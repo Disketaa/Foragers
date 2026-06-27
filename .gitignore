@@ -3,4 +3,5 @@
 .vscode/
 bin/
 dotnet-tools.json
+Foragers-Project/.clinerules/AI.md
 obj/
