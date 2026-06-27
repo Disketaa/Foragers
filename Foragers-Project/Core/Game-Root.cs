@@ -130,6 +130,12 @@ public class GameRoot : Game
 
     protected override void Update(GameTime gameTime)
     {
+        if (!IsActive)
+        {
+            base.Update(gameTime);
+            return;
+        }
+
         if (_needsReload)
         {
             _needsReload = false;
