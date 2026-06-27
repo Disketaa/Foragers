@@ -6,10 +6,31 @@ namespace Foragers_Project.Core.World;
 
 public sealed class TilePalette
 {
+    private static readonly int[] DefaultTileMap =
+    {
+        0,
+        12,
+        1,
+        13,
+        4,
+        8,
+        5,
+        9,
+        3,
+        15,
+        2,
+        14,
+        7,
+        11,
+        6,
+        10,
+    };
+
     private readonly Texture2D _texture;
     private readonly int _tileWidth;
     private readonly int _tileHeight;
     private readonly int _columns;
+    private readonly int[] _tileMap;
 
     public TilePalette(GraphicsDevice graphicsDevice, string jsonPath)
     {
@@ -19,6 +40,7 @@ public sealed class TilePalette
         _tileWidth = Runtime.Get<int>("tileWidth", 8);
         _tileHeight = Runtime.Get<int>("tileHeight", 8);
         _columns = Runtime.Get<int>("columns", 4);
+        _tileMap = Runtime.Get<int[]>("tileMap", DefaultTileMap);
 
         _texture = Texture2D.FromFile(
             graphicsDevice,
@@ -26,65 +48,10 @@ public sealed class TilePalette
         );
     }
 
-    public static int ResolveTileIndex(bool top, bool right, bool bottom, bool left)
+    public int ResolveTileIndex(bool top, bool right, bool bottom, bool left)
     {
-        if (!top && !right && !bottom && !left)
-            return 0;
-
-        bool h = left || right;
-        bool v = top || bottom;
-
-        if (h && !v)
-        {
-            if (left && right)
-                return 2;
-            if (right)
-                return 1;
-            if (left)
-                return 3;
-        }
-
-        if (v && !h)
-        {
-            if (top && bottom)
-                return 8;
-            if (bottom)
-                return 4;
-            if (top)
-                return 12;
-        }
-
-        if (top && right && bottom && left)
-            return 10;
-
-        if (bottom && right && left)
-            return 6;
-        if (top && right && left)
-            return 14;
-        if (top && bottom && left)
-            return 11;
-        if (top && bottom && right)
-            return 9;
-
-        if (top && right)
-            return 13;
-        if (right && bottom)
-            return 5;
-        if (bottom && left)
-            return 7;
-        if (left && top)
-            return 15;
-
-        if (top)
-            return 14;
-        if (right)
-            return 9;
-        if (bottom)
-            return 6;
-        if (left)
-            return 11;
-
-        return 10;
+        int mask = (top ? 1 : 0) | (right ? 2 : 0) | (bottom ? 4 : 0) | (left ? 8 : 0);
+        return _tileMap[mask];
     }
 
     public Rectangle GetSourceRect(int tileIndex)

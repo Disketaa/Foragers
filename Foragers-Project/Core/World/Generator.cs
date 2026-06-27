@@ -145,6 +145,6 @@ public sealed class Generator
         bool bottom = y < WorldTiles - 1 && IsFilled(x, y + 1);
         bool left = x > 0 && IsFilled(x - 1, y);
 
-        return TilePalette.ResolveTileIndex(top, right, bottom, left);
+        return _palette.ResolveTileIndex(top, right, bottom, left);
     }
 }
