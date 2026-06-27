@@ -1,3 +1,4 @@
+using Foragers_Project.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -53,7 +54,7 @@ public sealed class PlayerController
         if (movement != Vector2.Zero)
         {
             movement.Normalize();
-            PixelRoundingHelper.ApplyPixelRounding(ref movement);
+            PixelRounding.ApplyPixelRounding(ref movement);
             _position += movement * Speed;
             PlayRun();
         }
