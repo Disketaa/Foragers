@@ -52,7 +52,6 @@ public sealed class PlayerController
         if (movement != Vector2.Zero)
         {
             movement.Normalize();
-            PixelRounding.ApplyPixelRounding(ref movement);
             _position += movement * Runtime.Get<float>("speed");
             PlayRun();
         }
@@ -85,7 +84,7 @@ public sealed class PlayerController
 
         spriteBatch.Draw(
             _sheet.Texture,
-            _position,
+            PixelRounding.RoundToPixel(_position),
             _animPlayer.SourceRect(),
             Color.White,
             0f,
