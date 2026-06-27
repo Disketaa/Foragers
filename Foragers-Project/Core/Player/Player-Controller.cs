@@ -17,6 +17,9 @@ public sealed class PlayerController
         _position = startPosition;
     }
 
+    private const float StopRadius = 4f;
+    private const float FullSpeedRadius = 64f;
+
     public void Update(GameTime gameTime)
     {
         KeyboardState keyboard = Keyboard.GetState();
@@ -49,6 +52,37 @@ public sealed class PlayerController
             movement.Normalize();
             movementSpeed = speed;
             _position += movement * speed;
+        }
+
+        _animator.Update(gameTime, movementSpeed, _facingLeft);
+    }
+
+    public void UpdateMouse(GameTime gameTime, Vector2 cursorPosition)
+    {
+        Vector2 toTarget = cursorPosition - _position;
+        float distance = toTarget.Length();
+
+        float speed = Runtime.Get<float>("speed");
+        float movementSpeed = 0f;
+
+        if (distance > StopRadius)
+        {
+            float factor = MathHelper.Clamp(
+                (distance - StopRadius) / (FullSpeedRadius - StopRadius),
+                0f,
+                1f
+            );
+            movementSpeed = speed * factor;
+
+            Vector2 direction = toTarget / distance;
+
+            if (direction.X < 0f)
+                _facingLeft = true;
+            else if (direction.X > 0f)
+                _facingLeft = false;
+
+            float step = Math.Min(movementSpeed, distance);
+            _position += direction * step;
         }
 
         _animator.Update(gameTime, movementSpeed, _facingLeft);

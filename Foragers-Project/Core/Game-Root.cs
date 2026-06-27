@@ -117,16 +117,19 @@ public class GameRoot : Game
             Runtime.Load(_playerDataPath);
         }
 
-        _player.Update(gameTime);
+        MouseState mouse = Mouse.GetState();
+        float cursorX = (mouse.X - _offsetX) / (float)_scale;
+        float cursorY = (mouse.Y - _offsetY) / (float)_scale;
+        _player.UpdateMouse(gameTime, new Vector2(cursorX, cursorY));
 
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        MouseState mouse = Mouse.GetState();
-        int gameMouseX = (mouse.X - _offsetX) / _scale;
-        int gameMouseY = (mouse.Y - _offsetY) / _scale;
+        MouseState drawMouse = Mouse.GetState();
+        int gameMouseX = (drawMouse.X - _offsetX) / _scale;
+        int gameMouseY = (drawMouse.Y - _offsetY) / _scale;
 
         GraphicsDevice.SetRenderTarget(_renderTarget);
         GraphicsDevice.Clear(Color.Black);
