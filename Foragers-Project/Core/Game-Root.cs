@@ -7,6 +7,7 @@ public class GameRoot : Game
 {
     private readonly GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch = null!;
+    private Texture2D _tiledBackground = null!;
 
     public GameRoot()
     {
@@ -14,7 +15,7 @@ public class GameRoot : Game
         {
             PreferredBackBufferWidth = 640,
             PreferredBackBufferHeight = 360,
-            IsFullScreen = false
+            IsFullScreen = false,
         };
 
         Content.RootDirectory = "Content";
@@ -28,6 +29,10 @@ public class GameRoot : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+        _tiledBackground = Texture2D.FromFile(
+            GraphicsDevice,
+            Path.Combine(Content.RootDirectory, "Assets", "World", "Tiled-Background.png")
+        );
     }
 
     protected override void Update(GameTime gameTime)
@@ -37,9 +42,19 @@ public class GameRoot : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GraphicsDevice.Clear(Color.Black);
 
         _spriteBatch.Begin();
+
+        int screenWidth = _graphics.PreferredBackBufferWidth;
+        int screenHeight = _graphics.PreferredBackBufferHeight;
+        int tileWidth = _tiledBackground.Width;
+        int tileHeight = _tiledBackground.Height;
+
+        for (int x = 0; x < screenWidth; x += tileWidth)
+        for (int y = 0; y < screenHeight; y += tileHeight)
+            _spriteBatch.Draw(_tiledBackground, new Vector2(x, y), Color.White);
+
         _spriteBatch.End();
 
         base.Draw(gameTime);
