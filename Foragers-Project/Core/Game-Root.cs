@@ -18,10 +18,7 @@ public class GameRoot : Game
     private int _offsetX;
     private int _offsetY;
 
-    private SpriteSheet _characterSheet = null!;
-    private AnimationPlayer _animPlayer = null!;
-    private Vector2 _characterPos;
-    private string _currentAnim = "Idle";
+    private PlayerController _player = null!;
 
     public GameRoot()
     {
@@ -66,15 +63,11 @@ public class GameRoot : Game
             Path.Combine(Content.RootDirectory, "Assets", "UI", "Cursor.png")
         );
 
-        _characterSheet = new SpriteSheet(
+        _player = new PlayerController(
             GraphicsDevice,
-            Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.anim.json")
+            Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.anim.json"),
+            new Vector2(320, 180)
         );
-
-        _animPlayer = new AnimationPlayer(_characterSheet);
-        _animPlayer.Play("Idle");
-
-        _characterPos = new Vector2(320, 180);
     }
 
     private void OnResize(object? sender, EventArgs e)
@@ -97,46 +90,7 @@ public class GameRoot : Game
 
     protected override void Update(GameTime gameTime)
     {
-        KeyboardState keyboard = Keyboard.GetState();
-
-        if (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Up))
-        {
-            _characterPos.Y -= 2;
-            _animPlayer.Play("Run");
-            _currentAnim = "Run";
-        }
-        else if (keyboard.IsKeyDown(Keys.S) || keyboard.IsKeyDown(Keys.Down))
-        {
-            _characterPos.Y += 2;
-            _animPlayer.Play("Run");
-            _currentAnim = "Run";
-        }
-        else if (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.Left))
-        {
-            _characterPos.X -= 2;
-            _animPlayer.Play("Run");
-            _currentAnim = "Run";
-        }
-        else if (keyboard.IsKeyDown(Keys.D) || keyboard.IsKeyDown(Keys.Right))
-        {
-            _characterPos.X += 2;
-            _animPlayer.Play("Run");
-            _currentAnim = "Run";
-        }
-        else if (keyboard.IsKeyDown(Keys.Space))
-        {
-            _animPlayer.Play("Death");
-        }
-        else
-        {
-            if (_animPlayer.Done || _currentAnim == "Run")
-            {
-                _currentAnim = "Idle";
-                _animPlayer.Play(_currentAnim);
-            }
-        }
-
-        _animPlayer.Update(gameTime);
+        _player.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -156,12 +110,7 @@ public class GameRoot : Game
         for (int y = 0; y < BaseHeight; y += _tiledBackground.Height)
             _spriteBatch.Draw(_tiledBackground, new Vector2(x, y), Color.White);
 
-        _spriteBatch.Draw(
-            _characterSheet.Texture,
-            _characterPos,
-            _animPlayer.SourceRect(),
-            Color.White
-        );
+        _player.Draw(_spriteBatch);
 
         _spriteBatch.End();
 

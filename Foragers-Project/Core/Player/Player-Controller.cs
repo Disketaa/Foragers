@@ -1,0 +1,90 @@
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+
+namespace Foragers_Project.Core;
+
+public sealed class PlayerController
+{
+    private const float Speed = 2f;
+
+    private readonly SpriteSheet _sheet;
+    private readonly AnimationPlayer _animPlayer;
+    private Vector2 _position;
+    private string _currentAnim = "Idle";
+    private bool _facingLeft;
+
+    public PlayerController(GraphicsDevice graphicsDevice, string jsonPath, Vector2 startPosition)
+    {
+        _sheet = new SpriteSheet(graphicsDevice, jsonPath);
+        _animPlayer = new AnimationPlayer(_sheet);
+        _animPlayer.Play("Idle");
+        _position = startPosition;
+    }
+
+    public void Update(GameTime gameTime)
+    {
+        KeyboardState keyboard = Keyboard.GetState();
+
+        if (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Up))
+        {
+            _position.Y -= Speed;
+            PlayRun();
+        }
+        else if (keyboard.IsKeyDown(Keys.S) || keyboard.IsKeyDown(Keys.Down))
+        {
+            _position.Y += Speed;
+            PlayRun();
+        }
+        else if (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.Left))
+        {
+            _position.X -= Speed;
+            _facingLeft = true;
+            PlayRun();
+        }
+        else if (keyboard.IsKeyDown(Keys.D) || keyboard.IsKeyDown(Keys.Right))
+        {
+            _position.X += Speed;
+            _facingLeft = false;
+            PlayRun();
+        }
+        else if (keyboard.IsKeyDown(Keys.Space))
+        {
+            _animPlayer.Play("Death");
+            _currentAnim = "Death";
+        }
+        else
+        {
+            if (_animPlayer.Done || _currentAnim == "Run")
+            {
+                _currentAnim = "Idle";
+                _animPlayer.Play(_currentAnim);
+            }
+        }
+
+        _animPlayer.Update(gameTime);
+    }
+
+    private void PlayRun()
+    {
+        _animPlayer.Play("Run");
+        _currentAnim = "Run";
+    }
+
+    public void Draw(SpriteBatch spriteBatch)
+    {
+        SpriteEffects effects = _facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+
+        spriteBatch.Draw(
+            _sheet.Texture,
+            _position,
+            _animPlayer.SourceRect(),
+            Color.White,
+            0f,
+            Vector2.Zero,
+            1f,
+            effects,
+            0f
+        );
+    }
+}
