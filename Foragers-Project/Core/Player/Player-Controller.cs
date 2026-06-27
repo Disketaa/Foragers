@@ -35,14 +35,22 @@ public sealed class PlayerController
 
         if (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.Left))
         {
+            if (!_facingLeft)
+            {
+                _facingLeft = true;
+                _animator.Smear();
+            }
             movement.X -= 1;
-            _facingLeft = true;
         }
 
         if (keyboard.IsKeyDown(Keys.D) || keyboard.IsKeyDown(Keys.Right))
         {
+            if (_facingLeft)
+            {
+                _facingLeft = false;
+                _animator.Smear();
+            }
             movement.X += 1;
-            _facingLeft = false;
         }
 
         float speed = Runtime.Get<float>("speed");

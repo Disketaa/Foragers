@@ -131,7 +131,7 @@ public class GameRoot : Game
         GraphicsDevice.SetRenderTarget(_renderTarget);
         GraphicsDevice.Clear(Color.Black);
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
 
         for (int x = 0; x < BaseWidth; x += _tiledBackground.Width)
         for (int y = 0; y < BaseHeight; y += _tiledBackground.Height)
@@ -141,7 +141,7 @@ public class GameRoot : Game
 
         _spriteBatch.End();
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
         _spriteBatch.Draw(_cursor, new Vector2(gameMouseX, gameMouseY), Color.White);
         _spriteBatch.End();
 

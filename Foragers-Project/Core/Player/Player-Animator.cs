@@ -8,12 +8,19 @@ public sealed class PlayerAnimator
 {
     private readonly SpriteSheet _sheet;
     private readonly AnimationPlayer _animPlayer;
+    private Tweens.SmearEffect _smearEffect;
 
     public PlayerAnimator(GraphicsDevice graphicsDevice, string animPath)
     {
         _sheet = new SpriteSheet(graphicsDevice, animPath);
         _animPlayer = new AnimationPlayer(_sheet);
         _animPlayer.Play("Idle");
+        _smearEffect = new Tweens.SmearEffect(0.1f, 0.2f);
+    }
+
+    public void Smear()
+    {
+        _smearEffect.Start();
     }
 
     public void Update(GameTime gameTime, float speed)
@@ -26,20 +33,24 @@ public sealed class PlayerAnimator
         }
 
         _animPlayer.Update(gameTime);
+        _smearEffect.Update(gameTime);
     }
 
     public void Draw(SpriteBatch spriteBatch, Vector2 position, bool facingLeft)
     {
         SpriteEffects effects = facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+        Vector2 scale = _smearEffect.GetCurrentScale();
+        Rectangle sourceRect = _animPlayer.SourceRect();
+        Vector2 origin = new Vector2(sourceRect.Width / 2f, sourceRect.Height);
 
         spriteBatch.Draw(
             _sheet.Texture,
-            PixelRounding.RoundToPixel(position),
-            _animPlayer.SourceRect(),
+            position,
+            sourceRect,
             Color.White,
             0f,
-            Vector2.Zero,
-            1f,
+            origin,
+            scale,
             effects,
             0f
         );
