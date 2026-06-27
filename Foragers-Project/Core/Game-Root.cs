@@ -78,12 +78,19 @@ public class GameRoot : Game
             new Vector2(320, 180)
         );
 
-        Texture2D tileDebug = Texture2D.FromFile(
-            GraphicsDevice,
-            Path.Combine(Content.RootDirectory, "Assets", "World", "Tile-Debug.png")
+        string tilePalettePath = Path.Combine(
+            Content.RootDirectory,
+            "Assets",
+            "World",
+            "Tiles-Grass.json"
         );
 
-        _world = new Generator(tileDebug, new Random().Next(), threshold: 0.45f);
+        _world = new Generator(
+            GraphicsDevice,
+            tilePalettePath,
+            new Random().Next(),
+            threshold: 0.45f
+        );
 
         SetupFileWatcher();
     }

@@ -11,7 +11,7 @@ public sealed class Generator
 
     private readonly int _seed;
     private readonly float[] _map;
-    private readonly Texture2D _tileTexture;
+    private readonly TilePalette _palette;
     private readonly float _threshold;
 
     public static int WorldWidth => WorldPixels;
@@ -19,10 +19,15 @@ public sealed class Generator
     public static int TileCount => WorldTiles;
     public static int TilePixelSize => TileSize;
 
-    public Generator(Texture2D tileTexture, int seed, float threshold = 0.5f)
+    public Generator(
+        GraphicsDevice graphicsDevice,
+        string palettePath,
+        int seed,
+        float threshold = 0.5f
+    )
     {
         _seed = seed;
-        _tileTexture = tileTexture;
+        _palette = new TilePalette(graphicsDevice, palettePath);
         _threshold = threshold;
         _map = new float[WorldTiles * WorldTiles];
         Generate();
@@ -122,22 +127,24 @@ public sealed class Generator
         {
             for (int x = 0; x < WorldTiles; x++)
             {
-                float value = _map[y * WorldTiles + x];
-                if (value < _threshold)
+                if (!IsFilled(x, y))
                     continue;
 
-                int shade = (int)(value * 4);
-                shade = shade > 3 ? 3 : shade;
+                int tileIndex = ResolveTileIndex(x, y);
+                Vector2 tilePos = new(position.X + x * TileSize, position.Y + y * TileSize);
 
-                var destRect = new Rectangle(
-                    (int)(position.X + x * TileSize),
-                    (int)(position.Y + y * TileSize),
-                    TileSize,
-                    TileSize
-                );
-
-                spriteBatch.Draw(_tileTexture, destRect, Color.White);
+                _palette.Draw(spriteBatch, tileIndex, tilePos);
             }
         }
+    }
+
+    private int ResolveTileIndex(int x, int y)
+    {
+        bool top = y > 0 && IsFilled(x, y - 1);
+        bool right = x < WorldTiles - 1 && IsFilled(x + 1, y);
+        bool bottom = y < WorldTiles - 1 && IsFilled(x, y + 1);
+        bool left = x > 0 && IsFilled(x - 1, y);
+
+        return TilePalette.ResolveTileIndex(top, right, bottom, left);
     }
 }

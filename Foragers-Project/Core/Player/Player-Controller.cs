@@ -94,7 +94,7 @@ public sealed class PlayerController
 
     private void Move(GameTime gameTime, Vector2 direction, float speedFactor)
     {
-        float speed = Runtime.Get<float>("speed");
+        float speed = Runtime.Get("speed", 1f);
 
         if (direction != Vector2.Zero && speedFactor > 0f)
         {
