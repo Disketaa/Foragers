@@ -4,6 +4,14 @@ namespace Foragers_Project.Core.Helpers;
 
 public static class Tweens
 {
+    public enum SpriteTarget
+    {
+        ScaleX,
+        ScaleY,
+        X,
+        Y,
+    }
+
     public static float BackOut(float t)
     {
         const float c1 = 1.70158f;
@@ -21,24 +29,36 @@ public static class Tweens
         return 1.0f + factor * Math.Min(BackOut(t), BackOut(1.0f - t));
     }
 
-    public struct SmearEffect
+    public struct SpriteTween
     {
+        public SpriteTarget Target { get; private set; }
+        public float From { get; private set; }
+        public float To { get; private set; }
         public float Duration { get; private set; }
-        public float Factor { get; private set; }
+        public Func<float, float> Curve { get; private set; }
         public float Timer { get; private set; }
         public bool IsActive { get; private set; }
 
-        public SmearEffect(float duration, float factor)
+        public SpriteTween(
+            SpriteTarget target,
+            float from,
+            float to,
+            float duration,
+            Func<float, float> curve
+        )
         {
+            Target = target;
+            From = from;
+            To = to;
             Duration = duration;
-            Factor = factor;
-            Timer = 0;
+            Curve = curve;
+            Timer = 0f;
             IsActive = false;
         }
 
         public void Start()
         {
-            Timer = 0;
+            Timer = 0f;
             IsActive = true;
         }
 
@@ -50,19 +70,18 @@ public static class Tweens
             Timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
             if (Timer >= Duration)
             {
+                Timer = Duration;
                 IsActive = false;
-                Timer = 0;
             }
         }
 
-        public Vector2 GetCurrentScale()
+        public float GetValue()
         {
             if (!IsActive)
-                return Vector2.One;
+                return To;
 
             float t = Timer / Duration;
-            float scaleValue = Bump(t, Factor);
-            return new Vector2(scaleValue, scaleValue);
+            return Ease(t, From, To, Curve);
         }
     }
 }

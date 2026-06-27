@@ -24,32 +24,20 @@ public sealed class PlayerController
         Vector2 movement = Vector2.Zero;
 
         if (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Up))
-        {
             movement.Y -= 1;
-        }
 
         if (keyboard.IsKeyDown(Keys.S) || keyboard.IsKeyDown(Keys.Down))
-        {
             movement.Y += 1;
-        }
 
         if (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.Left))
         {
-            if (!_facingLeft)
-            {
-                _facingLeft = true;
-                _animator.Smear();
-            }
+            _facingLeft = true;
             movement.X -= 1;
         }
 
         if (keyboard.IsKeyDown(Keys.D) || keyboard.IsKeyDown(Keys.Right))
         {
-            if (_facingLeft)
-            {
-                _facingLeft = false;
-                _animator.Smear();
-            }
+            _facingLeft = false;
             movement.X += 1;
         }
 
@@ -63,11 +51,11 @@ public sealed class PlayerController
             _position += movement * speed;
         }
 
-        _animator.Update(gameTime, movementSpeed);
+        _animator.Update(gameTime, movementSpeed, _facingLeft);
     }
 
     public void Draw(SpriteBatch spriteBatch)
     {
-        _animator.Draw(spriteBatch, _position, _facingLeft);
+        _animator.Draw(spriteBatch, _position);
     }
 }
