@@ -122,7 +122,16 @@ public class GameRoot : Game
         float cursorY = (mouse.Y - _offsetY) / (float)_scale;
         Vector2 cursorPos = new Vector2(cursorX, cursorY);
 
-        if (mouse.LeftButton == ButtonState.Pressed)
+        GamePadState gamePad = GamePad.GetState(0);
+
+        Vector2 stick = gamePad.ThumbSticks.Left;
+        float magnitude = stick.Length();
+
+        if (gamePad.IsConnected && magnitude >= 0.2f)
+        {
+            _player.UpdateGamepad(gameTime);
+        }
+        else if (mouse.LeftButton == ButtonState.Pressed)
         {
             _player.UpdateMouse(gameTime, cursorPos);
         }
