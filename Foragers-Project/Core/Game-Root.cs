@@ -13,7 +13,6 @@ public class GameRoot : Game
 
     private readonly GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch = null!;
-    private Texture2D _tiledBackground = null!;
     private Texture2D _cursor = null!;
     private RenderTarget2D _renderTarget = null!;
     private int _scale = 1;
@@ -50,11 +49,6 @@ public class GameRoot : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _tiledBackground = Texture2D.FromFile(
-            GraphicsDevice,
-            Path.Combine(Content.RootDirectory, "Assets", "World", "Tiled-Background.png")
-        );
-
         _renderTarget = new RenderTarget2D(
             GraphicsDevice,
             BaseWidth,
@@ -166,13 +160,9 @@ public class GameRoot : Game
         int gameMouseY = (drawMouse.Y - _offsetY) / _scale;
 
         GraphicsDevice.SetRenderTarget(_renderTarget);
-        GraphicsDevice.Clear(Color.Black);
+        GraphicsDevice.Clear(new Color(46, 171, 212));
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
-
-        for (int x = 0; x < BaseWidth; x += _tiledBackground.Width)
-        for (int y = 0; y < BaseHeight; y += _tiledBackground.Height)
-            _spriteBatch.Draw(_tiledBackground, new Vector2(x, y), Color.White);
 
         _world.Draw(
             _spriteBatch,

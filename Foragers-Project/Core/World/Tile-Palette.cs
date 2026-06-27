@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Foragers_Project.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
