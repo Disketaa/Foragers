@@ -23,11 +23,14 @@ public class GameRoot : Game
     private Generator _world = null!;
     private string _playerDataPath = string.Empty;
     private string _worldDataPath = string.Empty;
+    private string _optionsDataPath = string.Empty;
     private string _tilePalettePath = string.Empty;
     private bool _needsReload;
     private bool _needsWorldReload;
+    private bool _needsOptionsReload;
     private FileSystemWatcher? _playerFileWatcher;
     private FileSystemWatcher? _worldFileWatcher;
+    private FileSystemWatcher? _optionsFileWatcher;
 
     public GameRoot()
     {
@@ -70,6 +73,9 @@ public class GameRoot : Game
         _playerDataPath = Path.Combine(Content.RootDirectory, "Data", "Entity", "Player.json");
         Runtime.Load(_playerDataPath);
 
+        _optionsDataPath = Path.Combine(Content.RootDirectory, "Data", "Core", "Options.json");
+        Runtime.Load(_optionsDataPath);
+
         _player = new PlayerController(
             GraphicsDevice,
             Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.json"),
@@ -107,6 +113,15 @@ public class GameRoot : Game
             _worldFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
             _worldFileWatcher.Changed += (s, e) => _needsWorldReload = true;
             _worldFileWatcher.EnableRaisingEvents = true;
+        }
+
+        string optionsDirectory = Path.GetDirectoryName(_optionsDataPath) ?? string.Empty;
+        if (!string.IsNullOrEmpty(optionsDirectory) && Directory.Exists(optionsDirectory))
+        {
+            _optionsFileWatcher = new FileSystemWatcher(optionsDirectory, "Options.json");
+            _optionsFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            _optionsFileWatcher.Changed += (s, e) => _needsOptionsReload = true;
+            _optionsFileWatcher.EnableRaisingEvents = true;
         }
     }
 
@@ -146,6 +161,12 @@ public class GameRoot : Game
         {
             _needsWorldReload = false;
             _world = Generator.Reload(GraphicsDevice, _tilePalettePath, _worldDataPath);
+        }
+
+        if (_needsOptionsReload)
+        {
+            _needsOptionsReload = false;
+            Runtime.Load(_optionsDataPath);
         }
 
         MouseState mouse = Mouse.GetState();
@@ -221,6 +242,7 @@ public class GameRoot : Game
     {
         _playerFileWatcher?.Dispose();
         _worldFileWatcher?.Dispose();
+        _optionsFileWatcher?.Dispose();
         base.UnloadContent();
     }
 }

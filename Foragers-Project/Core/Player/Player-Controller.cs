@@ -11,9 +11,9 @@ public sealed class PlayerController
     private Vector2 _position;
     private bool _facingLeft;
 
-    private const float GamepadDeadzone = 0.2f;
-    private const float MouseStopRadius = 4f;
-    private const float MouseFullSpeedRadius = 64f;
+    private static float GamepadDeadzone => Runtime.Get("GamepadDeadzone", 0.2f);
+    private static float MouseStopRadius => Runtime.Get("MouseStopRadius", 4f);
+    private static float MouseFullSpeedRadius => Runtime.Get("MouseFullSpeedRadius", 64f);
 
     public PlayerController(GraphicsDevice graphicsDevice, string animPath, Vector2 startPosition)
     {
