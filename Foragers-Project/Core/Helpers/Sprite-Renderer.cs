@@ -37,7 +37,9 @@ public sealed class SpriteRenderer
         Texture2D texture,
         Rectangle sourceRect,
         Vector2 position,
-        SpriteEffects effects
+        SpriteEffects effects,
+        float pivotX = 0.5f,
+        float pivotY = 0.5f
     )
     {
         float scaleX = 1f;
@@ -65,7 +67,7 @@ public sealed class SpriteRenderer
             }
         }
 
-        Vector2 origin = new Vector2(sourceRect.Width / 2f, sourceRect.Height);
+        Vector2 origin = new Vector2(sourceRect.Width * pivotX, sourceRect.Height * pivotY);
         Vector2 drawPosition = position + new Vector2(offsetX, offsetY);
 
         spriteBatch.Draw(

@@ -40,7 +40,15 @@ public sealed class PlayerAnimator
     public void Draw(SpriteBatch spriteBatch, Vector2 position)
     {
         SpriteEffects effects = _facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-        _renderer.Draw(spriteBatch, _sheet.Texture, _animPlayer.SourceRect(), position, effects);
+        _renderer.Draw(
+            spriteBatch,
+            _sheet.Texture,
+            _animPlayer.SourceRect(),
+            position,
+            effects,
+            _sheet.PivotX,
+            _sheet.PivotY
+        );
     }
 
     private void OnFlip()

@@ -13,5 +13,7 @@ public sealed class AnimationData
     public string Sheet { get; set; } = string.Empty;
     public int FrameWidth { get; set; }
     public int FrameHeight { get; set; }
+    public float PivotX { get; set; } = 0.5f;
+    public float PivotY { get; set; } = 0.5f;
     public List<AnimationDef> Animations { get; set; } = [];
 }

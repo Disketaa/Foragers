@@ -1,5 +1,7 @@
 {
     "sheet": "Character.png",
+    "pivotX": 0.5,
+    "pivotY": 0.6,
     "frameWidth": 16,
     "frameHeight": 16,
     "animations": [

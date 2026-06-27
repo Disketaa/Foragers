@@ -11,81 +11,83 @@ public sealed class PlayerController
     private Vector2 _position;
     private bool _facingLeft;
 
+    private const float StopRadius = 4f;
+    private const float FullSpeedRadius = 64f;
+
     public PlayerController(GraphicsDevice graphicsDevice, string animPath, Vector2 startPosition)
     {
         _animator = new PlayerAnimator(graphicsDevice, animPath);
         _position = startPosition;
     }
 
-    private const float StopRadius = 4f;
-    private const float FullSpeedRadius = 64f;
-
     public void Update(GameTime gameTime)
     {
         KeyboardState keyboard = Keyboard.GetState();
 
-        Vector2 movement = Vector2.Zero;
+        Vector2 direction = Vector2.Zero;
 
         if (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Up))
-            movement.Y -= 1;
+            direction.Y -= 1;
 
         if (keyboard.IsKeyDown(Keys.S) || keyboard.IsKeyDown(Keys.Down))
-            movement.Y += 1;
+            direction.Y += 1;
 
         if (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.Left))
-        {
-            _facingLeft = true;
-            movement.X -= 1;
-        }
+            direction.X -= 1;
 
         if (keyboard.IsKeyDown(Keys.D) || keyboard.IsKeyDown(Keys.Right))
-        {
-            _facingLeft = false;
-            movement.X += 1;
-        }
+            direction.X += 1;
 
-        float speed = Runtime.Get<float>("speed");
-        float movementSpeed = 0f;
+        if (direction != Vector2.Zero)
+            direction.Normalize();
 
-        if (movement != Vector2.Zero)
-        {
-            movement.Normalize();
-            movementSpeed = speed;
-            _position += movement * speed;
-        }
+        float speedFactor = direction != Vector2.Zero ? 1f : 0f;
 
-        _animator.Update(gameTime, movementSpeed, _facingLeft);
+        Move(gameTime, direction, speedFactor);
     }
 
     public void UpdateMouse(GameTime gameTime, Vector2 cursorPosition)
     {
+        MouseState mouse = Mouse.GetState();
+
         Vector2 toTarget = cursorPosition - _position;
         float distance = toTarget.Length();
 
-        float speed = Runtime.Get<float>("speed");
-        float movementSpeed = 0f;
+        Vector2 direction = Vector2.Zero;
+        float speedFactor = 0f;
 
-        if (distance > StopRadius)
+        if (mouse.LeftButton == ButtonState.Pressed && distance > StopRadius)
         {
-            float factor = MathHelper.Clamp(
+            float t = MathHelper.Clamp(
                 (distance - StopRadius) / (FullSpeedRadius - StopRadius),
                 0f,
                 1f
             );
-            movementSpeed = speed * factor;
-
-            Vector2 direction = toTarget / distance;
-
-            if (direction.X < 0f)
-                _facingLeft = true;
-            else if (direction.X > 0f)
-                _facingLeft = false;
-
-            float step = Math.Min(movementSpeed, distance);
-            _position += direction * step;
+            speedFactor = 1f - MathF.Pow(1f - t, 3f);
+            direction = toTarget / distance;
         }
 
-        _animator.Update(gameTime, movementSpeed, _facingLeft);
+        Move(gameTime, direction, speedFactor);
+    }
+
+    private const float MinSpeedThreshold = 0.01f;
+
+    private void Move(GameTime gameTime, Vector2 direction, float speedFactor)
+    {
+        float speed = Runtime.Get<float>("speed");
+        float animSpeed = 0f;
+
+        if (direction != Vector2.Zero && speedFactor > MinSpeedThreshold)
+        {
+            Vector2 step = direction * speed * speedFactor;
+            _facingLeft =
+                direction.X < 0f ? true
+                : direction.X > 0f ? false
+                : _facingLeft;
+            _position += step;
+            animSpeed = step.Length();
+        }
+        _animator.Update(gameTime, animSpeed, _facingLeft);
     }
 
     public void Draw(SpriteBatch spriteBatch)

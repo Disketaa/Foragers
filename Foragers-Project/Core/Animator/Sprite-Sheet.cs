@@ -19,6 +19,8 @@ public sealed class SpriteSheet
     public Texture2D Texture => _texture;
     public int FrameWidth => _data.FrameWidth;
     public int FrameHeight => _data.FrameHeight;
+    public float PivotX => _data.PivotX;
+    public float PivotY => _data.PivotY;
 
     public SpriteSheet(GraphicsDevice graphicsDevice, string jsonPath)
     {
