@@ -41,7 +41,7 @@ public sealed class AnimationPlayer
         _done = true;
     }
 
-    public void Update(GameTime gameTime)
+    public void Update(GameTime gameTime, float speedFactor = 1f)
     {
         if (_done || string.IsNullOrEmpty(_current))
             return;
@@ -49,7 +49,7 @@ public sealed class AnimationPlayer
         AnimationDef def = _sheet.GetDef(_current);
         float delay = 1f / def.Fps;
 
-        _timer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _timer += (float)gameTime.ElapsedGameTime.TotalSeconds * speedFactor;
 
         while (_timer >= delay)
         {

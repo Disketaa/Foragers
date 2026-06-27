@@ -72,7 +72,7 @@ public class GameRoot : Game
 
         _player = new PlayerController(
             GraphicsDevice,
-            Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.anim.json"),
+            Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.json"),
             new Vector2(320, 180)
         );
 
@@ -120,7 +120,16 @@ public class GameRoot : Game
         MouseState mouse = Mouse.GetState();
         float cursorX = (mouse.X - _offsetX) / (float)_scale;
         float cursorY = (mouse.Y - _offsetY) / (float)_scale;
-        _player.UpdateMouse(gameTime, new Vector2(cursorX, cursorY));
+        Vector2 cursorPos = new Vector2(cursorX, cursorY);
+
+        if (mouse.LeftButton == ButtonState.Pressed)
+        {
+            _player.UpdateMouse(gameTime, cursorPos);
+        }
+        else
+        {
+            _player.UpdateKeyboard(gameTime);
+        }
 
         base.Update(gameTime);
     }

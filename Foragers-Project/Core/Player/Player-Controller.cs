@@ -20,7 +20,7 @@ public sealed class PlayerController
         _position = startPosition;
     }
 
-    public void Update(GameTime gameTime)
+    public void UpdateKeyboard(GameTime gameTime)
     {
         KeyboardState keyboard = Keyboard.GetState();
 
@@ -85,7 +85,7 @@ public sealed class PlayerController
                 : direction.X > 0f ? false
                 : _facingLeft;
             _position += step;
-            animSpeed = step.Length();
+            animSpeed = speedFactor;
         }
         _animator.Update(gameTime, animSpeed, _facingLeft);
     }

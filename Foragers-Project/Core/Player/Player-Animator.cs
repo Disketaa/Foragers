@@ -33,7 +33,8 @@ public sealed class PlayerAnimator
         if (_animPlayer.Current != targetAnim)
             _animPlayer.Play(targetAnim);
 
-        _animPlayer.Update(gameTime);
+        float animSpeed = targetAnim == "Run" ? speed : 1f;
+        _animPlayer.Update(gameTime, animSpeed);
         _renderer.Update(gameTime);
     }
 
@@ -58,7 +59,7 @@ public sealed class PlayerAnimator
                 SpriteTarget.ScaleY,
                 from: 1.5f,
                 to: 1.0f,
-                duration: 0.1f,
+                duration: 0.3f,
                 curve: Tweens.BackOut
             )
         );
@@ -67,7 +68,7 @@ public sealed class PlayerAnimator
                 SpriteTarget.ScaleX,
                 from: 0.5f,
                 to: 1.0f,
-                duration: 0.1f,
+                duration: 0.3f,
                 curve: Tweens.BackOut
             )
         );
