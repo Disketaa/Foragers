@@ -22,8 +22,12 @@ public class GameRoot : Game
     private PlayerController _player = null!;
     private Generator _world = null!;
     private string _playerDataPath = string.Empty;
+    private string _worldDataPath = string.Empty;
+    private string _tilePalettePath = string.Empty;
     private bool _needsReload;
-    private FileSystemWatcher? _fileWatcher;
+    private bool _needsWorldReload;
+    private FileSystemWatcher? _playerFileWatcher;
+    private FileSystemWatcher? _worldFileWatcher;
 
     public GameRoot()
     {
@@ -72,32 +76,37 @@ public class GameRoot : Game
             new Vector2(320, 180)
         );
 
-        string tilePalettePath = Path.Combine(
+        _tilePalettePath = Path.Combine(
             Content.RootDirectory,
             "Assets",
             "World",
             "Tiles-Grass.json"
         );
 
-        _world = new Generator(
-            GraphicsDevice,
-            tilePalettePath,
-            new Random().Next(),
-            threshold: 0.45f
-        );
+        _worldDataPath = Path.Combine(Content.RootDirectory, "Data", "World", "World.json");
+        _world = new Generator(GraphicsDevice, _tilePalettePath, _worldDataPath);
 
         SetupFileWatcher();
     }
 
     private void SetupFileWatcher()
     {
-        string directory = Path.GetDirectoryName(_playerDataPath) ?? string.Empty;
-        if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
+        string playerDirectory = Path.GetDirectoryName(_playerDataPath) ?? string.Empty;
+        if (!string.IsNullOrEmpty(playerDirectory) && Directory.Exists(playerDirectory))
         {
-            _fileWatcher = new FileSystemWatcher(directory, "Player.json");
-            _fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            _fileWatcher.Changed += (s, e) => _needsReload = true;
-            _fileWatcher.EnableRaisingEvents = true;
+            _playerFileWatcher = new FileSystemWatcher(playerDirectory, "Player.json");
+            _playerFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            _playerFileWatcher.Changed += (s, e) => _needsReload = true;
+            _playerFileWatcher.EnableRaisingEvents = true;
+        }
+
+        string worldDirectory = Path.GetDirectoryName(_worldDataPath) ?? string.Empty;
+        if (!string.IsNullOrEmpty(worldDirectory) && Directory.Exists(worldDirectory))
+        {
+            _worldFileWatcher = new FileSystemWatcher(worldDirectory, "World.json");
+            _worldFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            _worldFileWatcher.Changed += (s, e) => _needsWorldReload = true;
+            _worldFileWatcher.EnableRaisingEvents = true;
         }
     }
 
@@ -125,6 +134,12 @@ public class GameRoot : Game
         {
             _needsReload = false;
             Runtime.Load(_playerDataPath);
+        }
+
+        if (_needsWorldReload)
+        {
+            _needsWorldReload = false;
+            _world = Generator.Reload(GraphicsDevice, _tilePalettePath, _worldDataPath);
         }
 
         MouseState mouse = Mouse.GetState();
@@ -198,7 +213,8 @@ public class GameRoot : Game
 
     protected override void UnloadContent()
     {
-        _fileWatcher?.Dispose();
+        _playerFileWatcher?.Dispose();
+        _worldFileWatcher?.Dispose();
         base.UnloadContent();
     }
 }
