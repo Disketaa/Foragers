@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Foragers_Project.Core;
 
@@ -29,6 +30,7 @@ public class GameRoot : Game
         Content.RootDirectory = "Content";
         Window.AllowUserResizing = true;
         Window.ClientSizeChanged += OnResize;
+        IsMouseVisible = false;
     }
 
     protected override void Initialize()
@@ -52,6 +54,11 @@ public class GameRoot : Game
             false,
             SurfaceFormat.Color,
             DepthFormat.None
+        );
+
+        _cursor = Texture2D.FromFile(
+            GraphicsDevice,
+            Path.Combine(Content.RootDirectory, "Assets", "UI", "Cursor.png")
         );
     }
 
@@ -80,6 +87,10 @@ public class GameRoot : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        MouseState mouse = Mouse.GetState();
+        int gameMouseX = (mouse.X - _offsetX) / _scale;
+        int gameMouseY = (mouse.Y - _offsetY) / _scale;
+
         GraphicsDevice.SetRenderTarget(_renderTarget);
         GraphicsDevice.Clear(Color.Black);
 
@@ -89,6 +100,10 @@ public class GameRoot : Game
         for (int y = 0; y < BaseHeight; y += _tiledBackground.Height)
             _spriteBatch.Draw(_tiledBackground, new Vector2(x, y), Color.White);
 
+        _spriteBatch.End();
+
+        _spriteBatch.Begin();
+        _spriteBatch.Draw(_cursor, new Vector2(gameMouseX, gameMouseY), Color.White);
         _spriteBatch.End();
 
         GraphicsDevice.SetRenderTarget(null);
