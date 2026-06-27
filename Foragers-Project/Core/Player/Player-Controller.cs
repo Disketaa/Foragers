@@ -7,17 +7,13 @@ namespace Foragers_Project.Core;
 
 public sealed class PlayerController
 {
-    private readonly SpriteSheet _sheet;
-    private readonly AnimationPlayer _animPlayer;
+    private readonly PlayerAnimator _animator;
     private Vector2 _position;
-    private string _currentAnim = "Idle";
     private bool _facingLeft;
 
     public PlayerController(GraphicsDevice graphicsDevice, string animPath, Vector2 startPosition)
     {
-        _sheet = new SpriteSheet(graphicsDevice, animPath);
-        _animPlayer = new AnimationPlayer(_sheet);
-        _animPlayer.Play("Idle");
+        _animator = new PlayerAnimator(graphicsDevice, animPath);
         _position = startPosition;
     }
 
@@ -49,49 +45,21 @@ public sealed class PlayerController
             _facingLeft = false;
         }
 
+        float speed = Runtime.Get<float>("speed");
+        float movementSpeed = 0f;
+
         if (movement != Vector2.Zero)
         {
             movement.Normalize();
-            _position += movement * Runtime.Get<float>("speed");
-            PlayRun();
-        }
-        else if (keyboard.IsKeyDown(Keys.Space))
-        {
-            _animPlayer.Play("Death");
-            _currentAnim = "Death";
-        }
-        else
-        {
-            if (_animPlayer.Done || _currentAnim == "Run")
-            {
-                _currentAnim = "Idle";
-                _animPlayer.Play(_currentAnim);
-            }
+            movementSpeed = speed;
+            _position += movement * speed;
         }
 
-        _animPlayer.Update(gameTime);
-    }
-
-    private void PlayRun()
-    {
-        _animPlayer.Play("Run");
-        _currentAnim = "Run";
+        _animator.Update(gameTime, movementSpeed);
     }
 
     public void Draw(SpriteBatch spriteBatch)
     {
-        SpriteEffects effects = _facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-
-        spriteBatch.Draw(
-            _sheet.Texture,
-            PixelRounding.RoundToPixel(_position),
-            _animPlayer.SourceRect(),
-            Color.White,
-            0f,
-            Vector2.Zero,
-            1f,
-            effects,
-            0f
-        );
+        _animator.Draw(spriteBatch, _position, _facingLeft);
     }
 }
