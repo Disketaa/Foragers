@@ -3,8 +3,23 @@
     "frameWidth": 16,
     "frameHeight": 16,
     "animations": [
-        { "name": "Idle",  "frames": 4, "fps": 8,  "loop": true },
-        { "name": "Run",   "frames": 4, "fps": 12, "loop": true },
-        { "name": "Death", "frames": 4, "fps": 10, "loop": false }
+        {
+            "name": "Idle",
+            "frames": 4,
+            "fps": 8,
+            "loop": true
+        },
+        {
+            "name": "Run",
+            "frames": 4,
+            "fps": 12,
+            "loop": true
+        },
+        {
+            "name": "Death",
+            "frames": 4,
+            "fps": 10,
+            "loop": false
+        }
     ]
 }

@@ -26,26 +26,35 @@ public sealed class PlayerController
     {
         KeyboardState keyboard = Keyboard.GetState();
 
+        Vector2 movement = Vector2.Zero;
+
         if (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Up))
         {
-            _position.Y -= Speed;
-            PlayRun();
+            movement.Y -= 1;
         }
-        else if (keyboard.IsKeyDown(Keys.S) || keyboard.IsKeyDown(Keys.Down))
+
+        if (keyboard.IsKeyDown(Keys.S) || keyboard.IsKeyDown(Keys.Down))
         {
-            _position.Y += Speed;
-            PlayRun();
+            movement.Y += 1;
         }
-        else if (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.Left))
+
+        if (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.Left))
         {
-            _position.X -= Speed;
+            movement.X -= 1;
             _facingLeft = true;
-            PlayRun();
         }
-        else if (keyboard.IsKeyDown(Keys.D) || keyboard.IsKeyDown(Keys.Right))
+
+        if (keyboard.IsKeyDown(Keys.D) || keyboard.IsKeyDown(Keys.Right))
         {
-            _position.X += Speed;
+            movement.X += 1;
             _facingLeft = false;
+        }
+
+        if (movement != Vector2.Zero)
+        {
+            movement.Normalize();
+            PixelRoundingHelper.ApplyPixelRounding(ref movement);
+            _position += movement * Speed;
             PlayRun();
         }
         else if (keyboard.IsKeyDown(Keys.Space))
