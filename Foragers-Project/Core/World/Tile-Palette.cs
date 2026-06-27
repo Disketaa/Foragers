@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Foragers_Project.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,6 +32,7 @@ public sealed class TilePalette
     private readonly int _tileHeight;
     private readonly int _columns;
     private readonly int[] _tileMap;
+    private readonly Dictionary<int, int[]> _variants;
 
     public TilePalette(GraphicsDevice graphicsDevice, string jsonPath)
     {
@@ -41,6 +43,7 @@ public sealed class TilePalette
         _tileHeight = Runtime.Get<int>("tileHeight", 8);
         _columns = Runtime.Get<int>("columns", 4);
         _tileMap = Runtime.Get<int[]>("tileMap", DefaultTileMap);
+        _variants = Runtime.Get<Dictionary<int, int[]>>("variants", new Dictionary<int, int[]>());
 
         _texture = Texture2D.FromFile(
             graphicsDevice,
@@ -52,6 +55,15 @@ public sealed class TilePalette
     {
         int mask = (top ? 1 : 0) | (right ? 2 : 0) | (bottom ? 4 : 0) | (left ? 8 : 0);
         return _tileMap[mask];
+    }
+
+    public int ResolveVariant(int tileIndex, int variantSeed)
+    {
+        if (!_variants.TryGetValue(tileIndex, out int[]? options) || options.Length == 0)
+            return tileIndex;
+
+        int pick = (int)((uint)variantSeed % (uint)options.Length);
+        return options[pick];
     }
 
     public Rectangle GetSourceRect(int tileIndex)

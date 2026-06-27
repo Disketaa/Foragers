@@ -11,6 +11,7 @@ public sealed class Generator
 
     private readonly int _seed;
     private readonly float[] _map;
+    private readonly int[] _tileIndices;
     private readonly TilePalette _palette;
     private readonly float _threshold;
 
@@ -30,7 +31,9 @@ public sealed class Generator
         _palette = new TilePalette(graphicsDevice, palettePath);
         _threshold = threshold;
         _map = new float[WorldTiles * WorldTiles];
+        _tileIndices = new int[WorldTiles * WorldTiles];
         Generate();
+        ResolveTiles();
     }
 
     private void Generate()
@@ -127,18 +130,37 @@ public sealed class Generator
         {
             for (int x = 0; x < WorldTiles; x++)
             {
-                if (!IsFilled(x, y))
+                int tileIndex = _tileIndices[y * WorldTiles + x];
+                if (tileIndex < 0)
                     continue;
 
-                int tileIndex = ResolveTileIndex(x, y);
                 Vector2 tilePos = new(position.X + x * TileSize, position.Y + y * TileSize);
-
                 _palette.Draw(spriteBatch, tileIndex, tilePos);
             }
         }
     }
 
-    private int ResolveTileIndex(int x, int y)
+    private void ResolveTiles()
+    {
+        for (int y = 0; y < WorldTiles; y++)
+        {
+            for (int x = 0; x < WorldTiles; x++)
+            {
+                if (!IsFilled(x, y))
+                {
+                    _tileIndices[y * WorldTiles + x] = -1;
+                    continue;
+                }
+
+                int baseIndex = ResolveAutotileIndex(x, y);
+                int variantSeed = Hash(x, y, _seed);
+
+                _tileIndices[y * WorldTiles + x] = _palette.ResolveVariant(baseIndex, variantSeed);
+            }
+        }
+    }
+
+    private int ResolveAutotileIndex(int x, int y)
     {
         bool top = y > 0 && IsFilled(x, y - 1);
         bool right = x < WorldTiles - 1 && IsFilled(x + 1, y);
