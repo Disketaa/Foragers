@@ -1,4 +1,5 @@
 using Foragers_Project.Core.Helpers;
+using Foragers_Project.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -20,6 +21,7 @@ public class GameRoot : Game
     private int _offsetY;
 
     private PlayerController _player = null!;
+    private Generator _world = null!;
     private string _playerDataPath = string.Empty;
     private bool _needsReload;
     private FileSystemWatcher? _fileWatcher;
@@ -75,6 +77,13 @@ public class GameRoot : Game
             Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.json"),
             new Vector2(320, 180)
         );
+
+        Texture2D tileDebug = Texture2D.FromFile(
+            GraphicsDevice,
+            Path.Combine(Content.RootDirectory, "Assets", "World", "Tile-Debug.png")
+        );
+
+        _world = new Generator(tileDebug, new Random().Next(), threshold: 0.45f);
 
         SetupFileWatcher();
     }
@@ -157,6 +166,14 @@ public class GameRoot : Game
         for (int x = 0; x < BaseWidth; x += _tiledBackground.Width)
         for (int y = 0; y < BaseHeight; y += _tiledBackground.Height)
             _spriteBatch.Draw(_tiledBackground, new Vector2(x, y), Color.White);
+
+        _world.Draw(
+            _spriteBatch,
+            new Vector2(
+                (BaseWidth - Generator.WorldWidth) / 2f,
+                (BaseHeight - Generator.WorldHeight) / 2f
+            )
+        );
 
         _player.Draw(_spriteBatch);
 
