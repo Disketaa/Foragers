@@ -1,3 +1,4 @@
+using Foragers_Project.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -19,6 +20,9 @@ public class GameRoot : Game
     private int _offsetY;
 
     private PlayerController _player = null!;
+    private string _playerDataPath = string.Empty;
+    private bool _needsReload;
+    private FileSystemWatcher? _fileWatcher;
 
     public GameRoot()
     {
@@ -63,11 +67,28 @@ public class GameRoot : Game
             Path.Combine(Content.RootDirectory, "Assets", "UI", "Cursor.png")
         );
 
+        _playerDataPath = Path.Combine(Content.RootDirectory, "Data", "Entity", "Player.json");
+        Runtime.Load(_playerDataPath);
+
         _player = new PlayerController(
             GraphicsDevice,
             Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.anim.json"),
             new Vector2(320, 180)
         );
+
+        SetupFileWatcher();
+    }
+
+    private void SetupFileWatcher()
+    {
+        string directory = Path.GetDirectoryName(_playerDataPath) ?? string.Empty;
+        if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
+        {
+            _fileWatcher = new FileSystemWatcher(directory, "Player.json");
+            _fileWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            _fileWatcher.Changed += (s, e) => _needsReload = true;
+            _fileWatcher.EnableRaisingEvents = true;
+        }
     }
 
     private void OnResize(object? sender, EventArgs e)
@@ -90,6 +111,12 @@ public class GameRoot : Game
 
     protected override void Update(GameTime gameTime)
     {
+        if (_needsReload)
+        {
+            _needsReload = false;
+            Runtime.Load(_playerDataPath);
+        }
+
         _player.Update(gameTime);
 
         base.Update(gameTime);
@@ -132,5 +159,11 @@ public class GameRoot : Game
         _spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    protected override void UnloadContent()
+    {
+        _fileWatcher?.Dispose();
+        base.UnloadContent();
     }
 }

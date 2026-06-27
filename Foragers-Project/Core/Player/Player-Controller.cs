@@ -7,17 +7,15 @@ namespace Foragers_Project.Core;
 
 public sealed class PlayerController
 {
-    private const float Speed = 2f;
-
     private readonly SpriteSheet _sheet;
     private readonly AnimationPlayer _animPlayer;
     private Vector2 _position;
     private string _currentAnim = "Idle";
     private bool _facingLeft;
 
-    public PlayerController(GraphicsDevice graphicsDevice, string jsonPath, Vector2 startPosition)
+    public PlayerController(GraphicsDevice graphicsDevice, string animPath, Vector2 startPosition)
     {
-        _sheet = new SpriteSheet(graphicsDevice, jsonPath);
+        _sheet = new SpriteSheet(graphicsDevice, animPath);
         _animPlayer = new AnimationPlayer(_sheet);
         _animPlayer.Play("Idle");
         _position = startPosition;
@@ -55,7 +53,7 @@ public sealed class PlayerController
         {
             movement.Normalize();
             PixelRounding.ApplyPixelRounding(ref movement);
-            _position += movement * Speed;
+            _position += movement * Runtime.Get<float>("speed");
             PlayRun();
         }
         else if (keyboard.IsKeyDown(Keys.Space))
