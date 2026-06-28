@@ -14,6 +14,7 @@ public sealed class PlayerController
     private static float GamepadDeadzone => Runtime.Get("GamepadDeadzone", 0.2f);
     private static float MouseStopRadius => Runtime.Get("MouseStopRadius", 4f);
     private static float MouseFullSpeedRadius => Runtime.Get("MouseFullSpeedRadius", 64f);
+    private const float MinSpeedFactor = 0.05f;
 
     public PlayerController(GraphicsDevice graphicsDevice, string animPath, Vector2 startPosition)
     {
@@ -84,7 +85,11 @@ public sealed class PlayerController
                 1f
             );
             float speedFactor = 1f - MathF.Pow(1f - t, 3f);
-            Move(gameTime, toTarget / distance, speedFactor);
+
+            if (speedFactor <= MinSpeedFactor)
+                Move(gameTime, Vector2.Zero, 0f);
+            else
+                Move(gameTime, toTarget / distance, speedFactor);
         }
         else
         {
