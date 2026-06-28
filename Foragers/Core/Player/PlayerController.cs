@@ -110,8 +110,7 @@ public sealed class PlayerController : ICollidable
         float runningSpeed = Runtime.GetFloat("Entity/Player.json", "running_speed", 1f);
         float swimmingSpeedMult = Runtime.GetFloat("Entity/Player.json", "swimming_speed", 0.5f);
         bool isSwimming = !IsOnTile();
-        float speedMult = isSwimming ? swimmingSpeedMult : 1f;
-        float speed = runningSpeed * speedMult;
+        float speed = isSwimming ? swimmingSpeedMult : runningSpeed;
 
         if (direction != Vector2.Zero && speedFactor > 0f)
         {
