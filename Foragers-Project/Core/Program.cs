@@ -1,4 +1,12 @@
 using Foragers_Project.Core;
+using Foragers_Project.Core.Helpers;
 
-using var game = new GameRoot();
-game.Run();
+try
+{
+    using var game = new GameRoot();
+    game.Run();
+}
+catch (Exception ex)
+{
+    ErrorHandler.ShowError("Foragers - Критическая ошибка", ex);
+}
