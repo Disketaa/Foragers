@@ -28,6 +28,8 @@ public class GameRoot : Game
     private bool _needsReload;
     private bool _needsWorldReload;
     private bool _needsOptionsReload;
+    private bool _debugMode;
+    private KeyboardState _prevKeyboardState;
     private FileSystemWatcher? _playerFileWatcher;
     private FileSystemWatcher? _worldFileWatcher;
     private FileSystemWatcher? _optionsFileWatcher;
@@ -45,11 +47,13 @@ public class GameRoot : Game
         Window.AllowUserResizing = true;
         Window.ClientSizeChanged += OnResize;
         IsMouseVisible = false;
+        UpdateWindowTitle();
     }
 
     protected override void Initialize()
     {
         base.Initialize();
+        UpdateWindowTitle();
         UpdateScale();
     }
 
@@ -75,6 +79,8 @@ public class GameRoot : Game
 
         _optionsDataPath = Path.Combine(Content.RootDirectory, "Data", "Core", "Options.json");
         Runtime.Load(_optionsDataPath);
+        _debugMode = Runtime.GetBool("DebugMode");
+        UpdateWindowTitle();
 
         _player = new PlayerController(
             GraphicsDevice,
@@ -143,6 +149,11 @@ public class GameRoot : Game
         _offsetY = (screenHeight - BaseHeight * _scale) / 2;
     }
 
+    private void UpdateWindowTitle()
+    {
+        Window.Title = _debugMode ? "Foragers (Debugging)" : "Foragers";
+    }
+
     protected override void Update(GameTime gameTime)
     {
         if (!IsActive)
@@ -167,6 +178,8 @@ public class GameRoot : Game
         {
             _needsOptionsReload = false;
             Runtime.Load(_optionsDataPath);
+            _debugMode = Runtime.GetBool("DebugMode");
+            UpdateWindowTitle();
         }
 
         MouseState mouse = Mouse.GetState();
@@ -191,6 +204,14 @@ public class GameRoot : Game
         {
             _player.UpdateKeyboard(gameTime);
         }
+
+        KeyboardState keyboard = Keyboard.GetState();
+        if (keyboard.IsKeyDown(Keys.F1) && _prevKeyboardState.IsKeyUp(Keys.F1))
+        {
+            _debugMode = !_debugMode;
+            UpdateWindowTitle();
+        }
+        _prevKeyboardState = keyboard;
 
         base.Update(gameTime);
     }

@@ -55,4 +55,9 @@ public static class Runtime
         }
         return defaultValue;
     }
+
+    public static bool GetBool(string key, bool defaultValue = false)
+    {
+        return Get<bool>(key, defaultValue);
+    }
 }
