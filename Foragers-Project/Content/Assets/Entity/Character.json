@@ -4,6 +4,12 @@
     "pivotY": 0.6,
     "frameWidth": 16,
     "frameHeight": 16,
+    "collision": {
+        "width": 8,
+        "height": 8,
+        "offsetX": 0,
+        "offsetY": -1
+    },
     "animations": [
         {
             "name": "Idle",
@@ -13,6 +19,12 @@
         },
         {
             "name": "Run",
+            "frames": 4,
+            "fps": 12,
+            "loop": true
+        },
+        {
+            "name": "Swim",
             "frames": 4,
             "fps": 12,
             "loop": true

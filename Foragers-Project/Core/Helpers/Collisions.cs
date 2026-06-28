@@ -21,7 +21,7 @@ public static class Collisions
         if (_pixel == null)
             return;
 
-        var debugColor = new Color(255, 0, 0, 128);
+        Color debugColor = new(255, 0, 0, 128);
 
         spriteBatch.Draw(_pixel, new Rectangle(bounds.X, bounds.Y, bounds.Width, 1), debugColor);
         spriteBatch.Draw(
