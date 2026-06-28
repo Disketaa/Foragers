@@ -1,5 +1,4 @@
 using Foragers_Project.Core.Helpers;
-using Foragers_Project.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,9 +10,6 @@ public sealed class PlayerController : ICollidable
     private readonly PlayerAnimator _animator;
     private Vector2 _position;
     private bool _facingLeft;
-    private int _tickCounter;
-    private int _collisionCheckTimer;
-    private bool _cachedIsOnTile;
 
     private static float GamepadDeadzone =>
         Runtime.GetFloat("Core/Options.json", "GamepadDeadzone", 0.2f);
@@ -22,7 +18,6 @@ public sealed class PlayerController : ICollidable
     private static float MouseFullSpeedRadius =>
         Runtime.GetFloat("Core/Options.json", "MouseFullSpeedRadius", 64f);
     private const float MinSpeedFactor = 0.05f;
-    private const int CollisionCheckInterval = 10;
     private const int NeighborRadius = 1;
 
     public bool NeedsTileCollision => true;
@@ -112,7 +107,7 @@ public sealed class PlayerController : ICollidable
 
     private void Move(GameTime gameTime, Vector2 direction, float speedFactor)
     {
-        float baseSpeed = Runtime.GetFloat("Entity/Player.json", "speed", 1f);
+        float baseSpeed = Runtime.GetFloat("Entity/Player.json", "running_speed", 1f);
         float swimmingSpeed = Runtime.GetFloat("Entity/Player.json", "swimming_speed", 0.5f);
         bool isSwimming = !IsOnTile();
         float speedMultiplier = isSwimming ? swimmingSpeed : 1f;
@@ -131,29 +126,11 @@ public sealed class PlayerController : ICollidable
         {
             _animator.Update(gameTime, 0f, _facingLeft, isSwimming);
         }
-
-        _tickCounter++;
-        if (_tickCounter >= 20)
-        {
-            _tickCounter = 0;
-            int tileSize = Generator.TilePixelSize;
-            int tileX = (int)((_position.X - TileMap.WorldOffset.X) / tileSize);
-            int tileY = (int)((_position.Y - TileMap.WorldOffset.Y) / tileSize);
-            string logLine =
-                $"[PLAYER] pos=({_position.X:F1},{_position.Y:F1}) tile=({tileX},{tileY}) isSwimming={isSwimming} onTile={IsOnTile()}";
-            File.AppendAllText("debug.log", logLine + Environment.NewLine);
-        }
     }
 
     private bool IsOnTile()
     {
-        _collisionCheckTimer++;
-        if (_collisionCheckTimer < CollisionCheckInterval)
-            return _cachedIsOnTile;
-
-        _collisionCheckTimer = 0;
-        _cachedIsOnTile = TileMap.IntersectsNeighborTiles(_position, NeighborRadius);
-        return _cachedIsOnTile;
+        return TileMap.IntersectsNeighborTiles(_position, NeighborRadius);
     }
 
     public void Draw(SpriteBatch spriteBatch, bool debugMode = false)

@@ -11,6 +11,7 @@ public sealed class PlayerAnimator
     private readonly AnimationPlayer _animPlayer;
     private readonly SpriteRenderer _renderer;
     private bool _facingLeft;
+    private bool _wasSwimming;
 
     public CollisionBox? Collision => _sheet.Collision;
     public float PivotX => _sheet.PivotX;
@@ -32,9 +33,13 @@ public sealed class PlayerAnimator
             OnFlip();
         }
 
-        string targetAnim = isSwimming
-            ? (speed > 0 ? "Swim" : "Swim")
-            : (speed > 0 ? "Run" : "Idle");
+        if (isSwimming != _wasSwimming)
+        {
+            _wasSwimming = isSwimming;
+            OnSwimStateChange();
+        }
+
+        string targetAnim = isSwimming ? "Swim" : (speed > 0 ? "Run" : "Idle");
 
         if (_animPlayer.Current != targetAnim)
             _animPlayer.Play(targetAnim);
@@ -68,8 +73,8 @@ public sealed class PlayerAnimator
     {
         _renderer.TriggerTween(
             new SpriteTween(
-                SpriteTarget.ScaleY,
-                from: 1.5f,
+                SpriteTarget.ScaleX,
+                from: 0.5f,
                 to: 1.0f,
                 duration: 0.3f,
                 curve: Tweens.BackOut
@@ -77,10 +82,32 @@ public sealed class PlayerAnimator
         );
         _renderer.TriggerTween(
             new SpriteTween(
-                SpriteTarget.ScaleX,
-                from: 0.5f,
+                SpriteTarget.ScaleY,
+                from: 1.5f,
                 to: 1.0f,
                 duration: 0.3f,
+                curve: Tweens.BackOut
+            )
+        );
+    }
+
+    private void OnSwimStateChange()
+    {
+        _renderer.TriggerTween(
+            new SpriteTween(
+                SpriteTarget.ScaleX,
+                from: 0.75f,
+                to: 1.0f,
+                duration: 0.2f,
+                curve: Tweens.BackOut
+            )
+        );
+        _renderer.TriggerTween(
+            new SpriteTween(
+                SpriteTarget.ScaleY,
+                from: 1.5f,
+                to: 1.0f,
+                duration: 0.4f,
                 curve: Tweens.BackOut
             )
         );
