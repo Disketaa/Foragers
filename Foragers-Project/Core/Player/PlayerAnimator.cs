@@ -12,6 +12,10 @@ public sealed class PlayerAnimator
     private readonly SpriteRenderer _renderer;
     private bool _facingLeft;
 
+    public CollisionBox? Collision => _sheet.Collision;
+    public float PivotX => _sheet.PivotX;
+    public float PivotY => _sheet.PivotY;
+
     public PlayerAnimator(GraphicsDevice graphicsDevice, string animPath)
     {
         _sheet = new SpriteSheet(graphicsDevice, animPath);
@@ -20,7 +24,7 @@ public sealed class PlayerAnimator
         _renderer = new SpriteRenderer();
     }
 
-    public void Update(GameTime gameTime, float speed, bool facingLeft)
+    public void Update(GameTime gameTime, float speed, bool facingLeft, bool isSwimming)
     {
         if (facingLeft != _facingLeft)
         {
@@ -28,12 +32,14 @@ public sealed class PlayerAnimator
             OnFlip();
         }
 
-        string targetAnim = speed > 0 ? "Run" : "Idle";
+        string targetAnim = isSwimming
+            ? (speed > 0 ? "Swim" : "Swim")
+            : (speed > 0 ? "Run" : "Idle");
 
         if (_animPlayer.Current != targetAnim)
             _animPlayer.Play(targetAnim);
 
-        float animSpeed = targetAnim == "Run" ? speed : 1f;
+        float animSpeed = targetAnim == "Run" || targetAnim == "Swim" ? speed : 1f;
         _animPlayer.Update(gameTime, animSpeed);
         _renderer.Update(gameTime);
     }

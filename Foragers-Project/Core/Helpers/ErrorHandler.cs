@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -19,7 +20,10 @@ public static class ErrorHandler
         sb.AppendLine();
         sb.AppendLine("The application will now close.");
 
-        _ = MessageBox(IntPtr.Zero, sb.ToString(), title, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
+        string fullMessage = sb.ToString();
+        LogToAll($"[ERROR] {title}: {fullMessage}");
+
+        _ = MessageBox(IntPtr.Zero, fullMessage, title, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
     }
 
     public static void ShowError(string title, Exception ex)
@@ -36,6 +40,23 @@ public static class ErrorHandler
         sb.AppendLine();
         sb.AppendLine("The application will now close.");
 
-        _ = MessageBox(IntPtr.Zero, sb.ToString(), title, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
+        string fullMessage = sb.ToString();
+        LogToAll($"[ERROR] {title}: {fullMessage}");
+        LogToAll(ex.StackTrace ?? "No stack trace");
+
+        _ = MessageBox(IntPtr.Zero, fullMessage, title, MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
+    }
+
+    private static void LogToAll(string message)
+    {
+        Console.Error.WriteLine(message);
+        Debug.WriteLine(message);
+
+        try
+        {
+            string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error.log");
+            File.AppendAllText(logPath, $"[{DateTime.Now}] {message}{Environment.NewLine}");
+        }
+        catch { }
     }
 }

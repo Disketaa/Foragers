@@ -96,6 +96,12 @@ public class GameRoot : Game
         );
 
         _world = new Generator(GraphicsDevice, _tilePalettePath, "World/World.json");
+
+        var worldOffset = new Vector2(
+            (BaseWidth - Generator.WorldWidth) / 2f,
+            (BaseHeight - Generator.WorldHeight) / 2f
+        );
+        TileMap.SetWorldOffset(worldOffset);
     }
 
     private void OnFileReloaded(string filePath)

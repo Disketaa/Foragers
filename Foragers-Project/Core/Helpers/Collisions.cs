@@ -1,3 +1,4 @@
+using Foragers_Project.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -15,6 +16,11 @@ public static class Collisions
             _pixel.SetData([Color.White]);
         }
     }
+
+    public static bool IntersectsTile(Rectangle bounds) => TileMap.IntersectsTile(bounds);
+
+    public static bool IntersectsNeighborTiles(Vector2 worldPos, int radiusInTiles = 1) =>
+        TileMap.IntersectsNeighborTiles(worldPos, radiusInTiles);
 
     public static void DrawDebug(SpriteBatch spriteBatch, Rectangle bounds)
     {

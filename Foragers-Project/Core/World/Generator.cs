@@ -22,6 +22,7 @@ public sealed class Generator
     public static int Seed => Instance._seed;
 
     private static Generator? _instance;
+    public static bool IsInitialized => _instance != null;
     private static Generator Instance =>
         _instance ?? throw new InvalidOperationException("Generator not initialized");
 
@@ -142,7 +143,19 @@ public sealed class Generator
         return _map[y * _worldTiles + x];
     }
 
-    public bool IsFilled(int x, int y) => GetTile(x, y) >= _threshold;
+    private bool IsFilledLocal(int x, int y)
+    {
+        if (x < 0 || x >= _worldTiles || y < 0 || y >= _worldTiles)
+            return false;
+        return _map[y * _worldTiles + x] >= _threshold;
+    }
+
+    public static bool IsFilled(int x, int y)
+    {
+        if (x < 0 || x >= Instance._worldTiles || y < 0 || y >= Instance._worldTiles)
+            return false;
+        return Instance._map[y * Instance._worldTiles + x] >= Instance._threshold;
+    }
 
     public void Draw(SpriteBatch spriteBatch, Vector2 position)
     {
@@ -166,7 +179,7 @@ public sealed class Generator
         {
             for (int x = 0; x < _worldTiles; x++)
             {
-                if (!IsFilled(x, y))
+                if (!IsFilledLocal(x, y))
                 {
                     _tileIndices[y * _worldTiles + x] = -1;
                     continue;
@@ -182,10 +195,10 @@ public sealed class Generator
 
     private int ResolveAutotileIndex(int x, int y)
     {
-        bool top = y > 0 && IsFilled(x, y - 1);
-        bool right = x < _worldTiles - 1 && IsFilled(x + 1, y);
-        bool bottom = y < _worldTiles - 1 && IsFilled(x, y + 1);
-        bool left = x > 0 && IsFilled(x - 1, y);
+        bool top = y > 0 && IsFilledLocal(x, y - 1);
+        bool right = x < _worldTiles - 1 && IsFilledLocal(x + 1, y);
+        bool bottom = y < _worldTiles - 1 && IsFilledLocal(x, y + 1);
+        bool left = x > 0 && IsFilledLocal(x - 1, y);
 
         return _palette.ResolveTileIndex(top, right, bottom, left);
     }
