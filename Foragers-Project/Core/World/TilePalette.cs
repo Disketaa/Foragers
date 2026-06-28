@@ -36,14 +36,20 @@ public sealed class TilePalette
 
     public TilePalette(GraphicsDevice graphicsDevice, string jsonPath)
     {
-        Runtime.Load(jsonPath);
+        string fullJsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, jsonPath);
 
-        string sheetPath = Runtime.Get<string>("sheet", string.Empty);
-        _tileWidth = Runtime.Get<int>("tileWidth", 8);
-        _tileHeight = Runtime.Get<int>("tileHeight", 8);
-        _columns = Runtime.Get<int>("columns", 4);
-        _tileMap = Runtime.Get<int[]>("tileMap", DefaultTileMap);
-        _variants = Runtime.Get<Dictionary<int, int[]>>("variants", new Dictionary<int, int[]>());
+        Runtime.RegisterJsonByPath(fullJsonPath);
+
+        string sheetPath = Runtime.GetString(fullJsonPath, "sheet", string.Empty);
+        _tileWidth = Runtime.GetInt(fullJsonPath, "tileWidth", 8);
+        _tileHeight = Runtime.GetInt(fullJsonPath, "tileHeight", 8);
+        _columns = Runtime.GetInt(fullJsonPath, "columns", 4);
+        _tileMap = Runtime.Get<int[]>(fullJsonPath, "tileMap", DefaultTileMap);
+        _variants = Runtime.Get<Dictionary<int, int[]>>(
+            fullJsonPath,
+            "variants",
+            new Dictionary<int, int[]>()
+        );
 
         string fullPath = Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory,

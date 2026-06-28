@@ -22,18 +22,10 @@ public class GameRoot : Game
 
     private PlayerController _player = null!;
     private Generator _world = null!;
-    private string _playerDataPath = string.Empty;
-    private string _worldDataPath = string.Empty;
-    private string _optionsDataPath = string.Empty;
-    private string _tilePalettePath = string.Empty;
-    private bool _needsReload;
-    private bool _needsWorldReload;
-    private bool _needsOptionsReload;
     private bool _debugMode;
+    private bool _needsWorldReload;
     private KeyboardState _prevKeyboardState;
-    private FileSystemWatcher? _playerFileWatcher;
-    private FileSystemWatcher? _worldFileWatcher;
-    private FileSystemWatcher? _optionsFileWatcher;
+    private string _tilePalettePath = string.Empty;
 
     public GameRoot()
     {
@@ -79,12 +71,13 @@ public class GameRoot : Game
         );
         _cursor = Texture2D.FromFile(GraphicsDevice, cursorPath);
 
-        _playerDataPath = Path.Combine(Content.RootDirectory, "Data", "Entity", "Player.json");
-        Runtime.Load(_playerDataPath);
+        Runtime.RegisterJson("Core/Options.json");
+        Runtime.RegisterJson("Entity/Player.json");
+        Runtime.RegisterJson("World/World.json");
 
-        _optionsDataPath = Path.Combine(Content.RootDirectory, "Data", "Core", "Options.json");
-        Runtime.Load(_optionsDataPath);
-        _debugMode = Runtime.GetBool("DebugMode");
+        Runtime.FileReloaded += OnFileReloaded;
+
+        _debugMode = Runtime.GetBool("Core/Options.json", "DebugMode");
         UpdateWindowTitle();
 
         _player = new PlayerController(
@@ -100,39 +93,14 @@ public class GameRoot : Game
             "TilesGrass.json"
         );
 
-        _worldDataPath = Path.Combine(Content.RootDirectory, "Data", "World", "World.json");
-        _world = new Generator(GraphicsDevice, _tilePalettePath, _worldDataPath);
-
-        SetupFileWatcher();
+        _world = new Generator(GraphicsDevice, _tilePalettePath, "World/World.json");
     }
 
-    private void SetupFileWatcher()
+    private void OnFileReloaded(string filePath)
     {
-        string playerDirectory = Path.GetDirectoryName(_playerDataPath) ?? string.Empty;
-        if (!string.IsNullOrEmpty(playerDirectory) && Directory.Exists(playerDirectory))
+        if (filePath.EndsWith("World.json", StringComparison.OrdinalIgnoreCase))
         {
-            _playerFileWatcher = new FileSystemWatcher(playerDirectory, "Player.json");
-            _playerFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            _playerFileWatcher.Changed += (s, e) => _needsReload = true;
-            _playerFileWatcher.EnableRaisingEvents = true;
-        }
-
-        string worldDirectory = Path.GetDirectoryName(_worldDataPath) ?? string.Empty;
-        if (!string.IsNullOrEmpty(worldDirectory) && Directory.Exists(worldDirectory))
-        {
-            _worldFileWatcher = new FileSystemWatcher(worldDirectory, "World.json");
-            _worldFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            _worldFileWatcher.Changed += (s, e) => _needsWorldReload = true;
-            _worldFileWatcher.EnableRaisingEvents = true;
-        }
-
-        string optionsDirectory = Path.GetDirectoryName(_optionsDataPath) ?? string.Empty;
-        if (!string.IsNullOrEmpty(optionsDirectory) && Directory.Exists(optionsDirectory))
-        {
-            _optionsFileWatcher = new FileSystemWatcher(optionsDirectory, "Options.json");
-            _optionsFileWatcher.NotifyFilter = NotifyFilters.LastWrite;
-            _optionsFileWatcher.Changed += (s, e) => _needsOptionsReload = true;
-            _optionsFileWatcher.EnableRaisingEvents = true;
+            _needsWorldReload = true;
         }
     }
 
@@ -167,25 +135,16 @@ public class GameRoot : Game
             return;
         }
 
-        if (_needsReload)
-        {
-            _needsReload = false;
-            Runtime.Load(_playerDataPath);
-        }
+        Runtime.Update();
 
         if (_needsWorldReload)
         {
             _needsWorldReload = false;
-            _world = Generator.Reload(GraphicsDevice, _tilePalettePath, _worldDataPath);
+            _world = Generator.Reload(GraphicsDevice, _tilePalettePath, "World/World.json");
         }
 
-        if (_needsOptionsReload)
-        {
-            _needsOptionsReload = false;
-            Runtime.Load(_optionsDataPath);
-            _debugMode = Runtime.GetBool("DebugMode");
-            UpdateWindowTitle();
-        }
+        _debugMode = Runtime.GetBool("Core/Options.json", "DebugMode");
+        UpdateWindowTitle();
 
         MouseState mouse = Mouse.GetState();
         float cursorX = (mouse.X - _offsetX) / (float)_scale;
@@ -214,6 +173,7 @@ public class GameRoot : Game
         if (keyboard.IsKeyDown(Keys.F1) && _prevKeyboardState.IsKeyUp(Keys.F1))
         {
             _debugMode = !_debugMode;
+            Runtime.Set("Core/Options.json", "DebugMode", _debugMode);
             UpdateWindowTitle();
         }
         _prevKeyboardState = keyboard;
@@ -262,13 +222,5 @@ public class GameRoot : Game
         _spriteBatch.End();
 
         base.Draw(gameTime);
-    }
-
-    protected override void UnloadContent()
-    {
-        _playerFileWatcher?.Dispose();
-        _worldFileWatcher?.Dispose();
-        _optionsFileWatcher?.Dispose();
-        base.UnloadContent();
     }
 }

@@ -1,10 +1,9 @@
+.clinerules/
 .config/
 .editorconfig
+.specify/
 .vscode/
-/Foragers-Project/.specify
 /Workspace/
 bin/
-dotnet-tools.json
-Foragers-Project/.clinerules/
-Foragers-Project/AGENTS.md
+dotnet-tools.json/
 obj/

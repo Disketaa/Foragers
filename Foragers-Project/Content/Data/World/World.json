@@ -1,6 +1,6 @@
 {
     "tileSize": 8,
-    "worldTiles": 15,
+    "worldTiles": 20,
     "seed": -1,
     "threshold": 0.45,
     "octaves": 4,

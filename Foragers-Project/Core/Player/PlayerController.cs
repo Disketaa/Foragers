@@ -11,9 +11,12 @@ public sealed class PlayerController
     private Vector2 _position;
     private bool _facingLeft;
 
-    private static float GamepadDeadzone => Runtime.Get("GamepadDeadzone", 0.2f);
-    private static float MouseStopRadius => Runtime.Get("MouseStopRadius", 4f);
-    private static float MouseFullSpeedRadius => Runtime.Get("MouseFullSpeedRadius", 64f);
+    private static float GamepadDeadzone =>
+        Runtime.GetFloat("Core/Options.json", "GamepadDeadzone", 0.2f);
+    private static float MouseStopRadius =>
+        Runtime.GetFloat("Core/Options.json", "MouseStopRadius", 4f);
+    private static float MouseFullSpeedRadius =>
+        Runtime.GetFloat("Core/Options.json", "MouseFullSpeedRadius", 64f);
     private const float MinSpeedFactor = 0.05f;
 
     public PlayerController(GraphicsDevice graphicsDevice, string animPath, Vector2 startPosition)
@@ -99,7 +102,7 @@ public sealed class PlayerController
 
     private void Move(GameTime gameTime, Vector2 direction, float speedFactor)
     {
-        float speed = Runtime.Get("speed", 1f);
+        float speed = Runtime.GetFloat("Entity/Player.json", "speed", 1f);
 
         if (direction != Vector2.Zero && speedFactor > 0f)
         {

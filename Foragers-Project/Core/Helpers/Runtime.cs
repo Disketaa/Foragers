@@ -1,63 +1,60 @@
-using System.Text.Json;
-
 namespace Foragers_Project.Core.Helpers;
 
 public static class Runtime
 {
-    private static Dictionary<string, object>? _data;
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    public static event Action<string>? FileReloaded
     {
-        PropertyNameCaseInsensitive = true,
-        WriteIndented = true,
-    };
-
-    public static void Load(string jsonPath)
-    {
-        if (!File.Exists(jsonPath))
-        {
-            return;
-        }
-
-        try
-        {
-            string json = File.ReadAllText(jsonPath);
-            _data = JsonSerializer.Deserialize<Dictionary<string, object>>(json, JsonOptions);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(
-                $"[Runtime] Failed to load {jsonPath}: {ex.Message}"
-            );
-        }
+        add => JsonManager.FileReloaded += value;
+        remove => JsonManager.FileReloaded -= value;
     }
 
-    public static T Get<T>(string key, T defaultValue = default!)
+    public static void RegisterJson(string relativePath)
     {
-        if (_data != null && _data.TryGetValue(key, out object? value))
-        {
-            try
-            {
-                if (value is JsonElement element)
-                {
-                    return element.Deserialize<T>(JsonOptions) ?? defaultValue;
-                }
-
-                if (value is T typed)
-                {
-                    return typed;
-                }
-            }
-            catch
-            {
-                return defaultValue;
-            }
-        }
-        return defaultValue;
+        JsonManager.Register(relativePath);
     }
 
-    public static bool GetBool(string key, bool defaultValue = false)
+    public static void RegisterJsonByPath(string fullPath)
     {
-        return Get<bool>(key, defaultValue);
+        JsonManager.RegisterByPath(fullPath);
+    }
+
+    public static void Update()
+    {
+        JsonManager.Update();
+    }
+
+    public static T Get<T>(string relativePath, string key, T defaultValue = default!)
+    {
+        return JsonManager.Get<T>(relativePath, key, defaultValue);
+    }
+
+    public static bool GetBool(string relativePath, string key, bool defaultValue = false)
+    {
+        return JsonManager.GetBool(relativePath, key, defaultValue);
+    }
+
+    public static float GetFloat(string relativePath, string key, float defaultValue = 0f)
+    {
+        return JsonManager.GetFloat(relativePath, key, defaultValue);
+    }
+
+    public static int GetInt(string relativePath, string key, int defaultValue = 0)
+    {
+        return JsonManager.GetInt(relativePath, key, defaultValue);
+    }
+
+    public static string GetString(string relativePath, string key, string defaultValue = "")
+    {
+        return JsonManager.GetString(relativePath, key, defaultValue);
+    }
+
+    public static void Set(string relativePath, string key, object value)
+    {
+        JsonManager.Set(relativePath, key, value);
+    }
+
+    public static Dictionary<string, object>? GetData(string relativePath)
+    {
+        return JsonManager.GetData(relativePath);
     }
 }

@@ -13,6 +13,7 @@ public sealed class Generator
     private readonly float _threshold;
     private readonly int _tileSize;
     private readonly int _worldTiles;
+    private readonly string _dataPath;
 
     public static int WorldWidth => Instance._worldTiles * Instance._tileSize;
     public static int WorldHeight => Instance._worldTiles * Instance._tileSize;
@@ -36,12 +37,11 @@ public sealed class Generator
 
     public Generator(GraphicsDevice graphicsDevice, string palettePath, string dataPath)
     {
-        Runtime.Load(dataPath);
-
-        _tileSize = Runtime.Get("tileSize", 8);
-        _worldTiles = Runtime.Get("worldTiles", 20);
-        _seed = Runtime.Get("seed", 0);
-        _threshold = Runtime.Get("threshold", 0.5f);
+        _dataPath = dataPath;
+        _tileSize = Runtime.GetInt(dataPath, "tileSize", 8);
+        _worldTiles = Runtime.GetInt(dataPath, "worldTiles", 20);
+        _seed = Runtime.GetInt(dataPath, "seed", 0);
+        _threshold = Runtime.GetFloat(dataPath, "threshold", 0.5f);
 
         if (_seed == -1)
         {
@@ -58,10 +58,10 @@ public sealed class Generator
 
     private void Generate()
     {
-        int octaves = Runtime.Get("octaves", 4);
-        float persistence = Runtime.Get("persistence", 0.5f);
-        float lacunarity = Runtime.Get("lacunarity", 2.0f);
-        float scale = Runtime.Get("scale", 0.1f);
+        int octaves = Runtime.GetInt(_dataPath, "octaves", 4);
+        float persistence = Runtime.GetFloat(_dataPath, "persistence", 0.5f);
+        float lacunarity = Runtime.GetFloat(_dataPath, "lacunarity", 2.0f);
+        float scale = Runtime.GetFloat(_dataPath, "scale", 0.1f);
 
         float maxAmplitude = 0f;
         float amplitude = 1f;
