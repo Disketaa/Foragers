@@ -71,6 +71,8 @@ public class GameRoot : Game
         );
         _cursor = Texture2D.FromFile(GraphicsDevice, cursorPath);
 
+        CollisionHelper.Initialize(GraphicsDevice);
+
         Runtime.RegisterJson("Core/Options.json");
         Runtime.RegisterJson("Entity/Player.json");
         Runtime.RegisterJson("World/World.json");
@@ -200,7 +202,7 @@ public class GameRoot : Game
             )
         );
 
-        _player.Draw(_spriteBatch);
+        _player.Draw(_spriteBatch, _debugMode);
 
         _spriteBatch.End();
 

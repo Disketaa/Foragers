@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using Foragers_Project.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -22,6 +23,7 @@ public sealed class SpriteSheet
     public int FrameHeight => _data.FrameHeight;
     public float PivotX => _data.PivotX;
     public float PivotY => _data.PivotY;
+    public CollisionBox? Collision { get; }
 
     public SpriteSheet(GraphicsDevice graphicsDevice, string jsonPath)
     {
@@ -36,6 +38,16 @@ public sealed class SpriteSheet
             ? Path.Combine(directory, _data.Sheet)
             : Path.Combine(baseDirectory, directory, _data.Sheet);
         _texture = Texture2D.FromFile(graphicsDevice, sheetPath);
+
+        if (_data.Collision != null)
+        {
+            Collision = new CollisionBox(
+                _data.Collision.Width,
+                _data.Collision.Height,
+                _data.Collision.OffsetX,
+                _data.Collision.OffsetY
+            );
+        }
 
         _animations = [];
         _definitions = [];

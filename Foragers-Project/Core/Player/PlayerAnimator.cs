@@ -38,7 +38,7 @@ public sealed class PlayerAnimator
         _renderer.Update(gameTime);
     }
 
-    public void Draw(SpriteBatch spriteBatch, Vector2 position)
+    public void Draw(SpriteBatch spriteBatch, Vector2 position, bool debugMode = false)
     {
         SpriteEffects effects = _facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
         _renderer.Draw(
@@ -50,6 +50,12 @@ public sealed class PlayerAnimator
             _sheet.PivotX,
             _sheet.PivotY
         );
+
+        if (debugMode && _sheet.Collision != null)
+        {
+            Rectangle bounds = _sheet.Collision.GetBounds(position, _sheet.PivotX, _sheet.PivotY);
+            CollisionHelper.DrawDebug(spriteBatch, bounds);
+        }
     }
 
     private void OnFlip()
