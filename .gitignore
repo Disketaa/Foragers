@@ -1,6 +1,7 @@
 .config/
 .editorconfig
 .vscode/
+/Workspace/
 bin/
 dotnet-tools.json
 Foragers-Project/.clinerules/AI.md
