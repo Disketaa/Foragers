@@ -71,7 +71,7 @@ public class GameRoot : Game
         );
         _cursor = Texture2D.FromFile(GraphicsDevice, cursorPath);
 
-        CollisionHelper.Initialize(GraphicsDevice);
+        Collisions.Initialize(GraphicsDevice);
 
         Runtime.RegisterJson("Core/Options.json");
         Runtime.RegisterJson("Entity/Player.json");

@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Foragers_Project.Core.Helpers;
 
-public static class CollisionHelper
+public static class Collisions
 {
     private static Texture2D? _pixel;
 
@@ -12,7 +12,7 @@ public static class CollisionHelper
         if (_pixel == null)
         {
             _pixel = new Texture2D(graphicsDevice, 1, 1);
-            _pixel.SetData(new[] { Color.White });
+            _pixel.SetData([Color.White]);
         }
     }
 
@@ -41,5 +41,32 @@ public static class CollisionHelper
 
         spriteBatch.Draw(_pixel, new Rectangle(centerX - 2, centerY, 5, 1), debugColor);
         spriteBatch.Draw(_pixel, new Rectangle(centerX, centerY - 2, 1, 5), debugColor);
+    }
+}
+
+public sealed class CollisionBox
+{
+    public int Width { get; }
+    public int Height { get; }
+    public int OffsetX { get; }
+    public int OffsetY { get; }
+
+    public CollisionBox(int width, int height, int offsetX = 0, int offsetY = 0)
+    {
+        Width = width;
+        Height = height;
+        OffsetX = offsetX;
+        OffsetY = offsetY;
+    }
+
+    public Rectangle GetBounds(Vector2 position, float pivotX, float pivotY)
+    {
+        float originX = Width * pivotX;
+        float originY = Height * pivotY;
+
+        int x = (int)(position.X + OffsetX - originX);
+        int y = (int)(position.Y + OffsetY - originY);
+
+        return new Rectangle(x, y, Width, Height);
     }
 }

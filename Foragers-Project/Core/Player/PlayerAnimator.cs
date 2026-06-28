@@ -54,7 +54,7 @@ public sealed class PlayerAnimator
         if (debugMode && _sheet.Collision != null)
         {
             Rectangle bounds = _sheet.Collision.GetBounds(position, _sheet.PivotX, _sheet.PivotY);
-            CollisionHelper.DrawDebug(spriteBatch, bounds);
+            Collisions.DrawDebug(spriteBatch, bounds);
         }
     }
 
