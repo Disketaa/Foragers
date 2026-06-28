@@ -1,3 +1,4 @@
+using System;
 using Foragers_Project.Core.Helpers;
 using Foragers_Project.Core.World;
 using Microsoft.Xna.Framework;
@@ -69,10 +70,14 @@ public class GameRoot : Game
             DepthFormat.None
         );
 
-        _cursor = Texture2D.FromFile(
-            GraphicsDevice,
-            Path.Combine(Content.RootDirectory, "Assets", "UI", "Cursor.png")
+        string cursorPath = Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory,
+            Content.RootDirectory,
+            "Assets",
+            "UI",
+            "Cursor.png"
         );
+        _cursor = Texture2D.FromFile(GraphicsDevice, cursorPath);
 
         _playerDataPath = Path.Combine(Content.RootDirectory, "Data", "Entity", "Player.json");
         Runtime.Load(_playerDataPath);
@@ -92,7 +97,7 @@ public class GameRoot : Game
             Content.RootDirectory,
             "Assets",
             "World",
-            "Tiles-Grass.json"
+            "TilesGrass.json"
         );
 
         _worldDataPath = Path.Combine(Content.RootDirectory, "Data", "World", "World.json");

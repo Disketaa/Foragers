@@ -1,3 +1,4 @@
+using System;
 using Foragers_Project.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -44,10 +45,14 @@ public sealed class TilePalette
         _tileMap = Runtime.Get<int[]>("tileMap", DefaultTileMap);
         _variants = Runtime.Get<Dictionary<int, int[]>>("variants", new Dictionary<int, int[]>());
 
-        _texture = Texture2D.FromFile(
-            graphicsDevice,
-            Path.Combine("Content", "Assets", "World", sheetPath)
+        string fullPath = Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory,
+            "Content",
+            "Assets",
+            "World",
+            sheetPath
         );
+        _texture = Texture2D.FromFile(graphicsDevice, fullPath);
     }
 
     public int ResolveTileIndex(bool top, bool right, bool bottom, bool left)

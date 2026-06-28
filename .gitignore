@@ -1,8 +1,10 @@
 .config/
 .editorconfig
 .vscode/
+/Foragers-Project/.specify
 /Workspace/
 bin/
 dotnet-tools.json
-Foragers-Project/.clinerules/AI.md
+Foragers-Project/.clinerules/
+Foragers-Project/AGENTS.md
 obj/

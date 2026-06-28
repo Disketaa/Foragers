@@ -2,7 +2,7 @@
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Foragers-Project", "Foragers-Project.csproj", "{84859CEA-8C82-4F43-BDE6-84543116C640}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForagersProject", "ForagersProject.csproj", "{84859CEA-8C82-4F43-BDE6-84543116C640}"
 EndProject
 Global
 GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -29,8 +30,11 @@ public sealed class SpriteSheet
             JsonSerializer.Deserialize<AnimationData>(json, JsonOptions)
             ?? throw new InvalidOperationException("Failed to parse animation file.");
 
-        string directory = Path.GetDirectoryName(jsonPath) ?? "Content";
-        string sheetPath = Path.Combine(directory, _data.Sheet);
+        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        string directory = Path.GetDirectoryName(jsonPath) ?? baseDirectory;
+        string sheetPath = Path.IsPathRooted(directory)
+            ? Path.Combine(directory, _data.Sheet)
+            : Path.Combine(baseDirectory, directory, _data.Sheet);
         _texture = Texture2D.FromFile(graphicsDevice, sheetPath);
 
         _animations = [];

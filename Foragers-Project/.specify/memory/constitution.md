@@ -20,7 +20,7 @@ All code MUST conform to the project `.editorconfig` and analyzer rules. `TreatW
 **Rationale**: The project enforces a strict, opinionated style. Violations break the build, so compliance is binary — either the code conforms or it does not compile.
 
 ### II. One Class Per File, File-Scoped Namespaces
-Every file contains exactly one top-level type. Namespaces use file-scoped syntax (`namespace Foragers_Project.Core;`). Private fields use `_camelCase`; public members use `PascalCase`. File names use kebab-case (e.g., `Game-Root.cs`).
+Every file contains exactly one top-level type. Namespaces use file-scoped syntax (`namespace Foragers_Project.Core;`). Private fields use `_camelCase`; public members use `PascalCase`. File names use PascalCase (e.g., `GameRoot.cs`).
 
 **Rationale**: Predictable structure makes navigation trivial and enforces single-responsibility at the file level.
 
