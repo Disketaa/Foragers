@@ -30,9 +30,9 @@ Prefer composition and small focused classes. Minimal changes to existing code. 
 **Rationale**: Inheritance hierarchies in game code tend to become rigid and hard to refactor. Composition keeps systems decoupled and testable.
 
 ### IV. Data-Driven Configuration
-Use JSON files for configuration and entity data. Use the `Runtime` helper for loading and accessing JSON data. Hot-reload via `FileSystemWatcher` is preferred for data files that change during development.
+Use JSON files for configuration and entity data. Register files via `Runtime.RegisterJson()` and access values with typed getters (`GetFloat`, `GetInt`, `GetBool`, `GetString`). Hot-reload is automatic — source files are watched and changes propagate on the next frame. Use `Runtime.Set()` to write values back to disk. Subscribe to `Runtime.FileReloaded` to react to data changes (e.g., regenerate world).
 
-**Rationale**: Designers and tools can tweak values without recompiling. Centralizing data access through `Runtime` ensures a single, consistent loading path.
+**Rationale**: Designers and tools can tweak values without recompiling. Centralizing data access through `Runtime` ensures a single, consistent loading path with automatic hot-reload and fallback on file deletion.
 
 ### V. MonoGame Rendering Standards
 Base resolution is 640×360. Pixel perfect rendering with `SamplerState.PointClamp`. Render to a `RenderTarget2D` at base resolution, then scale to the window.
@@ -59,7 +59,7 @@ Read related files first. After changes, run `dotnet build`. If it fails, fix th
 
 ## Development Workflow
 
-1. Load or create the relevant JSON data via `Runtime.Load`.
+1. Register the relevant JSON data via `Runtime.RegisterJson`.
 2. Read existing code in the target area before editing.
 3. Make minimal, focused changes — one class per file.
 4. Run `dotnet build` and fix all errors/warnings.
