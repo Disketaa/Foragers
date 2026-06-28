@@ -1,11 +1,12 @@
 using System;
-using Foragers_Project.Core.Helpers;
-using Foragers_Project.Core.World;
+using Foragers.Core.Helpers;
+using Foragers.Core.Player;
+using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Foragers_Project.Core;
+namespace Foragers.Core;
 
 public class GameRoot : Game
 {

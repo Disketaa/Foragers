@@ -1,9 +1,9 @@
 using System;
-using Foragers_Project.Core.Helpers;
+using Foragers.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Foragers_Project.Core.World;
+namespace Foragers.Core.World;
 
 public sealed class TilePalette
 {

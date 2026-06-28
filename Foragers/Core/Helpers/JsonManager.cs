@@ -2,7 +2,7 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 
-namespace Foragers_Project.Core.Helpers;
+namespace Foragers.Core.Helpers;
 
 public static class JsonManager
 {

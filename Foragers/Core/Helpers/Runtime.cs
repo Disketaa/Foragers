@@ -1,4 +1,4 @@
-namespace Foragers_Project.Core.Helpers;
+namespace Foragers.Core.Helpers;
 
 public static class Runtime
 {

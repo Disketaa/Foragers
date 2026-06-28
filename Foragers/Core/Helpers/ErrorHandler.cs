@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Foragers_Project.Core.Helpers;
+namespace Foragers.Core.Helpers;
 
 public static class ErrorHandler
 {

@@ -1,7 +1,7 @@
-using Foragers_Project.Core.World;
+using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 
-namespace Foragers_Project.Core.Helpers;
+namespace Foragers.Core.Helpers;
 
 public static class TileMap
 {

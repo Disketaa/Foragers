@@ -1,5 +1,5 @@
-using Foragers_Project.Core;
-using Foragers_Project.Core.Helpers;
+using Foragers.Core;
+using Foragers.Core.Helpers;
 
 try
 {

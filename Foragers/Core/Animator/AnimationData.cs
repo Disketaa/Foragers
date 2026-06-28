@@ -1,4 +1,4 @@
-namespace Foragers_Project.Core;
+namespace Foragers.Core.Animator;
 
 public sealed class AnimationDef
 {

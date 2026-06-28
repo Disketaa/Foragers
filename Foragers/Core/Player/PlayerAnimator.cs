@@ -1,9 +1,10 @@
-using Foragers_Project.Core.Helpers;
+using Foragers.Core.Animator;
+using Foragers.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using static Foragers_Project.Core.Helpers.Tweens;
+using static Foragers.Core.Helpers.Tweens;
 
-namespace Foragers_Project.Core;
+namespace Foragers.Core.Player;
 
 public sealed class PlayerAnimator
 {

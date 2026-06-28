@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace Foragers_Project.Core;
+namespace Foragers.Core.Animator;
 
 public sealed class AnimationPlayer
 {

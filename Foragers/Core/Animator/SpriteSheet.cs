@@ -1,10 +1,10 @@
 using System;
 using System.Text.Json;
-using Foragers_Project.Core.Helpers;
+using Foragers.Core.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Foragers_Project.Core;
+namespace Foragers.Core.Animator;
 
 public sealed class SpriteSheet
 {

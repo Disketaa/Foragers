@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Foragers_Project.Core.Helpers;
+namespace Foragers.Core.Helpers;
 
 public static class Collisions
 {

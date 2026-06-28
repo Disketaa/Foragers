@@ -1,9 +1,10 @@
-using Foragers_Project.Core.Helpers;
+using Foragers.Core.Helpers;
+using Foragers.Core.Player;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Foragers_Project.Core;
+namespace Foragers.Core.Player;
 
 public sealed class PlayerController : ICollidable
 {
