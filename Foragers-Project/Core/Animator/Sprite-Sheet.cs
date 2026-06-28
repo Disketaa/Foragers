@@ -39,7 +39,7 @@ public sealed class SpriteSheet
         for (int row = 0; row < _data.Animations.Count; row++)
         {
             AnimationDef def = _data.Animations[row];
-            Rectangle[] frames = new Rectangle[def.Frames];
+            var frames = new Rectangle[def.Frames];
 
             for (int i = 0; i < def.Frames; i++)
             {

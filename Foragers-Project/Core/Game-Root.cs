@@ -185,7 +185,7 @@ public class GameRoot : Game
         MouseState mouse = Mouse.GetState();
         float cursorX = (mouse.X - _offsetX) / (float)_scale;
         float cursorY = (mouse.Y - _offsetY) / (float)_scale;
-        Vector2 cursorPos = new Vector2(cursorX, cursorY);
+        var cursorPos = new Vector2(cursorX, cursorY);
 
         GamePadState gamePad = GamePad.GetState(0);
 

@@ -23,7 +23,7 @@ public sealed class SpriteRenderer
     {
         for (int i = _tweens.Count - 1; i >= 0; i--)
         {
-            var tween = _tweens[i];
+            SpriteTween tween = _tweens[i];
             tween.Update(gameTime);
             _tweens[i] = tween;
 
@@ -47,7 +47,7 @@ public sealed class SpriteRenderer
         float offsetX = 0f;
         float offsetY = 0f;
 
-        foreach (var tween in _tweens)
+        foreach (SpriteTween tween in _tweens)
         {
             float value = tween.GetValue();
             switch (tween.Target)
@@ -67,7 +67,7 @@ public sealed class SpriteRenderer
             }
         }
 
-        Vector2 origin = new Vector2(sourceRect.Width * pivotX, sourceRect.Height * pivotY);
+        var origin = new Vector2(sourceRect.Width * pivotX, sourceRect.Height * pivotY);
         Vector2 drawPosition = position + new Vector2(offsetX, offsetY);
 
         spriteBatch.Draw(

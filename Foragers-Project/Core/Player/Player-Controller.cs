@@ -66,7 +66,7 @@ public sealed class PlayerController
             1f
         );
 
-        Vector2 direction = new Vector2(stick.X, -stick.Y);
+        var direction = new Vector2(stick.X, -stick.Y);
         direction.Normalize();
 
         Move(gameTime, direction, speedFactor);
