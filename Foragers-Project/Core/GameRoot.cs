@@ -26,6 +26,7 @@ public class GameRoot : Game
     private bool _needsWorldReload;
     private KeyboardState _prevKeyboardState;
     private string _tilePalettePath = string.Empty;
+    private string _characterPath = string.Empty;
 
     public GameRoot()
     {
@@ -82,11 +83,10 @@ public class GameRoot : Game
         _debugMode = Runtime.GetBool("Core/Options.json", "DebugMode");
         UpdateWindowTitle();
 
-        _player = new PlayerController(
-            GraphicsDevice,
-            Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.json"),
-            new Vector2(320, 180)
-        );
+        _characterPath = Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.json");
+        Runtime.RegisterJsonByPath(_characterPath);
+
+        _player = new PlayerController(GraphicsDevice, _characterPath, new Vector2(320, 180));
 
         _tilePalettePath = Path.Combine(
             Content.RootDirectory,

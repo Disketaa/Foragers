@@ -13,32 +13,60 @@ public sealed class SpriteSheet
         PropertyNameCaseInsensitive = true,
     };
 
-    private readonly Dictionary<string, Rectangle[]> _animations;
-    private readonly Dictionary<string, AnimationDef> _definitions;
-    private readonly AnimationData _data;
-    private readonly Texture2D _texture;
+    private readonly GraphicsDevice _graphicsDevice;
+    private readonly string _jsonPath;
+    private readonly string _fullPath;
+
+    private Dictionary<string, Rectangle[]> _animations = null!;
+    private Dictionary<string, AnimationDef> _definitions = null!;
+    private AnimationData _data = null!;
+    private Texture2D _texture = null!;
 
     public Texture2D Texture => _texture;
     public int FrameWidth => _data.FrameWidth;
     public int FrameHeight => _data.FrameHeight;
     public float PivotX => _data.PivotX;
     public float PivotY => _data.PivotY;
-    public CollisionBox? Collision { get; }
+    public CollisionBox? Collision { get; private set; }
 
     public SpriteSheet(GraphicsDevice graphicsDevice, string jsonPath)
     {
-        string json = File.ReadAllText(jsonPath);
+        _graphicsDevice = graphicsDevice;
+        _jsonPath = jsonPath;
+        _fullPath = Path.GetFullPath(jsonPath);
+
+        Load();
+
+        Runtime.FileReloaded += OnFileReloaded;
+    }
+
+    private void OnFileReloaded(string filePath)
+    {
+        if (
+            string.Equals(Path.GetFullPath(filePath), _fullPath, StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            Load();
+        }
+    }
+
+    private void Load()
+    {
+        string json = File.ReadAllText(_jsonPath);
         _data =
             JsonSerializer.Deserialize<AnimationData>(json, JsonOptions)
             ?? throw new InvalidOperationException("Failed to parse animation file.");
 
         string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        string directory = Path.GetDirectoryName(jsonPath) ?? baseDirectory;
+        string directory = Path.GetDirectoryName(_jsonPath) ?? baseDirectory;
         string sheetPath = Path.IsPathRooted(directory)
             ? Path.Combine(directory, _data.Sheet)
             : Path.Combine(baseDirectory, directory, _data.Sheet);
-        _texture = Texture2D.FromFile(graphicsDevice, sheetPath);
 
+        _texture?.Dispose();
+        _texture = Texture2D.FromFile(_graphicsDevice, sheetPath);
+
+        Collision = null;
         if (_data.Collision != null)
         {
             Collision = new CollisionBox(
