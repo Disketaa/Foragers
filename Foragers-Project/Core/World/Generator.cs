@@ -136,13 +136,6 @@ public sealed class Generator
 
     private static int FloorInt(float x) => x >= 0 ? (int)x : (int)x - 1;
 
-    public float GetTile(int x, int y)
-    {
-        if (x < 0 || x >= _worldTiles || y < 0 || y >= _worldTiles)
-            return 0f;
-        return _map[y * _worldTiles + x];
-    }
-
     private bool IsFilledLocal(int x, int y)
     {
         if (x < 0 || x >= _worldTiles || y < 0 || y >= _worldTiles)

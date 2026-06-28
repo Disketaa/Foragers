@@ -18,7 +18,6 @@ public sealed class PlayerController : ICollidable
     private static float MouseFullSpeedRadius =>
         Runtime.GetFloat("Core/Options.json", "MouseFullSpeedRadius", 64f);
     private const float MinSpeedFactor = 0.05f;
-    private const int NeighborRadius = 1;
 
     public bool NeedsTileCollision => true;
     public Vector2 Position => _position;
@@ -107,11 +106,11 @@ public sealed class PlayerController : ICollidable
 
     private void Move(GameTime gameTime, Vector2 direction, float speedFactor)
     {
-        float baseSpeed = Runtime.GetFloat("Entity/Player.json", "running_speed", 1f);
-        float swimmingSpeed = Runtime.GetFloat("Entity/Player.json", "swimming_speed", 0.5f);
+        float runningSpeed = Runtime.GetFloat("Entity/Player.json", "running_speed", 1f);
+        float swimmingSpeedMult = Runtime.GetFloat("Entity/Player.json", "swimming_speed", 0.5f);
         bool isSwimming = !IsOnTile();
-        float speedMultiplier = isSwimming ? swimmingSpeed : 1f;
-        float speed = baseSpeed * speedMultiplier;
+        float speedMult = isSwimming ? swimmingSpeedMult : 1f;
+        float speed = runningSpeed * speedMult;
 
         if (direction != Vector2.Zero && speedFactor > 0f)
         {
@@ -120,17 +119,26 @@ public sealed class PlayerController : ICollidable
                 direction.X < 0f ? true
                 : direction.X > 0f ? false
                 : _facingLeft;
-            _animator.Update(gameTime, speedFactor, _facingLeft, isSwimming);
         }
-        else
-        {
-            _animator.Update(gameTime, 0f, _facingLeft, isSwimming);
-        }
+
+        float animSpeed = isSwimming
+            ? speedFactor * swimmingSpeedMult
+            : (speedFactor > 0f ? speedFactor : 0f);
+
+        _animator.Update(gameTime, animSpeed, _facingLeft, isSwimming);
     }
 
     private bool IsOnTile()
     {
-        return TileMap.IntersectsNeighborTiles(_position, NeighborRadius);
+        if (_animator.Collision == null)
+            return false;
+
+        Rectangle bounds = _animator.Collision.GetBounds(
+            _position,
+            _animator.PivotX,
+            _animator.PivotY
+        );
+        return TileMap.IntersectsTile(bounds);
     }
 
     public void Draw(SpriteBatch spriteBatch, bool debugMode = false)

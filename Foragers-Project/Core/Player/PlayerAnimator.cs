@@ -25,7 +25,7 @@ public sealed class PlayerAnimator
         _renderer = new SpriteRenderer();
     }
 
-    public void Update(GameTime gameTime, float speed, bool facingLeft, bool isSwimming)
+    public void Update(GameTime gameTime, float animSpeed, bool facingLeft, bool isSwimming)
     {
         if (facingLeft != _facingLeft)
         {
@@ -39,13 +39,16 @@ public sealed class PlayerAnimator
             OnSwimStateChange();
         }
 
-        string targetAnim = isSwimming ? "Swim" : (speed > 0 ? "Run" : "Idle");
+        string targetAnim = isSwimming ? "Swim" : (animSpeed > 0f ? "Run" : "Idle");
 
         if (_animPlayer.Current != targetAnim)
             _animPlayer.Play(targetAnim);
 
-        float animSpeed = targetAnim == "Run" || targetAnim == "Swim" ? speed : 1f;
-        _animPlayer.Update(gameTime, animSpeed);
+        float playbackSpeed = isSwimming
+            ? Math.Max(animSpeed, 0.3f)
+            : (targetAnim == "Run" ? animSpeed : 1f);
+
+        _animPlayer.Update(gameTime, playbackSpeed);
         _renderer.Update(gameTime);
     }
 
@@ -96,18 +99,18 @@ public sealed class PlayerAnimator
         _renderer.TriggerTween(
             new SpriteTween(
                 SpriteTarget.ScaleX,
-                from: 0.75f,
+                from: 1.25f,
                 to: 1.0f,
-                duration: 0.2f,
+                duration: 0.7f,
                 curve: Tweens.BackOut
             )
         );
         _renderer.TriggerTween(
             new SpriteTween(
                 SpriteTarget.ScaleY,
-                from: 1.5f,
+                from: 0.5f,
                 to: 1.0f,
-                duration: 0.4f,
+                duration: 0.9f,
                 curve: Tweens.BackOut
             )
         );

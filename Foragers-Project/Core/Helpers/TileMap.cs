@@ -8,21 +8,10 @@ public static class TileMap
     private static Vector2 _worldOffset;
 
     public static bool IsInitialized => Generator.IsInitialized;
-    public static Vector2 WorldOffset => _worldOffset;
 
     public static void SetWorldOffset(Vector2 offset)
     {
         _worldOffset = offset;
-    }
-
-    public static bool IsFilled(int tileX, int tileY) => Generator.IsFilled(tileX, tileY);
-
-    public static bool IsFilledWorldPosition(Vector2 worldPos)
-    {
-        int tileSize = Generator.TilePixelSize;
-        int tileX = (int)((worldPos.X - _worldOffset.X) / tileSize);
-        int tileY = (int)((worldPos.Y - _worldOffset.Y) / tileSize);
-        return Generator.IsFilled(tileX, tileY);
     }
 
     public static bool IntersectsTile(Rectangle bounds)
@@ -42,27 +31,6 @@ public static class TileMap
             for (int x = leftTile; x <= rightTile; x++)
             {
                 if (Generator.IsFilled(x, y))
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static bool IntersectsNeighborTiles(Vector2 worldPos, int radiusInTiles = 1)
-    {
-        if (!IsInitialized)
-            return false;
-
-        int tileSize = Generator.TilePixelSize;
-        int centerX = (int)((worldPos.X - _worldOffset.X) / tileSize);
-        int centerY = (int)((worldPos.Y - _worldOffset.Y) / tileSize);
-
-        for (int dy = -radiusInTiles; dy <= radiusInTiles; dy++)
-        {
-            for (int dx = -radiusInTiles; dx <= radiusInTiles; dx++)
-            {
-                if (Generator.IsFilled(centerX + dx, centerY + dy))
                     return true;
             }
         }
