@@ -13,6 +13,7 @@ public sealed class PlayerAnimator
     private readonly SpriteRenderer _renderer;
     private bool _facingLeft;
     private bool _wasSwimming;
+    private RenderTarget2D? _reflectionTarget;
 
     public CollisionBox? Collision => _sheet.Collision;
     public float PivotX => _sheet.PivotX;
@@ -71,6 +72,91 @@ public sealed class PlayerAnimator
             Rectangle bounds = _sheet.Collision.GetBounds(position, _sheet.PivotX, _sheet.PivotY);
             Collisions.DrawDebug(spriteBatch, bounds);
         }
+    }
+
+    public void DrawWithReflection(
+        SpriteBatch spriteBatch,
+        Vector2 position,
+        bool debugMode = false
+    )
+    {
+        bool shadersEnabled = Runtime.GetBool("Core/Options.json", "Shaders", false);
+        bool waterReflectionEnabled = Runtime.GetBool(
+            "Core/Options.json",
+            "WaterReflectionShader",
+            false
+        );
+
+        Texture2D? reflectionTexture = null;
+
+        if (shadersEnabled && waterReflectionEnabled && ShaderManager.WaterReflectionEffect != null)
+        {
+            GraphicsDevice device = spriteBatch.GraphicsDevice;
+
+            if (_reflectionTarget == null)
+            {
+                _reflectionTarget = new RenderTarget2D(
+                    device,
+                    _sheet.FrameWidth,
+                    _sheet.FrameHeight
+                );
+            }
+
+            SpriteEffects effects = _facingLeft
+                ? SpriteEffects.FlipHorizontally
+                : SpriteEffects.None;
+
+            device.SetRenderTarget(_reflectionTarget);
+            device.Clear(Color.Transparent);
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Immediate, null, SamplerState.PointClamp);
+            _renderer.Draw(
+                spriteBatch,
+                _sheet.Texture,
+                _animPlayer.SourceRect(),
+                new Vector2(_sheet.FrameWidth / 2f, _sheet.FrameHeight / 2f),
+                effects,
+                _sheet.PivotX,
+                _sheet.PivotY
+            );
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
+
+            device.SetRenderTarget(null);
+
+            reflectionTexture = _reflectionTarget;
+        }
+
+        if (reflectionTexture != null && ShaderManager.WaterReflectionEffect != null)
+        {
+            spriteBatch.End();
+            ShaderManager.WaterReflectionEffect.CurrentTechnique.Passes[0].Apply();
+
+            spriteBatch.Begin(
+                SpriteSortMode.Immediate,
+                null,
+                SamplerState.PointClamp,
+                null,
+                null,
+                ShaderManager.WaterReflectionEffect
+            );
+            spriteBatch.Draw(
+                reflectionTexture,
+                position,
+                null,
+                Color.White,
+                0f,
+                new Vector2(_sheet.FrameWidth * _sheet.PivotX, _sheet.FrameHeight * _sheet.PivotY),
+                1f,
+                SpriteEffects.FlipVertically,
+                0f
+            );
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
+        }
+
+        Draw(spriteBatch, position, debugMode);
     }
 
     private void OnFlip()

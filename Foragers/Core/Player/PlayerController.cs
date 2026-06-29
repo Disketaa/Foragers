@@ -7,10 +7,14 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Foragers.Core.Player;
 
-public sealed class PlayerController : ICollidable
+public sealed class PlayerController(
+    GraphicsDevice graphicsDevice,
+    string animPath,
+    Vector2 startPosition
+) : ICollidable
 {
-    private readonly PlayerAnimator _animator;
-    private Vector2 _position;
+    private readonly PlayerAnimator _animator = new PlayerAnimator(graphicsDevice, animPath);
+    private Vector2 _position = startPosition;
     private bool _facingLeft;
 
     private static float GamepadDeadzone =>
@@ -24,12 +28,6 @@ public sealed class PlayerController : ICollidable
     public bool NeedsTileCollision => true;
     public Vector2 Position => _position;
     public CollisionBox? CollisionBox => _animator.Collision;
-
-    public PlayerController(GraphicsDevice graphicsDevice, string animPath, Vector2 startPosition)
-    {
-        _animator = new PlayerAnimator(graphicsDevice, animPath);
-        _position = startPosition;
-    }
 
     public void UpdateKeyboard(GameTime gameTime)
     {
@@ -116,15 +114,17 @@ public sealed class PlayerController : ICollidable
         if (direction != Vector2.Zero && speedFactor > 0f)
         {
             _position = WorldBorder.Clamp(
-                _position + direction * speed * speedFactor,
+                _position + (direction * speed * speedFactor),
                 _animator.Collision,
                 _animator.PivotX,
                 _animator.PivotY
             );
-            _facingLeft =
-                direction.X < 0f ? true
-                : direction.X > 0f ? false
-                : _facingLeft;
+            _facingLeft = direction.X switch
+            {
+                < 0f => true,
+                > 0f => false,
+                _ => _facingLeft,
+            };
         }
 
         float animSpeed = isSwimming
@@ -149,6 +149,6 @@ public sealed class PlayerController : ICollidable
 
     public void Draw(SpriteBatch spriteBatch, bool debugMode = false)
     {
-        _animator.Draw(spriteBatch, _position, debugMode);
+        _animator.DrawWithReflection(spriteBatch, _position, debugMode);
     }
 }

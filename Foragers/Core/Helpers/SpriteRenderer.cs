@@ -6,12 +6,9 @@ namespace Foragers.Core.Helpers;
 
 public sealed class SpriteRenderer
 {
-    private readonly List<SpriteTween> _tweens;
+    private readonly List<SpriteTween> _tweens = [];
 
-    public SpriteRenderer()
-    {
-        _tweens = new List<SpriteTween>();
-    }
+    public SpriteRenderer() { }
 
     public void TriggerTween(SpriteTween tween)
     {

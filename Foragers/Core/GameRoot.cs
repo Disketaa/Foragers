@@ -52,8 +52,20 @@ public class GameRoot : Game
         UpdateScale();
     }
 
+    private static void Log(string message)
+    {
+        try
+        {
+            File.AppendAllText("debug.log", $"[{DateTime.Now:HH:mm:ss.fff}] {message}\n");
+        }
+        catch { }
+    }
+
     protected override void LoadContent()
     {
+        Log("=== GameRoot.LoadContent START ===");
+        Log($"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}");
+
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _renderTarget = new RenderTarget2D(
             GraphicsDevice,
@@ -74,6 +86,7 @@ public class GameRoot : Game
         _cursor = Texture2D.FromFile(GraphicsDevice, cursorPath);
 
         Collisions.Initialize(GraphicsDevice);
+        ShaderManager.LoadContent(GraphicsDevice);
 
         Runtime.RegisterJson("Core/Options.json");
         Runtime.RegisterJson("Entity/Player.json");
@@ -127,8 +140,8 @@ public class GameRoot : Game
         int scaleY = (screenHeight + BaseHeight - 1) / BaseHeight;
         _scale = Math.Max(1, Math.Max(scaleX, scaleY));
 
-        _offsetX = (screenWidth - BaseWidth * _scale) / 2;
-        _offsetY = (screenHeight - BaseHeight * _scale) / 2;
+        _offsetX = (screenWidth - (BaseWidth * _scale)) / 2;
+        _offsetY = (screenHeight - (BaseHeight * _scale)) / 2;
     }
 
     private void UpdateWindowTitle()
@@ -192,6 +205,8 @@ public class GameRoot : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        Log("=== Draw START ===");
+
         MouseState drawMouse = Mouse.GetState();
         int gameMouseX = (drawMouse.X - _offsetX) / _scale;
         int gameMouseY = (drawMouse.Y - _offsetY) / _scale;
@@ -211,24 +226,59 @@ public class GameRoot : Game
 
         _player.Draw(_spriteBatch, _debugMode);
 
-        _spriteBatch.End();
-
-        _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
         _spriteBatch.Draw(_cursor, new Vector2(gameMouseX, gameMouseY), Color.White);
+
         _spriteBatch.End();
 
         GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.Clear(Color.Black);
 
-        _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
+        bool shadersEnabled = Runtime.GetBool("Core/Options.json", "Shaders", false);
+        bool redScreenEnabled = Runtime.GetBool("Core/Options.json", "RedScreenShader", false);
 
-        _spriteBatch.Draw(
-            _renderTarget,
-            new Rectangle(_offsetX, _offsetY, BaseWidth * _scale, BaseHeight * _scale),
-            Color.White
-        );
+        Log($"shadersEnabled: {shadersEnabled}");
+        Log($"redScreenEnabled: {redScreenEnabled}");
+        Log($"RedScreenEffect != null: {ShaderManager.RedScreenEffect != null}");
 
-        _spriteBatch.End();
+        if (shadersEnabled && redScreenEnabled && ShaderManager.RedScreenEffect != null)
+        {
+            Log("Applying RedScreen shader");
+
+            _spriteBatch.Begin(
+                SpriteSortMode.Immediate,
+                null,
+                SamplerState.PointClamp,
+                null,
+                null,
+                ShaderManager.RedScreenEffect
+            );
+
+            _spriteBatch.Draw(
+                _renderTarget,
+                new Rectangle(_offsetX, _offsetY, BaseWidth * _scale, BaseHeight * _scale),
+                Color.White
+            );
+
+            _spriteBatch.End();
+
+            Log("RedScreen shader applied");
+        }
+        else
+        {
+            Log("Drawing without shader");
+
+            _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
+
+            _spriteBatch.Draw(
+                _renderTarget,
+                new Rectangle(_offsetX, _offsetY, BaseWidth * _scale, BaseHeight * _scale),
+                Color.White
+            );
+
+            _spriteBatch.End();
+        }
+
+        Log("=== Draw END ===");
 
         base.Draw(gameTime);
     }
