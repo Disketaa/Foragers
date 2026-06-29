@@ -15,8 +15,7 @@ public sealed class ReflectionRenderer
         Func<Vector2> originProvider,
         Func<Vector2>? anchorProvider = null,
         Func<Vector2>? scaleProvider = null,
-        Func<Vector2>? offsetProvider = null,
-        bool ignoreCollision = false
+        Func<Vector2>? offsetProvider = null
     )
     {
         _entries.Add(
@@ -28,8 +27,7 @@ public sealed class ReflectionRenderer
                 originProvider,
                 anchorProvider,
                 scaleProvider,
-                offsetProvider,
-                ignoreCollision
+                offsetProvider
             )
         );
     }
@@ -47,6 +45,8 @@ public sealed class ReflectionRenderer
             Vector2 origin = entry.OriginProvider();
             Vector2 scale = entry.ScaleProvider?.Invoke() ?? Vector2.One;
             Vector2 offset = entry.OffsetProvider?.Invoke() ?? Vector2.Zero;
+
+            // The reflection should follow the same visual origin as the main sprite, not the frame edge.
             Vector2 reflectedPosition = new(
                 anchor.X + offset.X,
                 anchor.Y + offset.Y + (sourceRect.Height - origin.Y)
@@ -74,8 +74,7 @@ public sealed class ReflectionRenderer
         Func<Vector2> originProvider,
         Func<Vector2>? anchorProvider,
         Func<Vector2>? scaleProvider,
-        Func<Vector2>? offsetProvider,
-        bool ignoreCollision
+        Func<Vector2>? offsetProvider
     )
     {
         public Texture2D Texture { get; } = texture;
@@ -86,6 +85,5 @@ public sealed class ReflectionRenderer
         public Func<Vector2>? AnchorProvider { get; } = anchorProvider;
         public Func<Vector2>? ScaleProvider { get; } = scaleProvider;
         public Func<Vector2>? OffsetProvider { get; } = offsetProvider;
-        public bool IgnoreCollision { get; } = ignoreCollision;
     }
 }

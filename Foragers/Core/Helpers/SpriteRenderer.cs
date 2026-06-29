@@ -31,6 +31,7 @@ public sealed class SpriteRenderer
 
     public (Vector2 scale, Vector2 offset) GetTransformState()
     {
+        // The reflection pass needs the same tweened transform values as the main sprite pass.
         float scaleX = 1f;
         float scaleY = 1f;
         float offsetX = 0f;

@@ -1,6 +1,4 @@
 using Foragers.Core.Helpers;
-using Foragers.Core.Player;
-using Foragers.Core.Shaders;
 using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -113,7 +111,7 @@ public sealed class PlayerController(
     {
         float runningSpeed = Runtime.GetFloat("Entity/Player.json", "running_speed", 1f);
         float swimmingSpeedMult = Runtime.GetFloat("Entity/Player.json", "swimming_speed", 0.5f);
-        bool isSwimming = !IsOnTile(_position);
+        bool isSwimming = !IsOnTile(_position); // The mirrored sprite is visual-only, so swim state must be derived from the real player position.
         _isSwimming = isSwimming;
         float speed = isSwimming ? swimmingSpeedMult : runningSpeed;
 
@@ -170,8 +168,7 @@ public sealed class PlayerController(
             () => _animator.Origin,
             () => _position,
             () => _animator.Renderer.GetTransformState().scale,
-            () => _animator.Renderer.GetTransformState().offset,
-            ignoreCollision: true
+            () => _animator.Renderer.GetTransformState().offset
         );
     }
 }
