@@ -1,10 +1,13 @@
 sampler2D SpriteTexture : register(s0);
 
+float GradientHeight : register(c0);
+
 float4 PixelShaderFunction(float2 texCoord : TEXCOORD0, float4 color : COLOR0) : COLOR0
 {
 	float4 texColor = tex2D(SpriteTexture, texCoord);
 
-	float alpha = texColor.a * color.a * (1.0 - texCoord.y);
+	float t = texCoord.y * GradientHeight;
+	float alpha = texColor.a * color.a * lerp(0.5, 0.0, t);
 
 	return float4(texColor.rgb, alpha);
 }
