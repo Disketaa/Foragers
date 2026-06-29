@@ -43,8 +43,9 @@ public sealed class ReflectionRenderer
         int tileSize = Generator.TilePixelSize;
         Vector2 worldOffset = TileMap.WorldOffset;
 
-        foreach (ReflectionEntry entry in _entries)
+        for (int i = 0; i < _entries.Count; i++)
         {
+            ReflectionEntry entry = _entries[i];
             Vector2 position = entry.PositionProvider();
             Rectangle sourceRect = entry.SourceRectProvider();
             SpriteEffects effects = entry.EffectsProvider() | SpriteEffects.FlipVertically;
@@ -71,10 +72,12 @@ public sealed class ReflectionRenderer
 
             Rectangle reflectionBounds = new((int)drawX, (int)drawY, drawWidth, drawHeight);
 
-            int leftTile = (int)((reflectionBounds.Left - worldOffset.X) / tileSize);
-            int rightTile = (int)((reflectionBounds.Right - 1 - worldOffset.X) / tileSize);
-            int topTile = (int)((reflectionBounds.Top - worldOffset.Y) / tileSize);
-            int bottomTile = (int)((reflectionBounds.Bottom - 1 - worldOffset.Y) / tileSize);
+            int leftTile = (int)Math.Floor((reflectionBounds.Left - worldOffset.X) / tileSize);
+            int rightTile = (int)
+                Math.Floor((reflectionBounds.Right - 1 - worldOffset.X) / tileSize);
+            int topTile = (int)Math.Floor((reflectionBounds.Top - worldOffset.Y) / tileSize);
+            int bottomTile = (int)
+                Math.Floor((reflectionBounds.Bottom - 1 - worldOffset.Y) / tileSize);
 
             bool fullyCovered = true;
             bool hasAnyTile = false;
