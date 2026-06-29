@@ -1,3 +1,4 @@
+using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -36,6 +37,12 @@ public sealed class ReflectionRenderer
 
     public void Draw(SpriteBatch spriteBatch)
     {
+        if (!TileMap.IsInitialized)
+            return;
+
+        int tileSize = Generator.TilePixelSize;
+        Vector2 worldOffset = TileMap.WorldOffset;
+
         foreach (ReflectionEntry entry in _entries)
         {
             Vector2 position = entry.PositionProvider();
@@ -51,6 +58,49 @@ public sealed class ReflectionRenderer
                 anchor.X + offset.X,
                 anchor.Y + offset.Y + (sourceRect.Height - origin.Y)
             );
+
+            float drawX = reflectedPosition.X - origin.X * scale.X;
+            float drawY = reflectedPosition.Y - origin.Y * scale.Y;
+            int drawWidth = (int)(sourceRect.Width * scale.X);
+            int drawHeight = (int)(sourceRect.Height * scale.Y);
+
+            if ((effects & SpriteEffects.FlipHorizontally) != 0)
+            {
+                drawX = reflectedPosition.X - (sourceRect.Width - origin.X) * scale.X;
+            }
+
+            Rectangle reflectionBounds = new((int)drawX, (int)drawY, drawWidth, drawHeight);
+
+            int leftTile = (int)((reflectionBounds.Left - worldOffset.X) / tileSize);
+            int rightTile = (int)((reflectionBounds.Right - 1 - worldOffset.X) / tileSize);
+            int topTile = (int)((reflectionBounds.Top - worldOffset.Y) / tileSize);
+            int bottomTile = (int)((reflectionBounds.Bottom - 1 - worldOffset.Y) / tileSize);
+
+            bool fullyCovered = true;
+            bool hasAnyTile = false;
+
+            for (int y = topTile; y <= bottomTile; y++)
+            {
+                for (int x = leftTile; x <= rightTile; x++)
+                {
+                    if (Generator.IsFilled(x, y))
+                    {
+                        hasAnyTile = true;
+                    }
+                    else
+                    {
+                        fullyCovered = false;
+                        break;
+                    }
+                }
+                if (!fullyCovered)
+                    break;
+            }
+
+            if (fullyCovered && hasAnyTile)
+            {
+                continue;
+            }
 
             spriteBatch.Draw(
                 entry.Texture,
