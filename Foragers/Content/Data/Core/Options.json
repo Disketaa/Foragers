@@ -4,6 +4,5 @@
 	"MouseFullSpeedRadius": 64.0,
 	"DebugMode": false,
 	"Shaders": true,
-	"WaterReflectionShader": true,
-	"RedScreenShader": true
+	"WaterReflectionShader": true
 }

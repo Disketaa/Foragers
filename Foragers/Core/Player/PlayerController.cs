@@ -149,6 +149,6 @@ public sealed class PlayerController(
 
     public void Draw(SpriteBatch spriteBatch, bool debugMode = false)
     {
-        _animator.DrawWithReflection(spriteBatch, _position, debugMode);
+        _animator.Draw(spriteBatch, _position, debugMode);
     }
 }
