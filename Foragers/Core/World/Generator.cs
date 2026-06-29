@@ -150,6 +150,18 @@ public sealed class Generator
         return Instance._map[(y * Instance._worldTiles) + x] >= Instance._threshold;
     }
 
+    public static int GetTileIndex(int x, int y)
+    {
+        if (x < 0 || x >= Instance._worldTiles || y < 0 || y >= Instance._worldTiles)
+            return -1;
+        return Instance._tileIndices[(y * Instance._worldTiles) + x];
+    }
+
+    public static Rectangle GetTileSourceRect(int tileIndex) =>
+        Instance._palette.GetSourceRect(tileIndex);
+
+    public static Texture2D TileTexture => Instance._palette.Texture;
+
     public void Draw(SpriteBatch spriteBatch, Vector2 position)
     {
         for (int y = 0; y < _worldTiles; y++)

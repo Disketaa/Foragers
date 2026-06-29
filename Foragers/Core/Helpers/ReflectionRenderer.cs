@@ -40,6 +40,56 @@ public sealed class ReflectionRenderer
         if (!TileMap.IsInitialized)
             return;
 
+        DrawTileReflections(spriteBatch);
+        DrawEntries(spriteBatch);
+    }
+
+    private static void DrawTileReflections(SpriteBatch spriteBatch)
+    {
+        int tileSize = Generator.TilePixelSize;
+        int tileCount = Generator.TileCount;
+        Vector2 worldOffset = TileMap.WorldOffset;
+        Texture2D tileTexture = Generator.TileTexture;
+
+        for (int y = 0; y < tileCount; y++)
+        {
+            for (int x = 0; x < tileCount; x++)
+            {
+                if (!Generator.IsFilled(x, y))
+                    continue;
+
+                if (Generator.IsFilled(x, y + 1))
+                    continue;
+
+                int tileIndex = Generator.GetTileIndex(x, y);
+                if (tileIndex < 0)
+                    continue;
+
+                Rectangle sourceRect = Generator.GetTileSourceRect(tileIndex);
+                Vector2 tilePos = new(
+                    worldOffset.X + (x * tileSize),
+                    worldOffset.Y + (y * tileSize)
+                );
+
+                Vector2 reflectedPos = new(tilePos.X, tilePos.Y + tileSize);
+
+                spriteBatch.Draw(
+                    tileTexture,
+                    reflectedPos,
+                    sourceRect,
+                    Color.White * 0.35f,
+                    0f,
+                    Vector2.Zero,
+                    Vector2.One,
+                    SpriteEffects.FlipVertically,
+                    0f
+                );
+            }
+        }
+    }
+
+    private void DrawEntries(SpriteBatch spriteBatch)
+    {
         int tileSize = Generator.TilePixelSize;
         Vector2 worldOffset = TileMap.WorldOffset;
 
