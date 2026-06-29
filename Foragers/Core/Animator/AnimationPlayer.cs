@@ -2,23 +2,17 @@ using Microsoft.Xna.Framework;
 
 namespace Foragers.Core.Animator;
 
-public sealed class AnimationPlayer
+public sealed class AnimationPlayer(SpriteSheet sheet)
 {
-    private readonly SpriteSheet _sheet;
+    private readonly SpriteSheet _sheet = sheet;
     private string _current = string.Empty;
     private int _frame;
     private float _timer;
-    private bool _done;
+    private bool _done = true;
 
     public string Current => _current;
     public int Frame => _frame;
     public bool Done => _done;
-
-    public AnimationPlayer(SpriteSheet sheet)
-    {
-        _sheet = sheet;
-        _done = true;
-    }
 
     public void Play(string name)
     {

@@ -72,12 +72,12 @@ public static class JsonManager
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
 
-        string[] possibleRoots = new[]
-        {
+        List<string> possibleRoots =
+        [
             Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..")),
             Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..")),
             Path.GetFullPath(Path.Combine(baseDir, "..", "..")),
-        };
+        ];
 
         foreach (string root in possibleRoots)
         {
