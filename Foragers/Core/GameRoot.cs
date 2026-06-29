@@ -218,7 +218,25 @@ public class GameRoot : Game
         GraphicsDevice.SetRenderTarget(_reflectionRenderTarget);
         GraphicsDevice.Clear(Color.Transparent);
 
-        _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
+        bool useReflectionShader =
+            ShaderManager.IsLoaded && Runtime.GetBool("Core/Options.json", "WaterReflectionShader");
+
+        if (useReflectionShader)
+        {
+            _spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.NonPremultiplied,
+                SamplerState.PointClamp,
+                null,
+                null,
+                ShaderManager.WaterReflectionEffect
+            );
+        }
+        else
+        {
+            _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
+        }
+
         _reflectionRenderer.Draw(_spriteBatch);
         _spriteBatch.End();
 

@@ -1,3 +1,4 @@
+using Foragers.Core.Shaders;
 using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -77,7 +78,7 @@ public sealed class ReflectionRenderer
                     tileTexture,
                     reflectedPos,
                     sourceRect,
-                    Color.White * 0.35f,
+                    Color.White,
                     0f,
                     Vector2.Zero,
                     Vector2.One,
@@ -159,7 +160,7 @@ public sealed class ReflectionRenderer
                 entry.Texture,
                 reflectedPosition,
                 sourceRect,
-                Color.White * 0.35f,
+                Color.White,
                 0f,
                 origin,
                 scale,
