@@ -7,8 +7,7 @@ sampler2D TextureSampler : register(s0)
 
 float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0
 {
-    float2 reflectedCoord = float2(texCoord.x, 1.0 - texCoord.y);
-    float4 color = tex2D(TextureSampler, reflectedCoord);
+    float4 color = tex2D(TextureSampler, texCoord);
     return color;
 }
 

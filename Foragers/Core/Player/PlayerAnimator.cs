@@ -63,12 +63,9 @@ public sealed class PlayerAnimator
             false
         );
         bool canReflect =
-            shadersEnabled
-            && waterReflectionEnabled
-            && ShaderManager.WaterReflectionEffect != null
-            && _wasSwimming;
+            shadersEnabled && waterReflectionEnabled && ShaderManager.WaterReflectionEffect != null;
 
-        if (canReflect)
+        if (canReflect && _animPlayer.Current != string.Empty)
         {
             DrawReflection(spriteBatch, position);
         }
@@ -110,7 +107,8 @@ public sealed class PlayerAnimator
             effect
         );
 
-        var reflectionPos = new Vector2(position.X, position.Y + _sheet.FrameHeight);
+        float pivotOffsetY = _sheet.FrameHeight * _sheet.PivotY;
+        var reflectionPos = new Vector2(position.X, position.Y + pivotOffsetY * 2f);
 
         _renderer.Draw(
             spriteBatch,
