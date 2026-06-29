@@ -8,6 +8,7 @@ public static class TileMap
     private static Vector2 _worldOffset;
 
     public static bool IsInitialized => Generator.IsInitialized;
+    public static Vector2 WorldOffset => _worldOffset;
 
     public static void SetWorldOffset(Vector2 offset)
     {

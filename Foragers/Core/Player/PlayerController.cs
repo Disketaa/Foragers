@@ -1,5 +1,6 @@
 using Foragers.Core.Helpers;
 using Foragers.Core.Player;
+using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -114,7 +115,12 @@ public sealed class PlayerController : ICollidable
 
         if (direction != Vector2.Zero && speedFactor > 0f)
         {
-            _position += direction * speed * speedFactor;
+            _position = WorldBorder.Clamp(
+                _position + direction * speed * speedFactor,
+                _animator.Collision,
+                _animator.PivotX,
+                _animator.PivotY
+            );
             _facingLeft =
                 direction.X < 0f ? true
                 : direction.X > 0f ? false

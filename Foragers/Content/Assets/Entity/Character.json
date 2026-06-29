@@ -5,8 +5,8 @@
     "frameWidth": 16,
     "frameHeight": 16,
     "collision": {
-        "width": 8,
-        "height": 8,
+        "width": 4,
+        "height": 4,
         "offsetX": 0,
         "offsetY": -1
     },
