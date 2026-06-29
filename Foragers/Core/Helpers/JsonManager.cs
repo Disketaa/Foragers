@@ -6,12 +6,12 @@ namespace Foragers.Core.Helpers;
 
 public static class JsonManager
 {
-    private static readonly Dictionary<string, JsonFileData> _files = new();
-    private static readonly Dictionary<string, string> _outputToSource = new();
-    private static readonly Dictionary<string, string> _sourceToOutput = new();
-    private static readonly List<FileSystemWatcher> _watchers = new();
-    private static readonly HashSet<string> _watchedDirectories = new();
-    private static readonly HashSet<string> _savingPaths = new();
+    private static readonly Dictionary<string, JsonFileData> _files = [];
+    private static readonly Dictionary<string, string> _outputToSource = [];
+    private static readonly Dictionary<string, string> _sourceToOutput = [];
+    private static readonly List<FileSystemWatcher> _watchers = [];
+    private static readonly HashSet<string> _watchedDirectories = [];
+    private static readonly HashSet<string> _savingPaths = [];
 
     private static readonly JsonSerializerOptions _readOptions = new()
     {

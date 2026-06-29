@@ -18,20 +18,20 @@ public static class WorldBorder
         int tiles = Generator.TileCount;
 
         Vector2 offset = TileMap.WorldOffset;
-        float minX = offset.X - _padding * tileSize;
-        float minY = offset.Y - _padding * tileSize;
-        float maxX = offset.X + tiles * tileSize + _padding * tileSize - box.Width;
-        float maxY = offset.Y + tiles * tileSize + _padding * tileSize - box.Height;
+        float minX = offset.X - (_padding * tileSize);
+        float minY = offset.Y - (_padding * tileSize);
+        float maxX = offset.X + (tiles * tileSize) + (_padding * tileSize) - box.Width;
+        float maxY = offset.Y + (tiles * tileSize) + (_padding * tileSize) - box.Height;
 
-        float localX = position.X + box.OffsetX - box.Width * pivotX;
-        float localY = position.Y + box.OffsetY - box.Height * pivotY;
+        float localX = position.X + box.OffsetX - (box.Width * pivotX);
+        float localY = position.Y + box.OffsetY - (box.Height * pivotY);
 
         float clampedX = MathHelper.Clamp(localX, minX, maxX);
         float clampedY = MathHelper.Clamp(localY, minY, maxY);
 
         return new Vector2(
-            clampedX - box.OffsetX + box.Width * pivotX,
-            clampedY - box.OffsetY + box.Height * pivotY
+            clampedX - box.OffsetX + (box.Width * pivotX),
+            clampedY - box.OffsetY + (box.Height * pivotY)
         );
     }
 }

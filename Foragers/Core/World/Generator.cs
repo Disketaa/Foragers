@@ -89,7 +89,7 @@ public sealed class Generator
                     frequency *= lacunarity;
                 }
 
-                _map[y * _worldTiles + x] = noiseValue / maxAmplitude;
+                _map[(y * _worldTiles) + x] = noiseValue / maxAmplitude;
             }
         }
     }
@@ -130,9 +130,9 @@ public sealed class Generator
         return h ^ (h >> 16);
     }
 
-    private static float Fade(float t) => t * t * t * (t * (t * 6f - 15f) + 10f);
+    private static float Fade(float t) => t * t * t * ((t * ((t * 6f) - 15f)) + 10f);
 
-    private static float Lerp(float a, float b, float t) => a + t * (b - a);
+    private static float Lerp(float a, float b, float t) => a + (t * (b - a));
 
     private static int FloorInt(float x) => x >= 0 ? (int)x : (int)x - 1;
 
@@ -140,14 +140,14 @@ public sealed class Generator
     {
         if (x < 0 || x >= _worldTiles || y < 0 || y >= _worldTiles)
             return false;
-        return _map[y * _worldTiles + x] >= _threshold;
+        return _map[(y * _worldTiles) + x] >= _threshold;
     }
 
     public static bool IsFilled(int x, int y)
     {
         if (x < 0 || x >= Instance._worldTiles || y < 0 || y >= Instance._worldTiles)
             return false;
-        return Instance._map[y * Instance._worldTiles + x] >= Instance._threshold;
+        return Instance._map[(y * Instance._worldTiles) + x] >= Instance._threshold;
     }
 
     public void Draw(SpriteBatch spriteBatch, Vector2 position)
@@ -156,11 +156,11 @@ public sealed class Generator
         {
             for (int x = 0; x < _worldTiles; x++)
             {
-                int tileIndex = _tileIndices[y * _worldTiles + x];
+                int tileIndex = _tileIndices[(y * _worldTiles) + x];
                 if (tileIndex < 0)
                     continue;
 
-                Vector2 tilePos = new(position.X + x * _tileSize, position.Y + y * _tileSize);
+                Vector2 tilePos = new(position.X + (x * _tileSize), position.Y + (y * _tileSize));
                 _palette.Draw(spriteBatch, tileIndex, tilePos);
             }
         }
@@ -174,14 +174,17 @@ public sealed class Generator
             {
                 if (!IsFilledLocal(x, y))
                 {
-                    _tileIndices[y * _worldTiles + x] = -1;
+                    _tileIndices[(y * _worldTiles) + x] = -1;
                     continue;
                 }
 
                 int baseIndex = ResolveAutotileIndex(x, y);
                 int variantSeed = Hash(x, y, _seed);
 
-                _tileIndices[y * _worldTiles + x] = _palette.ResolveVariant(baseIndex, variantSeed);
+                _tileIndices[(y * _worldTiles) + x] = _palette.ResolveVariant(
+                    baseIndex,
+                    variantSeed
+                );
             }
         }
     }

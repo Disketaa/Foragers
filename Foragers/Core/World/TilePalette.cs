@@ -45,11 +45,7 @@ public sealed class TilePalette
         _tileHeight = Runtime.GetInt(fullJsonPath, "tileHeight", 8);
         _columns = Runtime.GetInt(fullJsonPath, "columns", 4);
         _tileMap = Runtime.Get<int[]>(fullJsonPath, "tileMap", DefaultTileMap);
-        _variants = Runtime.Get<Dictionary<int, int[]>>(
-            fullJsonPath,
-            "variants",
-            new Dictionary<int, int[]>()
-        );
+        _variants = Runtime.Get<Dictionary<int, int[]>>(fullJsonPath, "variants", []);
 
         string fullPath = Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory,

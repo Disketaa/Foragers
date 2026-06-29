@@ -16,17 +16,17 @@ public static class Tweens
     {
         const float c1 = 1.70158f;
         const float c3 = c1 + 1;
-        return 1f + c3 * MathF.Pow(t - 1f, 3) + c1 * MathF.Pow(t - 1f, 2);
+        return 1f + (c3 * MathF.Pow(t - 1f, 3)) + (c1 * MathF.Pow(t - 1f, 2));
     }
 
     public static float Ease(float t, float from, float to, Func<float, float> curve)
     {
-        return from + (to - from) * curve(t);
+        return from + ((to - from) * curve(t));
     }
 
     public static float Bump(float t, float factor)
     {
-        return 1.0f + factor * Math.Min(BackOut(t), BackOut(1.0f - t));
+        return 1.0f + (factor * Math.Min(BackOut(t), BackOut(1.0f - t)));
     }
 
     public struct SpriteTween

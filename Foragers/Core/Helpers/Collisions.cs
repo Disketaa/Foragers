@@ -38,8 +38,8 @@ public static class Collisions
             debugColor
         );
 
-        int centerX = bounds.X + bounds.Width / 2;
-        int centerY = bounds.Y + bounds.Height / 2;
+        int centerX = bounds.X + (bounds.Width / 2);
+        int centerY = bounds.Y + (bounds.Height / 2);
 
         spriteBatch.Draw(_pixel, new Rectangle(centerX - 2, centerY, 5, 1), debugColor);
         spriteBatch.Draw(_pixel, new Rectangle(centerX, centerY - 2, 1, 5), debugColor);
