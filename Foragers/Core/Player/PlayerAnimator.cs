@@ -1,6 +1,5 @@
 using Foragers.Core.Animator;
 using Foragers.Core.Helpers;
-using Foragers.Core.Shaders;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static Foragers.Core.Helpers.Tweens;
@@ -18,6 +17,12 @@ public sealed class PlayerAnimator
     public CollisionBox? Collision => _sheet.Collision;
     public float PivotX => _sheet.PivotX;
     public float PivotY => _sheet.PivotY;
+    public Texture2D Texture => _sheet.Texture;
+    public Vector2 Origin =>
+        new Vector2(_sheet.FrameWidth * _sheet.PivotX, _sheet.FrameHeight * _sheet.PivotY);
+    public SpriteEffects CurrentEffects =>
+        _facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+    public SpriteRenderer Renderer => _renderer;
 
     public PlayerAnimator(GraphicsDevice graphicsDevice, string animPath)
     {
@@ -74,44 +79,7 @@ public sealed class PlayerAnimator
         }
     }
 
-    public void DrawReflection(SpriteBatch spriteBatch, Vector2 position)
-    {
-        if (_animPlayer.Current == string.Empty)
-            return;
-
-        Effect effect = ShaderManager.WaterReflectionEffect!;
-
-        spriteBatch.End();
-
-        SpriteEffects flipEffect = _facingLeft
-            ? SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically
-            : SpriteEffects.FlipVertically;
-
-        spriteBatch.Begin(
-            SpriteSortMode.Immediate,
-            BlendState.AlphaBlend,
-            SamplerState.PointClamp,
-            null,
-            null,
-            effect
-        );
-
-        float spriteBottom = _sheet.FrameHeight * (1f - _sheet.PivotY);
-        var reflectionPos = new Vector2(position.X, position.Y + spriteBottom);
-
-        _renderer.Draw(
-            spriteBatch,
-            _sheet.Texture,
-            _animPlayer.SourceRect(),
-            reflectionPos,
-            flipEffect,
-            _sheet.PivotX,
-            _sheet.PivotY
-        );
-
-        spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
-    }
+    public Rectangle SourceRect() => _animPlayer.SourceRect();
 
     private void OnFlip()
     {

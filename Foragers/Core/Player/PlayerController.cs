@@ -11,12 +11,15 @@ namespace Foragers.Core.Player;
 public sealed class PlayerController(
     GraphicsDevice graphicsDevice,
     string animPath,
-    Vector2 startPosition
+    Vector2 startPosition,
+    ReflectionRenderer reflectionRenderer
 ) : ICollidable
 {
     private readonly PlayerAnimator _animator = new PlayerAnimator(graphicsDevice, animPath);
     private Vector2 _position = startPosition;
+    private readonly ReflectionRenderer _reflectionRenderer = reflectionRenderer;
     private bool _facingLeft;
+    private bool _isSwimming;
 
     private static float GamepadDeadzone =>
         Runtime.GetFloat("Core/Options.json", "GamepadDeadzone", 0.2f);
@@ -29,6 +32,7 @@ public sealed class PlayerController(
     public bool NeedsTileCollision => true;
     public Vector2 Position => _position;
     public CollisionBox? CollisionBox => _animator.Collision;
+    public ReflectionRenderer ReflectionRenderer => _reflectionRenderer;
 
     public void UpdateKeyboard(GameTime gameTime)
     {
@@ -109,17 +113,20 @@ public sealed class PlayerController(
     {
         float runningSpeed = Runtime.GetFloat("Entity/Player.json", "running_speed", 1f);
         float swimmingSpeedMult = Runtime.GetFloat("Entity/Player.json", "swimming_speed", 0.5f);
-        bool isSwimming = !IsOnTile();
+        bool isSwimming = !IsOnTile(_position);
+        _isSwimming = isSwimming;
         float speed = isSwimming ? swimmingSpeedMult : runningSpeed;
 
         if (direction != Vector2.Zero && speedFactor > 0f)
         {
-            _position = WorldBorder.Clamp(
-                _position + (direction * speed * speedFactor),
+            Vector2 nextPosition = _position + (direction * speed * speedFactor);
+            Vector2 clampedPosition = WorldBorder.Clamp(
+                nextPosition,
                 _animator.Collision,
                 _animator.PivotX,
                 _animator.PivotY
             );
+            _position = clampedPosition;
             _facingLeft = direction.X switch
             {
                 < 0f => true,
@@ -132,16 +139,16 @@ public sealed class PlayerController(
             ? speedFactor * swimmingSpeedMult
             : (speedFactor > 0f ? speedFactor : 0f);
 
-        _animator.Update(gameTime, animSpeed, _facingLeft, isSwimming);
+        _animator.Update(gameTime, animSpeed, _facingLeft, _isSwimming);
     }
 
-    private bool IsOnTile()
+    private bool IsOnTile(Vector2 position)
     {
         if (_animator.Collision == null)
             return false;
 
         Rectangle bounds = _animator.Collision.GetBounds(
-            _position,
+            position,
             _animator.PivotX,
             _animator.PivotY
         );
@@ -153,18 +160,18 @@ public sealed class PlayerController(
         _animator.Draw(spriteBatch, _position, debugMode);
     }
 
-    public void DrawReflection(SpriteBatch spriteBatch)
+    public void RegisterReflection()
     {
-        bool shadersEnabled = Runtime.GetBool("Core/Options.json", "Shaders", false);
-        bool waterReflectionEnabled = Runtime.GetBool(
-            "Core/Options.json",
-            "WaterReflectionShader",
-            false
+        _reflectionRenderer.Register(
+            _animator.Texture,
+            () => _animator.SourceRect(),
+            () => _position,
+            () => _animator.CurrentEffects,
+            () => _animator.Origin,
+            () => _position,
+            () => _animator.Renderer.GetTransformState().scale,
+            () => _animator.Renderer.GetTransformState().offset,
+            ignoreCollision: true
         );
-
-        if (shadersEnabled && waterReflectionEnabled && ShaderManager.WaterReflectionEffect != null)
-        {
-            _animator.DrawReflection(spriteBatch, _position);
-        }
     }
 }

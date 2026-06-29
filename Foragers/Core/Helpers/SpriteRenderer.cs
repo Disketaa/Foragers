@@ -29,15 +29,7 @@ public sealed class SpriteRenderer
         }
     }
 
-    public void Draw(
-        SpriteBatch spriteBatch,
-        Texture2D texture,
-        Rectangle sourceRect,
-        Vector2 position,
-        SpriteEffects effects,
-        float pivotX = 0.5f,
-        float pivotY = 0.5f
-    )
+    public (Vector2 scale, Vector2 offset) GetTransformState()
     {
         float scaleX = 1f;
         float scaleY = 1f;
@@ -64,8 +56,22 @@ public sealed class SpriteRenderer
             }
         }
 
+        return (new Vector2(scaleX, scaleY), new Vector2(offsetX, offsetY));
+    }
+
+    public void Draw(
+        SpriteBatch spriteBatch,
+        Texture2D texture,
+        Rectangle sourceRect,
+        Vector2 position,
+        SpriteEffects effects,
+        float pivotX = 0.5f,
+        float pivotY = 0.5f
+    )
+    {
+        (Vector2 scale, Vector2 offset) = GetTransformState();
         var origin = new Vector2(sourceRect.Width * pivotX, sourceRect.Height * pivotY);
-        Vector2 drawPosition = position + new Vector2(offsetX, offsetY);
+        Vector2 drawPosition = position + offset;
 
         spriteBatch.Draw(
             texture,
@@ -74,7 +80,7 @@ public sealed class SpriteRenderer
             Color.White,
             0f,
             origin,
-            new Vector2(scaleX, scaleY),
+            scale,
             effects,
             0f
         );

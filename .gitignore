@@ -1,6 +1,7 @@
 .clinerules/
 .config/
 .editorconfig
+.kilo
 .specify/
 .vscode/
 /Workspace/
