@@ -1,6 +1,9 @@
 sampler2D TextureSampler : register(s0)
 {
     Texture = (Texture);
+    MinFilter = Point;
+    MagFilter = Point;
+    MipFilter = Point;
     AddressU = Clamp;
     AddressV = Clamp;
 };

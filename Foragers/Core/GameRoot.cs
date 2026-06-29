@@ -203,6 +203,8 @@ public class GameRoot : Game
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
 
+        _player.DrawReflection(_spriteBatch);
+
         _world.Draw(
             _spriteBatch,
             new Vector2(

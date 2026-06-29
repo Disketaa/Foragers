@@ -56,20 +56,6 @@ public sealed class PlayerAnimator
 
     public void Draw(SpriteBatch spriteBatch, Vector2 position, bool debugMode = false)
     {
-        bool shadersEnabled = Runtime.GetBool("Core/Options.json", "Shaders", false);
-        bool waterReflectionEnabled = Runtime.GetBool(
-            "Core/Options.json",
-            "WaterReflectionShader",
-            false
-        );
-        bool canReflect =
-            shadersEnabled && waterReflectionEnabled && ShaderManager.WaterReflectionEffect != null;
-
-        if (canReflect && _animPlayer.Current != string.Empty)
-        {
-            DrawReflection(spriteBatch, position);
-        }
-
         SpriteEffects effects = _facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
         _renderer.Draw(
             spriteBatch,
@@ -88,8 +74,11 @@ public sealed class PlayerAnimator
         }
     }
 
-    private void DrawReflection(SpriteBatch spriteBatch, Vector2 position)
+    public void DrawReflection(SpriteBatch spriteBatch, Vector2 position)
     {
+        if (_animPlayer.Current == string.Empty)
+            return;
+
         Effect effect = ShaderManager.WaterReflectionEffect!;
 
         spriteBatch.End();

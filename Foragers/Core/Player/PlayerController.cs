@@ -1,5 +1,6 @@
 using Foragers.Core.Helpers;
 using Foragers.Core.Player;
+using Foragers.Core.Shaders;
 using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -150,5 +151,20 @@ public sealed class PlayerController(
     public void Draw(SpriteBatch spriteBatch, bool debugMode = false)
     {
         _animator.Draw(spriteBatch, _position, debugMode);
+    }
+
+    public void DrawReflection(SpriteBatch spriteBatch)
+    {
+        bool shadersEnabled = Runtime.GetBool("Core/Options.json", "Shaders", false);
+        bool waterReflectionEnabled = Runtime.GetBool(
+            "Core/Options.json",
+            "WaterReflectionShader",
+            false
+        );
+
+        if (shadersEnabled && waterReflectionEnabled && ShaderManager.WaterReflectionEffect != null)
+        {
+            _animator.DrawReflection(spriteBatch, _position);
+        }
     }
 }
