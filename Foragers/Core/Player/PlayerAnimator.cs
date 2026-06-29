@@ -96,8 +96,8 @@ public sealed class PlayerAnimator
             effect
         );
 
-        float pivotOffsetY = _sheet.FrameHeight * _sheet.PivotY;
-        var reflectionPos = new Vector2(position.X, position.Y + pivotOffsetY * 2f);
+        float spriteBottom = _sheet.FrameHeight * (1f - _sheet.PivotY);
+        var reflectionPos = new Vector2(position.X, position.Y + spriteBottom);
 
         _renderer.Draw(
             spriteBatch,
