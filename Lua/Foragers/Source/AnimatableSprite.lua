@@ -55,8 +55,8 @@ end
 
 -- Called when flipX changes direction. Plays squash-stretch tween effect.
 function AnimatableSprite:OnFlip()
-	self:triggerTween("scale_x", 0.5, 1.0, 0.3, Tweens.BackOut)
-	self:triggerTween("scale_y", 1.5, 1.0, 0.3, Tweens.BackOut)
+	self:triggerTween("scale_x", 0.75, 1.0, 0.3, Tweens.BackOut)
+	self:triggerTween("scale_y", 1.25, 1.0, 0.3, Tweens.BackOut)
 end
 
 -- Builds quads for each animation row from spritesheet.

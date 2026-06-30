@@ -5,7 +5,9 @@
 bin/
 dotnet-tools.json/
 Lua/Foragers/.luacheckrc
+Lua/Foragers/conf.lua
 Lua/Foragers/Foragers.bat
+Lua/Foragers/lldebugger.lua
 Lua/Foragers/love-run.bat
 Lua/Foragers/package-lock.json
 Lua/Foragers/package.json

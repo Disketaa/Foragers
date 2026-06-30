@@ -1,5 +1,11 @@
 -- Game entry point. Initializes systems and handles LÖVE callbacks.
 local Config = require("Content.Data.Config") or {}
+
+-- Debugger integration - must be early
+if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+	require("lldebugger").start()
+end
+
 local SpriteLoader = require("Source.SpriteLoader")
 local Canvas = require("Source.Canvas")
 
