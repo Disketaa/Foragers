@@ -58,8 +58,8 @@ public sealed class CollisionBox(int width, int height, int offsetX = 0, int off
         float originX = Width * pivotX;
         float originY = Height * pivotY;
 
-        int x = (int)(position.X + OffsetX - originX);
-        int y = (int)(position.Y + OffsetY - originY);
+        int x = (int)Math.Floor(position.X + OffsetX - originX);
+        int y = (int)Math.Floor(position.Y + OffsetY - originY);
 
         return new Rectangle(x, y, Width, Height);
     }

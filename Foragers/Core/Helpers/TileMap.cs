@@ -22,10 +22,10 @@ public static class TileMap
 
         int tileSize = Generator.TilePixelSize;
 
-        int leftTile = (int)((bounds.Left - _worldOffset.X) / tileSize);
-        int rightTile = (int)((bounds.Right - 1 - _worldOffset.X) / tileSize);
-        int topTile = (int)((bounds.Top - _worldOffset.Y) / tileSize);
-        int bottomTile = (int)((bounds.Bottom - 1 - _worldOffset.Y) / tileSize);
+        int leftTile = (int)Math.Floor((bounds.Left - _worldOffset.X) / tileSize);
+        int rightTile = (int)Math.Floor((bounds.Right - 1 - _worldOffset.X) / tileSize);
+        int topTile = (int)Math.Floor((bounds.Top - _worldOffset.Y) / tileSize);
+        int bottomTile = (int)Math.Floor((bounds.Bottom - 1 - _worldOffset.Y) / tileSize);
 
         for (int y = topTile; y <= bottomTile; y++)
         {
