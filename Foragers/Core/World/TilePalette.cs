@@ -8,7 +8,7 @@ namespace Foragers.Core.World;
 public sealed class TilePalette
 {
     private static readonly int[] DefaultTileMap =
-    [
+    {
         0,
         12,
         1,
@@ -25,7 +25,7 @@ public sealed class TilePalette
         11,
         6,
         10,
-    ];
+    };
 
     private readonly Texture2D _texture;
     private readonly int _tileWidth;

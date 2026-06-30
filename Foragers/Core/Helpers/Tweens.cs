@@ -29,21 +29,32 @@ public static class Tweens
         return 1.0f + (factor * Math.Min(BackOut(t), BackOut(1.0f - t)));
     }
 
-    public struct SpriteTween(
-        SpriteTarget target,
-        float from,
-        float to,
-        float duration,
-        Func<float, float> curve
-    )
+    public struct SpriteTween
     {
-        public SpriteTarget Target { get; private set; } = target;
-        public float From { get; private set; } = from;
-        public float To { get; private set; } = to;
-        public float Duration { get; private set; } = duration;
-        public Func<float, float> Curve { get; private set; } = curve;
+        public SpriteTarget Target { get; private set; }
+        public float From { get; private set; }
+        public float To { get; private set; }
+        public float Duration { get; private set; }
+        public Func<float, float> Curve { get; private set; }
         public float Timer { get; private set; }
         public bool IsActive { get; private set; }
+
+        public SpriteTween(
+            SpriteTarget target,
+            float from,
+            float to,
+            float duration,
+            Func<float, float> curve
+        )
+        {
+            Target = target;
+            From = from;
+            To = to;
+            Duration = duration;
+            Curve = curve;
+            Timer = 0f;
+            IsActive = false;
+        }
 
         public void Start()
         {

@@ -252,12 +252,17 @@ public static class JsonManager
         }
     }
 
-    private sealed class JsonFileData(string filePath)
+    private sealed class JsonFileData
     {
-        public string FilePath = filePath;
+        public string FilePath;
         public Dictionary<string, object>? Data;
         public bool NeedsReload;
         public bool IsDeleted;
+
+        public JsonFileData(string filePath)
+        {
+            FilePath = filePath;
+        }
 
         public void Reload()
         {
