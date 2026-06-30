@@ -8,15 +8,14 @@
 ---@field currentAnim string|nil
 ---@field currentTime number
 ---@field type "animator"
----@field tweens table<string, Tween> Active tweens by target name
+---@field tweens table<string, Tween> Active tweens indexed by target name
 local AnimatableSprite = {}
 AnimatableSprite.__index = AnimatableSprite
 
 local Tweens = require("Source.Tweens")
 
--- Creates animated sprite component from data definition.
--- Loads tween config from Assets/System/Tweens/flip.lua for modding support.
--- Requires: data.spriteSheet (string), data.frameWidth/Height (numbers), data.animations (array).
+---@param data table Component data with spriteSheet, frameWidth/Height, animations
+---@return AnimatableSprite
 function AnimatableSprite.new(data)
 	local self = setmetatable({}, AnimatableSprite)
 	self.image = love.graphics.newImage(data.spriteSheet)
@@ -28,27 +27,13 @@ function AnimatableSprite.new(data)
 	self.currentAnim = data.animations and data.animations[1] and data.animations[1].name
 	self.currentTime = 0
 	self.type = "animator"
-	-- Load tween config for flip animation; fallback to defaults if missing/corrupted
-	self.flipTweenConfig = AnimatableSprite._loadFlipTweenConfig()
 	self.tweens = {}
 	self:_buildQuads(data.animations or {})
 	return self
 end
 
--- Loads flip tween configuration from data file. Returns default values on any error.
-function AnimatableSprite._loadFlipTweenConfig()
-	local configPath = "Assets.System.Tweens.flip"
-	package.loaded[configPath] = nil
-	local config = require(configPath)
-	if type(config) ~= "table" then
-		config = {}
-	end
-	return config
-end
-
 -- Triggers a tween on specified target property. Creates new tween or restarts existing.
--- Target follows TweenTarget pattern: "scale_x", "scale_y", "x", "y".
----@param target string Property name from TweenTarget enum
+---@param target string Property name ("scale_x", "scale_y", "x", "y")
 ---@param from number Start value
 ---@param to number End value
 ---@param duration number Duration in seconds
@@ -57,7 +42,6 @@ function AnimatableSprite:triggerTween(target, from, to, duration, curve)
 	if not self.tweens[target] then
 		self.tweens[target] = Tweens.create(target, from, to, duration, curve)
 	end
-	-- Reset and start/restart the tween
 	local tween = self.tweens[target]
 	tween.from = from
 	tween.to = to
@@ -66,24 +50,10 @@ function AnimatableSprite:triggerTween(target, from, to, duration, curve)
 	tween:start()
 end
 
--- Called when flipX changes direction. Triggers scale tweens for flip effect.
--- Scale tweens control absolute scale values; animation plays from "squash" to "normal" state.
+-- Called when flipX changes direction. Plays squash-stretch tween effect.
 function AnimatableSprite:OnFlip()
-	-- Get tween config values (always same animation: squash → normal)
-	local sxConfig = self.flipTweenConfig.scaleX or { from = 0.5, to = 1.0, duration = 0.3, curve = "back_out" }
-	local syConfig = self.flipTweenConfig.scaleY or { from = 1.5, to = 1.0, duration = 0.3, curve = "back_out" }
-
-	-- Resolve curve using Tweens.resolveCurve to support string or function
-	local curveFunc = Tweens.resolveCurve(sxConfig.curve)
-
-	-- Tween always plays from "squash" state to "normal" state
-	self:triggerTween("scale_x", sxConfig.from, sxConfig.to, sxConfig.duration, curveFunc)
-	-- Note: syConfig may have its own curve, check separately
-	if syConfig.curve and syConfig.curve ~= sxConfig.curve then
-		self:triggerTween("scale_y", syConfig.from, syConfig.to, syConfig.duration, Tweens.resolveCurve(syConfig.curve))
-	else
-		self:triggerTween("scale_y", syConfig.from, syConfig.to, syConfig.duration, curveFunc)
-	end
+	self:triggerTween("scale_x", 0.5, 1.0, 0.3, Tweens.BackOut)
+	self:triggerTween("scale_y", 1.5, 1.0, 0.3, Tweens.BackOut)
 end
 
 -- Builds quads for each animation row from spritesheet.
@@ -137,12 +107,6 @@ function AnimatableSprite:update(dt)
 	for _, tween in pairs(self.tweens) do
 		tween:update(dt)
 	end
-end
-
--- Reloads tween config from data file. Safe to call during hot-reload.
--- Does not reset active tweens (values apply to next flip).
-function AnimatableSprite:reloadTweenConfig()
-	self.flipTweenConfig = AnimatableSprite._loadFlipTweenConfig()
 end
 
 -- Renders current frame with optional horizontal flip for left-facing.

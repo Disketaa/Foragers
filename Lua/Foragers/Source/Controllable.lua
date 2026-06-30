@@ -2,7 +2,6 @@
 ---@field parent Object|nil Reference to owning object, set by Object:addComponent
 ---@field keys { up: string, down: string, left: string, right: string }
 ---@field speed number Movement speed in pixels per second
----@field prevFlipX boolean Previous flip state to detect direction changes
 local Controllable = {}
 Controllable.__index = Controllable
 
