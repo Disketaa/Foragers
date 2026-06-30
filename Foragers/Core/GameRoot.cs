@@ -195,18 +195,8 @@ public class GameRoot : Game
         base.Update(gameTime);
     }
 
-    private int _drawCounter;
-
     protected override void Draw(GameTime gameTime)
     {
-        _drawCounter++;
-        if (_drawCounter % 60 == 0)
-        {
-            Shaders.ShaderDebugLog.Write(
-                $"Draw #{_drawCounter}: Shaders={_shaderRenderer.IsEnabled}"
-            );
-        }
-
         MouseState drawMouse = Mouse.GetState();
         int gameMouseX = (drawMouse.X - _offsetX) / _scale;
         int gameMouseY = (drawMouse.Y - _offsetY) / _scale;
@@ -239,7 +229,7 @@ public class GameRoot : Game
                     null,
                     tileEffect
                 );
-                _world.DrawWithShadedColor(_spriteBatch, _shaderRenderer, worldPos);
+                _world.DrawShaded(_spriteBatch, worldPos);
                 _spriteBatch.End();
             }
         }

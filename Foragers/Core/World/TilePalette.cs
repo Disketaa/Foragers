@@ -85,16 +85,8 @@ public sealed class TilePalette
         spriteBatch.Draw(_texture, position, GetSourceRect(tileIndex), Color.White);
     }
 
-    public void DrawWithColor(
-        SpriteBatch spriteBatch,
-        Effect? effect,
-        int tileIndex,
-        Vector2 position,
-        Vector4 color
-    )
+    public void DrawShaded(SpriteBatch spriteBatch, int tileIndex, Vector2 position)
     {
-        effect?.Parameters["RandomColor"]?.SetValue(color);
-        effect?.Parameters["Position"]?.SetValue(position);
         spriteBatch.Draw(_texture, position, GetSourceRect(tileIndex), Color.White);
     }
 

@@ -7,23 +7,6 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Foragers.Core.Shaders;
 
-internal static class ShaderDebugLog
-{
-    private static readonly string LogPath = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory,
-        "shader_debug.log"
-    );
-
-    public static void Write(string message)
-    {
-        try
-        {
-            File.AppendAllText(LogPath, $"[{DateTime.Now:HH:mm:ss}] {message}\n");
-        }
-        catch { }
-    }
-}
-
 public sealed class ShaderRenderer : IDisposable
 {
     private readonly GraphicsDevice _graphicsDevice;
@@ -35,7 +18,6 @@ public sealed class ShaderRenderer : IDisposable
     public ShaderRenderer(GraphicsDevice graphicsDevice)
     {
         _graphicsDevice = graphicsDevice;
-        ShaderDebugLog.Write("ShaderRenderer created");
         LoadConfig();
 
         Runtime.FileReloaded += OnFileReloaded;
@@ -53,13 +35,11 @@ public sealed class ShaderRenderer : IDisposable
     private void LoadConfig()
     {
         _isEnabled = Runtime.GetBool("Core/Options.json", "Shaders", false);
-        ShaderDebugLog.Write($"LoadConfig: Shaders={_isEnabled}");
 
         if (_isEnabled)
         {
             _tileMaterial?.Dispose();
             _tileMaterial = new ShaderMaterial(_graphicsDevice, "TileDebug");
-            ShaderDebugLog.Write("TileDebug shader loaded");
         }
     }
 
@@ -74,7 +54,6 @@ public sealed class ShaderRenderer : IDisposable
         {
             _tileMaterial?.Dispose();
             _tileMaterial = new ShaderMaterial(_graphicsDevice, "TileDebug");
-            ShaderDebugLog.Write("TileDebug shader loaded");
         }
         else
         {
@@ -88,18 +67,6 @@ public sealed class ShaderRenderer : IDisposable
         if (!_isEnabled)
             return null;
         return _tileMaterial;
-    }
-
-    public static Vector4 GetRandomColorFromPosition(Vector2 position)
-    {
-        uint hash = (uint)(position.X * 73856093) ^ (uint)(position.Y * 19349663);
-        hash = (hash ^ 1103515245) * 1103515245;
-        float r = (hash & 0xFF) / 255f;
-        hash >>= 8;
-        float g = (hash & 0xFF) / 255f;
-        hash >>= 8;
-        float b = (hash & 0xFF) / 255f;
-        return new Vector4(r, g, b, 1f);
     }
 
     public void ApplyViewProjection(Matrix view, Matrix projection)

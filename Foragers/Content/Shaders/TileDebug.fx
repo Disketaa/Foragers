@@ -7,7 +7,6 @@
 #endif
 
 float4x4 view_projection;
-float4 RandomColor;
 
 sampler TextureSampler : register(s0);
 
@@ -37,7 +36,10 @@ PixelInput SpriteVertexShader(VertexInput v)
 float4 SpritePixelShader(PixelInput p) : SV_TARGET
 {
     float4 diffuse = tex2D(TextureSampler, p.TexCoord.xy);
-    return diffuse * p.Color * RandomColor;
+    
+    float3 gradient = float3(p.TexCoord.x, p.TexCoord.y, 0.5);
+    
+    return float4(diffuse.rgb * gradient, diffuse.a * p.Color.a);
 }
 
 technique SpriteBatch
