@@ -1,33 +1,32 @@
 -- Loads objects from Content/Assets/Sprites/{Name}/Character.lua.
--- Automatically builds components via factories.
+-- Automatically builds components via registered factories.
 local Object = require("Source.Object")
 local AnimatableSprite = require("Source.AnimatableSprite")
 local Controllable = require("Source.Controllable")
 
 local SpriteLoader = {}
 
--- Component factories by name. Add new types here.
+-- Component factories by type name. Mods can extend by adding to this table.
+-- Each factory receives compData table (may be nil for string-based component refs).
 local componentFactories = {
 	AnimatableSprite = function(compData)
 		return AnimatableSprite.new(compData)
 	end,
 	Controllable = function(compData)
-		return Controllable.new()
+		return Controllable.new(compData)
 	end,
 }
 
--- Scans folder for *.lua files, creates objects.
--- assetsPath - path to Character.lua folder.
--- spawnCallback(data) - returns spawn position (x, y).
--- Returns array: { path, data, instance }.
+-- Scans folder recursively, creates objects from Character.lua files.
+-- @param assetsPath string - Path to sprites folder (e.g., "Content/Assets/Sprites/Character")
+-- @param spawnCallback function|nil - Receives data table, returns spawn (x, y)
+-- @return table[] - Array of { path, data, instance } entries
 function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	local objects = {}
 
 	local function scan(path)
 		local items = love.filesystem.getDirectoryItems(path)
-		if not items then
-			return
-		end
+		if not items then return end
 
 		for _, item in ipairs(items) do
 			local fullPath = path .. "/" .. item
@@ -38,21 +37,25 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 			elseif item:match("%.lua$") then
 				local luaPath = fullPath:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
 				local success, data = pcall(require, luaPath)
-				if success and data then
+				if success and type(data) == "table" then
 					local obj = Object.new(0, 0)
 
 					for _, compData in ipairs(data.components or {}) do
-						local compType = type(compData) == "table" and compData.type or compData
-						local factory = componentFactories[compType]
-						if factory then
-							obj:addComponent(factory(compData))
+						if type(compData) ~= "table" then
+							-- Skip non-table components (string-based refs not supported yet)
+						else
+							local compType = compData.type
+							local factory = componentFactories[compType]
+							if factory then
+								obj:addComponent(factory(compData))
+							end
 						end
 					end
 
 					if spawnCallback then
 						local x, y = spawnCallback(data)
-						obj.x = x or obj.x
-						obj.y = y or obj.y
+						if x then obj.x = x end
+						if y then obj.y = y end
 					end
 
 					table.insert(objects, { path = fullPath, data = data, instance = obj })
@@ -66,9 +69,13 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	return objects
 end
 
--- Reloads all objects. Clears require cache.
+-- Reloads all objects from disk. Clears require cache before loading.
+-- @param objects table[] - Previous objects array (for cache invalidation)
+-- @param assetsPath string - Path to sprites folder
+-- @param spawnCallback function|nil - Spawn position callback
+-- @return table[] - New objects array
 function SpriteLoader.reload(objects, assetsPath, spawnCallback)
-	for _, entry in ipairs(objects) do
+	for _, entry in ipairs(objects or {}) do
 		local luaPath = entry.path:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
 		package.loaded[luaPath] = nil
 	end

@@ -1,9 +1,14 @@
--- Input control component. Handles keyboard input.
+---@class Controllable
+---@field parent Object|nil Reference to owning object, set by Object:addComponent
+---@field keys { up: string, down: string, left: string, right: string }
+---@field speed number Movement speed in pixels per second
+
 local Controllable = {}
 Controllable.__index = Controllable
 
--- data.keys - key mapping: { up, down, left, right }.
--- data.movementSpeed - movement speed in pixels per second. Default: 64.
+-- Creates input control component.
+-- @param data|nil - { keys: {up,down,left,right}, movementSpeed: number }
+-- @return Controllable instance with configurable key bindings
 function Controllable.new(data)
 	data = data or {}
 	return setmetatable({
@@ -12,13 +17,14 @@ function Controllable.new(data)
 	}, Controllable)
 end
 
--- Updates parent position based on input.
--- Requires AnimatableSprite component (type == "animator").
--- Sets animation to "Run" or "Idle".
+-- Updates parent position based on keyboard input.
+-- Modifies parent.x/y directly; sets animator "Run"/"Idle" animation state.
+-- Guard against missing parent/components to survive hot-reload edge cases.
 function Controllable:update(dt)
-	if not self.parent then
+	if not self.parent or not self.parent.components then
 		return
 	end
+
 	local moving = false
 	if love.keyboard.isDown(self.keys.up) then
 		self.parent.y = self.parent.y - self.speed * dt
@@ -28,6 +34,7 @@ function Controllable:update(dt)
 		self.parent.y = self.parent.y + self.speed * dt
 		moving = true
 	end
+
 	for _, comp in ipairs(self.parent.components) do
 		if comp.type == "animator" then
 			if love.keyboard.isDown(self.keys.left) then
@@ -40,11 +47,7 @@ function Controllable:update(dt)
 				comp.flipX = false
 				moving = true
 			end
-			if moving then
-				comp:setAnimation("Run")
-			else
-				comp:setAnimation("Idle")
-			end
+			comp:setAnimation(moving and "Run" or "Idle")
 			break
 		end
 	end
