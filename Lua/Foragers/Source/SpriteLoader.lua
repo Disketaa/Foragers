@@ -76,14 +76,26 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 end
 
 -- Reloads all objects from disk. Clears require cache before loading.
+-- Also reloads tween configuration for all existing animator components.
 -- @param objects table[] - Previous objects array (for cache invalidation)
 -- @param assetsPath string - Path to sprites folder
 -- @param spawnCallback function|nil - Spawn position callback
 -- @return table[] - New objects array
 function SpriteLoader.reload(objects, assetsPath, spawnCallback)
+	-- Invalidate tween config cache for hot-reload
+	package.loaded["Assets.System.Tweens.flip"] = nil
+
 	for _, entry in ipairs(objects or {}) do
 		local luaPath = entry.path:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
 		package.loaded[luaPath] = nil
+		-- Reload tween config for existing animator components
+		if entry.instance and entry.instance.components then
+			for _, comp in ipairs(entry.instance.components) do
+				if comp.type == "animator" and comp.reloadTweenConfig then
+					comp:reloadTweenConfig()
+				end
+			end
+		end
 	end
 	return SpriteLoader.loadAll(assetsPath, spawnCallback)
 end

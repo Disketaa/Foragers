@@ -2,7 +2,7 @@
 ---@field parent Object|nil Reference to owning object, set by Object:addComponent
 ---@field keys { up: string, down: string, left: string, right: string }
 ---@field speed number Movement speed in pixels per second
-
+---@field prevFlipX boolean Previous flip state to detect direction changes
 local Controllable = {}
 Controllable.__index = Controllable
 
@@ -58,10 +58,19 @@ function Controllable:update(dt)
 			if len > 0 then
 				self.parent.x = self.parent.x + moveX * self.speed * dt
 			end
+
 			-- flipX only updates on horizontal input (preserves last facing when moving vertically)
 			if inputX ~= 0 then
-				comp.flipX = inputX < 0
+				local newFlipX = inputX < 0
+				-- Trigger flip tween only when direction actually changes
+				if comp.flipX ~= newFlipX then
+					comp.flipX = newFlipX
+					if comp.OnFlip then
+						comp:OnFlip()
+					end
+				end
 			end
+
 			if len > 0 then
 				comp:setAnimation("Run")
 			else
