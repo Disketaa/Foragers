@@ -35,11 +35,10 @@ PixelInput SpriteVertexShader(VertexInput v)
 
 float4 SpritePixelShader(PixelInput p) : SV_TARGET
 {
-    float4 diffuse = tex2D(TextureSampler, p.TexCoord.xy);
+    // Grayscale gradient from black to white based on UV
+    float3 gradient = float3(p.TexCoord.x, p.TexCoord.y, (p.TexCoord.x + p.TexCoord.y) * 0.5);
     
-    float3 gradient = float3(p.TexCoord.x, p.TexCoord.y, 0.5);
-    
-    return float4(diffuse.rgb * gradient, diffuse.a * p.Color.a);
+    return float4(gradient, 1.0);
 }
 
 technique SpriteBatch
