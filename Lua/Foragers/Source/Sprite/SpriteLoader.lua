@@ -1,13 +1,13 @@
-local Object = require("Source.Object")
-local AnimatableSprite = require("Source.AnimatableSprite")
-local Controllable = require("Source.Controllable")
+local Sprite = require("Source.Sprite.Sprite")
+local Animatable = require("Source.Sprite.Components.Animatable")
+local Controllable = require("Source.Sprite.Components.Controllable")
 
 local SpriteLoader = {}
 
----@type table<string, fun(table):table> Component factory functions
+---@type table<string, function(table):table> Component factory functions
 local componentFactories = {
-	AnimatableSprite = function(compData)
-		return AnimatableSprite.new(compData)
+	Animatable = function(compData)
+		return Animatable.new(compData)
 	end,
 	Controllable = function(compData)
 		return Controllable.new(compData)
@@ -22,9 +22,7 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 
 	local function scan(path)
 		local items = love.filesystem.getDirectoryItems(path)
-		if not items then
-			return
-		end
+		if not items then return end
 
 		for _, item in ipairs(items) do
 			local fullPath = path .. "/" .. item
@@ -36,25 +34,39 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 				local luaPath = fullPath:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
 				local success, data = pcall(require, luaPath)
 				if success and type(data) == "table" then
-					local obj = Object.new(0, 0)
+					local obj = Sprite.new(0, 0)
+					if data.frameWidth then obj.frameWidth = data.frameWidth end
+					if data.frameHeight then obj.frameHeight = data.frameHeight end
+					if data.pivotX then obj.pivotX = data.pivotX end
+					if data.pivotY then obj.pivotY = data.pivotY end
 
 					for _, compData in ipairs(data.components or {}) do
 						if type(compData) == "table" then
-							local factory = componentFactories[compData.type]
+							local factory = componentFactories[compData.component]
 							if factory then
+								if obj.frameWidth then compData.frameWidth = obj.frameWidth end
+								if obj.frameHeight then compData.frameHeight = obj.frameHeight end
+								if obj.pivotX then compData.pivotX = obj.pivotX end
+								if obj.pivotY then compData.pivotY = obj.pivotY end
 								obj:addComponent(factory(compData))
 							end
 						end
 					end
 
+					if not next(data.components or {}) then
+						local pngPath = fullPath:gsub("%.lua$", ".png")
+						local pngInfo = love.filesystem.getInfo(pngPath)
+						if pngInfo then
+							local image = love.graphics.newImage(pngPath)
+							obj.image = image
+							obj.type = "StaticSprite"
+						end
+					end
+
 					if spawnCallback then
 						local x, y = spawnCallback(data)
-						if x then
-							obj.x = x
-						end
-						if y then
-							obj.y = y
-						end
+						if x then obj.x = x end
+						if y then obj.y = y end
 					end
 
 					table.insert(objects, { path = fullPath, data = data, instance = obj })

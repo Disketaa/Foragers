@@ -5,7 +5,7 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 	require("lldebugger").start()
 end
 
-local SpriteLoader = require("Source.SpriteLoader")
+local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Canvas = require("Source.Canvas")
 
 local objects = {}

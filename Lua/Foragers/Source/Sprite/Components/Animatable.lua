@@ -1,4 +1,4 @@
----@class AnimatableSprite
+---@class Animatable
 ---@field image love.Image
 ---@field frameWidth number
 ---@field frameHeight number
@@ -9,17 +9,17 @@
 ---@field flipX boolean
 ---@field currentAnim string|nil
 ---@field currentTime number
----@field type "animator"
+---@field type "Animatable"
 ---@field tweens table<string, Tween>
-local AnimatableSprite = {}
-AnimatableSprite.__index = AnimatableSprite
+local Animatable = {}
+Animatable.__index = Animatable
 
 local Tweens = require("Source.Tweens")
 
 ---@param data table
----@return AnimatableSprite
-function AnimatableSprite.new(data)
-	local self = setmetatable({}, AnimatableSprite)
+---@return Animatable
+function Animatable.new(data)
+	local self = setmetatable({}, Animatable)
 	self.image = love.graphics.newImage(data.spriteSheet)
 	self.frameWidth = data.frameWidth or 16
 	self.frameHeight = data.frameHeight or 16
@@ -28,7 +28,7 @@ function AnimatableSprite.new(data)
 	self.flipX = false
 	self.currentAnim = data.animations and data.animations[1] and data.animations[1].name
 	self.currentTime = 0
-	self.type = "animator"
+	self.type = "Animatable"
 	self.tweens = {}
 	self.pivotX = data.pivotX or 0.5
 	self.pivotY = data.pivotY or 0.5
@@ -41,7 +41,7 @@ end
 ---@param to number
 ---@param duration number
 ---@param curve function
-function AnimatableSprite:triggerTween(target, from, to, duration, curve)
+function Animatable:triggerTween(target, from, to, duration, curve)
 	if not self.tweens[target] then
 		self.tweens[target] = Tweens.create(target, from, to, duration, curve)
 	end
@@ -53,13 +53,13 @@ function AnimatableSprite:triggerTween(target, from, to, duration, curve)
 	tween:start()
 end
 
-function AnimatableSprite:OnFlip()
+function Animatable:OnFlip()
 	self:triggerTween("scale_x", 0.75, 1.0, 0.3, Tweens.BackOut)
 	self:triggerTween("scale_y", 1.25, 1.0, 0.3, Tweens.BackOut)
 end
 
 ---@param animList table
-function AnimatableSprite:_buildQuads(animList)
+function Animatable:_buildQuads(animList)
 	local sheetWidth, sheetHeight = self.image:getWidth(), self.image:getHeight()
 	for i, anim in ipairs(animList) do
 		if anim.name then
@@ -78,14 +78,14 @@ function AnimatableSprite:_buildQuads(animList)
 end
 
 ---@param name string
-function AnimatableSprite:setAnimation(name)
+function Animatable:setAnimation(name)
 	if self.animations[name] and self.currentAnim ~= name then
 		self.currentAnim = name
 		self.currentTime = 0
 	end
 end
 
-function AnimatableSprite:update(dt)
+function Animatable:update(dt)
 	local anim = self.animations[self.currentAnim]
 	if not anim then
 		return
@@ -96,7 +96,6 @@ function AnimatableSprite:update(dt)
 		local maxTime = (anim.frames - 1) / anim.speed
 		self.currentTime = math.min(self.currentTime + dt, maxTime)
 	end
-
 	for _, tween in pairs(self.tweens) do
 		tween:update(dt)
 	end
@@ -104,7 +103,7 @@ end
 
 ---@param x number
 ---@param y number
-function AnimatableSprite:draw(x, y)
+function Animatable:draw(x, y)
 	local anim = self.animations[self.currentAnim]
 	if not anim then
 		return
@@ -134,4 +133,4 @@ function AnimatableSprite:draw(x, y)
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
 end
 
-return AnimatableSprite
+return Animatable
