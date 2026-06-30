@@ -8,7 +8,7 @@ return {
 			frameWidth = 16,
 			frameHeight = 16,
 			pivotX = 0.5,
-			pivotY = 1.0,
+			pivotY = 0.75,
 			animations = {
 				{ name = "idle", frames = 4, speed = 4, loop = true },
 				{ name = "run", frames = 4, speed = 8, loop = true },
@@ -21,8 +21,7 @@ return {
 			type = "Controllable",
 			movementSpeed = 64,
 			mouseControl = {
-				deadzone = 4,
-				speedFactor = 0.3,
+				slowdownRadius = 30,
 			},
 		},
 	},
