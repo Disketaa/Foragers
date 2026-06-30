@@ -1,6 +1,5 @@
 using Foragers.Core.Animator;
 using Foragers.Core.Helpers;
-using Foragers.Core.Shaders;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static Foragers.Core.Helpers.Tweens;
@@ -25,11 +24,6 @@ public sealed class PlayerAnimator
         _animPlayer = new AnimationPlayer(_sheet);
         _animPlayer.Play("Idle");
         _renderer = new SpriteRenderer();
-    }
-
-    public void SetShaderRenderer(ShaderRenderer shaderRenderer)
-    {
-        _renderer.SetShaderRenderer(shaderRenderer);
     }
 
     public void Update(GameTime gameTime, float animSpeed, bool facingLeft, bool isSwimming)

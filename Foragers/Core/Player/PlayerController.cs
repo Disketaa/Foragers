@@ -1,6 +1,4 @@
 using Foragers.Core.Helpers;
-using Foragers.Core.Player;
-using Foragers.Core.Shaders;
 using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,11 +15,6 @@ public sealed class PlayerController(
     private readonly PlayerAnimator _animator = new PlayerAnimator(graphicsDevice, animPath);
     private Vector2 _position = startPosition;
     private bool _facingLeft;
-
-    public void SetShaderRenderer(ShaderRenderer shaderRenderer)
-    {
-        _animator.SetShaderRenderer(shaderRenderer);
-    }
 
     private static float GamepadDeadzone =>
         Runtime.GetFloat("Core/Options.json", "GamepadDeadzone", 0.2f);

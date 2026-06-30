@@ -3,6 +3,5 @@
 	"MouseStopRadius": 4.0,
 	"MouseFullSpeedRadius": 64.0,
 	"DebugMode": false,
-	"ShaderEnabled": true,
-	"ActiveShader": "TileDebug"
+	"Shaders": true
 }

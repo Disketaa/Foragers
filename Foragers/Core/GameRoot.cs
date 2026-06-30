@@ -4,6 +4,7 @@ using Foragers.Core.Player;
 using Foragers.Core.Shaders;
 using Foragers.Core.World;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -83,7 +84,7 @@ public class GameRoot : Game
 
         Runtime.FileReloaded += OnFileReloaded;
 
-        _debugMode = Runtime.GetBool("Core/Options.json", "DebugMode");
+        _debugMode = Runtime.GetBool("Core/Options.json", "DebugMode", false);
         UpdateWindowTitle();
 
         _characterPath = Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.json");
@@ -101,7 +102,6 @@ public class GameRoot : Game
         _world = new Generator(GraphicsDevice, _tilePalettePath, "World/World.json");
 
         _shaderRenderer = new ShaderRenderer(GraphicsDevice);
-        _player.SetShaderRenderer(_shaderRenderer);
 
         Vector2 worldOffset = new(
             (BaseWidth - Generator.WorldWidth) / 2f,
@@ -157,7 +157,7 @@ public class GameRoot : Game
             _world = Generator.Reload(GraphicsDevice, _tilePalettePath, "World/World.json");
         }
 
-        _debugMode = Runtime.GetBool("Core/Options.json", "DebugMode");
+        _debugMode = Runtime.GetBool("Core/Options.json", "DebugMode", false);
         UpdateWindowTitle();
 
         MouseState mouse = Mouse.GetState();
@@ -203,7 +203,7 @@ public class GameRoot : Game
         if (_drawCounter % 60 == 0)
         {
             Shaders.ShaderDebugLog.Write(
-                $"Draw #{_drawCounter}: ShaderEnabled={_shaderRenderer.IsEnabled}, CurrentShader={_shaderRenderer.CurrentShader}"
+                $"Draw #{_drawCounter}: Shaders={_shaderRenderer.IsEnabled}"
             );
         }
 
@@ -211,8 +211,8 @@ public class GameRoot : Game
         int gameMouseX = (drawMouse.X - _offsetX) / _scale;
         int gameMouseY = (drawMouse.Y - _offsetY) / _scale;
 
-        Effect? shaderEffect = _shaderRenderer.GetCurrentEffect();
-        bool useShader = _shaderRenderer.IsEnabled && shaderEffect != null;
+        ShaderMaterial? tileMaterial = _shaderRenderer.GetTileMaterial();
+        bool useTileShader = tileMaterial?.IsValid == true;
 
         Vector2 worldPos = new(
             (BaseWidth - Generator.WorldWidth) / 2f,
@@ -222,23 +222,26 @@ public class GameRoot : Game
         GraphicsDevice.SetRenderTarget(_renderTarget);
         GraphicsDevice.Clear(new Color(46, 171, 212));
 
-        if (useShader && shaderEffect != null)
+        if (useTileShader && tileMaterial != null)
         {
             var view = Matrix.CreateTranslation(0, 0, 0);
             var projection = Matrix.CreateOrthographicOffCenter(0, BaseWidth, BaseHeight, 0, 0, 1);
-            Matrix vp = view * projection;
-            shaderEffect.Parameters["view_projection"]?.SetValue(vp);
+            _shaderRenderer.ApplyViewProjection(view, projection);
 
-            _spriteBatch.Begin(
-                SpriteSortMode.Immediate,
-                null,
-                SamplerState.PointClamp,
-                null,
-                null,
-                shaderEffect
-            );
-            _world.DrawWithColor(_spriteBatch, shaderEffect, worldPos);
-            _spriteBatch.End();
+            Effect? tileEffect = tileMaterial.Effect;
+            if (tileEffect != null)
+            {
+                _spriteBatch.Begin(
+                    SpriteSortMode.Immediate,
+                    null,
+                    SamplerState.PointClamp,
+                    null,
+                    null,
+                    tileEffect
+                );
+                _world.DrawWithShadedColor(_spriteBatch, _shaderRenderer, worldPos);
+                _spriteBatch.End();
+            }
         }
         else
         {

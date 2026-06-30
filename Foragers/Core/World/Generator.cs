@@ -169,10 +169,13 @@ public sealed class Generator
 
     private static int _tileDrawCounter;
 
-    public void DrawWithColor(SpriteBatch spriteBatch, Effect effect, Vector2 position)
+    public void DrawWithShadedColor(
+        SpriteBatch spriteBatch,
+        ShaderRenderer shaderRenderer,
+        Vector2 position
+    )
     {
         _tileDrawCounter = 0;
-        Random random = new(_seed);
         for (int y = 0; y < _worldTiles; y++)
         {
             for (int x = 0; x < _worldTiles; x++)
@@ -182,18 +185,19 @@ public sealed class Generator
                     continue;
 
                 Vector2 tilePos = new(position.X + (x * _tileSize), position.Y + (y * _tileSize));
-                Vector4 color = new(
-                    (float)random.NextDouble(),
-                    (float)random.NextDouble(),
-                    (float)random.NextDouble(),
-                    1f
+                Vector4 color = ShaderRenderer.GetRandomColor();
+                _palette.DrawWithColor(
+                    spriteBatch,
+                    shaderRenderer.GetTileMaterial()?.Effect,
+                    tileIndex,
+                    tilePos,
+                    color
                 );
-                _palette.DrawWithColor(spriteBatch, effect, tileIndex, tilePos, color);
                 _tileDrawCounter++;
             }
         }
         Core.Shaders.ShaderDebugLog.Write(
-            $"DrawWithColor: drew {_tileDrawCounter} tiles at {position}"
+            $"DrawWithShadedColor: drew {_tileDrawCounter} tiles at {position}"
         );
     }
 

@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Foragers.Core.Shaders;
 
-public static class ShaderDebugLog
+internal static class ShaderDebugLog
 {
     private static readonly string LogPath = Path.Combine(
         AppDomain.CurrentDomain.BaseDirectory,
@@ -26,167 +26,97 @@ public static class ShaderDebugLog
 
 public sealed class ShaderRenderer : IDisposable
 {
-    private const string ShadersFolder = "Shaders/";
-    private const string ShaderConfig = "Core/Options.json";
-
     private readonly GraphicsDevice _graphicsDevice;
-    private readonly Dictionary<string, Effect> _effects = [];
-
+    private ShaderMaterial? _tileMaterial;
     private bool _isEnabled;
-    private string _currentShader = string.Empty;
-
-    private readonly Random _random = new();
 
     public bool IsEnabled => _isEnabled;
-    public string CurrentShader => _currentShader;
 
     public ShaderRenderer(GraphicsDevice graphicsDevice)
     {
         _graphicsDevice = graphicsDevice;
         ShaderDebugLog.Write("ShaderRenderer created");
         LoadConfig();
+
         Runtime.FileReloaded += OnFileReloaded;
-    }
-
-    private void LoadConfig()
-    {
-        _isEnabled = Runtime.GetBool(ShaderConfig, "ShaderEnabled", false);
-        string shaderName = Runtime.GetString(ShaderConfig, "ActiveShader", string.Empty);
-
-        ShaderDebugLog.Write($"LoadConfig: Enabled={_isEnabled}, Shader='{shaderName}'");
-
-        if (_isEnabled && !string.IsNullOrEmpty(shaderName))
-        {
-            LoadShader(shaderName);
-            _currentShader = shaderName;
-        }
-        else
-        {
-            _currentShader = string.Empty;
-        }
     }
 
     private void OnFileReloaded(string filePath)
     {
         if (filePath.EndsWith("Options.json", StringComparison.OrdinalIgnoreCase))
         {
-            ShaderDebugLog.Write($"Options.json reloaded, reloading config");
-            LoadConfig();
+            bool newEnabled = Runtime.GetBool("Core/Options.json", "Shaders", false);
+            SetEnabled(newEnabled);
         }
     }
 
-    private void LoadShader(string shaderName)
+    private void LoadConfig()
     {
-        if (_effects.TryGetValue(shaderName, out Effect? existing) && existing != null)
+        _isEnabled = Runtime.GetBool("Core/Options.json", "Shaders", false);
+        ShaderDebugLog.Write($"LoadConfig: Shaders={_isEnabled}");
+
+        if (_isEnabled)
         {
-            ShaderDebugLog.Write($"Shader '{shaderName}' already loaded");
-            return;
+            _tileMaterial?.Dispose();
+            _tileMaterial = new ShaderMaterial(_graphicsDevice, "TileDebug");
+            ShaderDebugLog.Write("TileDebug shader loaded");
         }
-
-        string mgfxoPath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory,
-            "Content",
-            ShadersFolder,
-            $"{shaderName}.mgfxo"
-        );
-
-        ShaderDebugLog.Write($"Loading shader from: {mgfxoPath}");
-
-        if (!File.Exists(mgfxoPath))
-        {
-            ShaderDebugLog.Write($"ERROR: Shader file not found: {mgfxoPath}");
-            return;
-        }
-
-        try
-        {
-            byte[] effectCode = File.ReadAllBytes(mgfxoPath);
-            ShaderDebugLog.Write($"Shader file size: {effectCode.Length} bytes");
-            var effect = new Effect(_graphicsDevice, effectCode);
-            _effects[shaderName] = effect;
-            ShaderDebugLog.Write($"Shader '{shaderName}' loaded successfully. Parameters:");
-            foreach (EffectParameter param in effect.Parameters)
-            {
-                ShaderDebugLog.Write($"  - {param.Name}");
-            }
-        }
-        catch (Exception ex)
-        {
-            ShaderDebugLog.Write($"ERROR: Failed to load shader '{shaderName}': {ex.Message}");
-        }
-    }
-
-    public void SetShader(string shaderName)
-    {
-        if (string.IsNullOrEmpty(shaderName))
-        {
-            _currentShader = string.Empty;
-            return;
-        }
-
-        if (!_effects.ContainsKey(shaderName))
-        {
-            LoadShader(shaderName);
-        }
-
-        _currentShader = _effects.ContainsKey(shaderName) ? shaderName : string.Empty;
     }
 
     public void SetEnabled(bool enabled)
     {
+        if (_isEnabled == enabled)
+            return;
+
         _isEnabled = enabled;
-        if (!enabled)
+
+        if (_isEnabled)
         {
-            _currentShader = string.Empty;
+            _tileMaterial?.Dispose();
+            _tileMaterial = new ShaderMaterial(_graphicsDevice, "TileDebug");
+            ShaderDebugLog.Write("TileDebug shader loaded");
+        }
+        else
+        {
+            _tileMaterial?.Dispose();
+            _tileMaterial = null;
         }
     }
 
-    public Effect? GetCurrentEffect()
+    public ShaderMaterial? GetTileMaterial()
     {
-        if (!_isEnabled || string.IsNullOrEmpty(_currentShader))
-        {
-            ShaderDebugLog.Write(
-                $"GetCurrentEffect returning null: Enabled={_isEnabled}, CurrentShader='{_currentShader}'"
-            );
+        if (!_isEnabled)
             return null;
-        }
-
-        _effects.TryGetValue(_currentShader, out Effect? effect);
-        if (effect == null)
-        {
-            ShaderDebugLog.Write($"ERROR: Effect '{_currentShader}' not found in dictionary!");
-        }
-        return effect;
+        return _tileMaterial;
     }
 
-    public void SetParameter(string name, Vector4 value)
+    public static Vector4 GetRandomColor()
     {
-        if (_effects.TryGetValue(_currentShader, out Effect? effect))
-        {
-            effect.Parameters[name]?.SetValue(value);
-        }
+        Random random = new();
+        return new Vector4(
+            (float)random.NextDouble(),
+            (float)random.NextDouble(),
+            (float)random.NextDouble(),
+            1f
+        );
     }
 
-    public void SetRandomColor()
+    public void ApplyViewProjection(Matrix view, Matrix projection)
     {
-        if (_effects.TryGetValue(_currentShader, out Effect? effect))
-        {
-            var color = new Vector4(
-                (float)_random.NextDouble(),
-                (float)_random.NextDouble(),
-                (float)_random.NextDouble(),
-                1f
-            );
-            effect.Parameters["RandomColor"]?.SetValue(color);
-        }
+        Matrix vp = view * projection;
+        _tileMaterial?.SetParameter("view_projection", vp);
+    }
+
+    [Conditional("DEBUG")]
+    public void Update()
+    {
+        _tileMaterial?.Update();
     }
 
     public void Dispose()
     {
-        foreach (Effect effect in _effects.Values)
-        {
-            effect.Dispose();
-        }
-        _effects.Clear();
+        Runtime.FileReloaded -= OnFileReloaded;
+        _tileMaterial?.Dispose();
+        _tileMaterial = null;
     }
 }
