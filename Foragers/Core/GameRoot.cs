@@ -1,6 +1,7 @@
 using System;
 using Foragers.Core.Helpers;
 using Foragers.Core.Player;
+using Foragers.Core.Shaders;
 using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -23,6 +24,7 @@ public class GameRoot : Game
 
     private PlayerController _player = null!;
     private Generator _world = null!;
+    private ShaderRenderer _shaderRenderer = null!;
     private bool _debugMode;
     private bool _needsWorldReload;
     private KeyboardState _prevKeyboardState;
@@ -98,7 +100,10 @@ public class GameRoot : Game
 
         _world = new Generator(GraphicsDevice, _tilePalettePath, "World/World.json");
 
-        var worldOffset = new Vector2(
+        _shaderRenderer = new ShaderRenderer(GraphicsDevice);
+        _player.SetShaderRenderer(_shaderRenderer);
+
+        Vector2 worldOffset = new(
             (BaseWidth - Generator.WorldWidth) / 2f,
             (BaseHeight - Generator.WorldHeight) / 2f
         );
@@ -158,7 +163,7 @@ public class GameRoot : Game
         MouseState mouse = Mouse.GetState();
         float cursorX = (mouse.X - _offsetX) / (float)_scale;
         float cursorY = (mouse.Y - _offsetY) / (float)_scale;
-        var cursorPos = new Vector2(cursorX, cursorY);
+        Vector2 cursorPos = new(cursorX, cursorY);
 
         GamePadState gamePad = GamePad.GetState(0);
 
@@ -190,27 +195,60 @@ public class GameRoot : Game
         base.Update(gameTime);
     }
 
+    private int _drawCounter;
+
     protected override void Draw(GameTime gameTime)
     {
+        _drawCounter++;
+        if (_drawCounter % 60 == 0)
+        {
+            Shaders.ShaderDebugLog.Write(
+                $"Draw #{_drawCounter}: ShaderEnabled={_shaderRenderer.IsEnabled}, CurrentShader={_shaderRenderer.CurrentShader}"
+            );
+        }
+
         MouseState drawMouse = Mouse.GetState();
         int gameMouseX = (drawMouse.X - _offsetX) / _scale;
         int gameMouseY = (drawMouse.Y - _offsetY) / _scale;
 
+        Effect? shaderEffect = _shaderRenderer.GetCurrentEffect();
+        bool useShader = _shaderRenderer.IsEnabled && shaderEffect != null;
+
+        Vector2 worldPos = new(
+            (BaseWidth - Generator.WorldWidth) / 2f,
+            (BaseHeight - Generator.WorldHeight) / 2f
+        );
+
         GraphicsDevice.SetRenderTarget(_renderTarget);
         GraphicsDevice.Clear(new Color(46, 171, 212));
 
+        if (useShader && shaderEffect != null)
+        {
+            var view = Matrix.CreateTranslation(0, 0, 0);
+            var projection = Matrix.CreateOrthographicOffCenter(0, BaseWidth, BaseHeight, 0, 0, 1);
+            Matrix vp = view * projection;
+            shaderEffect.Parameters["view_projection"]?.SetValue(vp);
+
+            _spriteBatch.Begin(
+                SpriteSortMode.Immediate,
+                null,
+                SamplerState.PointClamp,
+                null,
+                null,
+                shaderEffect
+            );
+            _world.DrawWithColor(_spriteBatch, shaderEffect, worldPos);
+            _spriteBatch.End();
+        }
+        else
+        {
+            _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
+            _world.Draw(_spriteBatch, worldPos);
+            _spriteBatch.End();
+        }
+
         _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
-
-        _world.Draw(
-            _spriteBatch,
-            new Vector2(
-                (BaseWidth - Generator.WorldWidth) / 2f,
-                (BaseHeight - Generator.WorldHeight) / 2f
-            )
-        );
-
         _player.Draw(_spriteBatch, _debugMode);
-
         _spriteBatch.End();
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
@@ -221,13 +259,11 @@ public class GameRoot : Game
         GraphicsDevice.Clear(Color.Black);
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
-
         _spriteBatch.Draw(
             _renderTarget,
             new Rectangle(_offsetX, _offsetY, BaseWidth * _scale, BaseHeight * _scale),
             Color.White
         );
-
         _spriteBatch.End();
 
         base.Draw(gameTime);

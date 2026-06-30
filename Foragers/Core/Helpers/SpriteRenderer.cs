@@ -1,3 +1,4 @@
+using Foragers.Core.Shaders;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static Foragers.Core.Helpers.Tweens;
@@ -7,10 +8,16 @@ namespace Foragers.Core.Helpers;
 public sealed class SpriteRenderer
 {
     private readonly List<SpriteTween> _tweens;
+    private ShaderRenderer? _shaderRenderer;
 
     public SpriteRenderer()
     {
         _tweens = [];
+    }
+
+    public void SetShaderRenderer(ShaderRenderer shaderRenderer)
+    {
+        _shaderRenderer = shaderRenderer;
     }
 
     public void TriggerTween(SpriteTween tween)

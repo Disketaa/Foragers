@@ -1,4 +1,5 @@
 using Foragers.Core.Helpers;
+using Foragers.Core.Shaders;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -164,6 +165,36 @@ public sealed class Generator
                 _palette.Draw(spriteBatch, tileIndex, tilePos);
             }
         }
+    }
+
+    private static int _tileDrawCounter;
+
+    public void DrawWithColor(SpriteBatch spriteBatch, Effect effect, Vector2 position)
+    {
+        _tileDrawCounter = 0;
+        Random random = new(_seed);
+        for (int y = 0; y < _worldTiles; y++)
+        {
+            for (int x = 0; x < _worldTiles; x++)
+            {
+                int tileIndex = _tileIndices[(y * _worldTiles) + x];
+                if (tileIndex < 0)
+                    continue;
+
+                Vector2 tilePos = new(position.X + (x * _tileSize), position.Y + (y * _tileSize));
+                Vector4 color = new(
+                    (float)random.NextDouble(),
+                    (float)random.NextDouble(),
+                    (float)random.NextDouble(),
+                    1f
+                );
+                _palette.DrawWithColor(spriteBatch, effect, tileIndex, tilePos, color);
+                _tileDrawCounter++;
+            }
+        }
+        Core.Shaders.ShaderDebugLog.Write(
+            $"DrawWithColor: drew {_tileDrawCounter} tiles at {position}"
+        );
     }
 
     private void ResolveTiles()

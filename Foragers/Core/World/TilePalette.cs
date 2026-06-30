@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Foragers.Core.Helpers;
+using Foragers.Core.Shaders;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -82,6 +84,28 @@ public sealed class TilePalette
     public void Draw(SpriteBatch spriteBatch, int tileIndex, Vector2 position)
     {
         spriteBatch.Draw(_texture, position, GetSourceRect(tileIndex), Color.White);
+    }
+
+    public void DrawWithColor(
+        SpriteBatch spriteBatch,
+        Effect effect,
+        int tileIndex,
+        Vector2 position,
+        Vector4 color
+    )
+    {
+        effect.Parameters["RandomColor"]?.SetValue(color);
+        spriteBatch.Draw(_texture, position, GetSourceRect(tileIndex), Color.White);
+    }
+
+    internal void DrawTileWithEffect(
+        GraphicsDevice graphicsDevice,
+        Effect effect,
+        int tileIndex,
+        Vector2 tilePos
+    )
+    {
+        throw new NotImplementedException();
     }
 
     public Texture2D Texture => _texture;

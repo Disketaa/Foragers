@@ -1,9 +1,5 @@
-.clinerules/
-.config/
+.*/
 .editorconfig
-.kilo
-.specify/
-.vscode/
 /Workspace/
 bin/
 dotnet-tools.json/
