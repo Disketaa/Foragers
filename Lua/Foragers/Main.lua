@@ -1,9 +1,7 @@
 local Config = require("Content.Data.Config")
-local Sprite = require("Source.Sprite")
-local CharacterData = require("Content.Data.Character")
+local SpriteLoader = require("Source.SpriteLoader")
 
-local player
-local moveSpeed = 64
+local objects
 
 local function reloadConfig()
 	package.loaded["Content.Data.Config"] = nil
@@ -12,17 +10,19 @@ local function reloadConfig()
 	love.graphics.setBackgroundColor(unpack(Config.backgroundColor))
 end
 
+local function getSpawnPosition(data)
+	if data.tag == "player" then
+		return Config.window.width / 2, Config.window.height / 2
+	end
+	return 0, 0
+end
+
 function love.load()
 	print("Love2D project started")
 	love.window.setMode(Config.window.width, Config.window.height, { resizable = Config.window.resizable })
 	love.graphics.setBackgroundColor(unpack(Config.backgroundColor))
-	player = {
-		x = Config.window.width / 2,
-		y = Config.window.height / 2,
-		flipX = false,
-	}
-	player.sprite = Sprite.new(CharacterData)
-	print("Sprite: " .. CharacterData.spriteSheet)
+
+	objects = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition)
 end
 
 function love.keypressed(key)
@@ -31,29 +31,19 @@ function love.keypressed(key)
 		print("Config reloaded")
 	end
 	if key == "f2" then
-		package.loaded["Content.Data.Character"] = nil
-		local newCharData = require("Content.Data.Character")
-		player.sprite = Sprite.new(newCharData)
-		player.sprite.flipX = player.flipX
-		print("Character data reloaded")
+		objects = SpriteLoader.reload(objects, "Content/Assets/Sprites/Character", getSpawnPosition)
+		print("Sprites reloaded")
 	end
 end
 
 function love.update(dt)
-	player.sprite:update(dt)
-	local moving = false
-	if love.keyboard.isDown("w") then player.y = player.y - moveSpeed * dt; moving = true end
-	if love.keyboard.isDown("s") then player.y = player.y + moveSpeed * dt; moving = true end
-	if love.keyboard.isDown("a") then player.x = player.x - moveSpeed * dt; player.flipX = true; moving = true end
-	if love.keyboard.isDown("d") then player.x = player.x + moveSpeed * dt; player.flipX = false; moving = true end
-	if moving then
-		player.sprite:setAnimation("run")
-	else
-		player.sprite:setAnimation("idle")
+	for _, entry in ipairs(objects) do
+		entry.instance:update(dt)
 	end
-	player.sprite.flipX = player.flipX
 end
 
 function love.draw()
-	player.sprite:draw(player.x, player.y)
+	for _, entry in ipairs(objects) do
+		entry.instance:draw()
+	end
 end

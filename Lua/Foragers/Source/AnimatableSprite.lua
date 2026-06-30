@@ -1,45 +1,46 @@
-local Sprite = {}
-Sprite.__index = Sprite
+local AnimatableSprite = {}
+AnimatableSprite.__index = AnimatableSprite
 
-function Sprite.new(data)
-	local self = setmetatable({}, Sprite)
+function AnimatableSprite.new(data)
+	local self = setmetatable({}, AnimatableSprite)
 	self.image = love.graphics.newImage(data.spriteSheet)
 	self.frameWidth = data.frameWidth
 	self.frameHeight = data.frameHeight
-	self.animations = data.animations
+	self.animations = {}
+	self.quads = {}
 	self.flipX = false
-	self:_buildQuads()
-	self.currentAnim = "idle"
+	self.currentAnim = data.animations[1] and data.animations[1].name
 	self.currentTime = 0
+	self.type = "animator"
+	self:_buildQuads(data.animations)
 	return self
 end
 
-function Sprite:_buildQuads()
-	self.quads = {}
+function AnimatableSprite:_buildQuads(animList)
 	local sheetWidth = self.image:getWidth()
 	local sheetHeight = self.image:getHeight()
-	local cols = sheetWidth / self.frameWidth
-	for name, anim in pairs(self.animations) do
+	for i, anim in ipairs(animList) do
+		local name = anim.name
+		local row = anim.row or i
+		self.animations[name] = anim
 		self.quads[name] = {}
-		local row = anim.row
 		for col = 0, anim.frames - 1 do
 			local x = col * self.frameWidth
-			local y = row * self.frameHeight
-			self.quads[name][col + 1] = love.graphics.newQuad(
-				x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight
-			)
+			local y = (row - 1) * self.frameHeight
+			self.quads[name][col + 1] =
+				love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
 		end
 	end
 end
 
-function Sprite:setAnimation(name)
+function AnimatableSprite:setAnimation(name)
 	if self.animations[name] and self.currentAnim ~= name then
 		self.currentAnim = name
 		self.currentTime = 0
 	end
 end
 
-function Sprite:update(dt)
+function AnimatableSprite:update(dt)
 	local anim = self.animations[self.currentAnim]
 	if anim.loop then
 		self.currentTime = self.currentTime + dt
@@ -54,7 +55,7 @@ function Sprite:update(dt)
 	end
 end
 
-function Sprite:draw(x, y)
+function AnimatableSprite:draw(x, y)
 	local anim = self.animations[self.currentAnim]
 	local frameIndex = math.floor(self.currentTime * anim.speed) + 1
 	if frameIndex > #self.quads[self.currentAnim] then
@@ -66,4 +67,4 @@ function Sprite:draw(x, y)
 	love.graphics.draw(self.image, quad, x, y, 0, sx, 1, ox, 0)
 end
 
-return Sprite
+return AnimatableSprite
