@@ -71,9 +71,9 @@ function Controllable:update(dt)
 			end
 
 			if len > 0 then
-				comp:setAnimation("Run")
+				comp:setAnimation("run")
 			else
-				comp:setAnimation("Idle")
+				comp:setAnimation("idle")
 			end
 			break
 		end

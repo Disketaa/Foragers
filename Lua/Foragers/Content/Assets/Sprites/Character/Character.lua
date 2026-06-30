@@ -1,5 +1,5 @@
 return {
-	tag = "Player",
+	tag = "player",
 	components = {
 
 		{
@@ -8,10 +8,10 @@ return {
 			frameWidth = 16,
 			frameHeight = 16,
 			animations = {
-				{ name = "Idle", frames = 4, speed = 4, loop = true },
-				{ name = "Run", frames = 4, speed = 8, loop = true },
-				{ name = "Swim", frames = 4, speed = 6, loop = true },
-				{ name = "Death", frames = 4, speed = 5, loop = false },
+				{ name = "idle", frames = 4, speed = 4, loop = true },
+				{ name = "run", frames = 4, speed = 8, loop = true },
+				{ name = "swim", frames = 4, speed = 6, loop = true },
+				{ name = "death", frames = 4, speed = 5, loop = false },
 			},
 		},
 

@@ -9,7 +9,7 @@ local objects = {}
 -- Uses Config captured by closure; hot-reload updates via reloadConfig.
 local function getSpawnPosition(data)
 	local w = Config.window or {}
-	if data.tag == "Player" then
+	if data.tag == "player" then
 		return (w.width or 640) / 2, (w.height or 360) / 2
 	end
 	return 0, 0
