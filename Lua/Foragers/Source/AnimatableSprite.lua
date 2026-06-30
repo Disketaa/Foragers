@@ -1,6 +1,10 @@
+-- Animated sprite component.
 local AnimatableSprite = {}
 AnimatableSprite.__index = AnimatableSprite
 
+-- data.spriteSheet - path to spritesheet image
+-- data.frameWidth, data.frameHeight - frame dimensions
+-- data.animations - array: { name, row, frames, speed, loop }
 function AnimatableSprite.new(data)
 	local self = setmetatable({}, AnimatableSprite)
 	self.image = love.graphics.newImage(data.spriteSheet)
@@ -16,6 +20,8 @@ function AnimatableSprite.new(data)
 	return self
 end
 
+-- Builds quads for each animation from spritesheet.
+-- Frames arranged left-to-right, rows bottom-to-top.
 function AnimatableSprite:_buildQuads(animList)
 	local sheetWidth = self.image:getWidth()
 	local sheetHeight = self.image:getHeight()
@@ -33,6 +39,7 @@ function AnimatableSprite:_buildQuads(animList)
 	end
 end
 
+-- Switches current animation. Resets animation time.
 function AnimatableSprite:setAnimation(name)
 	if self.animations[name] and self.currentAnim ~= name then
 		self.currentAnim = name
@@ -40,6 +47,7 @@ function AnimatableSprite:setAnimation(name)
 	end
 end
 
+-- Updates animation time. Loop or one-shot mode.
 function AnimatableSprite:update(dt)
 	local anim = self.animations[self.currentAnim]
 	if anim.loop then
@@ -55,6 +63,7 @@ function AnimatableSprite:update(dt)
 	end
 end
 
+-- Draws current frame. Supports X-axis flip.
 function AnimatableSprite:draw(x, y)
 	local anim = self.animations[self.currentAnim]
 	local frameIndex = math.floor(self.currentTime * anim.speed) + 1

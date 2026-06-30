@@ -1,9 +1,12 @@
+-- Loads objects from Content/Assets/Sprites/{Name}/Character.lua.
+-- Automatically builds components via factories.
 local Object = require("Source.Object")
 local AnimatableSprite = require("Source.AnimatableSprite")
 local Controllable = require("Source.Controllable")
 
 local SpriteLoader = {}
 
+-- Component factories by name. Add new types here.
 local componentFactories = {
 	AnimatableSprite = function(compData)
 		return AnimatableSprite.new(compData)
@@ -13,6 +16,10 @@ local componentFactories = {
 	end,
 }
 
+-- Scans folder for *.lua files, creates objects.
+-- assetsPath - path to Character.lua folder.
+-- spawnCallback(data) - returns spawn position (x, y).
+-- Returns array: { path, data, instance }.
 function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	local objects = {}
 
@@ -59,6 +66,7 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	return objects
 end
 
+-- Reloads all objects. Clears require cache.
 function SpriteLoader.reload(objects, assetsPath, spawnCallback)
 	for _, entry in ipairs(objects) do
 		local luaPath = entry.path:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")

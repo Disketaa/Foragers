@@ -1,6 +1,9 @@
+-- Input control component. Handles keyboard input.
 local Controllable = {}
 Controllable.__index = Controllable
 
+-- data.keys - key mapping: { up, down, left, right }.
+-- data.movementSpeed - movement speed in pixels per second. Default: 64.
 function Controllable.new(data)
 	data = data or {}
 	return setmetatable({
@@ -9,6 +12,9 @@ function Controllable.new(data)
 	}, Controllable)
 end
 
+-- Updates parent position based on input.
+-- Requires AnimatableSprite component (type == "animator").
+-- Sets animation to "Run" or "Idle".
 function Controllable:update(dt)
 	if not self.parent then
 		return
