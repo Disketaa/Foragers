@@ -26,7 +26,9 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 
 	local function scan(path)
 		local items = love.filesystem.getDirectoryItems(path)
-		if not items then return end
+		if not items then
+			return
+		end
 
 		for _, item in ipairs(items) do
 			local fullPath = path .. "/" .. item
@@ -54,8 +56,12 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 
 					if spawnCallback then
 						local x, y = spawnCallback(data)
-						if x then obj.x = x end
-						if y then obj.y = y end
+						if x then
+							obj.x = x
+						end
+						if y then
+							obj.y = y
+						end
 					end
 
 					table.insert(objects, { path = fullPath, data = data, instance = obj })

@@ -20,34 +20,53 @@ end
 -- Updates parent position based on keyboard input.
 -- Modifies parent.x/y directly; sets animator "Run"/"Idle" animation state.
 -- Guard against missing parent/components to survive hot-reload edge cases.
+-- Diagonal movement is normalized to prevent ~1.414x speed boost.
 function Controllable:update(dt)
 	if not self.parent or not self.parent.components then
 		return
 	end
 
-	local moving = false
+	-- Accumulate input direction vector
+	local inputX, inputY = 0, 0
 	if love.keyboard.isDown(self.keys.up) then
-		self.parent.y = self.parent.y - self.speed * dt
-		moving = true
+		inputY = inputY - 1
 	end
 	if love.keyboard.isDown(self.keys.down) then
-		self.parent.y = self.parent.y + self.speed * dt
-		moving = true
+		inputY = inputY + 1
+	end
+	if love.keyboard.isDown(self.keys.left) then
+		inputX = inputX - 1
+	end
+	if love.keyboard.isDown(self.keys.right) then
+		inputX = inputX + 1
+	end
+
+	-- Normalize diagonal movement to prevent ~1.414x speed boost
+	local len = math.sqrt(inputX * inputX + inputY * inputY)
+	local moveX, moveY = 0, 0
+	if len > 0 then
+		moveX, moveY = inputX / len, inputY / len
+	end
+
+	-- Y movement applies after vertical input check; X movement couples with animator (original structure)
+	if len > 0 then
+		self.parent.y = self.parent.y + moveY * self.speed * dt
 	end
 
 	for _, comp in ipairs(self.parent.components) do
 		if comp.type == "animator" then
-			if love.keyboard.isDown(self.keys.left) then
-				self.parent.x = self.parent.x - self.speed * dt
-				comp.flipX = true
-				moving = true
+			if len > 0 then
+				self.parent.x = self.parent.x + moveX * self.speed * dt
 			end
-			if love.keyboard.isDown(self.keys.right) then
-				self.parent.x = self.parent.x + self.speed * dt
-				comp.flipX = false
-				moving = true
+			-- flipX only updates on horizontal input (preserves last facing when moving vertically)
+			if inputX ~= 0 then
+				comp.flipX = inputX < 0
 			end
-			comp:setAnimation(moving and "Run" or "Idle")
+			if len > 0 then
+				comp:setAnimation("Run")
+			else
+				comp:setAnimation("Idle")
+			end
 			break
 		end
 	end

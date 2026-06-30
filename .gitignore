@@ -1,9 +1,12 @@
 .*/
 .editorconfig
+/Lua/Foragers/node_modules
 /Workspace/
 bin/
 dotnet-tools.json/
-obj/
-Lua/Foragers/love-run.bat
 Lua/Foragers/.luacheckrc
 Lua/Foragers/Foragers.bat
+Lua/Foragers/love-run.bat
+Lua/Foragers/package-lock.json
+Lua/Foragers/package.json
+obj/

@@ -20,7 +20,9 @@ function ModLoader.loadAllMods(modsPath)
 	local mods = {}
 	pcall(function()
 		local modList = love.filesystem.getDirectoryItems(modsPath)
-		if not modList then return end
+		if not modList then
+			return
+		end
 		for _, modName in ipairs(modList) do
 			local fullPath = modsPath .. "/" .. modName
 			local info = love.filesystem.getInfo(fullPath)

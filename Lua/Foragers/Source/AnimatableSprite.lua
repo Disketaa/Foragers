@@ -44,7 +44,8 @@ function AnimatableSprite:_buildQuads(animList)
 			for col = 0, (anim.frames or 1) - 1 do
 				local x = col * self.frameWidth
 				local y = (row - 1) * self.frameHeight
-				self.quads[name][col + 1] = love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
+				self.quads[name][col + 1] =
+					love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
 			end
 		end
 	end
@@ -64,7 +65,9 @@ end
 -- Guard against nil currentAnim (e.g., corrupted mod data) to prevent runtime crash.
 function AnimatableSprite:update(dt)
 	local anim = self.animations[self.currentAnim]
-	if not anim then return end
+	if not anim then
+		return
+	end
 	if anim.loop then
 		self.currentTime = (self.currentTime + dt) % (anim.frames / anim.speed)
 	else
@@ -79,9 +82,13 @@ end
 ---@param y number Object Y position
 function AnimatableSprite:draw(x, y)
 	local anim = self.animations[self.currentAnim]
-	if not anim then return end
+	if not anim then
+		return
+	end
 	local quads = self.quads[self.currentAnim]
-	if not quads or #quads == 0 then return end
+	if not quads or #quads == 0 then
+		return
+	end
 	local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, #quads)
 	local quad = quads[frameIndex]
 	local sx = self.flipX and -1 or 1

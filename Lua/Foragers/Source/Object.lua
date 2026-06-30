@@ -31,7 +31,9 @@ end
 ---@param dt number Delta time in seconds
 function Object:update(dt)
 	for _, component in ipairs(self.components) do
-		if component.update then component:update(dt) end
+		if component.update then
+			component:update(dt)
+		end
 	end
 end
 
@@ -39,7 +41,9 @@ end
 -- Component:draw(x, y) receives world coordinates.
 function Object:draw()
 	for _, component in ipairs(self.components) do
-		if component.draw then component:draw(self.x, self.y) end
+		if component.draw then
+			component:draw(self.x, self.y)
+		end
 	end
 end
 
