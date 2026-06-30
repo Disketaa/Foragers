@@ -28,6 +28,9 @@ function AnimatableSprite.new(data)
 	self.currentTime = 0
 	self.type = "animator"
 	self.tweens = {}
+	-- Pivot point as normalized coordinates (0-1): 0.5, 1 = bottom center
+	self.pivotX = data.pivotX or 0.5
+	self.pivotY = data.pivotY or 0.5
 	self:_buildQuads(data.animations or {})
 	return self
 end
@@ -136,14 +139,18 @@ function AnimatableSprite:draw(x, y)
 	end
 
 	-- Apply flipX: negative scale for left-facing
-	local ox = 0
 	if self.flipX then
 		sx = -sx
-		-- OffsetX shifts quad origin for horizontal flip: full width to align flipped sprite at same X
-		ox = self.frameWidth
 	end
 
-	love.graphics.draw(self.image, quad, x, y, 0, sx, sy, ox, 0)
+	-- Pivot-based origin offset
+	-- In LÖVE: (0,0) = top-left, (frameWidth, frameHeight) = bottom-right
+	-- pivotY = 0 means top edge (oy = 0), pivotY = 1 means bottom edge (oy = frameHeight)
+	local ox = self.frameWidth * self.pivotX
+	local oy = self.frameHeight * self.pivotY
+
+	-- Round to nearest pixel for pixel-perfect rendering
+	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
 end
 
 return AnimatableSprite
