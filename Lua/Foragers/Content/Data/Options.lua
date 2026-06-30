@@ -1,4 +1,4 @@
 return {
-	fullscreen = true,
+	fullscreen = false,
 	fullscreenType = "desktop",
 }

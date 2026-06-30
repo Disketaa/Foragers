@@ -10,6 +10,7 @@ local Canvas = require("Source.Canvas")
 
 local objects = {}
 local canvas = Canvas.new(480, 270)
+local cursorSprite = nil
 
 local function getSpawnPosition(data)
 	if data.tag == "player" then
@@ -40,6 +41,12 @@ function love.load()
 	local bg = Config.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))
 	objects = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
+	cursorSprite = SpriteLoader.loadAll("Content/Assets/Sprites/UI", function(data)
+		return 0, 0
+	end)[1]
+	if cursorSprite and cursorSprite.instance then
+		love.mouse.setVisible(false)
+	end
 end
 
 function love.resize(w, h)
@@ -52,6 +59,14 @@ function love.draw()
 			if entry.instance and entry.instance.draw then
 				entry.instance:draw()
 			end
+		end
+		if cursorSprite and cursorSprite.instance then
+			local mx, my = love.mouse.getPosition()
+			local wx = (mx - canvas.offsetX) / canvas.scale
+			local wy = (my - canvas.offsetY) / canvas.scale
+			cursorSprite.instance.x = wx
+			cursorSprite.instance.y = wy
+			cursorSprite.instance:draw()
 		end
 	end)
 end
