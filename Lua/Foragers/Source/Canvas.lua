@@ -27,6 +27,17 @@ function Canvas:_recreateCanvas()
 	self.canvas:setFilter("nearest", "nearest")
 end
 
+-- Initialize offset values for screen-to-world coordinate conversion
+-- Called from new() and resize() to ensure offsetX/offsetY are always valid
+---@param windowWidth number|nil (optional, defaults to canvas width)
+---@param windowHeight number|nil (optional, defaults to canvas height)
+function Canvas:_initOffset(windowWidth, windowHeight)
+	local w = windowWidth or self.width
+	local h = windowHeight or self.height
+	self.offsetX = math.floor((w - self.width * self.scale) / 2)
+	self.offsetY = math.floor((h - self.height * self.scale) / 2)
+end
+
 ---Recalculate scale and offset when window is resized
 ---@param windowWidth number
 ---@param windowHeight number

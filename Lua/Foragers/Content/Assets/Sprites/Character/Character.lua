@@ -20,6 +20,10 @@ return {
 		{
 			type = "Controllable",
 			movementSpeed = 64,
+			mouseControl = {
+				deadzone = 4,
+				speedFactor = 0.3,
+			},
 		},
 	},
 }

@@ -71,10 +71,38 @@ function love.keypressed(key)
 	end
 end
 
+-- Converts screen coordinates to world (canvas) coordinates.
+-- Accounts for canvas scaling and offset.
+-- @param screenX number Mouse X in screen pixels
+-- @param screenY number Mouse Y in screen pixels
+-- @return number, number World coordinates on canvas
+local function screenToWorld(screenX, screenY)
+	-- Screen coords need to be divided by scale and offset removed
+	-- to get canvas coordinates
+	return (screenX - canvas.offsetX) / canvas.scale, (screenY - canvas.offsetY) / canvas.scale
+end
+
 -- Updates all game object instances.
+-- Continuously updates mouse position for mouseControl while button is held.
 function love.update(dt)
+	-- Update mouse position for Controllable components (follow while held)
+	local mouseX, mouseY = love.mouse.getPosition()
+	local worldX, worldY = screenToWorld(mouseX, mouseY)
+	local isMouseDown = love.mouse.isDown(1)
+
 	for _, entry in ipairs(objects) do
 		if entry.instance and entry.instance.update then
+			-- Pass mouse position to Controllable components
+			for _, comp in ipairs(entry.instance.components or {}) do
+				if comp.type == "Controllable" then
+					if comp.mouseControl and isMouseDown then
+						comp:setMousePosition(worldX, worldY)
+					else
+						comp.mouseX = nil
+						comp.mouseY = nil
+					end
+				end
+			end
 			entry.instance:update(dt)
 		end
 	end

@@ -138,18 +138,19 @@ function AnimatableSprite:draw(x, y)
 		sy = self.tweens.scale_y:getValue()
 	end
 
-	-- Apply flipX: negative scale for left-facing
-	if self.flipX then
-		sx = -sx
-	end
-
 	-- Pivot-based origin offset
 	-- In LÖVE: (0,0) = top-left, (frameWidth, frameHeight) = bottom-right
 	-- pivotY = 0 means top edge (oy = 0), pivotY = 1 means bottom edge (oy = frameHeight)
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
 
+	-- Apply flipX: negative scale for left-facing
+	if self.flipX then
+		sx = -sx
+	end
+
 	-- Round to nearest pixel for pixel-perfect rendering
+	-- See graphics/functions/draw.md for signature: draw(drawable, x, y, r, sx, sy, ox, oy)
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
 end
 
