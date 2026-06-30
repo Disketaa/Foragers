@@ -1,4 +1,5 @@
 using Foragers.Core.Helpers;
+using Foragers.Core.Player;
 using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,15 +10,12 @@ namespace Foragers.Core.Player;
 public sealed class PlayerController(
     GraphicsDevice graphicsDevice,
     string animPath,
-    Vector2 startPosition,
-    ReflectionRenderer reflectionRenderer
+    Vector2 startPosition
 ) : ICollidable
 {
     private readonly PlayerAnimator _animator = new PlayerAnimator(graphicsDevice, animPath);
     private Vector2 _position = startPosition;
-    private readonly ReflectionRenderer _reflectionRenderer = reflectionRenderer;
     private bool _facingLeft;
-    private bool _isSwimming;
 
     private static float GamepadDeadzone =>
         Runtime.GetFloat("Core/Options.json", "GamepadDeadzone", 0.2f);
@@ -30,7 +28,6 @@ public sealed class PlayerController(
     public bool NeedsTileCollision => true;
     public Vector2 Position => _position;
     public CollisionBox? CollisionBox => _animator.Collision;
-    public ReflectionRenderer ReflectionRenderer => _reflectionRenderer;
 
     public void UpdateKeyboard(GameTime gameTime)
     {
@@ -111,42 +108,34 @@ public sealed class PlayerController(
     {
         float runningSpeed = Runtime.GetFloat("Entity/Player.json", "running_speed", 1f);
         float swimmingSpeedMult = Runtime.GetFloat("Entity/Player.json", "swimming_speed", 0.5f);
-        bool isSwimming = !IsOnTile(_position); // The mirrored sprite is visual-only, so swim state must be derived from the real player position.
-        _isSwimming = isSwimming;
+        bool isSwimming = !IsOnTile();
         float speed = isSwimming ? swimmingSpeedMult : runningSpeed;
 
         if (direction != Vector2.Zero && speedFactor > 0f)
         {
-            Vector2 nextPosition = _position + (direction * speed * speedFactor);
-            Vector2 clampedPosition = WorldBorder.Clamp(
-                nextPosition,
+            _position = WorldBorder.Clamp(
+                _position + direction * speed * speedFactor,
                 _animator.Collision,
                 _animator.PivotX,
                 _animator.PivotY
             );
-            _position = clampedPosition;
-            _facingLeft = direction.X switch
-            {
-                < 0f => true,
-                > 0f => false,
-                _ => _facingLeft,
-            };
+            _facingLeft = direction.X < 0f || direction.X <= 0f && _facingLeft;
         }
 
         float animSpeed = isSwimming
             ? speedFactor * swimmingSpeedMult
             : (speedFactor > 0f ? speedFactor : 0f);
 
-        _animator.Update(gameTime, animSpeed, _facingLeft, _isSwimming);
+        _animator.Update(gameTime, animSpeed, _facingLeft, isSwimming);
     }
 
-    private bool IsOnTile(Vector2 position)
+    private bool IsOnTile()
     {
         if (_animator.Collision == null)
             return false;
 
         Rectangle bounds = _animator.Collision.GetBounds(
-            position,
+            _position,
             _animator.PivotX,
             _animator.PivotY
         );
@@ -156,19 +145,5 @@ public sealed class PlayerController(
     public void Draw(SpriteBatch spriteBatch, bool debugMode = false)
     {
         _animator.Draw(spriteBatch, _position, debugMode);
-    }
-
-    public void RegisterReflection()
-    {
-        _reflectionRenderer.Register(
-            _animator.Texture,
-            () => _animator.SourceRect(),
-            () => _position,
-            () => _animator.CurrentEffects,
-            () => _animator.Origin,
-            () => _position,
-            () => _animator.Renderer.GetTransformState().scale,
-            () => _animator.Renderer.GetTransformState().offset
-        );
     }
 }

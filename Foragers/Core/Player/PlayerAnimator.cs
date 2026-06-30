@@ -17,12 +17,6 @@ public sealed class PlayerAnimator
     public CollisionBox? Collision => _sheet.Collision;
     public float PivotX => _sheet.PivotX;
     public float PivotY => _sheet.PivotY;
-    public Texture2D Texture => _sheet.Texture;
-    public Vector2 Origin =>
-        new Vector2(_sheet.FrameWidth * _sheet.PivotX, _sheet.FrameHeight * _sheet.PivotY);
-    public SpriteEffects CurrentEffects =>
-        _facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-    public SpriteRenderer Renderer => _renderer;
 
     public PlayerAnimator(GraphicsDevice graphicsDevice, string animPath)
     {
@@ -78,8 +72,6 @@ public sealed class PlayerAnimator
             Collisions.DrawDebug(spriteBatch, bounds);
         }
     }
-
-    public Rectangle SourceRect() => _animPlayer.SourceRect();
 
     private void OnFlip()
     {

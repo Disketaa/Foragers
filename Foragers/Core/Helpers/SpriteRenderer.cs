@@ -6,9 +6,12 @@ namespace Foragers.Core.Helpers;
 
 public sealed class SpriteRenderer
 {
-    private readonly List<SpriteTween> _tweens = [];
+    private readonly List<SpriteTween> _tweens;
 
-    public SpriteRenderer() { }
+    public SpriteRenderer()
+    {
+        _tweens = [];
+    }
 
     public void TriggerTween(SpriteTween tween)
     {
@@ -29,9 +32,16 @@ public sealed class SpriteRenderer
         }
     }
 
-    public (Vector2 scale, Vector2 offset) GetTransformState()
+    public void Draw(
+        SpriteBatch spriteBatch,
+        Texture2D texture,
+        Rectangle sourceRect,
+        Vector2 position,
+        SpriteEffects effects,
+        float pivotX = 0.5f,
+        float pivotY = 0.5f
+    )
     {
-        // The reflection pass needs the same tweened transform values as the main sprite pass.
         float scaleX = 1f;
         float scaleY = 1f;
         float offsetX = 0f;
@@ -57,22 +67,8 @@ public sealed class SpriteRenderer
             }
         }
 
-        return (new Vector2(scaleX, scaleY), new Vector2(offsetX, offsetY));
-    }
-
-    public void Draw(
-        SpriteBatch spriteBatch,
-        Texture2D texture,
-        Rectangle sourceRect,
-        Vector2 position,
-        SpriteEffects effects,
-        float pivotX = 0.5f,
-        float pivotY = 0.5f
-    )
-    {
-        (Vector2 scale, Vector2 offset) = GetTransformState();
         var origin = new Vector2(sourceRect.Width * pivotX, sourceRect.Height * pivotY);
-        Vector2 drawPosition = position + offset;
+        Vector2 drawPosition = position + new Vector2(offsetX, offsetY);
 
         spriteBatch.Draw(
             texture,
@@ -81,7 +77,7 @@ public sealed class SpriteRenderer
             Color.White,
             0f,
             origin,
-            scale,
+            new Vector2(scaleX, scaleY),
             effects,
             0f
         );

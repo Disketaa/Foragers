@@ -46,20 +46,12 @@ public static class Collisions
     }
 }
 
-public sealed class CollisionBox
+public sealed class CollisionBox(int width, int height, int offsetX = 0, int offsetY = 0)
 {
-    public int Width { get; }
-    public int Height { get; }
-    public int OffsetX { get; }
-    public int OffsetY { get; }
-
-    public CollisionBox(int width, int height, int offsetX = 0, int offsetY = 0)
-    {
-        Width = width;
-        Height = height;
-        OffsetX = offsetX;
-        OffsetY = offsetY;
-    }
+    public int Width { get; } = width;
+    public int Height { get; } = height;
+    public int OffsetX { get; } = offsetX;
+    public int OffsetY { get; } = offsetY;
 
     public Rectangle GetBounds(Vector2 position, float pivotX, float pivotY)
     {

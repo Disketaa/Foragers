@@ -1,7 +1,6 @@
 using System;
 using Foragers.Core.Helpers;
 using Foragers.Core.Player;
-using Foragers.Core.Shaders;
 using Foragers.Core.World;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,14 +17,12 @@ public class GameRoot : Game
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _cursor = null!;
     private RenderTarget2D _renderTarget = null!;
-    private RenderTarget2D _reflectionRenderTarget = null!;
     private int _scale = 1;
     private int _offsetX;
     private int _offsetY;
 
     private PlayerController _player = null!;
     private Generator _world = null!;
-    private ReflectionRenderer _reflectionRenderer = null!;
     private bool _debugMode;
     private bool _needsWorldReload;
     private KeyboardState _prevKeyboardState;
@@ -66,14 +63,6 @@ public class GameRoot : Game
             SurfaceFormat.Color,
             DepthFormat.None
         );
-        _reflectionRenderTarget = new RenderTarget2D(
-            GraphicsDevice,
-            BaseWidth,
-            BaseHeight,
-            false,
-            SurfaceFormat.Color,
-            DepthFormat.None
-        );
 
         string cursorPath = Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory,
@@ -85,7 +74,6 @@ public class GameRoot : Game
         _cursor = Texture2D.FromFile(GraphicsDevice, cursorPath);
 
         Collisions.Initialize(GraphicsDevice);
-        ShaderManager.LoadContent(GraphicsDevice);
 
         Runtime.RegisterJson("Core/Options.json");
         Runtime.RegisterJson("Entity/Player.json");
@@ -99,14 +87,7 @@ public class GameRoot : Game
         _characterPath = Path.Combine(Content.RootDirectory, "Assets", "Entity", "Character.json");
         Runtime.RegisterJsonByPath(_characterPath);
 
-        _reflectionRenderer = new ReflectionRenderer();
-        _player = new PlayerController(
-            GraphicsDevice,
-            _characterPath,
-            new Vector2(320, 180),
-            _reflectionRenderer
-        );
-        _player.RegisterReflection();
+        _player = new PlayerController(GraphicsDevice, _characterPath, new Vector2(320, 180));
 
         _tilePalettePath = Path.Combine(
             Content.RootDirectory,
@@ -146,8 +127,8 @@ public class GameRoot : Game
         int scaleY = (screenHeight + BaseHeight - 1) / BaseHeight;
         _scale = Math.Max(1, Math.Max(scaleX, scaleY));
 
-        _offsetX = (screenWidth - (BaseWidth * _scale)) / 2;
-        _offsetY = (screenHeight - (BaseHeight * _scale)) / 2;
+        _offsetX = (screenWidth - BaseWidth * _scale) / 2;
+        _offsetY = (screenHeight - BaseHeight * _scale) / 2;
     }
 
     private void UpdateWindowTitle()
@@ -215,41 +196,10 @@ public class GameRoot : Game
         int gameMouseX = (drawMouse.X - _offsetX) / _scale;
         int gameMouseY = (drawMouse.Y - _offsetY) / _scale;
 
-        GraphicsDevice.SetRenderTarget(_reflectionRenderTarget);
-        GraphicsDevice.Clear(Color.Transparent);
-
-        bool useReflectionShader =
-            ShaderManager.IsLoaded && Runtime.GetBool("Core/Options.json", "WaterReflectionShader");
-
-        if (useReflectionShader)
-        {
-            _spriteBatch.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.NonPremultiplied,
-                SamplerState.PointClamp,
-                null,
-                null,
-                ShaderManager.WaterReflectionEffect
-            );
-        }
-        else
-        {
-            _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
-        }
-
-        _reflectionRenderer.Draw(_spriteBatch);
-        _spriteBatch.End();
-
         GraphicsDevice.SetRenderTarget(_renderTarget);
         GraphicsDevice.Clear(new Color(46, 171, 212));
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
-
-        _spriteBatch.Draw(
-            _reflectionRenderTarget,
-            new Rectangle(0, 0, BaseWidth, BaseHeight),
-            Color.White
-        );
 
         _world.Draw(
             _spriteBatch,
@@ -261,12 +211,14 @@ public class GameRoot : Game
 
         _player.Draw(_spriteBatch, _debugMode);
 
-        _spriteBatch.Draw(_cursor, new Vector2(gameMouseX, gameMouseY), Color.White);
+        _spriteBatch.End();
 
+        _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
+        _spriteBatch.Draw(_cursor, new Vector2(gameMouseX, gameMouseY), Color.White);
         _spriteBatch.End();
 
         GraphicsDevice.SetRenderTarget(null);
-        GraphicsDevice.Clear(new Color(46, 171, 212));
+        GraphicsDevice.Clear(Color.Black);
 
         _spriteBatch.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp);
 
