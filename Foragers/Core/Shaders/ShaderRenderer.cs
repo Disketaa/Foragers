@@ -90,15 +90,16 @@ public sealed class ShaderRenderer : IDisposable
         return _tileMaterial;
     }
 
-    public static Vector4 GetRandomColor()
+    public static Vector4 GetRandomColorFromPosition(Vector2 position)
     {
-        Random random = new();
-        return new Vector4(
-            (float)random.NextDouble(),
-            (float)random.NextDouble(),
-            (float)random.NextDouble(),
-            1f
-        );
+        uint hash = (uint)(position.X * 73856093) ^ (uint)(position.Y * 19349663);
+        hash = (hash ^ 1103515245) * 1103515245;
+        float r = (hash & 0xFF) / 255f;
+        hash >>= 8;
+        float g = (hash & 0xFF) / 255f;
+        hash >>= 8;
+        float b = (hash & 0xFF) / 255f;
+        return new Vector4(r, g, b, 1f);
     }
 
     public void ApplyViewProjection(Matrix view, Matrix projection)

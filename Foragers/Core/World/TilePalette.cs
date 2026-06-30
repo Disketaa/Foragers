@@ -94,6 +94,7 @@ public sealed class TilePalette
     )
     {
         effect?.Parameters["RandomColor"]?.SetValue(color);
+        effect?.Parameters["Position"]?.SetValue(position);
         spriteBatch.Draw(_texture, position, GetSourceRect(tileIndex), Color.White);
     }
 

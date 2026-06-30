@@ -185,7 +185,7 @@ public sealed class Generator
                     continue;
 
                 Vector2 tilePos = new(position.X + (x * _tileSize), position.Y + (y * _tileSize));
-                Vector4 color = ShaderRenderer.GetRandomColor();
+                Vector4 color = ShaderRenderer.GetRandomColorFromPosition(tilePos);
                 _palette.DrawWithColor(
                     spriteBatch,
                     shaderRenderer.GetTileMaterial()?.Effect,
