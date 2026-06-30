@@ -1,7 +1,5 @@
--- Game entry point. Initializes systems and handles LÖVE callbacks.
 local Config = require("Content.Data.Config") or {}
 
--- Debugger integration - must be early
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 	require("lldebugger").start()
 end
@@ -12,8 +10,6 @@ local Canvas = require("Source.Canvas")
 local objects = {}
 local canvas = Canvas.new(480, 270)
 
--- Returns spawn position based on data.tag.
--- "player" spawns at screen center, others at (0, 0).
 local function getSpawnPosition(data)
 	if data.tag == "player" then
 		return canvas.width / 2, canvas.height / 2
@@ -21,7 +17,6 @@ local function getSpawnPosition(data)
 	return 0, 0
 end
 
--- Reloads Config.lua and applies background color.
 local function reloadConfig()
 	package.loaded["Content.Data.Config"] = nil
 	local newConfig = require("Content.Data.Config")
@@ -32,11 +27,8 @@ local function reloadConfig()
 	end
 end
 
--- Initializes window, loads sprites, sets background.
 function love.load()
 	print("Love2D project started")
-	-- Set nearest filter for all images to prevent blur on scale
-	-- See graphics/functions/setDefaultFilter.md for filter modes
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	love.window.setMode(canvas.width, canvas.height, { resizable = true })
 	local bg = Config.backgroundColor or { 0.5, 0.8, 1.0 }
@@ -44,12 +36,10 @@ function love.load()
 	objects = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
 end
 
--- Integer scale outer: calculate scale and offset based on window size
 function love.resize(w, h)
 	canvas:resize(w, h)
 end
 
--- Draws to canvas with nearest filtering for pixel-perfect upscale
 function love.draw()
 	canvas:draw(function()
 		for _, entry in ipairs(objects) do
@@ -60,7 +50,6 @@ function love.draw()
 	end)
 end
 
--- Hot-reloads Config.lua on F1, sprites on F2.
 function love.keypressed(key)
 	if key == "f1" then
 		reloadConfig()
@@ -71,35 +60,23 @@ function love.keypressed(key)
 	end
 end
 
--- Converts screen coordinates to world (canvas) coordinates.
--- Accounts for canvas scaling and offset.
--- @param screenX number Mouse X in screen pixels
--- @param screenY number Mouse Y in screen pixels
--- @return number, number World coordinates on canvas
 local function screenToWorld(screenX, screenY)
-	-- Screen coords need to be divided by scale and offset removed
-	-- to get canvas coordinates
 	return (screenX - canvas.offsetX) / canvas.scale, (screenY - canvas.offsetY) / canvas.scale
 end
 
--- Updates all game object instances.
--- Continuously updates mouse position for mouseControl while button is held.
 function love.update(dt)
-	-- Update mouse position for Controllable components (follow while held)
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
 	local isMouseDown = love.mouse.isDown(1)
 
 	for _, entry in ipairs(objects) do
 		if entry.instance and entry.instance.update then
-			-- Pass mouse position to Controllable components
 			for _, comp in ipairs(entry.instance.components or {}) do
 				if comp.type == "Controllable" then
 					if comp.mouseControl and isMouseDown then
 						comp:setMousePosition(worldX, worldY)
 					else
-						comp.mouseX = nil
-						comp.mouseY = nil
+						comp.mouseX, comp.mouseY = nil, nil
 					end
 				end
 			end

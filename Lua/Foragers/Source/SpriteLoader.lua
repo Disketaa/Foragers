@@ -1,13 +1,10 @@
--- Loads objects from Content/Assets/Sprites/{Name}/Character.lua.
--- Automatically builds components via registered factories.
 local Object = require("Source.Object")
 local AnimatableSprite = require("Source.AnimatableSprite")
 local Controllable = require("Source.Controllable")
 
 local SpriteLoader = {}
 
--- Component factories by type name. Mods can extend by adding to this table.
--- Each factory receives compData table (may be nil for string-based component refs).
+---@type table<string, function (table):table> Component factory functions indexed by type name
 local componentFactories = {
 	AnimatableSprite = function(compData)
 		return AnimatableSprite.new(compData)
@@ -17,10 +14,9 @@ local componentFactories = {
 	end,
 }
 
--- Scans folder recursively, creates objects from Character.lua files.
--- @param assetsPath string - Path to sprites folder (e.g., "Content/Assets/Sprites/Character")
--- @param spawnCallback function|nil - Receives data table, returns spawn (x, y)
--- @return table[] - Array of { path, data, instance } entries
+---@param assetsPath string
+---@param spawnCallback function|nil
+---@return table[]
 function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	local objects = {}
 
@@ -43,11 +39,8 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 					local obj = Object.new(0, 0)
 
 					for _, compData in ipairs(data.components or {}) do
-						if type(compData) ~= "table" then
-							-- Skip non-table components (string-based refs not supported yet)
-						else
-							local compType = compData.type
-							local factory = componentFactories[compType]
+						if type(compData) == "table" then
+							local factory = componentFactories[compData.type]
 							if factory then
 								obj:addComponent(factory(compData))
 							end
@@ -75,11 +68,10 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	return objects
 end
 
--- Reloads all objects from disk. Clears require cache before loading.
--- @param objects table[] - Previous objects array (for cache invalidation)
--- @param assetsPath string - Path to sprites folder
--- @param spawnCallback function|nil - Spawn position callback
--- @return table[] - New objects array
+---@param objects table[]
+---@param assetsPath string
+---@param spawnCallback function|nil
+---@return table[]
 function SpriteLoader.reload(objects, assetsPath, spawnCallback)
 	for _, entry in ipairs(objects or {}) do
 		local luaPath = entry.path:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")

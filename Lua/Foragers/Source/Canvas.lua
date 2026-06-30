@@ -1,6 +1,3 @@
--- Canvas-based pixel-perfect rendering system
--- Handles integer scaling with nearest-neighbor filtering
-
 local Canvas = {}
 Canvas.__index = Canvas
 
@@ -27,10 +24,8 @@ function Canvas:_recreateCanvas()
 	self.canvas:setFilter("nearest", "nearest")
 end
 
--- Initialize offset values for screen-to-world coordinate conversion
--- Called from new() and resize() to ensure offsetX/offsetY are always valid
----@param windowWidth number|nil (optional, defaults to canvas width)
----@param windowHeight number|nil (optional, defaults to canvas height)
+---@param windowWidth number|nil
+---@param windowHeight number|nil
 function Canvas:_initOffset(windowWidth, windowHeight)
 	local w = windowWidth or self.width
 	local h = windowHeight or self.height
@@ -47,18 +42,14 @@ function Canvas:resize(windowWidth, windowHeight)
 	self.offsetY = math.floor((windowHeight - self.height * self.scale) / 2)
 end
 
----Draw scene to canvas then scale to screen
----@param drawFunc function Function that draws the scene at base resolution
+---@param drawFunc function
 function Canvas:draw(drawFunc)
-	-- Draw to canvas
 	love.graphics.setCanvas(self.canvas)
 	love.graphics.clear()
 	if drawFunc then
 		drawFunc()
 	end
 	love.graphics.setCanvas()
-
-	-- Scale canvas to screen with nearest filtering
 	love.graphics.draw(self.canvas, self.offsetX, self.offsetY, 0, self.scale, self.scale)
 end
 

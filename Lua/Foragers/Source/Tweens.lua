@@ -46,7 +46,6 @@ end
 ---@class Tweens
 local Tweens = {}
 
----Back-out easing: overshoots target then springs back
 ---@param t number
 ---@return number
 function Tweens.BackOut(t)
@@ -55,12 +54,11 @@ function Tweens.BackOut(t)
 	return 1 + c3 * ((t - 1) ^ 3) + c1 * ((t - 1) ^ 2)
 end
 
----Creates a tween for a target property
----@param target string Property name
----@param from number Start value
----@param to number End value
----@param duration number Duration in seconds
----@param curve function Easing function
+---@param target string
+---@param from number
+---@param to number
+---@param duration number
+---@param curve function
 ---@return Tween
 function Tweens.create(target, from, to, duration, curve)
 	return Tween.new(target, from, to, duration, curve or Tweens.BackOut)
