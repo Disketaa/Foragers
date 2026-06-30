@@ -4,7 +4,7 @@ local Controllable = require("Source.Controllable")
 
 local SpriteLoader = {}
 
----@type table<string, function (table):table> Component factory functions indexed by type name
+---@type table<string, fun(table):table> Component factory functions
 local componentFactories = {
 	AnimatableSprite = function(compData)
 		return AnimatableSprite.new(compData)

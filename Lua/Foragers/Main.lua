@@ -1,4 +1,5 @@
 local Config = require("Content.Data.Config") or {}
+local Options = require("Content.Data.Options") or {}
 
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 	require("lldebugger").start()
@@ -30,7 +31,12 @@ end
 function love.load()
 	print("Love2D project started")
 	love.graphics.setDefaultFilter("nearest", "nearest")
-	love.window.setMode(canvas.width, canvas.height, { resizable = true })
+	local fstype = Options.fullscreenType or "desktop"
+	love.window.setMode(canvas.width, canvas.height, {
+		resizable = true,
+		fullscreen = Options.fullscreen or false,
+		fullscreentype = fstype,
+	})
 	local bg = Config.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))
 	objects = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
@@ -57,6 +63,9 @@ function love.keypressed(key)
 	elseif key == "f2" then
 		objects = SpriteLoader.reload(objects, "Content/Assets/Sprites/Character", getSpawnPosition) or {}
 		print("Sprites reloaded")
+	elseif key == "f11" then
+		local fullscreen, fstype = love.window.getFullscreen()
+		love.window.setFullscreen(not fullscreen, fstype)
 	end
 end
 
