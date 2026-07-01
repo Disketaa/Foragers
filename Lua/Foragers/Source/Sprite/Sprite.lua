@@ -8,6 +8,10 @@
 ---@field image love.Image|nil Image for StaticSprite mode
 ---@field type string|nil "StaticSprite" for auto-generated sprites
 ---@field components table<object> Component instances
+---@field _state string|nil Current sprite state ("moving", "idle", etc)
+---@field flipX boolean|nil Horizontal flip state
+---@field tweens table<string, Tween>|nil Runtime tweens on sprite
+---@field animSpeedFactor number Animation speed multiplier (used by Animatable)
 local Sprite = {}
 Sprite.__index = Sprite
 
@@ -19,7 +23,23 @@ function Sprite.new(x, y)
 		x = x or 0,
 		y = y or 0,
 		components = {},
+		tweens = {},
+		animSpeedFactor = 1,
 	}, Sprite)
+end
+
+---@param target string
+---@param from number
+---@param to number
+---@param duration number
+---@param curve function
+function Sprite:triggerTween(target, from, to, duration, curve)
+	for _, comp in ipairs(self.components) do
+		if comp.triggerTween then
+			comp:triggerTween(target, from, to, duration, curve)
+			break
+		end
+	end
 end
 
 ---@param component table

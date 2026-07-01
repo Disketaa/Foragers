@@ -4,12 +4,15 @@
 ---@field speed number Base movement speed in pixels per second
 ---@field mouseX number|nil Mouse X in world coordinates
 ---@field mouseY number|nil Mouse Y in world coordinates
+---@field tags table<string, string>|nil Mapping of states to animation names
 ---@field type "controllable"
 local Controllable = {}
 Controllable.__index = Controllable
 
 local function calculateSpeedMultiplier(distance, slowdownRadius)
-	if not slowdownRadius or slowdownRadius <= 0 then return 1.0 end
+	if not slowdownRadius or slowdownRadius <= 0 then
+		return 1.0
+	end
 	return math.max(0, math.min(1, distance / slowdownRadius))
 end
 
@@ -20,6 +23,7 @@ function Controllable.new(data)
 		keys = kc and kc.keys,
 		speed = data.movementSpeed or 64,
 		mouseControl = data.mouseControl,
+		tags = data.tags,
 		type = "controllable",
 	}, Controllable)
 end
@@ -29,7 +33,9 @@ function Controllable:setMousePosition(worldX, worldY)
 end
 
 function Controllable:update(dt)
-	if not self.parent or not self.parent.components then return end
+	if not self.parent or not self.parent.components then
+		return
+	end
 
 	local keyboardInputX, keyboardInputY = 0, 0
 	local keyboardActive = false
@@ -71,29 +77,23 @@ function Controllable:update(dt)
 
 	local len = math.sqrt(inputX * inputX + inputY * inputY)
 	local moveX, moveY = 0, 0
-	if len > 0 then moveX, moveY = inputX / len, inputY / len end
+	if len > 0 then
+		moveX, moveY = inputX / len, inputY / len
+	end
 
 	if len > 0 then
 		self.parent.y = self.parent.y + moveY * effectiveSpeed * dt
 		self.parent.x = self.parent.x + moveX * effectiveSpeed * dt
 	end
 
-	for _, comp in ipairs(self.parent.components) do
-		if comp.type == "animatable" then
-			if len > 0 then
-				local shouldFlip = mouseActive and (self.mouseX < self.parent.x) or (not mouseActive and inputX < 0)
-				if comp.flipX ~= shouldFlip then
-					comp.flipX = shouldFlip
-					if comp.OnFlip then comp:OnFlip() end
-				end
-				comp:setAnimation("run")
-				comp:setSpeed(speedFactor)
-			else
-				comp:setAnimation("idle")
-				comp:setSpeed(1)
-			end
-			break
+	if self.tags then
+		self.parent._state = len > 0 and "moving" or "idle"
+		if mouseActive then
+			self.parent.flipX = self.mouseX < self.parent.x
+		elseif len > 0 then
+			self.parent.flipX = inputX < 0
 		end
+		self.parent.animSpeedFactor = speedFactor
 	end
 end
 

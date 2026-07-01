@@ -1,5 +1,5 @@
 return {
-	tag = "player",
+	object = "player",
 	frameWidth = 16,
 	frameHeight = 16,
 	pivotX = 0.5,
@@ -8,6 +8,7 @@ return {
 		{
 			component = "animatable",
 			spriteSheet = "Content/Assets/Sprites/Character/Character.png",
+			tags = { idle = "idle", moving = "run" },
 			animations = {
 				idle = { frames = 4, speed = 4, loop = true },
 				run = { frames = 4, speed = 8, loop = true },
@@ -16,14 +17,17 @@ return {
 			},
 		},
 		{
+			component = "tweenable",
+			tweens = {
+				{ target = "scale_x", from = 0.75, to = 1.0, duration = 0.3, curve = "BackOut" },
+				{ target = "scale_y", from = 1.25, to = 1.0, duration = 0.3, curve = "BackOut" },
+			},
+		},
+		{
 			component = "controllable",
 			movementSpeed = 64,
-			keyboardControl = {
-				keys = { up = "w", down = "s", left = "a", right = "d" },
-			},
-			mouseControl = {
-				slowdownRadius = 30,
-			},
+			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
+			mouseControl = { slowdownRadius = 30 },
 		},
 	},
 }

@@ -13,7 +13,7 @@ local canvas = Canvas.new(480, 270)
 local cursorSprite = nil
 
 local function getSpawnPosition(data)
-	if data.tag == "player" then
+	if data.object == "player" then
 		return canvas.width / 2, canvas.height / 2
 	end
 	return 0, 0
