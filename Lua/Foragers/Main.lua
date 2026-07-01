@@ -19,16 +19,6 @@ local function getSpawnPosition(data)
 	return 0, 0
 end
 
-local function reloadConfig()
-	package.loaded["Content.Data.Config"] = nil
-	local newConfig = require("Content.Data.Config")
-	if newConfig then
-		Config = newConfig
-		local bg = Config.backgroundColor or { 0.5, 0.8, 1.0 }
-		love.graphics.setBackgroundColor(unpack(bg))
-	end
-end
-
 function love.load()
 	print("Love2D project started")
 	love.graphics.setDefaultFilter("nearest", "nearest")
@@ -70,13 +60,7 @@ function love.draw()
 end
 
 function love.keypressed(key)
-	if key == "f1" then
-		reloadConfig()
-		print("Config reloaded")
-	elseif key == "f2" then
-		objects = SpriteLoader.reload(objects, "Content/Assets/Sprites/Character", getSpawnPosition) or {}
-		print("Sprites reloaded")
-	elseif key == "f11" then
+	if key == "f11" then
 		local fullscreen, fstype = love.window.getFullscreen()
 		love.window.setFullscreen(not fullscreen, fstype)
 	end

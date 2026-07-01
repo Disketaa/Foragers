@@ -90,16 +90,4 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	return objects
 end
 
----@param objects table[]
----@param assetsPath string
----@param spawnCallback function|nil
----@return table[]
-function SpriteLoader.reload(objects, assetsPath, spawnCallback)
-	for _, entry in ipairs(objects or {}) do
-		local luaPath = entry.path:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
-		package.loaded[luaPath] = nil
-	end
-	return SpriteLoader.loadAll(assetsPath, spawnCallback)
-end
-
 return SpriteLoader
