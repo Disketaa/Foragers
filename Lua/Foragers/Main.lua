@@ -96,7 +96,7 @@ function love.update(dt)
 	for _, entry in ipairs(objects) do
 		if entry.instance and entry.instance.update then
 			for _, comp in ipairs(entry.instance.components or {}) do
-				if comp.type == "Controllable" then
+				if comp.type == "controllable" then
 					if comp.mouseControl and isMouseDown then
 						comp:setMousePosition(worldX, worldY)
 					else

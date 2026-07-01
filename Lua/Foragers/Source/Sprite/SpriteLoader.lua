@@ -6,10 +6,10 @@ local SpriteLoader = {}
 
 ---@type table<string, function(table):table> Component factory functions
 local componentFactories = {
-	Animatable = function(compData)
+	animatable = function(compData)
 		return Animatable.new(compData)
 	end,
-	Controllable = function(compData)
+	controllable = function(compData)
 		return Controllable.new(compData)
 	end,
 }

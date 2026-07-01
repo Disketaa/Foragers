@@ -9,8 +9,9 @@
 ---@field flipX boolean
 ---@field currentAnim string|nil
 ---@field currentTime number
----@field type "Animatable"
+---@field type "animatable"
 ---@field tweens table<string, Tween>
+---@field animationSpeedFactor number Current animation playback speed multiplier
 local Animatable = {}
 Animatable.__index = Animatable
 
@@ -28,10 +29,11 @@ function Animatable.new(data)
 	self.flipX = false
 	self.currentAnim = data.animations and data.animations[1] and data.animations[1].name
 	self.currentTime = 0
-	self.type = "Animatable"
+	self.type = "animatable"
 	self.tweens = {}
 	self.pivotX = data.pivotX or 0.5
 	self.pivotY = data.pivotY or 0.5
+	self.animationSpeedFactor = 1
 	self:_buildQuads(data.animations or {})
 	return self
 end
@@ -77,6 +79,11 @@ function Animatable:_buildQuads(animList)
 	end
 end
 
+---@param speed number Animation speed multiplier
+function Animatable:setSpeed(speed)
+	self.animationSpeedFactor = speed
+end
+
 ---@param name string
 function Animatable:setAnimation(name)
 	if self.animations[name] and self.currentAnim ~= name then
@@ -87,14 +94,12 @@ end
 
 function Animatable:update(dt)
 	local anim = self.animations[self.currentAnim]
-	if not anim then
-		return
-	end
+	if not anim then return end
 	if anim.loop then
-		self.currentTime = (self.currentTime + dt) % (anim.frames / anim.speed)
+		self.currentTime = (self.currentTime + dt * self.animationSpeedFactor) % (anim.frames / anim.speed)
 	else
 		local maxTime = (anim.frames - 1) / anim.speed
-		self.currentTime = math.min(self.currentTime + dt, maxTime)
+		self.currentTime = math.min(self.currentTime + dt * self.animationSpeedFactor, maxTime)
 	end
 	for _, tween in pairs(self.tweens) do
 		tween:update(dt)

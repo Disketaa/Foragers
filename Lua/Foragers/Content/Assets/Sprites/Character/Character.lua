@@ -6,7 +6,7 @@ return {
 	pivotY = 0.75,
 	components = {
 		{
-			component = "Animatable",
+			component = "animatable",
 			spriteSheet = "Content/Assets/Sprites/Character/Character.png",
 			animations = {
 				{ name = "idle", frames = 4, speed = 4, loop = true },
@@ -16,8 +16,11 @@ return {
 			},
 		},
 		{
-			component = "Controllable",
+			component = "controllable",
 			movementSpeed = 64,
+			keyboardControl = {
+				keys = { up = "w", down = "s", left = "a", right = "d" },
+			},
 			mouseControl = {
 				slowdownRadius = 30,
 			},
