@@ -24,9 +24,11 @@ return {
 		},
 		{
 			component = "tweenable",
-			tweens = {
-				{ target = "scale_x", from = 0.75, to = 1.0, duration = 0.3, curve = "BackOut" },
-				{ target = "scale_y", from = 1.25, to = 1.0, duration = 0.6, curve = "BackOut" },
+			tags = {
+				flip = {
+					{ target = "scale_x", from = 0.75, to = 1.0, duration = 0.3, curve = "BackOut" },
+					{ target = "scale_y", from = 1.25, to = 1.0, duration = 0.3, curve = "BackOut" },
+				},
 			},
 		},
 	},

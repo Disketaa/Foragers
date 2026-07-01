@@ -70,7 +70,7 @@ function Controllable:update(dt)
 
 	local effectiveSpeed = self.speed
 	local speedFactor = 1
-	if mouseActive then
+	if mouseActive and self.mouseControl then
 		speedFactor = calculateSpeedMultiplier(distance, self.mouseControl.slowdownRadius)
 		effectiveSpeed = self.speed * speedFactor
 	end
