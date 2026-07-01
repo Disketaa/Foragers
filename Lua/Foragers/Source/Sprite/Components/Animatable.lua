@@ -27,7 +27,7 @@ function Animatable.new(data)
 	self.animations = {}
 	self.quads = {}
 	self.flipX = false
-	self.currentAnim = data.animations and data.animations[1] and data.animations[1].name
+	self.currentAnim = nil
 	self.currentTime = 0
 	self.type = "animatable"
 	self.tweens = {}
@@ -35,6 +35,10 @@ function Animatable.new(data)
 	self.pivotY = data.pivotY or 0.5
 	self.animationSpeedFactor = 1
 	self:_buildQuads(data.animations or {})
+	for name, anim in pairs(self.animations) do
+		self.currentAnim = name
+		break
+	end
 	return self
 end
 
@@ -60,21 +64,20 @@ function Animatable:OnFlip()
 	self:triggerTween("scale_y", 1.25, 1.0, 0.3, Tweens.BackOut)
 end
 
----@param animList table
+---@param animList table<string, table>
 function Animatable:_buildQuads(animList)
 	local sheetWidth, sheetHeight = self.image:getWidth(), self.image:getHeight()
-	for i, anim in ipairs(animList) do
-		if anim.name then
-			local name = anim.name
-			local row = anim.row or i
-			self.animations[name] = anim
-			self.quads[name] = {}
-			for col = 0, (anim.frames or 1) - 1 do
-				local x = col * self.frameWidth
-				local y = (row - 1) * self.frameHeight
-				self.quads[name][col + 1] =
-					love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
-			end
+	local rowIndex = 1
+	for name, anim in pairs(animList) do
+		local row = anim.row or rowIndex
+		rowIndex = rowIndex + 1
+		self.animations[name] = anim
+		self.quads[name] = {}
+		for col = 0, (anim.frames or 1) - 1 do
+			local x = col * self.frameWidth
+			local y = (row - 1) * self.frameHeight
+			self.quads[name][col + 1] =
+				love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
 		end
 	end
 end

@@ -9,10 +9,10 @@ return {
 			component = "animatable",
 			spriteSheet = "Content/Assets/Sprites/Character/Character.png",
 			animations = {
-				{ name = "idle", frames = 4, speed = 4, loop = true },
-				{ name = "run", frames = 4, speed = 8, loop = true },
-				{ name = "swim", frames = 4, speed = 6, loop = true },
-				{ name = "death", frames = 4, speed = 5, loop = false },
+				idle = { frames = 4, speed = 4, loop = true },
+				run = { frames = 4, speed = 8, loop = true },
+				swim = { frames = 4, speed = 6, loop = true },
+				death = { frames = 4, speed = 5, loop = false },
 			},
 		},
 		{

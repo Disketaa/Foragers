@@ -32,11 +32,9 @@ end
 function love.load()
 	print("Love2D project started")
 	love.graphics.setDefaultFilter("nearest", "nearest")
-	local fstype = Options.fullscreenType or "desktop"
 	love.window.setMode(canvas.width, canvas.height, {
 		resizable = true,
-		fullscreen = Options.fullscreen or false,
-		fullscreentype = fstype,
+		fullscreen = Options.fullscreen,
 	})
 	local bg = Config.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))
