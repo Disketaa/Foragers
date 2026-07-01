@@ -26,19 +26,12 @@ function Animatable.new(data)
 	self.pivotX = data.pivotX or 0.5
 	self.pivotY = data.pivotY or 0.5
 	self.tags = data.tags
-	self:_buildQuads(data.animations or {})
-	for name in pairs(self.animations) do
-		self.currentAnim = name
-		break
-	end
-	return self
-end
+	self.currentTime = 0
+	self.currentAnim = self.tags and self.tags.idle or nil
 
----@param animList table<string, table>
-function Animatable:_buildQuads(animList)
 	local sheetWidth, sheetHeight = self.image:getWidth(), self.image:getHeight()
 	local rowIndex = 1
-	for name, anim in pairs(animList) do
+	for name, anim in pairs(data.animations or {}) do
 		local row = anim.row or rowIndex
 		rowIndex = rowIndex + 1
 		self.animations[name] = anim
@@ -46,26 +39,18 @@ function Animatable:_buildQuads(animList)
 		for col = 0, (anim.frames or 1) - 1 do
 			local x = col * self.frameWidth
 			local y = (row - 1) * self.frameHeight
-			self.quads[name][col + 1] =
-				love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
+			self.quads[name][col + 1] = love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
 		end
 	end
+	return self
 end
 
 function Animatable:update(dt)
-	local state = self.parent and self.parent._state
-	if state and self.tags then
-		local animName = self.tags[state]
-		if animName and self.currentAnim ~= animName then
-			self.currentAnim = animName
-			self.currentTime = 0
-		end
-	end
-
 	if self.currentAnim then
 		local anim = self.animations[self.currentAnim]
 		if anim then
 			local speedMult = (self.parent and self.parent.animSpeedFactor) or 1
+			dt = math.min(dt, 0.1) -- Clamp dt to prevent time jump
 			if anim.loop then
 				self.currentTime = (self.currentTime + dt * speedMult) % (anim.frames / anim.speed)
 			else
@@ -79,14 +64,20 @@ end
 ---@param x number
 ---@param y number
 function Animatable:draw(x, y)
-	if not self.currentAnim then
-		return
+	-- Update animation based on state (checked in draw to ensure _state is already set by Controllable)
+	local state = self.parent and self.parent._state
+	if state and self.tags then
+		local animName = self.tags[state]
+		if animName and animName ~= self.currentAnim and self.animations[animName] then
+			self.currentAnim = animName
+			self.currentTime = 0
+		end
 	end
+
+	if not self.currentAnim then return end
 	local anim = self.animations[self.currentAnim]
 	local quads = self.quads[self.currentAnim]
-	if not anim or not quads or #quads == 0 then
-		return
-	end
+	if not anim or not quads or #quads == 0 then return end
 
 	local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, #quads)
 	local quad = quads[frameIndex]
@@ -94,20 +85,14 @@ function Animatable:draw(x, y)
 	local sx, sy = 1, 1
 	local tweenTbl = self.parent and self.parent.tweens
 	if tweenTbl then
-		if tweenTbl.scale_x then
-			sx = tweenTbl.scale_x:getValue()
-		end
-		if tweenTbl.scale_y then
-			sy = tweenTbl.scale_y:getValue()
-		end
+		if tweenTbl.scale_x then sx = tweenTbl.scale_x:getValue() end
+		if tweenTbl.scale_y then sy = tweenTbl.scale_y:getValue() end
 	end
 
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
 
-	if self.parent and self.parent.flipX then
-		sx = -sx
-	end
+	if self.parent and self.parent.flipX then sx = -sx end
 
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
 end
