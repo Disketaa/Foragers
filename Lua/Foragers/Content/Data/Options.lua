@@ -1,3 +1,3 @@
 return {
-	fullscreen = true,
+	fullscreen = false,
 }
