@@ -1,11 +1,13 @@
 local Sprite = require("Source.Sprite.Sprite")
+local WorldConfig = require("Content.Data.World")
+local TileData = require("Content.Assets.Sprites.World.TileDebug")
 
 local private = {}
+local tileSize = TileData.frameWidth
 
-private.width = 20
-private.height = 20
-private.tileSize = 8
-private.seed = 42
+for k, v in pairs(WorldConfig) do
+	private[k] = v
+end
 
 function private.generate()
 	local world = {}
@@ -13,7 +15,10 @@ function private.generate()
 	local centerY = private.height / 2
 	local radius = math.min(centerX, centerY) - 0.5
 
-	love.math.setRandomSeed(private.seed)
+	local effectiveSeed = private.seed
+	if effectiveSeed < 0 then
+		effectiveSeed = love.math.random(1, 999999)
+	end
 
 	for y = 0, private.height - 1 do
 		world[y] = {}
@@ -23,19 +28,17 @@ function private.generate()
 			local dist = math.sqrt(dx * dx + dy * dy)
 			local normalizedDist = dist / radius
 
-			local island = love.math.noise(x * 0.15, y * 0.15)
-			local detail = love.math.noise(x * 0.35 + 5, y * 0.35 + 5)
-			local noiseVal = island + detail * 0.4
+			local island = love.math.noise(x * private.scale, y * private.scale)
+			local detail = love.math.noise(x * private.scale * 2 + 5, y * private.scale * 2 + 5)
+			local noiseVal = island + detail * private.detail
 
 			local rawNoise = noiseVal * 0.5 + 0.5
-			local circleMask = normalizedDist < 1 and (1 - normalizedDist ^ 2.5) or 0
-			local elevation = rawNoise * circleMask
-			local active = rawNoise > 0.75 and circleMask > 0.05
+			local inCircle = normalizedDist < 1
+			local active = rawNoise > private.density and inCircle
 
 			world[y][x] = {
-				x = x * private.tileSize,
-				y = y * private.tileSize,
-				elevation = elevation,
+				x = x * tileSize,
+				y = y * tileSize,
 				noise = noiseVal,
 				dist = normalizedDist,
 				active = active,
@@ -46,22 +49,22 @@ function private.generate()
 	return world
 end
 
-function private.buildWorldSprites(worldData, spawnCallback)
+function private.buildWorldSprites(worldData, canvasWidth, canvasHeight, spawnCallback)
 	local sprites = {}
-	local offsetX = (480 - private.width * private.tileSize) / 2
-	local offsetY = (270 - private.height * private.tileSize) / 2
+	local offsetX = (canvasWidth - private.width * tileSize) / 2
+	local offsetY = (canvasHeight - private.height * tileSize) / 2
 
 	for y = 0, private.height - 1 do
 		for x = 0, private.width - 1 do
 			local tile = worldData[y][x]
 			if tile.active then
 				local sprite = Sprite.new(tile.x + offsetX, tile.y + offsetY)
-				sprite.frameWidth = private.tileSize
-				sprite.frameHeight = private.tileSize
-				sprite.pivotX = 0.5
-				sprite.pivotY = 0.5
+				sprite.frameWidth = tileSize
+				sprite.frameHeight = tileSize
+				sprite.pivotX = TileData.pivotX
+				sprite.pivotY = TileData.pivotY
 				sprite.type = "StaticSprite"
-				sprite.image = love.graphics.newImage("Content/Assets/Sprites/World/TileDebug.png")
+				sprite.image = love.graphics.newImage(private.tileImage)
 
 				local sx, sy = spawnCallback(tile)
 				if sx then
