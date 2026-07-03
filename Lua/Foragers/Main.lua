@@ -8,6 +8,7 @@ end
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Generator = require("Source.World.Generator")
 local Canvas = require("Source.Canvas")
+local ShaderLoader = require("Source.ShaderLoader")
 
 local objects = {}
 local canvas = Canvas.new(480, 270)
@@ -33,6 +34,8 @@ function love.load()
 	objects = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
 
 	-- Insert world tiles at the beginning of objects list (drawn behind characters)
+	ShaderLoader.loadAll("Content/Assets/Shaders")
+
 	local worldData = Generator.generate()
 	for _, entry in
 		ipairs(Generator.buildWorldSprites(worldData, canvas.width, canvas.height, function(data)
@@ -56,6 +59,7 @@ end
 
 function love.draw()
 	canvas:draw(function()
+		ShaderLoader.drawBackground(canvas.width, canvas.height)
 		for _, entry in ipairs(objects) do
 			if entry.instance and entry.instance.draw then
 				entry.instance:draw()
@@ -84,6 +88,7 @@ local function screenToWorld(screenX, screenY)
 end
 
 function love.update(dt)
+	ShaderLoader.update(dt)
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
 	local isMouseDown = love.mouse.isDown(1)
