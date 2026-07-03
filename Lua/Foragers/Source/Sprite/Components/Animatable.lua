@@ -39,7 +39,8 @@ function Animatable.new(data)
 		for col = 0, (anim.frames or 1) - 1 do
 			local x = col * self.frameWidth
 			local y = (row - 1) * self.frameHeight
-			self.quads[name][col + 1] = love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
+			self.quads[name][col + 1] =
+				love.graphics.newQuad(x, y, self.frameWidth, self.frameHeight, sheetWidth, sheetHeight)
 		end
 	end
 	return self
@@ -74,10 +75,14 @@ function Animatable:draw(x, y)
 		end
 	end
 
-	if not self.currentAnim then return end
+	if not self.currentAnim then
+		return
+	end
 	local anim = self.animations[self.currentAnim]
 	local quads = self.quads[self.currentAnim]
-	if not anim or not quads or #quads == 0 then return end
+	if not anim or not quads or #quads == 0 then
+		return
+	end
 
 	local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, #quads)
 	local quad = quads[frameIndex]
@@ -85,14 +90,20 @@ function Animatable:draw(x, y)
 	local sx, sy = 1, 1
 	local tweenTbl = self.parent and self.parent.tweens
 	if tweenTbl then
-		if tweenTbl.scale_x then sx = tweenTbl.scale_x:getValue() end
-		if tweenTbl.scale_y then sy = tweenTbl.scale_y:getValue() end
+		if tweenTbl.scale_x then
+			sx = tweenTbl.scale_x:getValue()
+		end
+		if tweenTbl.scale_y then
+			sy = tweenTbl.scale_y:getValue()
+		end
 	end
 
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
 
-	if self.parent and self.parent.flipX then sx = -sx end
+	if self.parent and self.parent.flipX then
+		sx = -sx
+	end
 
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
 end

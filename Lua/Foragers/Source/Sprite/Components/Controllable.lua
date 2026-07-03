@@ -93,12 +93,10 @@ function Controllable:update(dt)
 		self.parent.flipX = inputX < 0
 	end
 	self.parent.animSpeedFactor = speedFactor
-	if len > 0 and self.parent._debugState ~= "moving" then
-		print("Moving state set")
-		self.parent._debugState = "moving"
-	elseif len == 0 and self.parent._debugState ~= "idle" then
-		print("Idle state set")
-		self.parent._debugState = "idle"
+	if mouseActive then
+		self.parent.flipX = self.mouseX < self.parent.x
+	elseif len > 0 then
+		self.parent.flipX = inputX < 0
 	end
 end
 return Controllable

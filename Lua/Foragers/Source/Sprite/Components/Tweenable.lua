@@ -23,11 +23,12 @@ end
 function Tweenable:update(dt)
 	if self.tags.flip and self.parent then
 		local currFlip = self.parent.flipX
-		if currFlip ~= self._prevFlip then
+		if currFlip ~= nil and currFlip ~= self._prevFlip then
 			for _, tweenData in pairs(self.tags.flip) do
 				local curveFunc = Tweens[tweenData.curve] or Tweens.BackOut
 				if not self.parent.tweens[tweenData.target] then
-					self.parent.tweens[tweenData.target] = Tweens.create(tweenData.target, tweenData.from, tweenData.to, tweenData.duration, curveFunc)
+					self.parent.tweens[tweenData.target] =
+						Tweens.create(tweenData.target, tweenData.from, tweenData.to, tweenData.duration, curveFunc)
 				end
 				local tween = self.parent.tweens[tweenData.target]
 				tween.from = tweenData.from
@@ -37,7 +38,7 @@ function Tweenable:update(dt)
 				tween:start()
 			end
 		end
-		self._prevFlip = currFlip
+		self._prevFlip = currFlip or false
 	end
 
 	for _, tween in pairs(self.parent and self.parent.tweens or {}) do

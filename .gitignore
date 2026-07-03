@@ -5,6 +5,7 @@
 bin/
 dotnet-tools.json/
 Lua/Foragers/.luacheckrc
+Lua/Foragers/AGENTS.md
 Lua/Foragers/conf.lua
 Lua/Foragers/Foragers.bat
 Lua/Foragers/lldebugger.lua
