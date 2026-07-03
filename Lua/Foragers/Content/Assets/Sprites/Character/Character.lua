@@ -18,6 +18,8 @@ return {
 			collisionHeight = 12,
 			offsetX = -5,
 			offsetY = -8,
+			visible = true,
+			object = "player",
 		},
 		{
 			component = "animatable",

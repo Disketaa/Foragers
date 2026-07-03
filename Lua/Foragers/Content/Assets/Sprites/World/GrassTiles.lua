@@ -22,6 +22,8 @@ return {
 			collisionHeight = 8,
 			offsetX = -4,
 			offsetY = -4,
+			visible = true,
+			object = "grass_tile",
 		},
 	},
 }
