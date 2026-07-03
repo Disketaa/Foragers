@@ -28,6 +28,8 @@ end
 
 ---@param data table
 ---@return Tweenable
+---@param data table
+---@return Tweenable
 function Tweenable.new(data)
 	return setmetatable({
 		tweens = data.tweens or {},
@@ -38,6 +40,7 @@ function Tweenable.new(data)
 	}, Tweenable)
 end
 
+---@param dt number
 function Tweenable:update(dt)
 	if self.tags.flip and self.parent then
 		local currFlip = self.parent.flipX

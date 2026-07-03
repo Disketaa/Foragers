@@ -22,6 +22,8 @@ function Collidable.getTerrainColliders()
 	return terrainColliders
 end
 
+---@param data table
+---@return Collidable
 function Collidable.new(data)
 	data = data or {}
 	local self = setmetatable({
@@ -49,6 +51,7 @@ local function checkAABB(a, b)
 	return a.x < b.x + b.w and a.x + a.w > b.x and a.y < b.y + b.h and a.y + a.h > b.y
 end
 
+---@param dt number
 function Collidable:update(dt)
 	if not self.parent then
 		return

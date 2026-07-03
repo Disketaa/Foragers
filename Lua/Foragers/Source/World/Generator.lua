@@ -49,6 +49,7 @@ function private.generate()
 			local dist = math.sqrt(dx * dx + dy * dy)
 			local normalizedDist = dist / radius
 
+			-- 3D simplex noise: seed as z-dimension for deterministic variation per seed
 			local island = love.math.noise(x * private.scale, y * private.scale, effectiveSeed)
 			local detail = love.math.noise(x * private.scale * 2 + 5, y * private.scale * 2 + 5, effectiveSeed + 1000)
 			local noiseVal = island + detail * private.detail

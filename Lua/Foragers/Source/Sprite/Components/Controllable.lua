@@ -2,6 +2,7 @@
 ---@field parent Sprite|nil Parent sprite reference
 ---@field keys { up: string, down: string, left: string, right: string }|nil
 ---@field speed number Base movement speed in pixels per second
+---@field swimmingSpeed number|nil Movement speed in water
 ---@field mouseX number|nil Mouse X in world coordinates
 ---@field mouseY number|nil Mouse Y in world coordinates
 ---@field tags table<string, string>|nil Mapping of states to animation names
@@ -70,13 +71,13 @@ function Controllable:update(dt)
 	end
 
 	local effectiveSpeed = self.speed
-	if self.parent._grounded == false and self.swimmingSpeed then
+	if self.parent._grounded ~= nil and self.parent._grounded == false and self.swimmingSpeed then
 		effectiveSpeed = self.swimmingSpeed
 	end
 	local speedFactor = 1
 	if mouseActive and self.mouseControl then
 		speedFactor = calculateSpeedMultiplier(distance, self.mouseControl.slowdownRadius)
-		effectiveSpeed = self.speed * speedFactor
+		effectiveSpeed = effectiveSpeed * speedFactor
 	end
 
 	local len = math.sqrt(inputX * inputX + inputY * inputY)
