@@ -12,14 +12,14 @@ Collidable.__index = Collidable
 
 -- Baked static terrain colliders, populated once at world generation
 ---@type table<{x:number, y:number, w:number, h:number}>
-local terrianColliders = {}
+local terrainColliders = {}
 
 function Collidable.resetTerrain()
-	terrianColliders = {}
+	terrainColliders = {}
 end
 
 function Collidable.getTerrainColliders()
-	return terrianColliders
+	return terrainColliders
 end
 
 function Collidable.new(data)
@@ -46,10 +46,7 @@ function Collidable:getRect()
 end
 
 local function checkAABB(a, b)
-	return a.x < b.x + b.w
-		and a.x + a.w > b.x
-		and a.y < b.y + b.h
-		and a.y + a.h > b.y
+	return a.x < b.x + b.w and a.x + a.w > b.x and a.y < b.y + b.h and a.y + a.h > b.y
 end
 
 function Collidable:update(dt)
@@ -63,7 +60,7 @@ function Collidable:update(dt)
 
 	local myRect = self:getRect()
 	local grounded = false
-	for _, r in ipairs(terrianColliders) do
+	for _, r in ipairs(terrainColliders) do
 		if checkAABB(myRect, r) then
 			grounded = true
 			break
@@ -79,7 +76,7 @@ end
 
 -- For static tiles only; baked once at world generation
 function Collidable:registerAsTerrain()
-	table.insert(terrianColliders, self:getRect())
+	table.insert(terrainColliders, self:getRect())
 end
 
 function Collidable:draw()

@@ -49,8 +49,8 @@ function private.generate()
 			local dist = math.sqrt(dx * dx + dy * dy)
 			local normalizedDist = dist / radius
 
-			local island = love.math.noise(x * private.scale, y * private.scale)
-			local detail = love.math.noise(x * private.scale * 2 + 5, y * private.scale * 2 + 5)
+			local island = love.math.noise(x * private.scale, y * private.scale, effectiveSeed)
+			local detail = love.math.noise(x * private.scale * 2 + 5, y * private.scale * 2 + 5, effectiveSeed + 1000)
 			local noiseVal = island + detail * private.detail
 
 			local rawNoise = noiseVal * 0.5 + 0.5

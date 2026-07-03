@@ -29,17 +29,19 @@ function love.load()
 	})
 	local bg = Config.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))
-	
+
 	objects = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
-	
+
 	-- Insert world tiles at the beginning of objects list (drawn behind characters)
 	local worldData = Generator.generate()
-	for _, entry in ipairs(Generator.buildWorldSprites(worldData, canvas.width, canvas.height, function(data)
-		return data.x, data.y
-	end)) do
+	for _, entry in
+		ipairs(Generator.buildWorldSprites(worldData, canvas.width, canvas.height, function(data)
+			return data.x, data.y
+		end))
+	do
 		table.insert(objects, 1, entry)
 	end
-	
+
 	cursorSprite = SpriteLoader.loadAll("Content/Assets/Sprites/UI", function(data)
 		return 0, 0
 	end)[1]

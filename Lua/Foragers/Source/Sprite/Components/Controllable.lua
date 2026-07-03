@@ -21,7 +21,8 @@ function Controllable.new(data)
 	local kc = data.keyboardControl
 	return setmetatable({
 		keys = kc and kc.keys,
-		speed = data.movementSpeed or 64,
+		speed = data.movementSpeed or 50,
+		swimmingSpeed = data.swimmingSpeed or 30,
 		mouseControl = data.mouseControl,
 		tags = data.tags,
 		type = "controllable",
@@ -69,6 +70,9 @@ function Controllable:update(dt)
 	end
 
 	local effectiveSpeed = self.speed
+	if self.parent._grounded == false and self.swimmingSpeed then
+		effectiveSpeed = self.swimmingSpeed
+	end
 	local speedFactor = 1
 	if mouseActive and self.mouseControl then
 		speedFactor = calculateSpeedMultiplier(distance, self.mouseControl.slowdownRadius)

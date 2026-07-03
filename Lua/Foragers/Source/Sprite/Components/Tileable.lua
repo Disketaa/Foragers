@@ -24,9 +24,12 @@ function Tileable.new(data)
 		local col = i % self.columns
 		local row = math.floor(i / self.columns)
 		self.quads[i + 1] = love.graphics.newQuad(
-			col * self.frameWidth, row * self.frameHeight,
-			self.frameWidth, self.frameHeight,
-			sheetWidth, sheetHeight
+			col * self.frameWidth,
+			row * self.frameHeight,
+			self.frameWidth,
+			self.frameHeight,
+			sheetWidth,
+			sheetHeight
 		)
 	end
 
