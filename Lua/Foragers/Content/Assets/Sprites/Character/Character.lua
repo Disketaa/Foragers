@@ -14,11 +14,11 @@ return {
 		{
 			component = "collidable",
 			mode = "both",
-			collisionWidth = 10,
-			collisionHeight = 12,
-			offsetX = -5,
-			offsetY = -8,
-			visible = true,
+			collisionWidth = 4,
+			collisionHeight = 4,
+			offsetX = 0,
+			offsetY = -2,
+			visible = false,
 			object = "player",
 		},
 		{

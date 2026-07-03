@@ -14,19 +14,7 @@ Collidable.__index = Collidable
 ---@type table<{x:number, y:number, w:number, h:number}>
 local terrianColliders = {}
 
-local function stringToColor(str)
-	if not str or #str == 0 then
-		return 0.6, 0.6, 0.6, 0.5
-	end
-	local h = 0
-	for i = 1, #str do
-		h = h * 31 + string.byte(str, i)
-	end
-	local r = ((h % 37) / 37) * 0.8 + 0.2
-	local g = ((math.floor(h / 37) % 43) / 43) * 0.8 + 0.2
-	local b = ((math.floor(h / (37 * 43)) % 29) / 29) * 0.8 + 0.2
-	return r, g, b, 0.5
-end
+
 
 function Collidable.resetTerrain()
 	terrianColliders = {}
@@ -53,8 +41,8 @@ end
 
 function Collidable:getRect()
 	return {
-		x = self.parent.x + self.offsetX,
-		y = self.parent.y + self.offsetY,
+		x = self.parent.x - self.collisionWidth / 2 + self.offsetX,
+		y = self.parent.y - self.collisionHeight / 2 + self.offsetY,
 		w = self.collisionWidth,
 		h = self.collisionHeight,
 	}
@@ -101,8 +89,7 @@ function Collidable:draw()
 		return
 	end
 	local rect = self:getRect()
-	local r, g, b, a = stringToColor(self.object)
-	love.graphics.setColor(r, g, b, a)
+	love.graphics.setColor(1, 0, 0, 0.5)
 	love.graphics.rectangle("line", rect.x, rect.y, rect.w, rect.h)
 	love.graphics.setColor(1, 1, 1, 1)
 end
