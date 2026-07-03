@@ -1,7 +1,7 @@
 local Sprite = require("Source.Sprite.Sprite")
 local Animatable = require("Source.Sprite.Components.Animatable")
 local Controllable = require("Source.Sprite.Components.Controllable")
-local Tileable = require("Source.World.Components.Tileable")
+local Tileable = require("Source.Sprite.Components.Tileable")
 local Tweenable = require("Source.Sprite.Components.Tweenable")
 
 local SpriteLoader = {}

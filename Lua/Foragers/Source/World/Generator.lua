@@ -2,7 +2,7 @@ local Sprite = require("Source.Sprite.Sprite")
 local WorldConfig = require("Content.Data.World") or {}
 local TileData = require("Content.Assets.Sprites.World.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
-local Tileable = require("Source.World.Components.Tileable")
+local Tileable = require("Source.Sprite.Components.Tileable")
 
 local private = {}
 local tileSize = TileData and TileData.frameWidth or 8
@@ -17,7 +17,7 @@ local function computeMask(world, x, y)
 	local right = world[y][x + 1] and world[y][x + 1].active
 	local bottom = world[y + 1] and world[y + 1][x] and world[y + 1][x].active
 	local left = world[y][x - 1] and world[y][x - 1].active
-	return (top and 1 or 0) + (right and 2 or 0) + (bottom and 4 or 0) + (left and 8 or 0)
+	return (top and 1 or 0) + (right and 2 or 0) + (bottom and 4 or 0) + (left and 8 or 0) -- + вместо |: LuaJIT
 end
 
 function private.generate()
@@ -51,6 +51,7 @@ function private.generate()
 				x = x * tileSize,
 				y = y * tileSize,
 				active = active,
+				seed = effectiveSeed + x * private.height + y,
 			}
 		end
 	end
@@ -88,7 +89,7 @@ function private.buildWorldSprites(worldData, canvasWidth, canvasHeight, spawnCa
 				component.pivotY = TileData.pivotY
 				local mask = computeMask(worldData, x, y)
 				local tileIndex = TilePalette.resolve(mask, compData.tileMap)
-				tileIndex = TilePalette.resolveVariant(tileIndex, compData.variants, x * private.height + y)
+				tileIndex = TilePalette.resolveVariant(tileIndex, compData.variants, tile.seed)
 				component:setTile(tileIndex)
 				sprite:addComponent(component)
 

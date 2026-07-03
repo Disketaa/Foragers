@@ -3,7 +3,11 @@ Tileable.__index = Tileable
 
 function Tileable.new(data)
 	local self = setmetatable({}, Tileable)
-	self.image = love.graphics.newImage(data.spriteSheet)
+	local image = love.graphics.newImage(data.spriteSheet)
+	if not image then
+		return self
+	end
+	self.image = image
 	self.frameWidth = data.frameWidth or 8
 	self.frameHeight = data.frameHeight or 8
 	self.type = "tileable"
@@ -13,7 +17,7 @@ function Tileable.new(data)
 	self.tileMap = data.tileMap
 	self.variants = data.variants or {}
 
-	local sheetWidth, sheetHeight = self.image:getWidth(), self.image:getHeight()
+	local sheetWidth, sheetHeight = image:getWidth(), image:getHeight()
 	local totalTiles = (data.rows or 6) * self.columns
 	self.quads = {}
 	for i = 0, totalTiles - 1 do
