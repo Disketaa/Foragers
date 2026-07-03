@@ -1,5 +1,6 @@
 local Sprite = require("Source.Sprite.Sprite")
 local Animatable = require("Source.Sprite.Components.Animatable")
+local Collidable = require("Source.Sprite.Components.Collidable")
 local Controllable = require("Source.Sprite.Components.Controllable")
 local Tileable = require("Source.Sprite.Components.Tileable")
 local Tweenable = require("Source.Sprite.Components.Tweenable")
@@ -10,6 +11,9 @@ local SpriteLoader = {}
 local componentFactories = {
 	animatable = function(compData)
 		return Animatable.new(compData)
+	end,
+	collidable = function(compData)
+		return Collidable.new(compData)
 	end,
 	controllable = function(compData)
 		return Controllable.new(compData)

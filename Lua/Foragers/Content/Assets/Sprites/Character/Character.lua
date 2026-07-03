@@ -12,9 +12,17 @@ return {
 			mouseControl = { slowdownRadius = 32 },
 		},
 		{
+			component = "collidable",
+			mode = "both",
+			collisionWidth = 10,
+			collisionHeight = 12,
+			offsetX = -5,
+			offsetY = -8,
+		},
+		{
 			component = "animatable",
 			spriteSheet = "Content/Assets/Sprites/Character/Character.png",
-			tags = { idle = "idle", moving = "run" },
+			tags = { idle = "idle", moving = "run", swimming = "swim" },
 			animations = {
 				idle = { row = 1, frames = 4, speed = 4, loop = true },
 				run = { row = 2, frames = 4, speed = 8, loop = true },

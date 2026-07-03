@@ -3,10 +3,20 @@ local WorldConfig = require("Content.Data.World") or {}
 local TileData = require("Content.Assets.Sprites.World.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
 local Tileable = require("Source.Sprite.Components.Tileable")
+local Collidable = require("Source.Sprite.Components.Collidable")
 
 local private = {}
 local tileSize = TileData and TileData.frameWidth or 8
 local compData = TileData and TileData.components and TileData.components[1] or {}
+local collidableData = nil
+if TileData and TileData.components then
+	for _, cd in ipairs(TileData.components) do
+		if cd.component == "collidable" then
+			collidableData = cd
+			break
+		end
+	end
+end
 
 for k, v in pairs(WorldConfig) do
 	private[k] = v
@@ -92,6 +102,13 @@ function private.buildWorldSprites(worldData, canvasWidth, canvasHeight, spawnCa
 				tileIndex = TilePalette.resolveVariant(tileIndex, compData.variants, tile.seed)
 				component:setTile(tileIndex)
 				sprite:addComponent(component)
+
+				if collidableData then
+					local collidableComp = Collidable.new(collidableData)
+					sprite:addComponent(collidableComp)
+					collidableComp.parent = sprite
+					collidableComp:registerAsTerrain()
+				end
 
 				table.insert(sprites, {
 					path = "World/" .. x .. "_" .. y,
