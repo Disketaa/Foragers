@@ -74,6 +74,8 @@ function private.buildWorldSprites(worldData, canvasWidth, canvasHeight, spawnCa
 	local offsetX = (canvasWidth - private.width * tileSize) / 2
 	local offsetY = (canvasHeight - private.height * tileSize) / 2
 
+	Collidable.resetTerrain()
+
 	for y = 0, private.height - 1 do
 		for x = 0, private.width - 1 do
 			local tile = worldData[y][x]

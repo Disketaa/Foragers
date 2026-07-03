@@ -11,15 +11,14 @@ return {
 			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
 			mouseControl = { slowdownRadius = 32 },
 		},
-		{
+{
 			component = "collidable",
-			mode = "both",
-			collisionWidth = 4,
-			collisionHeight = 4,
+			mode = "solid_and_detect",
+			collisionWidth = 40,
+			collisionHeight = 40,
 			offsetX = 0,
-			offsetY = -2,
-			visible = false,
-			object = "player",
+			offsetY = 0,
+			visible = true,
 		},
 		{
 			component = "animatable",

@@ -17,13 +17,12 @@ return {
 		},
 		{
 			component = "collidable",
-			mode = "collision",
+			mode = "solid",
 			collisionWidth = 8,
 			collisionHeight = 8,
 			offsetX = 0,
 			offsetY = 0,
 			visible = false,
-			object = "grass_tile",
 		},
 	},
 }
