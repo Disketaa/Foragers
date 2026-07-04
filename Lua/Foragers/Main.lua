@@ -11,12 +11,22 @@ local Canvas = require("Source.Canvas")
 local ShaderLoader = require("Source.ShaderLoader")
 
 local objects = {}
-local canvas = Canvas.new(480, 270)
+local canvas = Canvas.new(480, 270, "outer")
 local cursorSprite = nil
+local cameraX = 0
+local cameraY = 0
+local tileSize = 8
+local worldPixelWidth = World.width * tileSize
+local worldPixelHeight = World.height * tileSize
+
+local function updateCamera()
+	cameraX = math.floor((canvas.width - worldPixelWidth) / 2)
+	cameraY = math.floor((canvas.height - worldPixelHeight) / 2)
+end
 
 local function getSpawnPosition(data)
 	if data.object == "player" then
-		return canvas.width / 2, canvas.height / 2
+		return worldPixelWidth / 2, worldPixelHeight / 2
 	end
 	return 0, 0
 end
@@ -38,12 +48,13 @@ function love.load()
 
 	local worldData = Generator.generate()
 	for _, entry in
-		ipairs(Generator.buildWorldSprites(worldData, canvas.width, canvas.height, function(data)
+		ipairs(Generator.buildWorldSprites(worldData, function(data)
 			return data.x, data.y
 		end))
 	do
 		table.insert(objects, 1, entry)
 	end
+	updateCamera()
 
 	cursorSprite = SpriteLoader.loadAll("Content/Assets/Sprites/UI", function(data)
 		return 0, 0
@@ -55,24 +66,32 @@ end
 
 function love.resize(w, h)
 	canvas:resize(w, h)
+	updateCamera()
 end
 
 function love.draw()
 	canvas:draw(function()
 		ShaderLoader.drawBackground(canvas.width, canvas.height)
+
+		love.graphics.push()
+		love.graphics.translate(cameraX, cameraY)
+
 		for _, entry in ipairs(objects) do
 			if entry.instance and entry.instance.draw then
 				entry.instance:draw()
 			end
 		end
+
 		if cursorSprite and cursorSprite.instance then
 			local mx, my = love.mouse.getPosition()
-			local wx = (mx - canvas.offsetX) / canvas.scale
-			local wy = (my - canvas.offsetY) / canvas.scale
-			cursorSprite.instance.x = wx
-			cursorSprite.instance.y = wy
+			local cx = (mx - canvas.offsetX) / canvas.scale
+			local cy = (my - canvas.offsetY) / canvas.scale
+			cursorSprite.instance.x = cx - cameraX
+			cursorSprite.instance.y = cy - cameraY
 			cursorSprite.instance:draw()
 		end
+
+		love.graphics.pop()
 	end, World.backgroundColor)
 end
 
@@ -84,7 +103,9 @@ function love.keypressed(key)
 end
 
 local function screenToWorld(screenX, screenY)
-	return (screenX - canvas.offsetX) / canvas.scale, (screenY - canvas.offsetY) / canvas.scale
+	local cx = (screenX - canvas.offsetX) / canvas.scale
+	local cy = (screenY - canvas.offsetY) / canvas.scale
+	return cx - cameraX, cy - cameraY
 end
 
 function love.update(dt)

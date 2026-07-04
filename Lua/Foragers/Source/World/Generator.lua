@@ -70,10 +70,8 @@ function private.generate()
 	return world
 end
 
-function private.buildWorldSprites(worldData, canvasWidth, canvasHeight, spawnCallback)
+function private.buildWorldSprites(worldData, spawnCallback)
 	local sprites = {}
-	local offsetX = (canvasWidth - private.width * tileSize) / 2
-	local offsetY = (canvasHeight - private.height * tileSize) / 2
 
 	Collidable.resetTerrain()
 
@@ -81,7 +79,7 @@ function private.buildWorldSprites(worldData, canvasWidth, canvasHeight, spawnCa
 		for x = 0, private.width - 1 do
 			local tile = worldData[y][x]
 			if tile.active then
-				local sprite = Sprite.new(tile.x + offsetX, tile.y + offsetY)
+				local sprite = Sprite.new(tile.x, tile.y)
 				sprite.frameWidth = tileSize
 				sprite.frameHeight = tileSize
 				sprite.pivotX = TileData.pivotX
@@ -89,10 +87,10 @@ function private.buildWorldSprites(worldData, canvasWidth, canvasHeight, spawnCa
 
 				local sx, sy = spawnCallback(tile)
 				if sx then
-					sprite.x = sx + offsetX
+					sprite.x = sx
 				end
 				if sy then
-					sprite.y = sy + offsetY
+					sprite.y = sy
 				end
 
 				local component = Tileable.new(compData)
