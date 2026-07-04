@@ -70,6 +70,9 @@ function private.generate()
 	return world
 end
 
+---@param worldData table
+---@param spawnCallback function
+---@return table
 function private.buildWorldSprites(worldData, spawnCallback)
 	local sprites = {}
 

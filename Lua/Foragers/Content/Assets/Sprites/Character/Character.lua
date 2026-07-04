@@ -10,7 +10,7 @@ return {
 			movementSpeed = 50,
 			swimmingSpeed = 30,
 			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
-			mouseControl = { slowdownRadius = 32 },
+			mouseControl = { slowdownRadius = 15 },
 		},
 		{
 			component = "collidable",

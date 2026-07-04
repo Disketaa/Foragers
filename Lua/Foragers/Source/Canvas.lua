@@ -63,6 +63,7 @@ end
 ---@param viewX number|nil Camera offset X (shifts canvas draw position)
 ---@param viewY number|nil Camera offset Y (shifts canvas draw position)
 function Canvas:draw(drawFunc, clearColor, viewX, viewY)
+	-- fractional offset creates sub-pixel seams with nearest-filtered canvas
 	viewX = math.floor(viewX or 0)
 	viewY = math.floor(viewY or 0)
 

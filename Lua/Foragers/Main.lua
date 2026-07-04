@@ -20,6 +20,7 @@ local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
 
 local function updateCamera()
+	-- integer translate only: fractional causes sub-pixel gaps with nearest filtering
 	cameraX = math.floor((canvas.width - worldPixelWidth) / 2)
 	cameraY = math.floor((canvas.height - worldPixelHeight) / 2)
 end
