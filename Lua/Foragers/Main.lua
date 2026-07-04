@@ -1,4 +1,4 @@
-local Config = require("Content.Data.Config") or {}
+local World = require("Content.Data.World") or {}
 local Options = require("Content.Data.Options") or {}
 
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
@@ -28,7 +28,7 @@ function love.load()
 		resizable = true,
 		fullscreen = Options.fullscreen,
 	})
-	local bg = Config.backgroundColor or { 0.5, 0.8, 1.0 }
+	local bg = World.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))
 
 	objects = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
@@ -73,7 +73,7 @@ function love.draw()
 			cursorSprite.instance.y = wy
 			cursorSprite.instance:draw()
 		end
-	end)
+	end, World.backgroundColor)
 end
 
 function love.keypressed(key)

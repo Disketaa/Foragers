@@ -43,9 +43,14 @@ function Canvas:resize(windowWidth, windowHeight)
 end
 
 ---@param drawFunc function
-function Canvas:draw(drawFunc)
+---@param clearColor table|nil Optional {r,g,b,a} to clear canvas with instead of transparent
+function Canvas:draw(drawFunc, clearColor)
 	love.graphics.setCanvas(self.canvas)
-	love.graphics.clear()
+	if clearColor then
+		love.graphics.clear(clearColor[1], clearColor[2], clearColor[3], clearColor[4] or 1)
+	else
+		love.graphics.clear()
+	end
 	if drawFunc then
 		drawFunc()
 	end

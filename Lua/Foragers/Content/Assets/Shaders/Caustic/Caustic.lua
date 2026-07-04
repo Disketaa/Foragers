@@ -3,15 +3,15 @@ return {
 	applies_to = "screen",
 	priority = "background",
 	uniforms = {
-		caustic_color = { 1, 1, 1 },
-		speed = 0.5,
+		caustic_color = { 0.1, 0.8, 0.95 },
+		speed = 0.2,
 		horizontal_scale = 0.2,
 		vertical_scale = 0.1,
-		threshold = 0.7,
-		sharpness = 0.0,
-		glow_intensity = 0.3,
-		glow_threshold = 0.2,
-		opacity_variation = 1.0,
+		threshold = 0.9,
+		sharpness = 0.8,
+		glow_intensity = 0.7,
+		glow_threshold = 0.1,
+		opacity_variation = 0.5,
 	},
 	code = [[
 extern vec3 caustic_color;
@@ -87,7 +87,7 @@ vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
         alpha *= mix(1.0, 1.0 - noise, opacity_variation);
     }
 
-    vec3 fc = caustic_color * alpha + vec3(1.0) * glow * alpha;
+    vec3 fc = caustic_color + vec3(1.0) * glow;
     return vec4(fc, alpha);
 }
 ]],
