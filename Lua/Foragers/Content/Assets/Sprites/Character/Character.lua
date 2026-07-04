@@ -45,5 +45,31 @@ return {
 				},
 			},
 		},
+		{
+			component = "soundable",
+			volume = 0.5,
+			pitch = 1.0,
+			pitchRandomness = 0.15,
+			stepInterval = 2,
+			tags = {
+				moving = {
+					"Content/Assets/Sounds/Steps/Grass1.ogg",
+					"Content/Assets/Sounds/Steps/Grass2.ogg",
+					"Content/Assets/Sounds/Steps/Grass3.ogg",
+					"Content/Assets/Sounds/Steps/Grass4.ogg",
+				},
+				swimming = {
+					"Content/Assets/Sounds/Steps/Water1.ogg",
+					"Content/Assets/Sounds/Steps/Water2.ogg",
+					"Content/Assets/Sounds/Steps/Water3.ogg",
+				},
+				water_in = {
+					"Content/Assets/Sounds/Steps/Events/WaterIn.ogg",
+				},
+				water_out = {
+					"Content/Assets/Sounds/Steps/Events/WaterOut.ogg",
+				},
+			},
+		},
 	},
 }
