@@ -6,6 +6,7 @@
 ---@field offsetX number Offset from sprite pivot to collision rect top-left in pixels
 ---@field offsetY number
 ---@field visible boolean Draw wireframe when true
+---@field _prevGrounded boolean|nil Previous frame grounded state
 ---@field type "collidable"
 local Collidable = {}
 Collidable.__index = Collidable
@@ -26,16 +27,16 @@ end
 ---@return Collidable
 function Collidable.new(data)
 	data = data or {}
-	local self = setmetatable({
+	return setmetatable({
 		mode = data.mode or "solid",
 		collisionWidth = data.collisionWidth or 8,
 		collisionHeight = data.collisionHeight or 8,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
 		visible = data.visible or false,
+		_prevGrounded = nil,
 		type = "collidable",
 	}, Collidable)
-	return self
 end
 
 function Collidable:getRect()
@@ -70,10 +71,9 @@ function Collidable:update(dt)
 		end
 	end
 
-	self.parent._grounded = grounded
-
-	if self.mode == "solid_and_detect" and not grounded then
-		self.parent._state = "swimming"
+	if grounded ~= self._prevGrounded then
+		self._prevGrounded = grounded
+		self.parent:emit("grounded_changed", grounded)
 	end
 end
 

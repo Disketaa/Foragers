@@ -28,6 +28,7 @@ function Animatable.new(data)
 	self.tags = data.tags
 	self.currentTime = 0
 	self.currentAnim = self.tags and self.tags.idle or nil
+	self._lastFrame = nil
 
 	local sheetWidth, sheetHeight = self.image:getWidth(), self.image:getHeight()
 	local rowIndex = 1
@@ -46,17 +47,38 @@ function Animatable.new(data)
 	return self
 end
 
+function Animatable:attach()
+	self.parent:on("state_changed", function(newState)
+		if self.tags and self.tags[newState] and self.animations[self.tags[newState]] then
+			local animName = self.tags[newState]
+			if animName ~= self.currentAnim then
+				self.currentAnim = animName
+				self.currentTime = 0
+				self._lastFrame = nil
+			end
+		end
+	end, 5)
+end
+
 function Animatable:update(dt)
 	if self.currentAnim then
 		local anim = self.animations[self.currentAnim]
 		if anim then
 			local speedMult = (self.parent and self.parent.animSpeedFactor) or 1
-			dt = math.min(dt, 0.1) -- Clamp dt to prevent time jump
+			dt = math.min(dt, 0.1)
 			if anim.loop then
 				self.currentTime = (self.currentTime + dt * speedMult) % (anim.frames / anim.speed)
 			else
 				local maxTime = (anim.frames - 1) / anim.speed
 				self.currentTime = math.min(self.currentTime + dt * speedMult, maxTime)
+			end
+
+			local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, #self.quads[self.currentAnim])
+			if frameIndex ~= self._lastFrame then
+				self._lastFrame = frameIndex
+				if self.parent then
+					self.parent:emit("anim_frame", frameIndex)
+				end
 			end
 		end
 	end
@@ -65,16 +87,6 @@ end
 ---@param x number
 ---@param y number
 function Animatable:draw(x, y)
-	-- Update animation based on state (checked in draw to ensure _state is already set by Controllable)
-	local state = self.parent and self.parent._state
-	if state and self.tags then
-		local animName = self.tags[state]
-		if animName and animName ~= self.currentAnim and self.animations[animName] then
-			self.currentAnim = animName
-			self.currentTime = 0
-		end
-	end
-
 	if not self.currentAnim then
 		return
 	end

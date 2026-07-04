@@ -32,10 +32,7 @@ end
 ---@param windowWidth number
 ---@param windowHeight number
 function Canvas:resize(windowWidth, windowHeight)
-	self.scale = math.max(1, math.floor(math.min(
-		windowWidth / self.baseWidth,
-		windowHeight / self.baseHeight
-	)))
+	self.scale = math.max(1, math.floor(math.min(windowWidth / self.baseWidth, windowHeight / self.baseHeight)))
 
 	if self.mode == "inner" then
 		self.offsetX = math.floor((windowWidth - self.baseWidth * self.scale) / 2)
@@ -68,7 +65,8 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY)
 	viewY = math.floor(viewY or 0)
 
 	if self.mode == "inner" then
-		local r, g, b = clearColor and clearColor[1] or 0, clearColor and clearColor[2] or 0, clearColor and clearColor[3] or 0
+		local r, g, b =
+			clearColor and clearColor[1] or 0, clearColor and clearColor[2] or 0, clearColor and clearColor[3] or 0
 		love.graphics.clear(r, g, b, 1)
 	end
 

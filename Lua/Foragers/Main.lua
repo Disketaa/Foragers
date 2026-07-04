@@ -9,6 +9,7 @@ local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Generator = require("Source.World.Generator")
 local Canvas = require("Source.Canvas")
 local ShaderLoader = require("Source.ShaderLoader")
+local ModLoader = require("Source.ModLoader")
 
 local objects = {}
 local canvas = Canvas.new(480, 270, "outer")
@@ -56,6 +57,9 @@ function love.load()
 		table.insert(objects, 1, entry)
 	end
 	updateCamera()
+
+	local mods = ModLoader.loadAllMods("Mods")
+	ModLoader.reloadAll(mods)
 
 	cursorSprite = SpriteLoader.loadAll("Content/Assets/Sprites/UI", function(data)
 		return 0, 0

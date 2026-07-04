@@ -6,6 +6,7 @@
 ---@field mouseX number|nil Mouse X in world coordinates
 ---@field mouseY number|nil Mouse Y in world coordinates
 ---@field tags table<string, string>|nil Mapping of states to animation names
+---@field _grounded boolean|nil Grounded state cached from grounded_changed event
 ---@field type "controllable"
 local Controllable = {}
 Controllable.__index = Controllable
@@ -20,14 +21,22 @@ end
 function Controllable.new(data)
 	data = data or {}
 	local kc = data.keyboardControl
-	return setmetatable({
+	local self = setmetatable({
 		keys = kc and kc.keys,
 		speed = data.movementSpeed or 50,
 		swimmingSpeed = data.swimmingSpeed or 30,
 		mouseControl = data.mouseControl,
 		tags = data.tags,
+		_grounded = nil,
 		type = "controllable",
 	}, Controllable)
+	return self
+end
+
+function Controllable:attach()
+	self.parent:on("grounded_changed", function(isGrounded)
+		self._grounded = isGrounded
+	end, 10)
 end
 
 function Controllable:setMousePosition(worldX, worldY)
@@ -71,7 +80,7 @@ function Controllable:update(dt)
 	end
 
 	local effectiveSpeed = self.speed
-	if self.parent._grounded ~= nil and self.parent._grounded == false and self.swimmingSpeed then
+	if self._grounded ~= nil and self._grounded == false and self.swimmingSpeed then
 		effectiveSpeed = self.swimmingSpeed
 	end
 	local speedFactor = 1
@@ -91,12 +100,32 @@ function Controllable:update(dt)
 		self.parent.x = self.parent.x + moveX * effectiveSpeed * dt
 	end
 
-	self.parent._state = len > 0 and "moving" or "idle"
-	if mouseActive then
-		self.parent.flipX = self.mouseX < self.parent.x
-	elseif inputX ~= 0 then
-		self.parent.flipX = inputX < 0
+	local oldState = self.parent._state
+	local newState
+	if self._grounded == false then
+		newState = "swimming"
+	else
+		newState = len > 0 and "moving" or "idle"
 	end
+	self.parent._state = newState
+	if newState ~= oldState then
+		self.parent:emit("state_changed", newState, oldState)
+	end
+
+	local oldFlip = self.parent.flipX
+	---@type boolean|nil
+	local newFlip
+	if mouseActive then
+		newFlip = self.mouseX < self.parent.x
+	elseif inputX ~= 0 then
+		newFlip = inputX < 0
+	end
+	if newFlip ~= nil and newFlip ~= oldFlip then
+		self.parent.flipX = newFlip
+		self.parent:emit("flipped", newFlip)
+	end
+
 	self.parent.animSpeedFactor = speedFactor
 end
+
 return Controllable

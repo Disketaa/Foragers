@@ -1,34 +1,7 @@
 local Sprite = require("Source.Sprite.Sprite")
-local Animatable = require("Source.Sprite.Components.Animatable")
-local Collidable = require("Source.Sprite.Components.Collidable")
-local Controllable = require("Source.Sprite.Components.Controllable")
-local Tileable = require("Source.Sprite.Components.Tileable")
-local Tweenable = require("Source.Sprite.Components.Tweenable")
-local Soundable = require("Source.Sprite.Components.Soundable")
+local ComponentRegistry = require("Source.ComponentRegistry")
 
 local SpriteLoader = {}
-
----@type table<string, function(table):table> Component factory functions
-local componentFactories = {
-	animatable = function(compData)
-		return Animatable.new(compData)
-	end,
-	collidable = function(compData)
-		return Collidable.new(compData)
-	end,
-	controllable = function(compData)
-		return Controllable.new(compData)
-	end,
-	tileable = function(compData)
-		return Tileable.new(compData)
-	end,
-	tweenable = function(compData)
-		return Tweenable.new(compData)
-	end,
-	soundable = function(compData)
-		return Soundable.new(compData)
-	end,
-}
 
 ---@param assetsPath string
 ---@param spawnCallback function|nil
@@ -60,13 +33,13 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 
 					for _, compData in ipairs(data.components or {}) do
 						if type(compData) == "table" then
-							local factory = componentFactories[compData.component]
-							if factory then
-								compData.frameWidth = obj.frameWidth
-								compData.frameHeight = obj.frameHeight
-								compData.pivotX = obj.pivotX
-								compData.pivotY = obj.pivotY
-								obj:addComponent(factory(compData))
+							compData.frameWidth = obj.frameWidth
+							compData.frameHeight = obj.frameHeight
+							compData.pivotX = obj.pivotX
+							compData.pivotY = obj.pivotY
+							local component = ComponentRegistry.create(compData.component, compData)
+							if component then
+								obj:addComponent(component)
 							end
 						end
 					end

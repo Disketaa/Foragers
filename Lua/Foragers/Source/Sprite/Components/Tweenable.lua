@@ -2,8 +2,6 @@
 ---@field parent Sprite|nil Parent sprite reference
 ---@field tweens table[] Array of tween configurations
 ---@field tags table<string, table> Tween sets keyed by flip change or state
----@field _prevFlip boolean Previous flip state
----@field _prevState string|nil Previous _state
 ---@field type "tweenable"
 local Tweenable = {}
 Tweenable.__index = Tweenable
@@ -28,38 +26,31 @@ end
 
 ---@param data table
 ---@return Tweenable
----@param data table
----@return Tweenable
 function Tweenable.new(data)
 	return setmetatable({
 		tweens = data.tweens or {},
 		tags = data.tags or {},
-		_prevFlip = false,
-		_prevState = nil,
 		type = "tweenable",
 	}, Tweenable)
 end
 
----@param dt number
-function Tweenable:update(dt)
-	if self.tags.flip and self.parent then
-		local currFlip = self.parent.flipX
-		if currFlip ~= nil and currFlip ~= self._prevFlip then
+function Tweenable:attach()
+	self.parent:on("flipped", function()
+		if self.tags.flip then
 			applyTweens(self, self.tags.flip)
 		end
-		self._prevFlip = currFlip or false
-	end
+	end, 10)
 
-	if self.tags.splash and self.parent then
-		local currState = self.parent._state
-		local wasSwimming = self._prevState == "swimming"
-		local isSwimming = currState == "swimming"
-		if wasSwimming ~= isSwimming then
+	self.parent:on("state_changed", function(newState, oldState)
+		-- XOR: fires on both entering and leaving water
+		if self.tags.splash and oldState and (oldState == "swimming") ~= (newState == "swimming") then
 			applyTweens(self, self.tags.splash)
 		end
-		self._prevState = currState
-	end
+	end, 10)
+end
 
+---@param dt number
+function Tweenable:update(dt)
 	for _, tween in pairs(self.parent and self.parent.tweens or {}) do
 		tween:update(dt)
 	end

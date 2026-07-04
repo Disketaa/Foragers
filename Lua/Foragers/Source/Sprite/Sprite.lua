@@ -1,3 +1,5 @@
+local EventEmitter = require("Source.EventEmitter")
+
 ---@class Sprite
 ---@field x number World X position
 ---@field y number World Y position
@@ -8,9 +10,9 @@
 ---@field image love.Image|nil Image for StaticSprite mode
 ---@field type string|nil "StaticSprite" for auto-generated sprites
 ---@field components table<object> Component instances
----@field _state string|nil Current sprite state ("moving", "idle", etc)
----@field flipX boolean|nil Horizontal flip state
----@field tweens table<string, Tween>|nil Runtime tweens on sprite
+---@field _state string|nil Current sprite state — render-only, do not read for logic
+---@field flipX boolean|nil Horizontal flip state — render-only, do not read for logic
+---@field tweens table<string, Tween>|nil Runtime tweens on sprite (Tweenable→Animatable producer/consumer)
 ---@field animSpeedFactor number Animation speed multiplier (used by Animatable)
 local Sprite = {}
 Sprite.__index = Sprite
@@ -19,33 +21,43 @@ Sprite.__index = Sprite
 ---@param y number|nil
 ---@return Sprite
 function Sprite.new(x, y)
-	return setmetatable({
+	local self = setmetatable({
 		x = x or 0,
 		y = y or 0,
 		components = {},
 		tweens = {},
 		animSpeedFactor = 1,
+		_events = EventEmitter.new(),
 	}, Sprite)
+	return self
 end
 
----@param target string
----@param from number
----@param to number
----@param duration number
----@param curve function
-function Sprite:triggerTween(target, from, to, duration, curve)
-	for _, comp in ipairs(self.components) do
-		if comp.triggerTween then
-			comp:triggerTween(target, from, to, duration, curve)
-			break
-		end
-	end
+---@param event string
+---@param callback function
+---@param priority number|nil
+function Sprite:on(event, callback, priority)
+	self._events:on(event, callback, priority)
+end
+
+---@param event string
+---@param ... any
+function Sprite:emit(event, ...)
+	self._events:emit(event, ...)
+end
+
+---@param event string
+---@param callback function
+function Sprite:removeListener(event, callback)
+	self._events:removeListener(event, callback)
 end
 
 ---@param component table
 function Sprite:addComponent(component)
 	table.insert(self.components, component)
 	component.parent = self
+	if component.attach then
+		component:attach()
+	end
 end
 
 ---@param dt number
