@@ -4,7 +4,7 @@ local ParticleEmitter = {}
 ParticleEmitter.__index = ParticleEmitter
 
 function ParticleEmitter.new(data)
-	return setmetatable({
+	local self = setmetatable({
 		particle = data.particle,
 		stepInterval = data.stepInterval or 2,
 		offsetX = data.offsetX or 0,
@@ -20,16 +20,29 @@ function ParticleEmitter.new(data)
 		_particleData = nil,
 		type = "particle_emitter",
 	}, ParticleEmitter)
+
+	local luaPath = self.particle:gsub("[/\\]", "."):gsub("%.lua$", "")
+	local success, particleData = pcall(require, luaPath)
+	if success then
+		self._particleData = particleData
+	end
+
+	return self
 end
 
 function ParticleEmitter:attach()
 	self.parent:on("state_changed", function(newState)
 		self._emitting = self._emittingStates[newState] or false
 		self._stepCounter = 0
+		if self._emitting then
+			self:_spawn()
+		end
 	end, 8)
 
 	self.parent:on("flipped", function(newFlip)
-		self._cachedFlipX = newFlip
+		if self.inheritFlip then
+			self._cachedFlipX = newFlip
+		end
 	end, 12)
 
 	self.parent:on("anim_frame", function()
@@ -49,14 +62,6 @@ function ParticleEmitter:attach()
 end
 
 function ParticleEmitter:update(dt)
-	if not self._particleData then
-		local luaPath = self.particle:gsub("[/\\]", "."):gsub("%.lua$", "")
-		local success, data = pcall(require, luaPath)
-		if success then
-			self._particleData = data
-		end
-	end
-
 	for i = #self._particles, 1, -1 do
 		local p = self._particles[i]
 		p.anim:update(dt)
@@ -90,6 +95,9 @@ function ParticleEmitter:_spawn()
 	}
 
 	local config = anim.animations[anim.currentAnim]
+	if not config then
+		return
+	end
 
 	table.insert(self._particles, {
 		x = self.parent.x + self.offsetX,
