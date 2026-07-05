@@ -4,6 +4,8 @@ return {
 	frameHeight = 16,
 	pivotX = 0.5,
 	pivotY = 0.75,
+	sortOffsetY = 2,
+	layer = 0,
 	components = {
 		{
 			component = "control",

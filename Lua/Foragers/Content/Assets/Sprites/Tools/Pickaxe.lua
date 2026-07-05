@@ -4,6 +4,8 @@ return {
 	frameHeight = 10,
 	pivotX = 0.5,
 	pivotY = 1,
+	sortOffsetY = 8,
+	layer = 0,
 	components = {
 		{
 			component = "tween",

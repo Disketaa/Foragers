@@ -14,6 +14,9 @@ local EventEmitter = require("Source.Helpers.EventEmitter")
 ---@field flipX boolean|nil Horizontal flip state — render-only, do not read for logic
 ---@field tweens table<string, Tween>|nil Runtime tweens on sprite (Tween→Animation producer/consumer)
 ---@field animSpeedFactor number Animation speed multiplier (used by Animation)
+---@field sortY number Y-sort key, updated each frame as y + sortOffsetY
+---@field sortOffsetY number Per-sprite vertical offset for Y-sorting (foot position relative to origin)
+---@field layer integer Draw layer: zKey = layer * 100000 + sortY
 local Sprite = {}
 Sprite.__index = Sprite
 
@@ -24,6 +27,9 @@ function Sprite.new(x, y)
 	local self = setmetatable({
 		x = x or 0,
 		y = y or 0,
+		sortY = 0,
+		sortOffsetY = 0,
+		layer = 0,
 		components = {},
 		tweens = {},
 		animSpeedFactor = 1,
@@ -67,6 +73,7 @@ function Sprite:update(dt)
 			component:update(dt)
 		end
 	end
+	self.sortY = self.y + (self.sortOffsetY or 0)
 end
 
 function Sprite:draw()

@@ -10,8 +10,11 @@ local Generator = require("Source.World.Generator")
 local Canvas = require("Source.Helpers.Canvas")
 local ShaderLoader = require("Source.Helpers.ShaderLoader")
 local ModLoader = require("Source.Helpers.ModLoader")
+local DrawOrder = require("Source.Helpers.DrawOrder")
 
 local objects = {}
+local staticObjects = {}
+local dynamicObjects = {}
 local canvas = Canvas.new(480, 270, "outer")
 local cursorSprite = nil
 local cameraX = 0
@@ -43,32 +46,41 @@ function love.load()
 	local bg = World.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))
 
-	objects = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
-
-	-- Insert world tiles at the beginning of objects list (drawn behind characters)
 	ShaderLoader.loadAll("Content/Assets/Shaders")
 
 	local worldData = Generator.generate()
-	local tileCount = 0
-	for _, entry in
-		ipairs(Generator.buildWorldSprites(worldData, function(data)
-			return data.x, data.y
-		end))
-	do
-		table.insert(objects, 1, entry)
-		tileCount = tileCount + 1
-	end
-	-- Spawn props on tiles (between tiles and characters in draw order)
-	local propEntries = Generator.spawnProps(worldData) or {}
-	for _, entry in ipairs(propEntries) do
-		table.insert(objects, tileCount + 1, entry)
-		tileCount = tileCount + 1
-	end
 
-	-- Load and link tools to the player
+	local charEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
+	local tileEntries = Generator.buildWorldSprites(worldData, function(data)
+		return data.x, data.y
+	end)
+	local propEntries = Generator.spawnProps(worldData) or {}
 	local toolEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
 		return 0, 0
 	end) or {}
+
+	dynamicObjects = {}
+	for _, entry in ipairs(charEntries) do
+		table.insert(dynamicObjects, entry)
+	end
+	for _, entry in ipairs(propEntries) do
+		table.insert(dynamicObjects, entry)
+	end
+
+	staticObjects = {}
+	for _, entry in ipairs(tileEntries) do
+		table.insert(staticObjects, entry)
+	end
+
+	objects = {}
+	for _, entry in ipairs(staticObjects) do
+		table.insert(objects, entry)
+	end
+	for _, entry in ipairs(dynamicObjects) do
+		table.insert(objects, entry)
+	end
+
+	-- Link tools to the player
 	local playerSprite = nil
 	for _, entry in ipairs(objects) do
 		if entry.data and entry.data.object == "player" then
@@ -83,6 +95,7 @@ function love.load()
 					comp:setFollowTarget(playerSprite)
 				end
 			end
+			table.insert(dynamicObjects, entry)
 			table.insert(objects, entry)
 		end
 	end
@@ -112,10 +125,18 @@ function love.draw()
 		love.graphics.push()
 		love.graphics.translate(cameraX, cameraY)
 
-		for _, entry in ipairs(objects) do
+		-- Static terrain (pre-ordered by generation — no sorting needed)
+		for _, entry in ipairs(staticObjects) do
 			if entry.instance and entry.instance.draw then
 				entry.instance:draw()
 			end
+		end
+
+		-- Dynamic sprites: collect, sort by zKey, draw
+		local sorted = DrawOrder.collect(dynamicObjects)
+		DrawOrder.sort(sorted)
+		for _, sprite in ipairs(sorted) do
+			sprite:draw()
 		end
 
 		if cursorSprite and cursorSprite.instance then

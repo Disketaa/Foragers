@@ -3,6 +3,7 @@ Spritesheet.__index = Spritesheet
 
 function Spritesheet.new(data)
 	local self = setmetatable({}, Spritesheet)
+	-- Return empty component instead of nil: caller always adds result via addComponent(), no nil-check at call sites
 	if not data or not data.spriteSheet then
 		return self
 	end

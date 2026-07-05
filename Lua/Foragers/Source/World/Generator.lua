@@ -206,6 +206,8 @@ function private.spawnProps(worldData)
 		sprite.frameHeight = chosen.data.frameHeight
 		sprite.pivotX = chosen.data.pivotX
 		sprite.pivotY = chosen.data.pivotY
+		sprite.sortOffsetY = chosen.data.sortOffsetY or 0
+		sprite.layer = chosen.data.layer or 0
 
 		if chosen.spritesheetData then
 			local component = Spritesheet.new(chosen.spritesheetData)

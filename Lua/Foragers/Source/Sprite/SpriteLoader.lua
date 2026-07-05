@@ -30,6 +30,8 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 					obj.frameHeight = data.frameHeight
 					obj.pivotX = data.pivotX
 					obj.pivotY = data.pivotY
+					obj.sortOffsetY = data.sortOffsetY or 0
+					obj.layer = data.layer or 0
 
 					for _, compData in ipairs(data.components or {}) do
 						if type(compData) == "table" then

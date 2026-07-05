@@ -4,6 +4,8 @@ return {
 	frameHeight = 32,
 	pivotX = 0.5,
 	pivotY = 0.9,
+	sortOffsetY = 3,
+	layer = 0,
 	components = {
 		{
 			component = "collision",
