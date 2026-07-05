@@ -129,64 +129,109 @@ end
 function private.spawnProps(worldData)
 	local props = {}
 	local propConfigs = private.props or {}
+	local coverage = private.propCoverage or 0.3
 
 	Collision.resetSolids()
 
+	local loadedProps = {}
 	for _, cfg in ipairs(propConfigs) do
-		local moduleName = cfg.data
-		local ok, propData = pcall(require, moduleName)
-		if not ok or type(propData) ~= "table" then
-			package.loaded[moduleName] = nil
-		else
-			local compData = propData.components and propData.components[1] or {}
+		local ok, propData = pcall(require, cfg.data)
+		if ok and type(propData) == "table" then
+			local spritesheetData = nil
 			local collidableData = nil
 			for _, cd in ipairs(propData.components or {}) do
-				if cd.component == "collision" then
+				if cd.component == "spritesheet" then
+					spritesheetData = cd
+				elseif cd.component == "collision" then
 					collidableData = cd
-					break
 				end
 			end
-
-			for y = 0, private.height - 1 do
-				for x = 0, private.width - 1 do
-					local tile = worldData[y][x]
-					if tile.active then
-						local noiseVal = love.math.noise(x + 0.1, y + 0.3, tile.seed + 5000)
-						local rng = noiseVal * 0.5 + 0.5
-						if rng < cfg.spawnChance then
-							local sprite = Sprite.new(tile.x, tile.y)
-							sprite.frameWidth = propData.frameWidth
-							sprite.frameHeight = propData.frameHeight
-							sprite.pivotX = propData.pivotX
-							sprite.pivotY = propData.pivotY
-
-							local component = Spritesheet.new(compData)
-							component.frameWidth = propData.frameWidth
-							component.frameHeight = propData.frameHeight
-							component.pivotX = propData.pivotX
-							component.pivotY = propData.pivotY
-							local frameIndex = math.abs(tile.seed + 5000) % (compData.columns or 1)
-							component:setFrame(frameIndex)
-							sprite:addComponent(component)
-
-						if collidableData then
-							local collidableComp = Collision.new(collidableData)
-							sprite:addComponent(collidableComp)
-							collidableComp:registerAsSolid()
-						end
-
-						table.insert(props, {
-								path = cfg.name .. "_" .. x .. "_" .. y,
-								data = tile,
-								instance = sprite,
-							})
-						end
-					end
-				end
-			end
-
-			package.loaded[moduleName] = nil
+			table.insert(loadedProps, {
+				name = cfg.name,
+				weight = cfg.weight or 1,
+				data = propData,
+				spritesheetData = spritesheetData,
+				collidableData = collidableData,
+				pngPath = cfg.data:gsub("%.", "/") .. ".png",
+			})
 		end
+		package.loaded[cfg.data] = nil
+	end
+
+	if #loadedProps == 0 then
+		return props
+	end
+
+	local totalWeight = 0
+	for _, p in ipairs(loadedProps) do
+		totalWeight = totalWeight + p.weight
+	end
+
+	local activeTiles = {}
+	for y = 0, private.height - 1 do
+		for x = 0, private.width - 1 do
+			local tile = worldData[y][x]
+			if tile.active then
+				table.insert(activeTiles, tile)
+			end
+		end
+	end
+
+	local numProps = math.floor(#activeTiles * coverage)
+	if numProps == 0 then
+		return props
+	end
+
+	love.math.setRandomSeed(numProps > 0 and activeTiles[1].seed or 0)
+
+	for i = 1, math.min(numProps, #activeTiles) do
+		local j = love.math.random(i, #activeTiles)
+		activeTiles[i], activeTiles[j] = activeTiles[j], activeTiles[i]
+		local tile = activeTiles[i]
+
+		local pick = love.math.random(1, totalWeight)
+		local cumulative = 0
+		local chosen = loadedProps[1]
+		for _, p in ipairs(loadedProps) do
+			cumulative = cumulative + p.weight
+			if pick <= cumulative then
+				chosen = p
+				break
+			end
+		end
+
+		local sprite = Sprite.new(tile.x, tile.y)
+		sprite.frameWidth = chosen.data.frameWidth
+		sprite.frameHeight = chosen.data.frameHeight
+		sprite.pivotX = chosen.data.pivotX
+		sprite.pivotY = chosen.data.pivotY
+
+		if chosen.spritesheetData then
+			local component = Spritesheet.new(chosen.spritesheetData)
+			component.frameWidth = chosen.data.frameWidth
+			component.frameHeight = chosen.data.frameHeight
+			component.pivotX = chosen.data.pivotX
+			component.pivotY = chosen.data.pivotY
+			local numFrames = chosen.spritesheetData.columns or 1
+			local frameIndex = math.abs(tile.seed + 5000) % numFrames
+			component:setFrame(frameIndex)
+			sprite:addComponent(component)
+		else
+			sprite.image = love.graphics.newImage(chosen.pngPath)
+			sprite.type = "StaticSprite"
+		end
+
+		if chosen.collidableData then
+			local collidableComp = Collision.new(chosen.collidableData)
+			sprite:addComponent(collidableComp)
+			collidableComp:registerAsSolid()
+		end
+
+		table.insert(props, {
+			path = chosen.name .. "_" .. tile.x .. "_" .. tile.y,
+			data = tile,
+			instance = sprite,
+		})
 	end
 
 	return props
