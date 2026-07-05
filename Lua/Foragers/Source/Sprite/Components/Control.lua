@@ -133,7 +133,7 @@ function Control:update(dt)
 		self.parent:emit(Events.FLIPPED, newFlip)
 	end
 
-	self.parent.animSpeedFactor = speedFactor
+	self.parent.animSpeedFactor = speedFactor * self._slowdown
 end
 
 return Control
