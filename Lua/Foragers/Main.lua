@@ -6,7 +6,8 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 end
 
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
-local Generator = require("Source.World.Generator")
+local WorldGen = require("Source.World.WorldGen")
+local WorldBuilder = require("Source.World.WorldBuilder")
 local Canvas = require("Source.Helpers.Canvas")
 local ShaderLoader = require("Source.Helpers.ShaderLoader")
 local ModLoader = require("Source.Helpers.ModLoader")
@@ -48,13 +49,13 @@ function love.load()
 
 	ShaderLoader.loadAll("Content/Assets/Shaders")
 
-	local worldData = Generator.generate()
+	local worldData = WorldGen.generate()
 
 	local charEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
-	local tileEntries = Generator.buildWorldSprites(worldData, function(data)
+	local tileEntries = WorldBuilder.buildWorldSprites(worldData, function(data)
 		return data.x, data.y
 	end)
-	local propEntries = Generator.spawnProps(worldData) or {}
+	local propEntries = WorldBuilder.spawnProps(worldData) or {}
 	local toolEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
 		return 0, 0
 	end) or {}
