@@ -1,62 +1,174 @@
+local Events = require("Source.Helpers.Events")
+
 local Spritesheet = {}
 Spritesheet.__index = Spritesheet
 
 function Spritesheet.new(data)
-	local self = setmetatable({}, Spritesheet)
-	-- Return empty component instead of nil: caller always adds result via addComponent(), no nil-check at call sites
 	if not data or not data.spriteSheet then
-		return self
+		return setmetatable({}, Spritesheet)
 	end
+
 	local image = love.graphics.newImage(data.spriteSheet)
 	if not image then
-		return self
+		return setmetatable({}, Spritesheet)
 	end
-	self.image = image
-	self.frameWidth = data.frameWidth or 8
-	self.frameHeight = data.frameHeight or 8
-	self.type = "spritesheet"
-	self.pivotX = data.pivotX or 0.5
-	self.pivotY = data.pivotY or 0.5
-	self.columns = data.columns or 4
 
-	local rows = data.rows or 6
-	local sheetWidth, sheetHeight = image:getWidth(), image:getHeight()
-	local totalFrames = rows * self.columns
+	local self = setmetatable({
+		image = image,
+		type = "spritesheet",
+		frameWidth = data.frameWidth or 8,
+		frameHeight = data.frameHeight or 8,
+		pivotX = data.pivotX or 0.5,
+		pivotY = data.pivotY or 0.5,
+	}, Spritesheet)
+
+	local imageW, imageH = image:getWidth(), image:getHeight()
+
+	local columns = data.columns or math.floor(imageW / self.frameWidth)
+	local rows = data.rows or math.floor(imageH / self.frameHeight)
+
+	if data.columns then
+		assert(imageW == data.columns * self.frameWidth,
+			string.format("Spritesheet '%s': columns=%d * frameWidth=%d = %d, but imageWidth=%d",
+				data.spriteSheet, data.columns, self.frameWidth, data.columns * self.frameWidth, imageW))
+	end
+	if data.rows then
+		assert(imageH == data.rows * self.frameHeight,
+			string.format("Spritesheet '%s': rows=%d * frameHeight=%d = %d, but imageHeight=%d",
+				data.spriteSheet, data.rows, self.frameHeight, data.rows * self.frameHeight, imageH))
+	end
+
+	self.columns = columns
+	self.rows = rows
+
 	self.quads = {}
-	for i = 0, totalFrames - 1 do
-		local col = i % self.columns
-		local row = math.floor(i / self.columns)
-		self.quads[i + 1] = love.graphics.newQuad(
-			col * self.frameWidth,
-			row * self.frameHeight,
-			self.frameWidth,
-			self.frameHeight,
-			sheetWidth,
-			sheetHeight
-		)
+	for row = 0, rows - 1 do
+		for col = 0, columns - 1 do
+			self.quads[#self.quads + 1] = love.graphics.newQuad(
+				col * self.frameWidth,
+				row * self.frameHeight,
+				self.frameWidth,
+				self.frameHeight,
+				imageW, imageH
+			)
+		end
 	end
 
-	self.currentQuad = nil
+	if data.animations then
+		self.animations = {}
+		for name, animDef in pairs(data.animations) do
+			local numFrames = math.min(animDef.frames or columns, columns)
+			self.animations[name] = {
+				startIdx = (animDef.row - 1) * columns + 1,
+				frames = numFrames,
+				speed = animDef.speed or 1,
+				loop = animDef.loop ~= false,
+			}
+		end
+		self.tags = data.tags
+		self.currentAnim = (self.tags and self.tags.idle) or next(self.animations)
+		self.currentTime = 0
+		self._lastFrame = nil
+	else
+		self._currentIndex = nil
+	end
+
 	return self
 end
 
--- 0-indexed input: tile index from palette and deterministic frame pick (both 0-based)
+function Spritesheet:attach()
+	if not self.tags then
+		return
+	end
+	self.parent:on(Events.STATE_CHANGED, function(newState)
+		if self.tags and self.tags[newState] and self.animations[self.tags[newState]] then
+			local animName = self.tags[newState]
+			if animName ~= self.currentAnim then
+				self.currentAnim = animName
+				self.currentTime = 0
+				self._lastFrame = nil
+			end
+		end
+	end, 5)
+end
+
+function Spritesheet:update(dt)
+	if not self.currentAnim or not self.animations then
+		return
+	end
+	local anim = self.animations[self.currentAnim]
+	if not anim then
+		return
+	end
+
+	local speedMult = (self.parent and self.parent.animSpeedFactor) or 1
+	dt = math.min(dt, 0.1)
+	if anim.loop then
+		self.currentTime = (self.currentTime + dt * speedMult) % (anim.frames / anim.speed)
+	else
+		local maxTime = (anim.frames - 1) / anim.speed
+		self.currentTime = math.min(self.currentTime + dt * speedMult, maxTime)
+	end
+
+	local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, anim.frames)
+	if frameIndex ~= self._lastFrame then
+		self._lastFrame = frameIndex
+		if self.parent then
+			self.parent:emit(Events.ANIM_FRAME, frameIndex)
+		end
+	end
+end
+
 function Spritesheet:setFrame(index)
 	if not self.quads then
 		return
 	end
 	if index >= 0 and index < #self.quads then
-		self.currentQuad = self.quads[index + 1]
+		self._currentIndex = index + 1
 	end
 end
 
 function Spritesheet:draw(x, y)
-	if not self.currentQuad then
+	if not self.quads then
 		return
 	end
+
+	local quad
+	if self.currentAnim then
+		local anim = self.animations[self.currentAnim]
+		if not anim then
+			return
+		end
+		local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, anim.frames)
+		quad = self.quads[anim.startIdx + frameIndex - 1]
+	elseif self._currentIndex then
+		quad = self.quads[self._currentIndex]
+	else
+		return
+	end
+
+	if not quad then
+		return
+	end
+
+	local sx, sy = 1, 1
+	local tweenTbl = self.parent and self.parent.tweens
+	if tweenTbl then
+		if tweenTbl.scale_x then
+			sx = tweenTbl.scale_x:getValue()
+		end
+		if tweenTbl.scale_y then
+			sy = tweenTbl.scale_y:getValue()
+		end
+	end
+
+	if self.parent and self.parent.flipX then
+		sx = -sx
+	end
+
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
-	love.graphics.draw(self.image, self.currentQuad, math.floor(x + 0.5), math.floor(y + 0.5), 0, 1, 1, ox, oy)
+	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
 end
 
 return Spritesheet

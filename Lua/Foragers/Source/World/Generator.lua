@@ -2,7 +2,7 @@ local Sprite = require("Source.Sprite.Sprite")
 local WorldConfig = require("Content.Data.World") or {}
 local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
-local Spritesheet = require("Source.Sprite.Components.Spritesheet")
+local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
 local Collision = require("Source.Sprite.Components.Collision")
 
 local private = {}
@@ -96,11 +96,7 @@ function private.buildWorldSprites(worldData, spawnCallback)
 					sprite.y = sy
 				end
 
-				local component = Spritesheet.new(compData)
-				component.frameWidth = tileSize
-				component.frameHeight = tileSize
-				component.pivotX = TileData.pivotX
-				component.pivotY = TileData.pivotY
+				local component = ComponentRegistry.create("spritesheet", compData) or {}			
 				local mask = computeMask(worldData, x, y)
 				local adj = TileData.adjacency or {}
 				local tileIndex = TilePalette.resolve(mask, adj.tileMap)
@@ -210,11 +206,7 @@ function private.spawnProps(worldData)
 		sprite.layer = chosen.data.layer or 0
 
 		if chosen.spritesheetData then
-			local component = Spritesheet.new(chosen.spritesheetData)
-			component.frameWidth = chosen.data.frameWidth
-			component.frameHeight = chosen.data.frameHeight
-			component.pivotX = chosen.data.pivotX
-			component.pivotY = chosen.data.pivotY
+			local component = ComponentRegistry.create("spritesheet", chosen.spritesheetData) or {}
 			local numFrames = chosen.spritesheetData.columns or 1
 			-- deterministic frame pick per tile seed; +5000 ensures positive modulo
 			local frameIndex = math.abs(tile.seed + 5000) % numFrames

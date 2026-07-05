@@ -1,4 +1,3 @@
-local Animation = require("Source.Sprite.Components.Animation")
 local Events = require("Source.Helpers.Events")
 
 local ParticleEmitter = {}
@@ -98,17 +97,19 @@ function ParticleEmitter:_spawn()
 		compData.pivotX = data.pivotX
 		compData.pivotY = data.pivotY
 
-		local ok, anim = pcall(Animation.new, compData)
-		if not ok then
+		local ok, sp = pcall(function()
+			return require("Source.Helpers.ComponentRegistry").create("spritesheet", compData)
+		end)
+		if not ok or not sp then
 			return
 		end
 
-		anim.currentAnim = next(anim.animations)
-		if not anim.currentAnim then
+		sp.currentAnim = next(sp.animations)
+		if not sp.currentAnim then
 			return
 		end
 
-		anim.parent = {
+		sp.parent = {
 			flipX = self._cachedFlipX,
 			emit = function(event, ...)
 				if self.parent then
@@ -117,12 +118,12 @@ function ParticleEmitter:_spawn()
 			end,
 		}
 
-		local config = anim.animations[anim.currentAnim]
+		local config = sp.animations[sp.currentAnim]
 		if not config then
 			return
 		end
 
-		particle.anim = anim
+		particle.anim = sp
 		particle._duration = config.frames / config.speed
 	else
 		local pngPath = self.particle:gsub("%.lua$", ".png")

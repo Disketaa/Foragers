@@ -5,7 +5,7 @@ return {
 	pivotY = 0.5,
 	components = {
 		{
-			component = "animation",
+			component = "spritesheet",
 			spriteSheet = "Content/Assets/Sprites/Particles/Dust.png",
 			animations = {
 				small_dust = { row = 1, frames = 4, speed = 6, loop = false },

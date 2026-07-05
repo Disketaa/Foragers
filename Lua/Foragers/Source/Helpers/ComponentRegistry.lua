@@ -20,7 +20,6 @@ function ComponentRegistry.create(name, data)
 	return nil
 end
 
-local Animation = require("Source.Sprite.Components.Animation")
 local Collision = require("Source.Sprite.Components.Collision")
 local Control = require("Source.Sprite.Components.Control")
 local Spritesheet = require("Source.Sprite.Components.Spritesheet")
@@ -29,9 +28,6 @@ local Sound = require("Source.Sprite.Components.Sound")
 local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 local Follow = require("Source.Sprite.Components.Follow")
 
-ComponentRegistry.register("animation", function(data)
-	return Animation.new(data)
-end)
 ComponentRegistry.register("collision", function(data)
 	return Collision.new(data)
 end)
