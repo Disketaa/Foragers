@@ -1,5 +1,5 @@
 local Sprite = require("Source.Sprite.Sprite")
-local ComponentRegistry = require("Source.ComponentRegistry")
+local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
 
 local SpriteLoader = {}
 

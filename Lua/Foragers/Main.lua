@@ -7,9 +7,9 @@ end
 
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Generator = require("Source.World.Generator")
-local Canvas = require("Source.Canvas")
-local ShaderLoader = require("Source.ShaderLoader")
-local ModLoader = require("Source.ModLoader")
+local Canvas = require("Source.Helpers.Canvas")
+local ShaderLoader = require("Source.Helpers.ShaderLoader")
+local ModLoader = require("Source.Helpers.ModLoader")
 
 local objects = {}
 local canvas = Canvas.new(480, 270, "outer")

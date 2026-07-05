@@ -6,7 +6,7 @@
 local Tweenable = {}
 Tweenable.__index = Tweenable
 
-local Tweens = require("Source.Tweens")
+local Tweens = require("Source.Helpers.Tweens")
 
 local function applyTweens(self, tweenSet)
 	for _, tweenData in pairs(tweenSet) do

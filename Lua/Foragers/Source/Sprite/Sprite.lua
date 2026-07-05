@@ -1,4 +1,4 @@
-local EventEmitter = require("Source.EventEmitter")
+local EventEmitter = require("Source.Helpers.EventEmitter")
 
 ---@class Sprite
 ---@field x number World X position
