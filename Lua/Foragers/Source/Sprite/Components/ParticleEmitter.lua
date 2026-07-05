@@ -1,4 +1,4 @@
-local Animatable = require("Source.Sprite.Components.Animatable")
+local Animation = require("Source.Sprite.Components.Animation")
 
 local ParticleEmitter = {}
 ParticleEmitter.__index = ParticleEmitter
@@ -82,7 +82,7 @@ function ParticleEmitter:_spawn()
 	compData.pivotX = data.pivotX
 	compData.pivotY = data.pivotY
 
-	local anim = Animatable.new(compData)
+	local anim = Animation.new(compData)
 	anim.currentAnim = next(anim.animations)
 	anim.parent = {
 		flipX = self._cachedFlipX,

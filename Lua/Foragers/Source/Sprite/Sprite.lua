@@ -12,8 +12,8 @@ local EventEmitter = require("Source.Helpers.EventEmitter")
 ---@field components table<object> Component instances
 ---@field _state string|nil Current sprite state — render-only, do not read for logic
 ---@field flipX boolean|nil Horizontal flip state — render-only, do not read for logic
----@field tweens table<string, Tween>|nil Runtime tweens on sprite (Tweenable→Animatable producer/consumer)
----@field animSpeedFactor number Animation speed multiplier (used by Animatable)
+---@field tweens table<string, Tween>|nil Runtime tweens on sprite (Tween→Animation producer/consumer)
+---@field animSpeedFactor number Animation speed multiplier (used by Animation)
 local Sprite = {}
 Sprite.__index = Sprite
 

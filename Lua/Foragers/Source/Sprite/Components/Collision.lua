@@ -1,4 +1,4 @@
----@class Collidable
+---@class Collision
 ---@field parent Sprite|nil
 ---@field mode "solid"|"detect"|"solid_and_detect"
 ---@field collisionWidth number
@@ -7,25 +7,25 @@
 ---@field offsetY number
 ---@field visible boolean Draw wireframe when true
 ---@field _prevGrounded boolean|nil Previous frame grounded state
----@field type "collidable"
-local Collidable = {}
-Collidable.__index = Collidable
+---@field type "collision"
+local Collision = {}
+Collision.__index = Collision
 
 -- Baked static terrain colliders, populated once at world generation
 ---@type table<{x:number, y:number, w:number, h:number}>
 local terrainColliders = {}
 
-function Collidable.resetTerrain()
+function Collision.resetTerrain()
 	terrainColliders = {}
 end
 
-function Collidable.getTerrainColliders()
+function Collision.getTerrainColliders()
 	return terrainColliders
 end
 
 ---@param data table
----@return Collidable
-function Collidable.new(data)
+---@return Collision
+function Collision.new(data)
 	data = data or {}
 	return setmetatable({
 		mode = data.mode or "solid",
@@ -35,11 +35,11 @@ function Collidable.new(data)
 		offsetY = data.offsetY or 0,
 		visible = data.visible or false,
 		_prevGrounded = nil,
-		type = "collidable",
-	}, Collidable)
+		type = "collision",
+	}, Collision)
 end
 
-function Collidable:getRect()
+function Collision:getRect()
 	return {
 		x = self.parent.x - self.collisionWidth / 2 + self.offsetX,
 		y = self.parent.y - self.collisionHeight / 2 + self.offsetY,
@@ -53,7 +53,7 @@ local function checkAABB(a, b)
 end
 
 ---@param dt number
-function Collidable:update(dt)
+function Collision:update(dt)
 	if not self.parent then
 		return
 	end
@@ -78,11 +78,11 @@ function Collidable:update(dt)
 end
 
 -- For static tiles only; baked once at world generation
-function Collidable:registerAsTerrain()
+function Collision:registerAsTerrain()
 	table.insert(terrainColliders, self:getRect())
 end
 
-function Collidable:draw()
+function Collision:draw()
 	if not self.visible or not self.parent then
 		return
 	end
@@ -92,4 +92,4 @@ function Collidable:draw()
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
-return Collidable
+return Collision

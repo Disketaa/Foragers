@@ -1,22 +1,22 @@
----@class Soundable
+---@class Sound
 ---@field parent Sprite|nil
 ---@field soundSets table<string, table>
 ---@field tags table<string, table>
 ---@field _currentState string|nil
 ---@field _stepCounter number
----@field type "soundable"
-local Soundable = {}
-Soundable.__index = Soundable
+---@field type "sound"
+local Sound = {}
+Sound.__index = Sound
 
 ---@param data table
----@return Soundable
-function Soundable.new(data)
-	local self = setmetatable({}, Soundable)
+---@return Sound
+function Sound.new(data)
+	local self = setmetatable({}, Sound)
 	self.soundSets = {}
 	self.tags = data.tags or {}
 	self._currentState = nil
 	self._stepCounter = 0
-	self.type = "soundable"
+	self.type = "sound"
 
 	for stateName, config in pairs(self.tags) do
 		local sounds = config.sounds or config
@@ -38,7 +38,7 @@ function Soundable.new(data)
 	return self
 end
 
-function Soundable:attach()
+function Sound:attach()
 	self.parent:on("grounded_changed", function(isGrounded)
 		self:_play(isGrounded and "water_out" or "water_in")
 	end, 15)
@@ -63,7 +63,7 @@ function Soundable:attach()
 	end, 15)
 end
 
-function Soundable:_play(state)
+function Sound:_play(state)
 	local set = self.soundSets[state]
 	if not set or #set.baseSources == 0 then
 		return
@@ -77,6 +77,6 @@ function Soundable:_play(state)
 end
 
 ---@param dt number
-function Soundable:update(dt) end
+function Sound:update(dt) end
 
-return Soundable
+return Sound

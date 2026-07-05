@@ -1,4 +1,4 @@
----@class Animatable
+---@class Animation
 ---@field image love.Image
 ---@field frameWidth number
 ---@field frameHeight number
@@ -8,21 +8,21 @@
 ---@field quads table<string, table<number, love.Quad>>
 ---@field currentAnim string|nil
 ---@field currentTime number
----@field type "animatable"
+---@field type "animation"
 ---@field tags table<string, string>|nil State to animation name mapping
-local Animatable = {}
-Animatable.__index = Animatable
+local Animation = {}
+Animation.__index = Animation
 
 ---@param data table
----@return Animatable
-function Animatable.new(data)
-	local self = setmetatable({}, Animatable)
+---@return Animation
+function Animation.new(data)
+	local self = setmetatable({}, Animation)
 	self.image = love.graphics.newImage(data.spriteSheet)
 	self.frameWidth = data.frameWidth or 16
 	self.frameHeight = data.frameHeight or 16
 	self.animations = {}
 	self.quads = {}
-	self.type = "animatable"
+	self.type = "animation"
 	self.pivotX = data.pivotX or 0.5
 	self.pivotY = data.pivotY or 0.5
 	self.tags = data.tags
@@ -47,7 +47,7 @@ function Animatable.new(data)
 	return self
 end
 
-function Animatable:attach()
+function Animation:attach()
 	self.parent:on("state_changed", function(newState)
 		if self.tags and self.tags[newState] and self.animations[self.tags[newState]] then
 			local animName = self.tags[newState]
@@ -60,7 +60,7 @@ function Animatable:attach()
 	end, 5)
 end
 
-function Animatable:update(dt)
+function Animation:update(dt)
 	if self.currentAnim then
 		local anim = self.animations[self.currentAnim]
 		if anim then
@@ -86,7 +86,7 @@ end
 
 ---@param x number
 ---@param y number
-function Animatable:draw(x, y)
+function Animation:draw(x, y)
 	if not self.currentAnim then
 		return
 	end
@@ -120,4 +120,4 @@ function Animatable:draw(x, y)
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
 end
 
-return Animatable
+return Animation

@@ -1,8 +1,8 @@
-local Tileable = {}
-Tileable.__index = Tileable
+local Tile = {}
+Tile.__index = Tile
 
-function Tileable.new(data)
-	local self = setmetatable({}, Tileable)
+function Tile.new(data)
+	local self = setmetatable({}, Tile)
 	local image = love.graphics.newImage(data.spriteSheet)
 	if not image then
 		return self
@@ -10,7 +10,7 @@ function Tileable.new(data)
 	self.image = image
 	self.frameWidth = data.frameWidth or 8
 	self.frameHeight = data.frameHeight or 8
-	self.type = "tileable"
+	self.type = "tile"
 	self.pivotX = data.pivotX or 0.5
 	self.pivotY = data.pivotY or 0.5
 	self.columns = data.columns or 4
@@ -37,13 +37,13 @@ function Tileable.new(data)
 	return self
 end
 
-function Tileable:setTile(tileIndex)
+function Tile:setTile(tileIndex)
 	if tileIndex >= 0 and tileIndex < #self.quads then
 		self.currentQuad = self.quads[tileIndex + 1]
 	end
 end
 
-function Tileable:draw(x, y)
+function Tile:draw(x, y)
 	if not self.currentQuad then
 		return
 	end
@@ -52,4 +52,4 @@ function Tileable:draw(x, y)
 	love.graphics.draw(self.image, self.currentQuad, math.floor(x + 0.5), math.floor(y + 0.5), 0, 1, 1, ox, oy)
 end
 
-return Tileable
+return Tile

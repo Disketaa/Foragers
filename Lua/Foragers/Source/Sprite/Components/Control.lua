@@ -1,4 +1,4 @@
----@class Controllable
+---@class Control
 ---@field parent Sprite|nil Parent sprite reference
 ---@field keys { up: string, down: string, left: string, right: string }|nil
 ---@field speed number Base movement speed in pixels per second
@@ -7,9 +7,9 @@
 ---@field mouseY number|nil Mouse Y in world coordinates
 ---@field tags table<string, string>|nil Mapping of states to animation names
 ---@field _grounded boolean|nil Grounded state cached from grounded_changed event
----@field type "controllable"
-local Controllable = {}
-Controllable.__index = Controllable
+---@field type "control"
+local Control = {}
+Control.__index = Control
 
 local function calculateSpeedMultiplier(distance, slowdownRadius)
 	if not slowdownRadius or slowdownRadius <= 0 then
@@ -18,7 +18,7 @@ local function calculateSpeedMultiplier(distance, slowdownRadius)
 	return math.max(0, math.min(1, distance / slowdownRadius))
 end
 
-function Controllable.new(data)
+function Control.new(data)
 	data = data or {}
 	local kc = data.keyboardControl
 	local self = setmetatable({
@@ -28,22 +28,22 @@ function Controllable.new(data)
 		mouseControl = data.mouseControl,
 		tags = data.tags,
 		_grounded = nil,
-		type = "controllable",
-	}, Controllable)
+		type = "control",
+	}, Control)
 	return self
 end
 
-function Controllable:attach()
+function Control:attach()
 	self.parent:on("grounded_changed", function(isGrounded)
 		self._grounded = isGrounded
 	end, 10)
 end
 
-function Controllable:setMousePosition(worldX, worldY)
+function Control:setMousePosition(worldX, worldY)
 	self.mouseX, self.mouseY = worldX, worldY
 end
 
-function Controllable:update(dt)
+function Control:update(dt)
 	if not self.parent or not self.parent.components then
 		return
 	end
@@ -128,4 +128,4 @@ function Controllable:update(dt)
 	self.parent.animSpeedFactor = speedFactor
 end
 
-return Controllable
+return Control

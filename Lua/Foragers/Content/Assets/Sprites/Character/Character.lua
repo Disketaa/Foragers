@@ -6,14 +6,14 @@ return {
 	pivotY = 0.75,
 	components = {
 		{
-			component = "controllable",
+			component = "control",
 			movementSpeed = 50,
 			swimmingSpeed = 30,
 			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
 			mouseControl = { slowdownRadius = 15 },
 		},
 		{
-			component = "collidable",
+			component = "collision",
 			mode = "solid_and_detect",
 			collisionWidth = 4,
 			collisionHeight = 4,
@@ -22,7 +22,7 @@ return {
 			visible = false,
 		},
 		{
-			component = "animatable",
+			component = "animation",
 			spriteSheet = "Content/Assets/Sprites/Character/Character.png",
 			tags = { idle = "idle", moving = "run", swimming = "swim" },
 			animations = {
@@ -33,7 +33,7 @@ return {
 			},
 		},
 		{
-			component = "tweenable",
+			component = "tween",
 			tags = {
 				flip = {
 					{ target = "scale_x", from = 0.75, to = 1.0, duration = 0.3, curve = "BackOut" },
@@ -46,7 +46,7 @@ return {
 			},
 		},
 		{
-			component = "soundable",
+			component = "sound",
 			volume = 0.5,
 			pitch = 1.0,
 			pitchRandomness = 0.15,

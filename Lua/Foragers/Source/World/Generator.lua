@@ -2,8 +2,8 @@ local Sprite = require("Source.Sprite.Sprite")
 local WorldConfig = require("Content.Data.World") or {}
 local TileData = require("Content.Assets.Sprites.World.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
-local Tileable = require("Source.Sprite.Components.Tileable")
-local Collidable = require("Source.Sprite.Components.Collidable")
+local Tile = require("Source.Sprite.Components.Tile")
+local Collision = require("Source.Sprite.Components.Collision")
 
 local private = {}
 local tileSize = TileData and TileData.frameWidth or 8
@@ -11,7 +11,7 @@ local compData = TileData and TileData.components and TileData.components[1] or 
 local collidableData = nil
 if TileData and TileData.components then
 	for _, cd in ipairs(TileData.components) do
-		if cd.component == "collidable" then
+		if cd.component == "collision" then
 			collidableData = cd
 			break
 		end
@@ -76,7 +76,7 @@ end
 function private.buildWorldSprites(worldData, spawnCallback)
 	local sprites = {}
 
-	Collidable.resetTerrain()
+	Collision.resetTerrain()
 
 	for y = 0, private.height - 1 do
 		for x = 0, private.width - 1 do
@@ -96,7 +96,7 @@ function private.buildWorldSprites(worldData, spawnCallback)
 					sprite.y = sy
 				end
 
-				local component = Tileable.new(compData)
+				local component = Tile.new(compData)
 				component.frameWidth = tileSize
 				component.frameHeight = tileSize
 				component.pivotX = TileData.pivotX
@@ -108,7 +108,7 @@ function private.buildWorldSprites(worldData, spawnCallback)
 				sprite:addComponent(component)
 
 				if collidableData then
-					local collidableComp = Collidable.new(collidableData)
+					local collidableComp = Collision.new(collidableData)
 					sprite:addComponent(collidableComp)
 					collidableComp.parent = sprite
 					collidableComp:registerAsTerrain()

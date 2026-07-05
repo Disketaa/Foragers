@@ -1,10 +1,10 @@
----@class Tweenable
+---@class Tween
 ---@field parent Sprite|nil Parent sprite reference
 ---@field tweens table[] Array of tween configurations
 ---@field tags table<string, table> Tween sets keyed by flip change or state
----@field type "tweenable"
-local Tweenable = {}
-Tweenable.__index = Tweenable
+---@field type "tween"
+local Tween = {}
+Tween.__index = Tween
 
 local Tweens = require("Source.Helpers.Tweens")
 
@@ -25,16 +25,16 @@ local function applyTweens(self, tweenSet)
 end
 
 ---@param data table
----@return Tweenable
-function Tweenable.new(data)
+---@return Tween
+function Tween.new(data)
 	return setmetatable({
 		tweens = data.tweens or {},
 		tags = data.tags or {},
-		type = "tweenable",
-	}, Tweenable)
+		type = "tween",
+	}, Tween)
 end
 
-function Tweenable:attach()
+function Tween:attach()
 	self.parent:on("flipped", function()
 		if self.tags.flip then
 			applyTweens(self, self.tags.flip)
@@ -50,10 +50,10 @@ function Tweenable:attach()
 end
 
 ---@param dt number
-function Tweenable:update(dt)
+function Tween:update(dt)
 	for _, tween in pairs(self.parent and self.parent.tweens or {}) do
 		tween:update(dt)
 	end
 end
 
-return Tweenable
+return Tween

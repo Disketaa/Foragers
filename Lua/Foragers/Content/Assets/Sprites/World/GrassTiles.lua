@@ -6,7 +6,7 @@ return {
 	pivotY = 0.5,
 	components = {
 		{
-			component = "tileable",
+			component = "tile",
 			spriteSheet = "Content/Assets/Sprites/World/GrassTiles.png",
 			columns = 4,
 			rows = 6,
@@ -16,7 +16,7 @@ return {
 			},
 		},
 		{
-			component = "collidable",
+			component = "collision",
 			mode = "solid",
 			collisionWidth = 8,
 			collisionHeight = 8,
