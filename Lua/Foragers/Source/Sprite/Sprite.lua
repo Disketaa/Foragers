@@ -1,4 +1,5 @@
 local EventEmitter = require("Source.Helpers.EventEmitter")
+local Log = require("Source.Helpers.Log")
 
 ---@class Sprite
 ---@field x number World X position
@@ -69,8 +70,12 @@ end
 ---@param dt number
 function Sprite:update(dt)
 	for _, component in ipairs(self.components) do
-		if component.update then
-			component:update(dt)
+		if not component._broken and component.update then
+			local ok, err = xpcall(component.update, debug.traceback, component, dt)
+			if not ok then
+				Log.error(string.format("[%s] update: %s", component.type or "?", err))
+				component._broken = true
+			end
 		end
 	end
 	self.sortY = self.y + (self.sortOffsetY or 0)
@@ -83,13 +88,21 @@ function Sprite:draw()
 		love.graphics.draw(self.image, math.floor(self.x + 0.5), math.floor(self.y + 0.5), 0, 1, 1, ox, oy)
 	end
 	for _, component in ipairs(self.components) do
-		if component.drawBehind and component.draw then
-			component:draw(self.x, self.y)
+		if not component._broken and component.drawBehind and component.draw then
+			local ok, err = xpcall(component.draw, debug.traceback, component, self.x, self.y)
+			if not ok then
+				Log.error(string.format("[%s] draw: %s", component.type or "?", err))
+				component._broken = true
+			end
 		end
 	end
 	for _, component in ipairs(self.components) do
-		if not component.drawBehind and component.draw then
-			component:draw(self.x, self.y)
+		if not component._broken and not component.drawBehind and component.draw then
+			local ok, err = xpcall(component.draw, debug.traceback, component, self.x, self.y)
+			if not ok then
+				Log.error(string.format("[%s] draw: %s", component.type or "?", err))
+				component._broken = true
+			end
 		end
 	end
 end
