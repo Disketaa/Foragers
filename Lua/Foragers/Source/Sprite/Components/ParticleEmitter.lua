@@ -60,16 +60,9 @@ function ParticleEmitter:update(dt)
 	for i = #self._particles, 1, -1 do
 		local p = self._particles[i]
 		p.anim:update(dt)
-		local anim = p.anim.animations[p.anim.currentAnim]
-		if anim and not anim.loop then
-			local maxTime = (anim.frames - 1) / anim.speed
-			if p.anim.currentTime >= maxTime then
-				if p._scheduledForRemoval then
-					table.remove(self._particles, i)
-				else
-					p._scheduledForRemoval = true
-				end
-			end
+		p._age = p._age + dt
+		if p._age >= p._duration then
+			table.remove(self._particles, i)
 		end
 	end
 end
@@ -96,10 +89,14 @@ function ParticleEmitter:_spawn()
 		emit = function() end,
 	}
 
+	local config = anim.animations[anim.currentAnim]
+
 	table.insert(self._particles, {
 		x = self.parent.x + self.offsetX,
 		y = self.parent.y + self.offsetY,
 		anim = anim,
+		_age = 0,
+		_duration = config.frames / config.speed,
 	})
 end
 
