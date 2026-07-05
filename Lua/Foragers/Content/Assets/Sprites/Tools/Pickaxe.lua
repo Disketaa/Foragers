@@ -16,6 +16,7 @@ return {
 			image = "Content/Assets/Sprites/Tools/Pickaxe.png",
 			offsetX = 6,
 			offsetY = -3,
+			smoothness = 0.5,
 		},
 	},
 }

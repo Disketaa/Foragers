@@ -4,6 +4,7 @@
 ---@field followTarget Sprite|nil
 ---@field offsetX number
 ---@field offsetY number
+---@field smoothness number Seconds to reach target (0 = instant)
 ---@field type "follow"
 local Follow = {}
 Follow.__index = Follow
@@ -15,6 +16,7 @@ function Follow.new(data)
 		image = data.image and love.graphics.newImage(data.image) or nil,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
+		smoothness = data.smoothness or 0,
 		type = "follow",
 	}, Follow)
 end
@@ -31,8 +33,25 @@ function Follow:update(dt)
 	end
 
 	local dir = self.followTarget.flipX and -1 or 1
-	self.parent.x = self.followTarget.x + dir * self.offsetX
-	self.parent.y = self.followTarget.y + self.offsetY
+	local targetX = self.followTarget.x + dir * self.offsetX
+	local targetY = self.followTarget.y + self.offsetY
+
+	if self._followX == nil then
+		self._followX = targetX
+		self._followY = targetY
+	end
+
+	if self.smoothness > 0 then
+		local ease = math.min(1, dt / self.smoothness)
+		self._followX = self._followX + (targetX - self._followX) * ease
+		self._followY = self._followY + (targetY - self._followY) * ease
+	else
+		self._followX = targetX
+		self._followY = targetY
+	end
+
+	self.parent.x = self._followX
+	self.parent.y = self._followY
 
 	if self.parent.tweens and self.parent.tweens.y then
 		self.parent.y = self.parent.y + self.parent.tweens.y:getValue()
