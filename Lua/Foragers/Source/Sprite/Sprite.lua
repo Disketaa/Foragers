@@ -83,10 +83,25 @@ end
 
 function Sprite:draw()
 	if self.type == "StaticSprite" and self.image then
+		local sx, sy = 1, 1
+		local rot = 0
+		if self.tweens then
+			if self.tweens.scale_x then
+				sx = self.tweens.scale_x:getValue()
+			end
+			if self.tweens.scale_y then
+				sy = self.tweens.scale_y:getValue()
+			end
+			if self.tweens.angle then
+				rot = math.rad(self.tweens.angle:getValue())
+			end
+		end
+		if self.flipX then
+			sx = -sx
+		end
 		local ox = (self.frameWidth or self.image:getWidth()) * (self.pivotX or 0)
 		local oy = (self.frameHeight or self.image:getHeight()) * (self.pivotY or 0)
-		local sx = self.flipX and -1 or 1
-		love.graphics.draw(self.image, math.floor(self.x + 0.5), math.floor(self.y + 0.5), 0, sx, 1, ox, oy)
+		love.graphics.draw(self.image, math.floor(self.x + 0.5), math.floor(self.y + 0.5), rot, sx, sy, ox, oy)
 	end
 	for _, component in ipairs(self.components) do
 		if not component._broken and component.drawBehind and component.draw then

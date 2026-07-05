@@ -100,16 +100,42 @@ end
 
 ---@param self TweenComponent
 ---@param tweenSet table[]
+local function parseRandomValue(value)
+	if type(value) == "string" and string.find(value, "|") then
+		local parts = {}
+		for part in string.gmatch(value, "[^|]+") do
+			local trimmed = string.match(part, "^%s*(.-)%s*$")
+			local num = tonumber(trimmed)
+			if num then
+				table.insert(parts, num)
+			end
+		end
+		if #parts > 0 then
+			return parts[love.math.random(1, #parts)]
+		end
+	end
+	return tonumber(value) or value
+end
+
 local function applyTweens(self, tweenSet)
 	for _, tweenData in pairs(tweenSet) do
+		local from = parseRandomValue(tweenData.from)
+		local to = parseRandomValue(tweenData.to)
 		local curveFunc = Easing[tweenData.curve] or Easing.BackOut
 		if not self.parent.tweens[tweenData.target] then
-			self.parent.tweens[tweenData.target] =
-				createTween(tweenData.target, tweenData.from, tweenData.to, tweenData.duration, curveFunc, tweenData.loop, tweenData.pingPong)
+			self.parent.tweens[tweenData.target] = createTween(
+				tweenData.target,
+				from,
+				to,
+				tweenData.duration,
+				curveFunc,
+				tweenData.loop,
+				tweenData.pingPong
+			)
 		end
 		local tween = self.parent.tweens[tweenData.target]
-		tween.from = tweenData.from
-		tween.to = tweenData.to
+		tween.from = from
+		tween.to = to
 		tween.duration = tweenData.duration
 		tween.curve = curveFunc
 		tween.loop = tweenData.loop or false
@@ -148,6 +174,12 @@ function TweenComponent:attach()
 	self.parent:on(Events.STATE_CHANGED, function(newState, oldState)
 		if self.tags.splash and oldState and (oldState == "swimming") ~= (newState == "swimming") then
 			applyTweens(self, self.tags.splash)
+		end
+	end, 10)
+
+	self.parent:on(Events.SLOWDOWN_ENTER, function()
+		if self.tags.bush_touch then
+			applyTweens(self, self.tags.bush_touch)
 		end
 	end, 10)
 end

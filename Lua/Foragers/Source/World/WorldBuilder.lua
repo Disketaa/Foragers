@@ -93,11 +93,14 @@ function private.spawnProps(worldData)
 		if ok and type(propData) == "table" then
 			local spritesheetData = nil
 			local collidableData = nil
+			local extraComponents = {}
 			for _, cd in ipairs(propData.components or {}) do
 				if cd.component == "spritesheet" then
 					spritesheetData = cd
 				elseif cd.component == "collision" then
 					collidableData = cd
+				else
+					table.insert(extraComponents, cd)
 				end
 			end
 			local propName = cfg.data:match("([^%.]+)$"):lower()
@@ -107,6 +110,7 @@ function private.spawnProps(worldData)
 				data = propData,
 				spritesheetData = spritesheetData,
 				collidableData = collidableData,
+				extraComponents = extraComponents,
 				pngPath = cfg.data:gsub("%.", "/") .. ".png",
 			})
 		end
@@ -190,6 +194,13 @@ function private.spawnProps(worldData)
 				collidableComp:registerAsSlowdown()
 			else
 				collidableComp:registerAsSolid()
+			end
+		end
+
+		for _, compData in ipairs(chosen.extraComponents or {}) do
+			local component = ComponentRegistry.create(compData.component, compData)
+			if component then
+				sprite:addComponent(component)
 			end
 		end
 

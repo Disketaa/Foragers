@@ -3,6 +3,8 @@ local Events = {
 	FLIPPED = "flipped",
 	GROUNDED_CHANGED = "grounded_changed",
 	SLOWDOWN_CHANGED = "slowdown_changed",
+	SLOWDOWN_ENTER = "slowdown_enter",
+	SLOWDOWN_EXIT = "slowdown_exit",
 	ANIM_FRAME = "anim_frame",
 }
 return Events

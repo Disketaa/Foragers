@@ -22,8 +22,11 @@ local terrainColliders = {}
 ---@type table<{x:number, y:number, w:number, h:number}>
 local solidColliders = {}
 -- Baked static slowdown colliders, populated once at world generation
----@type table<{x:number, y:number, w:number, h:number, slowdown:number}>
+---@type table<{x:number, y:number, w:number, h:number, slowdown:number, sprite:Sprite|nil}>
 local slowdownColliders = {}
+-- Reusable buffers for tracking slowdown sprite overlap sets (no per-frame alloc)
+local _slowdownCurr = {}
+local _slowdownPrev = {}
 
 function Collision.resetTerrain()
 	terrainColliders = {}
@@ -135,11 +138,21 @@ function Collision:update(dt)
 		self.parent:emit(Events.GROUNDED_CHANGED, grounded)
 	end
 
+	for k in pairs(_slowdownCurr) do
+		_slowdownCurr[k] = nil
+	end
+
 	local currentSlowdown = 1.0
 	for _, r in ipairs(slowdownColliders) do
 		if checkAABB(myRect, r) then
 			if r.slowdown and r.slowdown < currentSlowdown then
 				currentSlowdown = r.slowdown
+			end
+			if r.sprite then
+				_slowdownCurr[r.sprite] = true
+				if not _slowdownPrev[r.sprite] then
+					r.sprite:emit(Events.SLOWDOWN_ENTER)
+				end
 			end
 		end
 	end
@@ -147,6 +160,13 @@ function Collision:update(dt)
 		self._prevSlowdown = currentSlowdown
 		self.parent:emit(Events.SLOWDOWN_CHANGED, currentSlowdown)
 	end
+
+	for sprite in pairs(_slowdownPrev) do
+		if not _slowdownCurr[sprite] then
+			sprite:emit(Events.SLOWDOWN_EXIT)
+		end
+	end
+	_slowdownPrev, _slowdownCurr = _slowdownCurr, _slowdownPrev
 
 	self._prevX = self.parent.x
 	self._prevY = self.parent.y
@@ -166,6 +186,7 @@ end
 function Collision:registerAsSlowdown()
 	local rect = self:getRect()
 	rect.slowdown = self.slowdown or 1.0
+	rect.sprite = self.parent
 	table.insert(slowdownColliders, rect)
 end
 

@@ -152,6 +152,7 @@ function Spritesheet:draw(x, y)
 	end
 
 	local sx, sy = 1, 1
+	local rot = 0
 	local tweenTbl = self.parent and self.parent.tweens
 	if tweenTbl then
 		if tweenTbl.scale_x then
@@ -159,6 +160,9 @@ function Spritesheet:draw(x, y)
 		end
 		if tweenTbl.scale_y then
 			sy = tweenTbl.scale_y:getValue()
+		end
+		if tweenTbl.angle then
+			rot = math.rad(tweenTbl.angle:getValue())
 		end
 	end
 
@@ -168,7 +172,7 @@ function Spritesheet:draw(x, y)
 
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
-	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
+	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), rot, sx, sy, ox, oy)
 end
 
 return Spritesheet
