@@ -8,15 +8,17 @@ return {
 		{
 			component = "tween",
 			tweens = {
-				{ target = "y", from = -2, to = 2, duration = 1.0, curve = "Sine", loop = true, pingPong = true },
+				{ target = "y", from = -1, to = 1, duration = 1.0, curve = "Sine", loop = true, pingPong = true },
 			},
 		},
 		{
 			component = "follow",
-			image = "Content/Assets/Sprites/Tools/Pickaxe.png",
 			offsetX = 6,
 			offsetY = -3,
-			smoothness = 0.5,
+			smoothnessX = 0.5,
+			smoothnessY = 0.2,
+			leanAngle = -45,
+			leanThreshold = 0.1,
 		},
 	},
 }

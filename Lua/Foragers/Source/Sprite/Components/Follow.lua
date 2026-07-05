@@ -1,10 +1,12 @@
 ---@class Follow
 ---@field parent Sprite|nil
----@field image love.Image|nil
 ---@field followTarget Sprite|nil
 ---@field offsetX number
 ---@field offsetY number
----@field smoothness number Seconds to reach target (0 = instant)
+---@field smoothnessX number Seconds to reach target on X (0 = instant)
+---@field smoothnessY number Seconds to reach target on Y (0 = instant)
+---@field leanAngle number Degrees to tilt when moving (flip-aware)
+---@field leanThreshold number Min pixel-delta per frame to trigger lean (lower = more sensitive)
 ---@field type "follow"
 local Follow = {}
 Follow.__index = Follow
@@ -13,10 +15,12 @@ Follow.__index = Follow
 ---@return Follow
 function Follow.new(data)
 	return setmetatable({
-		image = data.image and love.graphics.newImage(data.image) or nil,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
-		smoothness = data.smoothness or 0,
+		smoothnessX = data.smoothnessX or 0,
+		smoothnessY = data.smoothnessY or 0,
+		leanAngle = data.leanAngle or 0,
+		leanThreshold = data.leanThreshold or 0.5,
 		type = "follow",
 	}, Follow)
 end
@@ -33,22 +37,28 @@ function Follow:update(dt)
 	end
 
 	local dir = self.followTarget.flipX and -1 or 1
-	local targetX = self.followTarget.x + dir * self.offsetX
-	local targetY = self.followTarget.y + self.offsetY
+	local liveX = self.followTarget.x + dir * self.offsetX
+	local liveY = self.followTarget.y + self.offsetY
 
 	if self._followX == nil then
-		self._followX = targetX
-		self._followY = targetY
+		self._followX = liveX
+		self._followY = liveY
+		self._prevLiveX = liveX
+		self._prevLiveY = liveY
+		self._currentAngle = 0
 	end
 
-	if self.smoothness > 0 then
-		local ease = math.min(1, dt / self.smoothness)
-		self._followX = self._followX + (targetX - self._followX) * ease
-		self._followY = self._followY + (targetY - self._followY) * ease
-	else
-		self._followX = targetX
-		self._followY = targetY
-	end
+	local moving = math.abs(liveX - self._prevLiveX) > self.leanThreshold
+	self._prevLiveX = liveX
+	self._prevLiveY = liveY
+
+	local easeX = self.smoothnessX > 0 and (1 - math.exp(-dt / self.smoothnessX)) or 1
+	local easeY = self.smoothnessY > 0 and (1 - math.exp(-dt / self.smoothnessY)) or 1
+	self._followX = self._followX + (liveX - self._followX) * easeX
+	self._followY = self._followY + (liveY - self._followY) * easeY
+
+	local targetAngle = moving and (self.leanAngle * dir) or 0
+	self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * easeX
 
 	self.parent.x = self._followX
 	self.parent.y = self._followY
@@ -61,12 +71,20 @@ end
 ---@param x number
 ---@param y number
 function Follow:draw(x, y)
-	if not self.image then
+	if not self.parent or not self.parent.image then
 		return
 	end
-	local ox = self.parent.frameWidth * (self.parent.pivotX or 0.5)
-	local oy = self.parent.frameHeight * (self.parent.pivotY or 1)
-	love.graphics.draw(self.image, math.floor(x + 0.5), math.floor(y + 0.5), 0, 1, 1, ox, oy)
+	local img = self.parent.image
+	love.graphics.draw(
+		img,
+		math.floor(x + 0.5),
+		math.floor(y + 0.5),
+		math.rad(self._currentAngle or 0),
+		1,
+		1,
+		(self.parent.frameWidth or img:getWidth()) * (self.parent.pivotX or 0.5),
+		(self.parent.frameHeight or img:getHeight()) * (self.parent.pivotY or 1)
+	)
 end
 
 return Follow
