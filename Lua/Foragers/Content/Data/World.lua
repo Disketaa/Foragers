@@ -7,6 +7,7 @@ return {
 	density = 0.8,
 	backgroundColor = { 0.25, 0.74, 0.9 },
 	propCoverage = 0.3,
+	spawnClearance = 1,
 	props = {
 		{
 			data = "Content.Assets.Sprites.Props.Rocks",

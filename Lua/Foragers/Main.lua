@@ -32,7 +32,9 @@ end
 
 local function getSpawnPosition(data)
 	if data.object == "player" then
-		return worldPixelWidth / 2, worldPixelHeight / 2
+		local tileX = math.floor(World.width / 2)
+		local tileY = math.floor(World.height / 2)
+		return tileX * tileSize + tileSize / 2, tileY * tileSize + tileSize / 2
 	end
 	return 0, 0
 end

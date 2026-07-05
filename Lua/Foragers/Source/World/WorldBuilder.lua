@@ -120,12 +120,19 @@ function private.spawnProps(worldData)
 		totalWeight = totalWeight + p.weight
 	end
 
+	local centerTileX = math.floor(private.width / 2)
+	local centerTileY = math.floor(private.height / 2)
+	local spawnClearance = private.spawnClearance or 1
 	local activeTiles = {}
 	for y = 0, private.height - 1 do
 		for x = 0, private.width - 1 do
 			local tile = worldData[y][x]
 			if tile.active then
-				table.insert(activeTiles, tile)
+				local dx = x - centerTileX
+				local dy = y - centerTileY
+				if math.abs(dx) > spawnClearance or math.abs(dy) > spawnClearance then
+					table.insert(activeTiles, tile)
+				end
 			end
 		end
 	end
