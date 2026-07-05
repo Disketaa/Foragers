@@ -47,10 +47,12 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 					local pngPath = fullPath:gsub("%.lua$", ".png")
 					local pngInfo = love.filesystem.getInfo(pngPath)
 					if pngInfo then
-						local image = love.graphics.newImage(pngPath)
-						obj.image = image
-						if not next(data.components or {}) then
-							obj.type = "StaticSprite"
+						local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
+						if ok then
+							obj.image = image
+							if not next(data.components or {}) then
+								obj.type = "StaticSprite"
+							end
 						end
 					end
 

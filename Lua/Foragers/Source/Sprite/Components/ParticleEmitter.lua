@@ -64,7 +64,9 @@ end
 function ParticleEmitter:update(dt)
 	for i = #self._particles, 1, -1 do
 		local p = self._particles[i]
-		p.anim:update(dt)
+		if p.anim then
+			p.anim:update(dt)
+		end
 		p._age = p._age + dt
 		if p._age >= p._duration then
 			table.remove(self._particles, i)
@@ -74,43 +76,83 @@ end
 
 function ParticleEmitter:_spawn()
 	local data = self._particleData
-	if not data or not data.components or #data.components == 0 then
+	if not data then
 		return
 	end
 
-	local compData = {}
-	for k, v in pairs(data.components[1]) do
-		compData[k] = v
-	end
-	compData.frameWidth = data.frameWidth
-	compData.frameHeight = data.frameHeight
-	compData.pivotX = data.pivotX
-	compData.pivotY = data.pivotY
-
-	local anim = Animation.new(compData)
-	anim.currentAnim = next(anim.animations)
-	anim.parent = {
-		flipX = self._cachedFlipX,
-		emit = function() end,
-	}
-
-	local config = anim.animations[anim.currentAnim]
-	if not config then
-		return
-	end
-
-	table.insert(self._particles, {
+	local particle = {
 		x = self.parent.x + self.offsetX,
 		y = self.parent.y + self.offsetY,
-		anim = anim,
 		_age = 0,
-		_duration = config.frames / config.speed,
-	})
+	}
+
+	if data.components and #data.components > 0 then
+		---@cast data.components -nil
+		local compData = {}
+		for k, v in pairs(data.components[1]) do
+			compData[k] = v
+		end
+		compData.frameWidth = data.frameWidth
+		compData.frameHeight = data.frameHeight
+		compData.pivotX = data.pivotX
+		compData.pivotY = data.pivotY
+
+		local ok, anim = pcall(Animation.new, compData)
+		if not ok then
+			return
+		end
+
+		anim.currentAnim = next(anim.animations)
+		if not anim.currentAnim then
+			return
+		end
+
+		anim.parent = {
+			flipX = self._cachedFlipX,
+			emit = function() end,
+		}
+
+		local config = anim.animations[anim.currentAnim]
+		if not config then
+			return
+		end
+
+		particle.anim = anim
+		particle._duration = config.frames / config.speed
+	else
+		local pngPath = self.particle:gsub("%.lua$", ".png")
+		local pngInfo = love.filesystem.getInfo(pngPath)
+		if not pngInfo then
+			return
+		end
+
+		local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
+		if not ok then
+			return
+		end
+
+		particle.image = image
+		particle.frameWidth = data.frameWidth or 16
+		particle.frameHeight = data.frameHeight or 16
+		particle.pivotX = data.pivotX or 0.5
+		particle.pivotY = data.pivotY or 0.5
+		particle.flipX = self._cachedFlipX
+		particle._duration = data.lifetime or 0.5
+	end
+
+	table.insert(self._particles, particle)
 end
 
 function ParticleEmitter:draw()
 	for _, p in ipairs(self._particles) do
-		p.anim:draw(p.x, p.y)
+		if p.anim then
+			p.anim:draw(p.x, p.y)
+		else
+			local sx = p.flipX and -1 or 1
+			local ox = p.frameWidth * p.pivotX
+			local oy = p.frameHeight * p.pivotY
+			love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), 0, sx, 1, ox, oy)
+		end
 	end
 end
 
