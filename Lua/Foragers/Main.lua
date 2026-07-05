@@ -102,8 +102,7 @@ function love.load()
 
 	updateCamera()
 
-	local mods = ModLoader.loadAllMods("Mods")
-	ModLoader.reloadAll(mods)
+	ModLoader.loadAllMods("Mods")
 
 	cursorSprite = SpriteLoader.loadAll("Content/Assets/Sprites/UI", function(data)
 		return 0, 0

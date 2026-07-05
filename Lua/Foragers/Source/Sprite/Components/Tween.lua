@@ -1,3 +1,5 @@
+local Events = require("Source.Helpers.Events")
+
 ---@class Tween
 ---@field parent Sprite|nil Parent sprite reference
 ---@field tweens table[] Array of tween configurations
@@ -39,13 +41,13 @@ end
 function Tween:attach()
 	applyTweens(self, self.tweens)
 
-	self.parent:on("flipped", function()
+	self.parent:on(Events.FLIPPED, function()
 		if self.tags.flip then
 			applyTweens(self, self.tags.flip)
 		end
 	end, 10)
 
-	self.parent:on("state_changed", function(newState, oldState)
+	self.parent:on(Events.STATE_CHANGED, function(newState, oldState)
 		-- XOR: fires on both entering and leaving water
 		if self.tags.splash and oldState and (oldState == "swimming") ~= (newState == "swimming") then
 			applyTweens(self, self.tags.splash)

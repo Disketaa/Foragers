@@ -1,3 +1,5 @@
+local Events = require("Source.Helpers.Events")
+
 ---@class Sound
 ---@field parent Sprite|nil
 ---@field soundSets table<string, table>
@@ -39,17 +41,17 @@ function Sound.new(data)
 end
 
 function Sound:attach()
-	self.parent:on("grounded_changed", function(isGrounded)
+	self.parent:on(Events.GROUNDED_CHANGED, function(isGrounded)
 		self:_play(isGrounded and "water_out" or "water_in")
 	end, 15)
 
-	self.parent:on("state_changed", function(state)
+	self.parent:on(Events.STATE_CHANGED, function(state)
 		self._currentState = state
 		self._stepCounter = 0
 		self:_play(state)
 	end, 15)
 
-	self.parent:on("anim_frame", function()
+	self.parent:on(Events.ANIM_FRAME, function()
 		local set = self.soundSets[self._currentState]
 		local interval = set and set.stepInterval or 1
 		if interval > 1 then

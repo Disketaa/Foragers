@@ -1,3 +1,5 @@
+local Events = require("Source.Helpers.Events")
+
 ---@class Control
 ---@field parent Sprite|nil Parent sprite reference
 ---@field keys { up: string, down: string, left: string, right: string }|nil
@@ -34,7 +36,7 @@ function Control.new(data)
 end
 
 function Control:attach()
-	self.parent:on("grounded_changed", function(isGrounded)
+	self.parent:on(Events.GROUNDED_CHANGED, function(isGrounded)
 		self._grounded = isGrounded
 	end, 10)
 end
@@ -109,7 +111,7 @@ function Control:update(dt)
 	end
 	self.parent._state = newState
 	if newState ~= oldState then
-		self.parent:emit("state_changed", newState, oldState)
+		self.parent:emit(Events.STATE_CHANGED, newState, oldState)
 	end
 
 	local oldFlip = self.parent.flipX
@@ -122,7 +124,7 @@ function Control:update(dt)
 	end
 	if newFlip ~= nil and newFlip ~= oldFlip then
 		self.parent.flipX = newFlip
-		self.parent:emit("flipped", newFlip)
+		self.parent:emit(Events.FLIPPED, newFlip)
 	end
 
 	self.parent.animSpeedFactor = speedFactor

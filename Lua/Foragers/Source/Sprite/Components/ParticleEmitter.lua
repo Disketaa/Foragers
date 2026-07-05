@@ -1,4 +1,5 @@
 local Animation = require("Source.Sprite.Components.Animation")
+local Events = require("Source.Helpers.Events")
 
 local ParticleEmitter = {}
 ParticleEmitter.__index = ParticleEmitter
@@ -31,7 +32,7 @@ function ParticleEmitter.new(data)
 end
 
 function ParticleEmitter:attach()
-	self.parent:on("state_changed", function(newState)
+	self.parent:on(Events.STATE_CHANGED, function(newState)
 		self._emitting = self._emittingStates[newState] or false
 		self._stepCounter = 0
 		if self._emitting then
@@ -39,13 +40,13 @@ function ParticleEmitter:attach()
 		end
 	end, 8)
 
-	self.parent:on("flipped", function(newFlip)
+	self.parent:on(Events.FLIPPED, function(newFlip)
 		if self.inheritFlip then
 			self._cachedFlipX = newFlip
 		end
 	end, 12)
 
-	self.parent:on("anim_frame", function()
+	self.parent:on(Events.ANIM_FRAME, function()
 		if not self._emitting or not self._particleData or #self._particles >= self.maxParticles then
 			return
 		end

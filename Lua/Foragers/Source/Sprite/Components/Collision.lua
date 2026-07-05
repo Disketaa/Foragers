@@ -1,3 +1,5 @@
+local Events = require("Source.Helpers.Events")
+
 ---@class Collision
 ---@field parent Sprite|nil
 ---@field mode "solid"|"detect"|"solid_and_detect"
@@ -114,7 +116,7 @@ function Collision:update(dt)
 
 	if grounded ~= self._prevGrounded then
 		self._prevGrounded = grounded
-		self.parent:emit("grounded_changed", grounded)
+		self.parent:emit(Events.GROUNDED_CHANGED, grounded)
 	end
 end
 

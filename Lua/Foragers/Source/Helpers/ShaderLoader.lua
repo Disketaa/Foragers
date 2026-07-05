@@ -21,13 +21,11 @@ function ShaderLoader.loadAll(basePath)
 				local luaPath = fullPath:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
 				local success, data = pcall(require, luaPath)
 				if not success or type(data) ~= "table" or not data.code then
-					package.loaded[luaPath] = nil
 					return
 				end
 
 				local ok, shader = pcall(love.graphics.newShader, data.code)
 				if not ok then
-					package.loaded[luaPath] = nil
 					return
 				end
 
@@ -39,7 +37,6 @@ function ShaderLoader.loadAll(basePath)
 					shader = shader,
 					luaPath = luaPath,
 				})
-				package.loaded[luaPath] = nil
 			end
 		end
 	end

@@ -34,13 +34,4 @@ function ModLoader.loadAllMods(modsPath)
 	return mods
 end
 
----@param mods table<string, table>
-function ModLoader.reloadAll(mods)
-	for _, mod in pairs(mods or {}) do
-		if type(mod.reload) == "function" then
-			mod.reload()
-		end
-	end
-end
-
 return ModLoader

@@ -156,7 +156,6 @@ function private.spawnProps(worldData)
 				pngPath = cfg.data:gsub("%.", "/") .. ".png",
 			})
 		end
-		package.loaded[cfg.data] = nil
 	end
 
 	if #loadedProps == 0 then

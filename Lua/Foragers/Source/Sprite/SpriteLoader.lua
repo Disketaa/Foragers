@@ -69,7 +69,6 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 					end
 
 					table.insert(objects, { path = fullPath, data = data, instance = obj })
-					package.loaded[luaPath] = nil
 				end
 			end
 		end
