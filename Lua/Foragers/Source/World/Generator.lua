@@ -1,6 +1,6 @@
 local Sprite = require("Source.Sprite.Sprite")
 local WorldConfig = require("Content.Data.World") or {}
-local TileData = require("Content.Assets.Sprites.World.GrassTiles")
+local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
 local Tile = require("Source.Sprite.Components.Tile")
 local Collision = require("Source.Sprite.Components.Collision")

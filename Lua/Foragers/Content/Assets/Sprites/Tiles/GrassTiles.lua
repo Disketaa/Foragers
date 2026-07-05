@@ -7,7 +7,7 @@ return {
 	components = {
 		{
 			component = "tile",
-			spriteSheet = "Content/Assets/Sprites/World/GrassTiles.png",
+			spriteSheet = "Content/Assets/Sprites/Tiles/GrassTiles.png",
 			columns = 4,
 			rows = 6,
 			tileMap = { 0, 12, 1, 13, 4, 8, 5, 9, 3, 15, 2, 14, 7, 11, 6, 10 },
