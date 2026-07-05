@@ -1,5 +1,4 @@
 return {
-	object = "oaks",
 	frameWidth = 24,
 	frameHeight = 32,
 	pivotX = 0.5,
@@ -14,7 +13,7 @@ return {
 			collisionHeight = 6,
 			offsetX = 0,
 			offsetY = 0,
-			visible = false,
+			visible = true,
 		},
 	},
 }

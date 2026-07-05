@@ -9,22 +9,18 @@ return {
 	propCoverage = 0.3,
 	props = {
 		{
-			name = "rock",
 			data = "Content.Assets.Sprites.Props.Rocks",
 			weight = 5,
 		},
 		{
-			name = "oak_trunk",
 			data = "Content.Assets.Sprites.Props.OakTrunks",
 			weight = 3,
 		},
 		{
-			name = "oak_bushes",
 			data = "Content.Assets.Sprites.Props.OakBushes",
 			weight = 3,
 		},
 		{
-			name = "oaks",
 			data = "Content.Assets.Sprites.Props.Oaks",
 			weight = 3,
 		},

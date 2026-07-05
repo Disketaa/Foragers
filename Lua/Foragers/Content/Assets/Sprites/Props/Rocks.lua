@@ -1,5 +1,4 @@
 return {
-	object = "rock",
 	frameWidth = 8,
 	frameHeight = 8,
 	pivotX = 0.5,
@@ -19,7 +18,7 @@ return {
 			collisionHeight = 6,
 			offsetX = 0,
 			offsetY = 0,
-			visible = false,
+			visible = true,
 		},
 	},
 }

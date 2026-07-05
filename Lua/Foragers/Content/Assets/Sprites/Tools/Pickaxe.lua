@@ -1,5 +1,4 @@
 return {
-	object = "tool",
 	frameWidth = 10,
 	frameHeight = 10,
 	pivotX = 0.5,

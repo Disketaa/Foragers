@@ -146,8 +146,9 @@ function private.spawnProps(worldData)
 					collidableData = cd
 				end
 			end
+			local propName = cfg.data:match("([^%.]+)$"):lower()
 			table.insert(loadedProps, {
-				name = cfg.name,
+				name = propName,
 				weight = cfg.weight or 1,
 				data = propData,
 				spritesheetData = spritesheetData,

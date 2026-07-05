@@ -17,11 +17,11 @@ return {
 		{
 			component = "collision",
 			mode = "solid_and_detect",
-			collisionWidth = 4,
-			collisionHeight = 4,
+			collisionWidth = 2,
+			collisionHeight = 2,
 			offsetX = 0,
 			offsetY = -2,
-			visible = false,
+			visible = true,
 		},
 		{
 			component = "animation",
