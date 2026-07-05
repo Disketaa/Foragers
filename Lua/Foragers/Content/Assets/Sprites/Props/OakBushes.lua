@@ -5,5 +5,16 @@ return {
 	pivotY = 0.75,
 	sortOffsetY = 2,
 	layer = 0,
-	components = {},
+	components = {
+		{
+			component = "collision",
+			mode = "slowdown",
+			slowdown = 0.5,
+			collisionWidth = 6,
+			collisionHeight = 6,
+			offsetX = 0,
+			offsetY = 0,
+			visible = false,
+		},
+	},
 }

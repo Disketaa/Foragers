@@ -85,6 +85,7 @@ function private.spawnProps(worldData)
 	local coverage = private.propCoverage or 0.3
 
 	Collision.resetSolids()
+	Collision.resetSlowdown()
 
 	local loadedProps = {}
 	for _, cfg in ipairs(propConfigs) do
@@ -185,7 +186,11 @@ function private.spawnProps(worldData)
 		if chosen.collidableData then
 			local collidableComp = Collision.new(chosen.collidableData)
 			sprite:addComponent(collidableComp)
-			collidableComp:registerAsSolid()
+			if collidableComp.mode == "slowdown" then
+				collidableComp:registerAsSlowdown()
+			else
+				collidableComp:registerAsSolid()
+			end
 		end
 
 		table.insert(props, {

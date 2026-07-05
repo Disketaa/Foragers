@@ -9,6 +9,7 @@ local Events = require("Source.Helpers.Events")
 ---@field mouseY number|nil Mouse Y in world coordinates
 ---@field tags table<string, string>|nil Mapping of states to animation names
 ---@field _grounded boolean|nil Grounded state cached from grounded_changed event
+---@field _slowdown number Speed multiplier from collision zones (1.0 = normal)
 ---@field type "control"
 local Control = {}
 Control.__index = Control
@@ -30,6 +31,7 @@ function Control.new(data)
 		mouseControl = data.mouseControl,
 		tags = data.tags,
 		_grounded = nil,
+		_slowdown = 1.0,
 		type = "control",
 	}, Control)
 	return self
@@ -38,6 +40,9 @@ end
 function Control:attach()
 	self.parent:on(Events.GROUNDED_CHANGED, function(isGrounded)
 		self._grounded = isGrounded
+	end, 10)
+	self.parent:on(Events.SLOWDOWN_CHANGED, function(multiplier)
+		self._slowdown = multiplier
 	end, 10)
 end
 
@@ -85,6 +90,7 @@ function Control:update(dt)
 	if self._grounded ~= nil and self._grounded == false and self.swimmingSpeed then
 		effectiveSpeed = self.swimmingSpeed
 	end
+	effectiveSpeed = effectiveSpeed * self._slowdown
 	local speedFactor = 1
 	if mouseActive and self.mouseControl then
 		speedFactor = calculateSpeedMultiplier(distance, self.mouseControl.slowdownRadius)
