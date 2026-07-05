@@ -182,6 +182,7 @@ function private.spawnProps(worldData)
 		return props
 	end
 
+	local oldSeed = love.math.getRandomSeed()
 	love.math.setRandomSeed(numProps > 0 and activeTiles[1].seed or 0)
 
 	for i = 1, math.min(numProps, #activeTiles) do
@@ -213,6 +214,7 @@ function private.spawnProps(worldData)
 			component.pivotX = chosen.data.pivotX
 			component.pivotY = chosen.data.pivotY
 			local numFrames = chosen.spritesheetData.columns or 1
+			-- deterministic frame pick per tile seed; +5000 ensures positive modulo
 			local frameIndex = math.abs(tile.seed + 5000) % numFrames
 			component:setFrame(frameIndex)
 			sprite:addComponent(component)
@@ -233,6 +235,8 @@ function private.spawnProps(worldData)
 			instance = sprite,
 		})
 	end
+
+	love.math.setRandomSeed(oldSeed)
 
 	return props
 end

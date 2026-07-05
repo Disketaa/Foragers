@@ -3,6 +3,9 @@ Spritesheet.__index = Spritesheet
 
 function Spritesheet.new(data)
 	local self = setmetatable({}, Spritesheet)
+	if not data or not data.spriteSheet then
+		return self
+	end
 	local image = love.graphics.newImage(data.spriteSheet)
 	if not image then
 		return self
@@ -36,7 +39,11 @@ function Spritesheet.new(data)
 	return self
 end
 
+-- 0-indexed input: tile index from palette and deterministic frame pick (both 0-based)
 function Spritesheet:setFrame(index)
+	if not self.quads then
+		return
+	end
 	if index >= 0 and index < #self.quads then
 		self.currentQuad = self.quads[index + 1]
 	end
