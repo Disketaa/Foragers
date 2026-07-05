@@ -71,5 +71,15 @@ return {
 				},
 			},
 		},
+		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/Dust.lua",
+			stepInterval = 2,
+			offsetX = 0,
+			offsetY = 0,
+			inheritFlip = true,
+			layer = "below",
+			emittingStates = { moving = true },
+		},
 	},
 }

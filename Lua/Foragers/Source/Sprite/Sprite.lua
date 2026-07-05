@@ -77,7 +77,12 @@ function Sprite:draw()
 		return
 	end
 	for _, component in ipairs(self.components) do
-		if component.draw then
+		if component.drawBehind and component.draw then
+			component:draw(self.x, self.y)
+		end
+	end
+	for _, component in ipairs(self.components) do
+		if not component.drawBehind and component.draw then
 			component:draw(self.x, self.y)
 		end
 	end

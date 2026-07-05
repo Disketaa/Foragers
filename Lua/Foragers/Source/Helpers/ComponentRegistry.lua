@@ -26,6 +26,7 @@ local Controllable = require("Source.Sprite.Components.Controllable")
 local Tileable = require("Source.Sprite.Components.Tileable")
 local Tweenable = require("Source.Sprite.Components.Tweenable")
 local Soundable = require("Source.Sprite.Components.Soundable")
+local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 
 ComponentRegistry.register("animatable", function(data)
 	return Animatable.new(data)
@@ -44,6 +45,9 @@ ComponentRegistry.register("tweenable", function(data)
 end)
 ComponentRegistry.register("soundable", function(data)
 	return Soundable.new(data)
+end)
+ComponentRegistry.register("particle_emitter", function(data)
+	return ParticleEmitter.new(data)
 end)
 
 return ComponentRegistry
