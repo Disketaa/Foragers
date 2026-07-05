@@ -180,6 +180,8 @@ function private.spawnProps(worldData)
 			sprite.type = "StaticSprite"
 		end
 
+		sprite.flipX = math.abs(tile.seed + 7777) % 2 == 0
+
 		if chosen.collidableData then
 			local collidableComp = Collision.new(chosen.collidableData)
 			sprite:addComponent(collidableComp)

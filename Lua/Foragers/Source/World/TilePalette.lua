@@ -9,7 +9,8 @@ function TilePalette.resolveVariant(tileIndex, variants, seed)
 	if not options or #options == 0 then
 		return tileIndex
 	end
-	return options[(seed % #options) + 1]
+	local hash = (seed * 1103515245 + 12345) % 2147483648
+	return options[(hash % #options) + 1]
 end
 
 return TilePalette

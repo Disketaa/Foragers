@@ -11,19 +11,19 @@ return {
 	props = {
 		{
 			data = "Content.Assets.Sprites.Props.Rocks",
-			weight = 5,
+			weight = 4,
 		},
 		{
 			data = "Content.Assets.Sprites.Props.OakTrunks",
-			weight = 3,
+			weight = 5,
 		},
 		{
 			data = "Content.Assets.Sprites.Props.OakBushes",
-			weight = 3,
+			weight = 7,
 		},
 		{
 			data = "Content.Assets.Sprites.Props.Oaks",
-			weight = 3,
+			weight = 1,
 		},
 	},
 }

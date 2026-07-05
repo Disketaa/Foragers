@@ -85,7 +85,8 @@ function Sprite:draw()
 	if self.type == "StaticSprite" and self.image then
 		local ox = (self.frameWidth or self.image:getWidth()) * (self.pivotX or 0)
 		local oy = (self.frameHeight or self.image:getHeight()) * (self.pivotY or 0)
-		love.graphics.draw(self.image, math.floor(self.x + 0.5), math.floor(self.y + 0.5), 0, 1, 1, ox, oy)
+		local sx = self.flipX and -1 or 1
+		love.graphics.draw(self.image, math.floor(self.x + 0.5), math.floor(self.y + 0.5), 0, sx, 1, ox, oy)
 	end
 	for _, component in ipairs(self.components) do
 		if not component._broken and component.drawBehind and component.draw then
