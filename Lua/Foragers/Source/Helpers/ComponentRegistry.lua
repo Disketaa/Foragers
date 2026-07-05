@@ -27,6 +27,7 @@ local Tile = require("Source.Sprite.Components.Tile")
 local Tween = require("Source.Sprite.Components.Tween")
 local Sound = require("Source.Sprite.Components.Sound")
 local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
+local Follow = require("Source.Sprite.Components.Follow")
 
 ComponentRegistry.register("animation", function(data)
 	return Animation.new(data)
@@ -48,6 +49,9 @@ ComponentRegistry.register("sound", function(data)
 end)
 ComponentRegistry.register("particle_emitter", function(data)
 	return ParticleEmitter.new(data)
+end)
+ComponentRegistry.register("follow", function(data)
+	return Follow.new(data)
 end)
 
 return ComponentRegistry

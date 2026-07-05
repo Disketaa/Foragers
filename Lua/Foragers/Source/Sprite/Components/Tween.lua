@@ -13,13 +13,15 @@ local function applyTweens(self, tweenSet)
 		local curveFunc = Tweens[tweenData.curve] or Tweens.BackOut
 		if not self.parent.tweens[tweenData.target] then
 			self.parent.tweens[tweenData.target] =
-				Tweens.create(tweenData.target, tweenData.from, tweenData.to, tweenData.duration, curveFunc)
+				Tweens.create(tweenData.target, tweenData.from, tweenData.to, tweenData.duration, curveFunc, tweenData.loop, tweenData.pingPong)
 		end
 		local tween = self.parent.tweens[tweenData.target]
 		tween.from = tweenData.from
 		tween.to = tweenData.to
 		tween.duration = tweenData.duration
 		tween.curve = curveFunc
+		tween.loop = tweenData.loop or false
+		tween.pingPong = tweenData.pingPong or false
 		tween:start()
 	end
 end
@@ -35,6 +37,8 @@ function Tween.new(data)
 end
 
 function Tween:attach()
+	applyTweens(self, self.tweens)
+
 	self.parent:on("flipped", function()
 		if self.tags.flip then
 			applyTweens(self, self.tags.flip)

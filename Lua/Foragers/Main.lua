@@ -56,6 +56,28 @@ function love.load()
 	do
 		table.insert(objects, 1, entry)
 	end
+	-- Load and link tools to the player
+	local toolEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
+		return 0, 0
+	end) or {}
+	local playerSprite = nil
+	for _, entry in ipairs(objects) do
+		if entry.data and entry.data.object == "player" then
+			playerSprite = entry.instance
+			break
+		end
+	end
+	if playerSprite then
+		for _, entry in ipairs(toolEntries) do
+			for _, comp in ipairs(entry.instance.components or {}) do
+				if comp.type == "follow" and comp.setFollowTarget then
+					comp:setFollowTarget(playerSprite)
+				end
+			end
+			table.insert(objects, entry)
+		end
+	end
+
 	updateCamera()
 
 	local mods = ModLoader.loadAllMods("Mods")
