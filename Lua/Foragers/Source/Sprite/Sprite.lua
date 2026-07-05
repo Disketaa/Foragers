@@ -97,7 +97,16 @@ function Sprite:draw()
 		end
 	end
 	for _, component in ipairs(self.components) do
-		if not component._broken and not component.drawBehind and component.draw then
+		if not component._broken and not component.drawBehind and not component.drawOnTop and component.draw then
+			local ok, err = xpcall(component.draw, debug.traceback, component, self.x, self.y)
+			if not ok then
+				Log.error(string.format("[%s] draw: %s", component.type or "?", err))
+				component._broken = true
+			end
+		end
+	end
+	for _, component in ipairs(self.components) do
+		if not component._broken and component.drawOnTop and component.draw then
 			local ok, err = xpcall(component.draw, debug.traceback, component, self.x, self.y)
 			if not ok then
 				Log.error(string.format("[%s] draw: %s", component.type or "?", err))

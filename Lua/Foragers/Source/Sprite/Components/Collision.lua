@@ -48,6 +48,7 @@ function Collision.new(data)
 		offsetY = data.offsetY or 0,
 		visible = data.visible or false,
 		_prevGrounded = nil,
+		drawOnTop = true,
 		type = "collision",
 	}, Collision)
 end
