@@ -2,7 +2,7 @@ local Sprite = require("Source.Sprite.Sprite")
 local WorldConfig = require("Content.Data.World") or {}
 local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
-local Tile = require("Source.Sprite.Components.Tile")
+local Spritesheet = require("Source.Sprite.Components.Spritesheet")
 local Collision = require("Source.Sprite.Components.Collision")
 
 local private = {}
@@ -96,15 +96,16 @@ function private.buildWorldSprites(worldData, spawnCallback)
 					sprite.y = sy
 				end
 
-				local component = Tile.new(compData)
+				local component = Spritesheet.new(compData)
 				component.frameWidth = tileSize
 				component.frameHeight = tileSize
 				component.pivotX = TileData.pivotX
 				component.pivotY = TileData.pivotY
 				local mask = computeMask(worldData, x, y)
-				local tileIndex = TilePalette.resolve(mask, compData.tileMap)
-				tileIndex = TilePalette.resolveVariant(tileIndex, compData.variants, tile.seed)
-				component:setTile(tileIndex)
+				local adj = TileData.adjacency or {}
+				local tileIndex = TilePalette.resolve(mask, adj.tileMap)
+				tileIndex = TilePalette.resolveVariant(tileIndex, adj.variants, tile.seed)
+				component:setFrame(tileIndex)
 				sprite:addComponent(component)
 
 				if collidableData then
@@ -128,6 +129,8 @@ end
 function private.spawnProps(worldData)
 	local props = {}
 	local propConfigs = private.props or {}
+
+	Collision.resetSolids()
 
 	for _, cfg in ipairs(propConfigs) do
 		local moduleName = cfg.data
@@ -157,21 +160,22 @@ function private.spawnProps(worldData)
 							sprite.pivotX = propData.pivotX
 							sprite.pivotY = propData.pivotY
 
-							local component = Tile.new(compData)
+							local component = Spritesheet.new(compData)
 							component.frameWidth = propData.frameWidth
 							component.frameHeight = propData.frameHeight
 							component.pivotX = propData.pivotX
 							component.pivotY = propData.pivotY
-							local tileIndex = TilePalette.resolveVariant(0, compData.variants, tile.seed + 5000)
-							component:setTile(tileIndex)
+							local frameIndex = math.abs(tile.seed + 5000) % (compData.columns or 1)
+							component:setFrame(frameIndex)
 							sprite:addComponent(component)
 
-							if collidableData then
-								local collidableComp = Collision.new(collidableData)
-								sprite:addComponent(collidableComp)
-							end
+						if collidableData then
+							local collidableComp = Collision.new(collidableData)
+							sprite:addComponent(collidableComp)
+							collidableComp:registerAsSolid()
+						end
 
-							table.insert(props, {
+						table.insert(props, {
 								path = cfg.name .. "_" .. x .. "_" .. y,
 								data = tile,
 								instance = sprite,

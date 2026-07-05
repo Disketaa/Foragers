@@ -4,16 +4,18 @@ return {
 	frameHeight = 8,
 	pivotX = 0.5,
 	pivotY = 0.5,
+	adjacency = {
+		tileMap = { 0, 12, 1, 13, 4, 8, 5, 9, 3, 15, 2, 14, 7, 11, 6, 10 },
+		variants = {
+			[10] = { 10, 16, 17, 17, 18, 18, 19, 19, 19, 19, 20, 21, 22, 23 },
+		},
+	},
 	components = {
 		{
-			component = "tile",
+			component = "spritesheet",
 			spriteSheet = "Content/Assets/Sprites/Tiles/GrassTiles.png",
 			columns = 4,
 			rows = 6,
-			tileMap = { 0, 12, 1, 13, 4, 8, 5, 9, 3, 15, 2, 14, 7, 11, 6, 10 },
-			variants = {
-				[10] = { 10, 16, 17, 17, 18, 18, 19, 19, 19, 19, 20, 21, 22, 23 },
-			},
 		},
 		{
 			component = "collision",

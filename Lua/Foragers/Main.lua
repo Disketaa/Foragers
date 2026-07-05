@@ -150,6 +150,18 @@ function love.update(dt)
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
 	local isMouseDown = love.mouse.isDown(1)
 
+	-- Save pre-move positions for collision resolution
+	for _, entry in ipairs(objects) do
+		if entry.instance then
+			for _, comp in ipairs(entry.instance.components or {}) do
+				if comp.type == "collision" and comp.mode ~= "solid" then
+					comp._prevX = entry.instance.x
+					comp._prevY = entry.instance.y
+				end
+			end
+		end
+	end
+
 	for _, entry in ipairs(objects) do
 		if entry.instance and entry.instance.update then
 			for _, comp in ipairs(entry.instance.components or {}) do

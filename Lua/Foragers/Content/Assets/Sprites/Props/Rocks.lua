@@ -6,14 +6,9 @@ return {
 	pivotY = 0.75,
 	components = {
 		{
-			component = "tile",
+			component = "spritesheet",
 			spriteSheet = "Content/Assets/Sprites/Props/Rocks.png",
 			columns = 3,
-			rows = 1,
-			tileMap = { 0, 1, 2 },
-			variants = {
-				[0] = { 0, 1, 2 },
-			},
 		},
 		{
 			component = "collision",
