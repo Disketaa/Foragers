@@ -27,7 +27,6 @@ function Sound.new(data)
 			pitch = config.pitch or data.pitch or 1.0,
 			pitchRandomness = config.pitchRandomness or data.pitchRandomness or 0,
 			stepInterval = config.stepInterval or data.stepInterval or 1,
-			sourcePoolSize = #(config.sounds or config),
 			baseSources = {},
 		}
 		for _, soundPath in ipairs(sounds) do
