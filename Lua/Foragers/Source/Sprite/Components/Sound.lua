@@ -62,6 +62,10 @@ function Sound:attach()
 			self:_play(self._currentState)
 		end
 	end, 15)
+
+	self.parent:on(Events.SLOWDOWN_ENTER, function()
+		self:_play("bush_touch")
+	end, 15)
 end
 
 function Sound:_play(state)

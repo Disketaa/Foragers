@@ -26,5 +26,14 @@ return {
 				},
 			},
 		},
+		{
+			component = "sound",
+			volume = 0.7,
+			tags = {
+				bush_touch = {
+					"Content/Assets/Sounds/Steps/Events/BushHit.ogg",
+				},
+			},
+		},
 	},
 }
