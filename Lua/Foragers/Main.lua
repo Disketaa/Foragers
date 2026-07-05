@@ -49,13 +49,22 @@ function love.load()
 	ShaderLoader.loadAll("Content/Assets/Shaders")
 
 	local worldData = Generator.generate()
+	local tileCount = 0
 	for _, entry in
 		ipairs(Generator.buildWorldSprites(worldData, function(data)
 			return data.x, data.y
 		end))
 	do
 		table.insert(objects, 1, entry)
+		tileCount = tileCount + 1
 	end
+	-- Spawn props on tiles (between tiles and characters in draw order)
+	local propEntries = Generator.spawnProps(worldData) or {}
+	for _, entry in ipairs(propEntries) do
+		table.insert(objects, tileCount + 1, entry)
+		tileCount = tileCount + 1
+	end
+
 	-- Load and link tools to the player
 	local toolEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
 		return 0, 0

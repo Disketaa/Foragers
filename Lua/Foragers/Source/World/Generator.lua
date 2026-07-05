@@ -125,7 +125,71 @@ function private.buildWorldSprites(worldData, spawnCallback)
 	return sprites
 end
 
+function private.spawnProps(worldData)
+	local props = {}
+	local propConfigs = private.props or {}
+
+	for _, cfg in ipairs(propConfigs) do
+		local moduleName = cfg.data
+		local ok, propData = pcall(require, moduleName)
+		if not ok or type(propData) ~= "table" then
+			package.loaded[moduleName] = nil
+		else
+			local compData = propData.components and propData.components[1] or {}
+			local collidableData = nil
+			for _, cd in ipairs(propData.components or {}) do
+				if cd.component == "collision" then
+					collidableData = cd
+					break
+				end
+			end
+
+			for y = 0, private.height - 1 do
+				for x = 0, private.width - 1 do
+					local tile = worldData[y][x]
+					if tile.active then
+						local noiseVal = love.math.noise(x + 0.1, y + 0.3, tile.seed + 5000)
+						local rng = noiseVal * 0.5 + 0.5
+						if rng < cfg.spawnChance then
+							local sprite = Sprite.new(tile.x, tile.y)
+							sprite.frameWidth = propData.frameWidth
+							sprite.frameHeight = propData.frameHeight
+							sprite.pivotX = propData.pivotX
+							sprite.pivotY = propData.pivotY
+
+							local component = Tile.new(compData)
+							component.frameWidth = propData.frameWidth
+							component.frameHeight = propData.frameHeight
+							component.pivotX = propData.pivotX
+							component.pivotY = propData.pivotY
+							local tileIndex = TilePalette.resolveVariant(0, compData.variants, tile.seed + 5000)
+							component:setTile(tileIndex)
+							sprite:addComponent(component)
+
+							if collidableData then
+								local collidableComp = Collision.new(collidableData)
+								sprite:addComponent(collidableComp)
+							end
+
+							table.insert(props, {
+								path = cfg.name .. "_" .. x .. "_" .. y,
+								data = tile,
+								instance = sprite,
+							})
+						end
+					end
+				end
+			end
+
+			package.loaded[moduleName] = nil
+		end
+	end
+
+	return props
+end
+
 return {
 	generate = private.generate,
 	buildWorldSprites = private.buildWorldSprites,
+	spawnProps = private.spawnProps,
 }
