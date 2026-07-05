@@ -118,6 +118,12 @@ function love.resize(w, h)
 	updateCamera()
 end
 
+local function screenToWorld(screenX, screenY)
+	local cx = (screenX - canvas.offsetX) / canvas.scale
+	local cy = (screenY - canvas.offsetY) / canvas.scale
+	return cx - cameraX, cy - cameraY
+end
+
 function love.draw()
 	canvas:draw(function()
 		ShaderLoader.drawBackground(canvas.width, canvas.height)
@@ -141,10 +147,9 @@ function love.draw()
 
 		if cursorSprite and cursorSprite.instance then
 			local mx, my = love.mouse.getPosition()
-			local cx = (mx - canvas.offsetX) / canvas.scale
-			local cy = (my - canvas.offsetY) / canvas.scale
-			cursorSprite.instance.x = cx - cameraX
-			cursorSprite.instance.y = cy - cameraY
+			local wx, wy = screenToWorld(mx, my)
+			cursorSprite.instance.x = wx
+			cursorSprite.instance.y = wy
 			cursorSprite.instance:draw()
 		end
 
@@ -157,12 +162,6 @@ function love.keypressed(key)
 		local fullscreen, fstype = love.window.getFullscreen()
 		love.window.setFullscreen(not fullscreen, fstype)
 	end
-end
-
-local function screenToWorld(screenX, screenY)
-	local cx = (screenX - canvas.offsetX) / canvas.scale
-	local cy = (screenY - canvas.offsetY) / canvas.scale
-	return cx - cameraX, cy - cameraY
 end
 
 function love.update(dt)

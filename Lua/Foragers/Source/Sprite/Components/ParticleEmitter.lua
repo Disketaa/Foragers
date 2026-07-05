@@ -109,7 +109,11 @@ function ParticleEmitter:_spawn()
 
 		anim.parent = {
 			flipX = self._cachedFlipX,
-			emit = function() end,
+			emit = function(event, ...)
+				if self.parent then
+					self.parent:emit(event, ...)
+				end
+			end,
 		}
 
 		local config = anim.animations[anim.currentAnim]

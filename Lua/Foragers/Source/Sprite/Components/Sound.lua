@@ -76,7 +76,4 @@ function Sound:_play(state)
 	source:play()
 end
 
----@param dt number
-function Sound:update(dt) end
-
 return Sound

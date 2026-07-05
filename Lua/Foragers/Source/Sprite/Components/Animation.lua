@@ -1,3 +1,5 @@
+local Events = require("Source.Helpers.Events")
+
 ---@class Animation
 ---@field image love.Image
 ---@field frameWidth number
@@ -48,7 +50,7 @@ function Animation.new(data)
 end
 
 function Animation:attach()
-	self.parent:on("state_changed", function(newState)
+	self.parent:on(Events.STATE_CHANGED, function(newState)
 		if self.tags and self.tags[newState] and self.animations[self.tags[newState]] then
 			local animName = self.tags[newState]
 			if animName ~= self.currentAnim then
@@ -77,7 +79,7 @@ function Animation:update(dt)
 			if frameIndex ~= self._lastFrame then
 				self._lastFrame = frameIndex
 				if self.parent then
-					self.parent:emit("anim_frame", frameIndex)
+					self.parent:emit(Events.ANIM_FRAME, frameIndex)
 				end
 			end
 		end

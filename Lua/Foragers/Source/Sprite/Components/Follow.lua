@@ -1,3 +1,5 @@
+local Events = require("Source.Helpers.Events")
+
 ---@class Follow
 ---@field parent Sprite|nil
 ---@field followTarget Sprite|nil
@@ -7,6 +9,7 @@
 ---@field smoothnessY number Seconds to reach target on Y (0 = instant)
 ---@field leanAngle number Degrees to tilt when moving (flip-aware)
 ---@field leanThreshold number Min pixel-delta per frame to trigger lean (lower = more sensitive)
+---@field _direction number 1 or -1, cached from flipped event
 ---@field type "follow"
 local Follow = {}
 Follow.__index = Follow
@@ -21,6 +24,7 @@ function Follow.new(data)
 		smoothnessY = data.smoothnessY or 0,
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
+		_direction = 1,
 		type = "follow",
 	}, Follow)
 end
@@ -28,6 +32,11 @@ end
 ---@param target Sprite
 function Follow:setFollowTarget(target)
 	self.followTarget = target
+	if target then
+		target:on(Events.FLIPPED, function(flipped)
+			self._direction = flipped and -1 or 1
+		end)
+	end
 end
 
 ---@param dt number
@@ -36,8 +45,7 @@ function Follow:update(dt)
 		return
 	end
 
-	local dir = self.followTarget.flipX and -1 or 1
-	local liveX = self.followTarget.x + dir * self.offsetX
+	local liveX = self.followTarget.x + self._direction * self.offsetX
 	local liveY = self.followTarget.y + self.offsetY
 
 	if self._followX == nil then
@@ -57,7 +65,7 @@ function Follow:update(dt)
 	self._followX = self._followX + (liveX - self._followX) * easeX
 	self._followY = self._followY + (liveY - self._followY) * easeY
 
-	local targetAngle = moving and (self.leanAngle * dir) or 0
+	local targetAngle = moving and (self.leanAngle * self._direction) or 0
 	self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * easeX
 
 	self.parent.x = self._followX
