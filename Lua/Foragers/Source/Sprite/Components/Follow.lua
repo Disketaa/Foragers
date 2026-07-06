@@ -1,5 +1,3 @@
-local Events = require("Source.Helpers.Events")
-
 ---@class Follow
 ---@field parent Sprite|nil
 ---@field followTarget Sprite|nil
@@ -7,9 +5,8 @@ local Events = require("Source.Helpers.Events")
 ---@field offsetY number
 ---@field smoothnessX number Seconds to reach target on X (0 = instant)
 ---@field smoothnessY number Seconds to reach target on Y (0 = instant)
----@field leanAngle number Degrees to tilt when moving (flip-aware)
+---@field leanAngle number Degrees to tilt (flip-aware, based on weapon pos vs target)
 ---@field leanThreshold number Min pixel-delta per frame to trigger lean (lower = more sensitive)
----@field _direction number 1 or -1, cached from flipped event
 ---@field type "follow"
 local Follow = {}
 Follow.__index = Follow
@@ -24,7 +21,6 @@ function Follow.new(data)
 		smoothnessY = data.smoothnessY or 0,
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
-		_direction = 1,
 		_tempOffsetX = 0,
 		_tempOffsetY = 0,
 		type = "follow",
@@ -34,35 +30,21 @@ end
 ---@param target Sprite
 function Follow:setFollowTarget(target)
 	self.followTarget = target
-	if target then
-		target:on(Events.FLIPPED, function(flipped)
-			self._direction = flipped and -1 or 1
-		end)
-	end
 end
 
-function Follow:deployTo(target, offsetX, offsetY)
+function Follow:deployTo(target, offsetX, offsetY, smoothness, dir)
 	self._tempTarget = target
 	self._tempOffsetX = offsetX or 0
 	self._tempOffsetY = offsetY or 0
-	if not self._savedSmoothnessX then
-		self._savedSmoothnessX = self.smoothnessX
-		self._savedSmoothnessY = self.smoothnessY
-	end
-	self.smoothnessX = 0.02
-	self.smoothnessY = 0.02
+	self._deploySmoothness = smoothness or 0.02
+	self._deployDir = dir or (self.parent and ((self.parent.x < target.x) and -1 or 1) or 1)
 end
 
 function Follow:recall()
 	self._tempTarget = nil
 	self._tempOffsetX = 0
 	self._tempOffsetY = 0
-	if self._savedSmoothnessX then
-		self.smoothnessX = self._savedSmoothnessX
-		self.smoothnessY = self._savedSmoothnessY
-		self._savedSmoothnessX = nil
-		self._savedSmoothnessY = nil
-	end
+	self._deploySmoothness = nil
 end
 
 ---@param dt number
@@ -76,12 +58,13 @@ function Follow:update(dt)
 		return
 	end
 
+	local dir = self._tempTarget and self._deployDir or ((self.parent.x < useTarget.x) and -1 or 1)
 	local liveX, liveY
 	if self._tempTarget then
-		liveX = self._tempTarget.x + self._direction * self._tempOffsetX
+		liveX = self._tempTarget.x + dir * self._tempOffsetX
 		liveY = self._tempTarget.y + self._tempOffsetY
 	else
-		liveX = self.followTarget.x + self._direction * self.offsetX
+		liveX = self.followTarget.x + dir * self.offsetX
 		liveY = self.followTarget.y + self.offsetY
 	end
 
@@ -93,8 +76,10 @@ function Follow:update(dt)
 		self._currentAngle = 0
 	end
 
-	local easeX = self.smoothnessX > 0 and (1 - math.exp(-dt / self.smoothnessX)) or 1
-	local easeY = self.smoothnessY > 0 and (1 - math.exp(-dt / self.smoothnessY)) or 1
+	local sx = self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessX
+	local sy = self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessY
+	local easeX = sx > 0 and (1 - math.exp(-dt / sx)) or 1
+	local easeY = sy > 0 and (1 - math.exp(-dt / sy)) or 1
 
 	if self._tempTarget then
 		self._currentAngle = 0
@@ -102,7 +87,7 @@ function Follow:update(dt)
 		local moving = math.abs(liveX - self._prevLiveX) > self.leanThreshold
 		self._prevLiveX = liveX
 		self._prevLiveY = liveY
-		local targetAngle = moving and (self.leanAngle * self._direction) or 0
+		local targetAngle = moving and (self.leanAngle * dir) or 0
 		self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * easeX
 	end
 

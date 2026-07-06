@@ -19,10 +19,10 @@ local function getWeaponData(sprite)
 			return comp.range, comp.cooldown, comp.damage, comp.swing
 		end
 	end
-	return 20,
+		return 20,
 		0.5,
 		1,
-		{ angleFrom = -30, angleTo = 30, duration = 0.15, offsetX = 0, offsetY = -8, curve = "Sine", smoothness = 0 }
+		{ angleFrom = -30, angleTo = 30, duration = 0.15, offsetX = 0, offsetY = -8, curve = "Sine", smoothness = 0.02 }
 end
 
 local function getWeaponFollow(ws)
@@ -50,6 +50,7 @@ function AttackSystem.registerAttacker(sprite, weaponSprite)
 		weaponSprite = weaponSprite,
 		cooldownTimer = 0,
 		currentTarget = nil,
+		_arrived = false,
 	}
 end
 
@@ -106,10 +107,26 @@ function AttackSystem.update(dt, allObjects)
 		end
 		if #candidates > 0 then
 			local chosen = candidates[love.math.random(1, #candidates)]
+			-- Deploy to far side of target: away from character, not from weapon
+			local deployDir = (attacker.sprite.x < chosen.x) and 1 or -1
 			if weaponFollow then
-				weaponFollow:deployTo(chosen, swing.offsetX, swing.offsetY)
+				weaponFollow:deployTo(chosen, swing.offsetX, swing.offsetY, swing.smoothness, deployDir)
 			end
 			attacker.currentTarget = chosen
+			attacker._deployDir = deployDir
+			attacker._arrived = false
+		end
+	end
+
+	-- Flight phase: wait until weapon is close to target before attacking
+	if attacker.currentTarget and not attacker._arrived then
+		local dir = attacker._deployDir or ((ws.x < attacker.currentTarget.x) and -1 or 1)
+		local destX = attacker.currentTarget.x + dir * swing.offsetX
+		local destY = attacker.currentTarget.y + swing.offsetY
+		if math.abs(ws.x - destX) <= 2 and math.abs(ws.y - destY) <= 2 then
+			attacker._arrived = true
+		else
+			return
 		end
 	end
 
@@ -129,18 +146,19 @@ function AttackSystem.update(dt, allObjects)
 		end
 	end
 
-	if not attacker.currentTarget or attacker.cooldownTimer > 0 then
+	if not attacker.currentTarget or attacker.cooldownTimer > 0 or attacker.damageTimer then
 		return
 	end
 
 	attacker.cooldownTimer = cooldown
-	attacker.damageTimer = swing.duration * 0.5
+	attacker.damageTimer = swing.duration
 
-	local dir = attacker.sprite.flipX and -1 or 1
+	-- Swing toward target: opposite of deploy direction
+	local dir = -attacker._deployDir
 	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.Sine
 	local easeFunc = swingCurve(rawEase)
 	local angleTween =
-		TweenModule.Tween.new("swing_angle", swing.angleFrom, swing.angleTo * dir, swing.duration, easeFunc)
+		TweenModule.Tween.new("swing_angle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration, easeFunc)
 	angleTween._smoothness = swing.smoothness
 	ws.tweens.swing_angle = angleTween
 	angleTween:start()
