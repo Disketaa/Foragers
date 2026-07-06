@@ -21,5 +21,11 @@ return {
 			leanAngle = -45,
 			leanThreshold = 0.1,
 		},
+		{
+			component = "weapon",
+			range = 20,
+			cooldown = 0.5,
+			damage = 1,
+		},
 	},
 }

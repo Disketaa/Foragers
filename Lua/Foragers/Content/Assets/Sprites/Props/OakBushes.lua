@@ -7,6 +7,10 @@ return {
 	layer = 0,
 	components = {
 		{
+			component = "destructible",
+			hp = 3,
+		},
+		{
 			component = "collision",
 			mode = "slowdown",
 			slowdown = 0.5,

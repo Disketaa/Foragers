@@ -7,6 +7,10 @@ return {
 	layer = 0,
 	components = {
 		{
+			component = "destructible",
+			hp = 7,
+		},
+		{
 			component = "collision",
 			mode = "solid",
 			collisionWidth = 6,

@@ -12,6 +12,9 @@ local Canvas = require("Source.Helpers.Canvas")
 local ShaderLoader = require("Source.Helpers.ShaderLoader")
 local ModLoader = require("Source.Helpers.ModLoader")
 local DrawOrder = require("Source.Helpers.DrawOrder")
+local AttackSystem = require("Source.Helpers.AttackSystem")
+local Destructible = require("Source.Sprite.Components.Destructible")
+local Collision = require("Source.Sprite.Components.Collision")
 
 local objects = {}
 local staticObjects = {}
@@ -101,6 +104,7 @@ function love.load()
 			table.insert(dynamicObjects, entry)
 			table.insert(objects, entry)
 		end
+		AttackSystem.registerAttacker(playerSprite, toolEntries[1] and toolEntries[1].instance)
 	end
 
 	updateCamera()
@@ -159,6 +163,21 @@ function love.draw()
 	end, World.backgroundColor)
 end
 
+local function removeSpriteFromLists(sprite)
+	for i = #objects, 1, -1 do
+		if objects[i].instance == sprite then
+			table.remove(objects, i)
+			break
+		end
+	end
+	for i = #dynamicObjects, 1, -1 do
+		if dynamicObjects[i].instance == sprite then
+			table.remove(dynamicObjects, i)
+			break
+		end
+	end
+end
+
 function love.keypressed(key)
 	if key == "f11" then
 		local fullscreen, fstype = love.window.getFullscreen()
@@ -167,6 +186,13 @@ function love.keypressed(key)
 end
 
 function love.update(dt)
+	local dead = Destructible.getDead()
+	for _, sprite in ipairs(dead) do
+		Collision.removeSpriteColliders(sprite)
+		removeSpriteFromLists(sprite)
+	end
+	Destructible.clearDead()
+
 	ShaderLoader.update(dt)
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
@@ -198,4 +224,6 @@ function love.update(dt)
 			entry.instance:update(dt)
 		end
 	end
+
+	AttackSystem.update(dt, dynamicObjects)
 end

@@ -1,0 +1,39 @@
+local deadSprites = {}
+
+local Destructible = {}
+Destructible.__index = Destructible
+
+function Destructible.new(data)
+	return setmetatable({
+		hp = data.hp or 3,
+		maxHp = data.hp or 3,
+		type = "destructible",
+	}, Destructible)
+end
+
+function Destructible:takeDamage(amount)
+	self.hp = self.hp - amount
+	if self.hp <= 0 and self.parent then
+		deadSprites[self.parent] = true
+	end
+end
+
+function Destructible.getDead()
+	local list = {}
+	for sprite in pairs(deadSprites) do
+		table.insert(list, sprite)
+	end
+	return list
+end
+
+function Destructible.clearDead()
+	for sprite in pairs(deadSprites) do
+		deadSprites[sprite] = nil
+	end
+end
+
+return {
+	Component = Destructible,
+	getDead = Destructible.getDead,
+	clearDead = Destructible.clearDead,
+}

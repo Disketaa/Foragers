@@ -7,6 +7,10 @@ return {
 	layer = 0,
 	components = {
 		{
+			component = "destructible",
+			hp = 3,
+		},
+		{
 			component = "spritesheet",
 			spriteSheet = "Content/Assets/Sprites/Props/Rocks.png",
 			columns = 3,

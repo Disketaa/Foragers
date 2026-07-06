@@ -179,7 +179,9 @@ end
 
 -- For static obstacles (props); baked once at world generation
 function Collision:registerAsSolid()
-	table.insert(solidColliders, self:getRect())
+	local rect = self:getRect()
+	rect.sprite = self.parent
+	table.insert(solidColliders, rect)
 end
 
 -- For slowdown zones (bushes, etc.); baked once at world generation
@@ -188,6 +190,19 @@ function Collision:registerAsSlowdown()
 	rect.slowdown = self.slowdown or 1.0
 	rect.sprite = self.parent
 	table.insert(slowdownColliders, rect)
+end
+
+function Collision.removeSpriteColliders(sprite)
+	for i = #solidColliders, 1, -1 do
+		if solidColliders[i].sprite == sprite then
+			table.remove(solidColliders, i)
+		end
+	end
+	for i = #slowdownColliders, 1, -1 do
+		if slowdownColliders[i].sprite == sprite then
+			table.remove(slowdownColliders, i)
+		end
+	end
 end
 
 function Collision:draw()

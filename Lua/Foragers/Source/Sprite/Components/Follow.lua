@@ -83,11 +83,15 @@ function Follow:draw(x, y)
 		return
 	end
 	local img = self.parent.image
+	local rot = math.rad(self._currentAngle or 0)
+	if self.parent.tweens and self.parent.tweens.swing_angle then
+		rot = rot + math.rad(self.parent.tweens.swing_angle:getValue())
+	end
 	love.graphics.draw(
 		img,
 		math.floor(x + 0.5),
 		math.floor(y + 0.5),
-		math.rad(self._currentAngle or 0),
+		rot,
 		1,
 		1,
 		(self.parent.frameWidth or img:getWidth()) * (self.parent.pivotX or 0.5),
