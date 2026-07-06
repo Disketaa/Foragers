@@ -45,12 +45,24 @@ function Follow:deployTo(target, offsetX, offsetY)
 	self._tempTarget = target
 	self._tempOffsetX = offsetX or 0
 	self._tempOffsetY = offsetY or 0
+	if not self._savedSmoothnessX then
+		self._savedSmoothnessX = self.smoothnessX
+		self._savedSmoothnessY = self.smoothnessY
+	end
+	self.smoothnessX = 0.02
+	self.smoothnessY = 0.02
 end
 
 function Follow:recall()
 	self._tempTarget = nil
 	self._tempOffsetX = 0
 	self._tempOffsetY = 0
+	if self._savedSmoothnessX then
+		self.smoothnessX = self._savedSmoothnessX
+		self.smoothnessY = self._savedSmoothnessY
+		self._savedSmoothnessX = nil
+		self._savedSmoothnessY = nil
+	end
 end
 
 ---@param dt number

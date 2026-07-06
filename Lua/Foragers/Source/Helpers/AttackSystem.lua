@@ -19,7 +19,10 @@ local function getWeaponData(sprite)
 			return comp.range, comp.cooldown, comp.damage, comp.swing
 		end
 	end
-	return 20, 0.5, 1, { angleFrom = -30, angleTo = 30, duration = 0.15, offsetX = 0, offsetY = -8, curve = "Sine", smoothness = 0 }
+	return 20,
+		0.5,
+		1,
+		{ angleFrom = -30, angleTo = 30, duration = 0.15, offsetX = 0, offsetY = -8, curve = "Sine", smoothness = 0 }
 end
 
 local function getWeaponFollow(ws)
@@ -66,7 +69,6 @@ function AttackSystem.update(dt, allObjects)
 
 	cleanupTween(ws, "swing_angle")
 
-	-- Check if current target is still valid (alive + in range)
 	local targetValid = false
 	if attacker.currentTarget then
 		for _, comp in ipairs(attacker.currentTarget.components or {}) do
@@ -85,7 +87,6 @@ function AttackSystem.update(dt, allObjects)
 		end
 	end
 
-	-- Pick a new random target if none
 	if not attacker.currentTarget then
 		local candidates = {}
 		for _, entry in ipairs(allObjects) do
@@ -112,27 +113,37 @@ function AttackSystem.update(dt, allObjects)
 		end
 	end
 
+	if attacker.damageTimer then
+		attacker.damageTimer = attacker.damageTimer - dt
+		if attacker.damageTimer <= 0 then
+			attacker.damageTimer = nil
+			if attacker.currentTarget then
+				for _, comp in ipairs(attacker.currentTarget.components or {}) do
+					if comp.type == "destructible" and comp.hp > 0 and comp.takeDamage then
+						comp:takeDamage(damage)
+						attacker.currentTarget:emit(Events.PROP_HIT)
+						break
+					end
+				end
+			end
+		end
+	end
+
 	if not attacker.currentTarget or attacker.cooldownTimer > 0 then
 		return
 	end
 
 	attacker.cooldownTimer = cooldown
+	attacker.damageTimer = swing.duration * 0.5
 
 	local dir = attacker.sprite.flipX and -1 or 1
 	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.Sine
 	local easeFunc = swingCurve(rawEase)
-	local angleTween = TweenModule.Tween.new("swing_angle", swing.angleFrom, swing.angleTo * dir, swing.duration, easeFunc)
+	local angleTween =
+		TweenModule.Tween.new("swing_angle", swing.angleFrom, swing.angleTo * dir, swing.duration, easeFunc)
 	angleTween._smoothness = swing.smoothness
 	ws.tweens.swing_angle = angleTween
 	angleTween:start()
-
-	for _, comp in ipairs(attacker.currentTarget.components or {}) do
-		if comp.type == "destructible" and comp.hp > 0 and comp.takeDamage then
-			comp:takeDamage(damage)
-			attacker.currentTarget:emit(Events.PROP_HIT)
-			break
-		end
-	end
 end
 
 return AttackSystem
