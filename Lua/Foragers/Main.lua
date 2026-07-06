@@ -151,6 +151,9 @@ function love.draw()
 			end
 		end
 
+		-- Orphan particles behind dynamic sprites (terrain-aligned: dust, sparks near ground)
+		ParticleEmitter.drawOrphans(true)
+
 		-- Dynamic sprites: collect, sort by zKey, draw
 		local sorted = DrawOrder.collect(dynamicObjects)
 		DrawOrder.sort(sorted)
@@ -158,7 +161,8 @@ function love.draw()
 			sprite:draw()
 		end
 
-		ParticleEmitter.drawOrphans()
+		-- Orphan particles on top of everything
+		ParticleEmitter.drawOrphans(false)
 
 		if cursorSprite and cursorSprite.instance then
 			local mx, my = love.mouse.getPosition()

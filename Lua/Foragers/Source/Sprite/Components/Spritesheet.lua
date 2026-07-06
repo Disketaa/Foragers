@@ -170,6 +170,12 @@ function Spritesheet:draw(x, y)
 		sx = -sx
 	end
 
+	if not tweenTbl or not tweenTbl.angle then
+		if self.parent and self.parent.angle then
+			rot = self.parent.angle
+		end
+	end
+
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), rot, sx, sy, ox, oy)

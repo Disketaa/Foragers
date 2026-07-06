@@ -142,6 +142,11 @@ function AttackSystem.update(dt, allObjects)
 							ws:emit(Events.PROP_BROKEN)
 						end
 						attacker.currentTarget:emit(Events.PROP_HIT)
+						if ws then
+							ws._lastHitX = attacker.currentTarget.x
+							ws._lastHitY = attacker.currentTarget.y
+							ws:emit(Events.PROP_HIT)
+						end
 						break
 					end
 				end

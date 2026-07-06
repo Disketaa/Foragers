@@ -2,6 +2,19 @@ local Events = require("Source.Helpers.Events")
 
 local orphanParticles = {}
 
+local function parseRange(value)
+	if type(value) == "number" then
+		return value, value
+	end
+	if type(value) == "string" then
+		local min, max = value:match("^(%-?%d+%.?%d*)%.%.%.%s*(%-?%d+%.?%d*)$")
+		if min and max then
+			return tonumber(min), tonumber(max)
+		end
+	end
+	return value, value
+end
+
 local ParticleEmitter = {}
 ParticleEmitter.__index = ParticleEmitter
 
@@ -16,6 +29,10 @@ function ParticleEmitter.new(data)
 		drawBehind = data.layer == "below",
 		burstCount = data.burstCount or 1,
 		burstRadius = data.burstRadius or 0,
+		count = data.count,
+		angle = data.angle,
+		cone = data.cone or 0,
+
 		_emittingStates = data.emittingStates or { moving = true },
 		_burstOn = data.burstOn or {},
 		_particles = {},
@@ -35,7 +52,7 @@ function ParticleEmitter.new(data)
 	return self
 end
 
-function ParticleEmitter:_createParticle(px, py)
+function ParticleEmitter:_createParticle(px, py, angle)
 	local data = self._particleData
 	if not data then
 		return
@@ -45,6 +62,8 @@ function ParticleEmitter:_createParticle(px, py)
 		x = px,
 		y = py,
 		_age = 0,
+		angle = angle or 0,
+		drawBehind = self.drawBehind,
 	}
 
 	if data.components and #data.components > 0 then
@@ -71,6 +90,7 @@ function ParticleEmitter:_createParticle(px, py)
 
 		sp.parent = {
 			flipX = self._cachedFlipX,
+			angle = angle or 0,
 			emit = function(event, ...)
 				if self.parent then
 					self.parent:emit(event, ...)
@@ -145,11 +165,35 @@ function ParticleEmitter:attach()
 				if not self._particleData then
 					return
 				end
+
+				local count
+				if self.count then
+					local cmin, cmax = parseRange(self.count)
+					count = math.floor(cmin + math.random() * (cmax - cmin + 1))
+				else
+					count = self.burstCount
+				end
+
+				local hx = self.parent._lastHitX or self.parent.x
+				local hy = self.parent._lastHitY or self.parent.y
 				local radius = self.burstRadius
-				for i = 1, self.burstCount do
-					local px = self.parent.x + self.offsetX + math.random(-radius, radius)
-					local py = self.parent.y + self.offsetY + math.random(-radius, radius)
-					local p = self:_createParticle(px, py)
+				local angleMin, angleMax
+				if self.angle then
+					angleMin, angleMax = parseRange(self.angle)
+				end
+				local coneMin, coneMax
+				if self.cone then
+					coneMin, coneMax = parseRange(self.cone)
+				end
+
+				for i = 1, count do
+					local baseAngleDeg = angleMin and (angleMin + math.random() * (angleMax - angleMin)) or 0
+					local cone = coneMin and math.rad(coneMin + math.random() * (coneMax - coneMin)) or 0
+					local spread = -cone / 2 + math.random() * cone
+					local angle = math.rad(baseAngleDeg) + spread
+					local px = hx + self.offsetX + math.random(-radius, radius)
+					local py = hy + self.offsetY + math.random(-radius, radius)
+					local p = self:_createParticle(px, py, angle)
 					if p then
 						table.insert(orphanParticles, p)
 					end
@@ -205,15 +249,17 @@ function ParticleEmitter.updateOrphans(dt)
 	end
 end
 
-function ParticleEmitter.drawOrphans()
+function ParticleEmitter.drawOrphans(behind)
 	for _, p in ipairs(orphanParticles) do
-		if p.anim then
-			p.anim:draw(p.x, p.y)
-		else
-			local sx = p.flipX and -1 or 1
-			local ox = p.frameWidth * p.pivotX
-			local oy = p.frameHeight * p.pivotY
-			love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), 0, sx, 1, ox, oy)
+		if p.drawBehind == behind then
+			if p.anim then
+				p.anim:draw(p.x, p.y)
+			else
+				local sx = p.flipX and -1 or 1
+				local ox = p.frameWidth * p.pivotX
+				local oy = p.frameHeight * p.pivotY
+				love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), 0, sx, 1, ox, oy)
+			end
 		end
 	end
 end

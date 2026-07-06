@@ -42,5 +42,13 @@ return {
 			duration = 0.2,
 			decay = true,
 		},
+		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/Spark",
+			burstOn = { prop_hit = true },
+			count = "3...5",
+			angle = "0...360",
+			layer = "below",
+		},
 	},
 }
