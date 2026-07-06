@@ -84,18 +84,132 @@ end
 
 local Easing = {}
 
-function Easing.BackOut(t)
-	local c1 = 1.70158
-	local c3 = c1 + 1
-	return 1 + c3 * ((t - 1) ^ 3) + c1 * ((t - 1) ^ 2)
+local _c1 = 1.70158
+local _c2 = _c1 * 1.525
+local _c3 = _c1 + 1
+local _c4 = (2 * math.pi) / 3
+local _c5 = (2 * math.pi) / 4.5
+
+local function _bounceOut(x)
+	if x < 1 / 2.75 then
+		return 7.5625 * x * x
+	elseif x < 2 / 2.75 then
+		x = x - 1.5 / 2.75
+		return 7.5625 * x * x + 0.75
+	elseif x < 2.5 / 2.75 then
+		x = x - 2.25 / 2.75
+		return 7.5625 * x * x + 0.9375
+	else
+		x = x - 2.625 / 2.75
+		return 7.5625 * x * x + 0.984375
+	end
 end
 
-function Easing.Sine(t)
-	return math.sin(t * math.pi * 0.5)
+function Easing.Linear(x) return x end
+
+function Easing.InSine(x) return 1 - math.cos((x * math.pi) / 2) end
+function Easing.OutSine(x) return math.sin((x * math.pi) / 2) end
+function Easing.InOutSine(x) return -(math.cos(math.pi * x) - 1) / 2 end
+
+function Easing.InQuad(x) return x * x end
+function Easing.OutQuad(x) return 1 - (1 - x) * (1 - x) end
+function Easing.InOutQuad(x)
+	return x < 0.5 and 2 * x * x or 1 - ((-2 * x + 2) ^ 2) / 2
 end
+
+function Easing.InCubic(x) return x * x * x end
+function Easing.OutCubic(x) return 1 - ((1 - x) ^ 3) end
+function Easing.InOutCubic(x)
+	return x < 0.5 and 4 * x * x * x or 1 - ((-2 * x + 2) ^ 3) / 2
+end
+
+function Easing.InQuart(x) return x * x * x * x end
+function Easing.OutQuart(x) return 1 - ((1 - x) ^ 4) end
+function Easing.InOutQuart(x)
+	return x < 0.5 and 8 * x * x * x * x or 1 - ((-2 * x + 2) ^ 4) / 2
+end
+
+function Easing.InQuint(x) return x * x * x * x * x end
+function Easing.OutQuint(x) return 1 - ((1 - x) ^ 5) end
+function Easing.InOutQuint(x)
+	return x < 0.5 and 16 * x * x * x * x * x or 1 - ((-2 * x + 2) ^ 5) / 2
+end
+
+function Easing.InExpo(x)
+	if x == 0 then return 0 end
+	return 2 ^ (10 * x - 10)
+end
+function Easing.OutExpo(x)
+	if x == 1 then return 1 end
+	return 1 - 2 ^ (-10 * x)
+end
+function Easing.InOutExpo(x)
+	if x == 0 then return 0 end
+	if x == 1 then return 1 end
+	if x < 0.5 then
+		return (2 ^ (20 * x - 10)) / 2
+	else
+		return (2 - (2 ^ (-20 * x + 10))) / 2
+	end
+end
+
+function Easing.InCirc(x)
+	return 1 - math.sqrt(1 - x ^ 2)
+end
+function Easing.OutCirc(x)
+	return math.sqrt(1 - (x - 1) ^ 2)
+end
+function Easing.InOutCirc(x)
+	return x < 0.5
+		and (1 - math.sqrt(1 - (2 * x) ^ 2)) / 2
+		or (math.sqrt(1 - ((-2 * x + 2) ^ 2)) + 1) / 2
+end
+
+function Easing.InBack(x)
+	return _c3 * x * x * x - _c1 * x * x
+end
+function Easing.OutBack(x)
+	return 1 + _c3 * ((x - 1) ^ 3) + _c1 * ((x - 1) ^ 2)
+end
+function Easing.InOutBack(x)
+	return x < 0.5
+		and ((2 * x) ^ 2 * ((_c2 + 1) * 2 * x - _c2)) / 2
+		or (((2 * x - 2) ^ 2) * ((_c2 + 1) * (x * 2 - 2) + _c2) + 2) / 2
+end
+
+function Easing.InElastic(x)
+	if x == 0 then return 0 end
+	if x == 1 then return 1 end
+	return -(2 ^ (10 * x - 10)) * math.sin((x * 10 - 10.75) * _c4)
+end
+function Easing.OutElastic(x)
+	if x == 0 then return 0 end
+	if x == 1 then return 1 end
+	return (2 ^ (-10 * x)) * math.sin((x * 10 - 0.75) * _c4) + 1
+end
+function Easing.InOutElastic(x)
+	if x == 0 then return 0 end
+	if x == 1 then return 1 end
+	return x < 0.5
+		and -((2 ^ (20 * x - 10)) * math.sin((20 * x - 11.125) * _c5)) / 2
+		or ((2 ^ (-20 * x + 10)) * math.sin((20 * x - 11.125) * _c5)) / 2 + 1
+end
+
+function Easing.InBounce(x)
+	return 1 - _bounceOut(1 - x)
+end
+function Easing.OutBounce(x)
+	return _bounceOut(x)
+end
+function Easing.InOutBounce(x)
+	return x < 0.5
+		and (1 - _bounceOut(1 - 2 * x)) / 2
+		or (1 + _bounceOut(2 * x - 1)) / 2
+end
+
 
 local function createTween(target, from, to, duration, curve, loop, pingPong)
-	return Tween.new(target, from, to, duration, curve or Easing.BackOut, loop, pingPong)
+	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong)
 end
 
 ---@param self TweenComponent
@@ -121,7 +235,7 @@ local function applyTweens(self, tweenSet)
 	for _, tweenData in pairs(tweenSet) do
 		local from = parseRandomValue(tweenData.from)
 		local to = parseRandomValue(tweenData.to)
-		local curveFunc = Easing[tweenData.curve] or Easing.BackOut
+		local curveFunc = Easing[tweenData.curve] or Easing.OutBack
 		if not self.parent.tweens[tweenData.target] then
 			self.parent.tweens[tweenData.target] = createTween(
 				tweenData.target,
@@ -197,7 +311,7 @@ function TweenComponent:update(dt)
 			if not self.parent.tweens[key] then
 				local from = parseRandomValue(tweenData.from)
 				local to = parseRandomValue(tweenData.to)
-				local curveFunc = Easing[tweenData.curve] or Easing.BackOut
+				local curveFunc = Easing[tweenData.curve] or Easing.OutBack
 				self.parent.tweens[key] = createTween(key, from, to, tweenData.duration, curveFunc, tweenData.loop, tweenData.pingPong)
 				self.parent.tweens[key]:start()
 			end

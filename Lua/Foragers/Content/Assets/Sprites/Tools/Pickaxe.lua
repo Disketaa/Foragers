@@ -9,7 +9,7 @@ return {
 		{
 			component = "tween",
 			tweens = {
-				{ target = "y", from = -1, to = 1, duration = 1.0, curve = "Sine", loop = true, pingPong = true },
+				{ target = "y", from = -1, to = 1, duration = 1.0, curve = "OutSine", loop = true, pingPong = true },
 			},
 		},
 		{
@@ -32,7 +32,7 @@ return {
 				duration = 0.1,
 				offsetX = -8,
 				offsetY = -4,
-				curve = "Sine",
+				curve = "OutSine",
 				smoothness = 0.35,
 			},
 		},

@@ -20,7 +20,7 @@ function Weapon.new(data)
 			duration = swing.duration or 0.15,
 			offsetX = swing.offsetX or 0,
 			offsetY = swing.offsetY or -8,
-			curve = swing.curve or "Sine",
+			curve = swing.curve or "OutSine",
 			smoothness = swing.smoothness or 0,
 		},
 		type = "weapon",

@@ -22,7 +22,7 @@ local function getWeaponData(sprite)
 		return 20,
 		0.5,
 		1,
-		{ angleFrom = -30, angleTo = 30, duration = 0.15, offsetX = 0, offsetY = -8, curve = "Sine", smoothness = 0.02 }
+		{ angleFrom = -30, angleTo = 30, duration = 0.15, offsetX = 0, offsetY = -8, curve = "OutSine", smoothness = 0.02 }
 end
 
 local function getWeaponFollow(ws)
@@ -163,7 +163,7 @@ function AttackSystem.update(dt, allObjects)
 
 	-- Swing toward target: opposite of deploy direction
 	local dir = -attacker._deployDir
-	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.Sine
+	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.OutSine
 	local easeFunc = swingCurve(rawEase)
 	local angleTween =
 		TweenModule.Tween.new("swing_angle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration, easeFunc)
