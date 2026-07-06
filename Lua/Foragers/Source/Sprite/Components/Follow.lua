@@ -25,6 +25,8 @@ function Follow.new(data)
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
 		_direction = 1,
+		_tempOffsetX = 0,
+		_tempOffsetY = 0,
 		type = "follow",
 	}, Follow)
 end
@@ -39,14 +41,37 @@ function Follow:setFollowTarget(target)
 	end
 end
 
+function Follow:deployTo(target, offsetX, offsetY)
+	self._tempTarget = target
+	self._tempOffsetX = offsetX or 0
+	self._tempOffsetY = offsetY or 0
+end
+
+function Follow:recall()
+	self._tempTarget = nil
+	self._tempOffsetX = 0
+	self._tempOffsetY = 0
+end
+
 ---@param dt number
 function Follow:update(dt)
-	if not self.followTarget or not self.parent then
+	if not self.parent then
 		return
 	end
 
-	local liveX = self.followTarget.x + self._direction * self.offsetX
-	local liveY = self.followTarget.y + self.offsetY
+	local useTarget = self._tempTarget or self.followTarget
+	if not useTarget then
+		return
+	end
+
+	local liveX, liveY
+	if self._tempTarget then
+		liveX = self._tempTarget.x + self._direction * self._tempOffsetX
+		liveY = self._tempTarget.y + self._tempOffsetY
+	else
+		liveX = self.followTarget.x + self._direction * self.offsetX
+		liveY = self.followTarget.y + self.offsetY
+	end
 
 	if self._followX == nil then
 		self._followX = liveX
@@ -56,23 +81,42 @@ function Follow:update(dt)
 		self._currentAngle = 0
 	end
 
-	local moving = math.abs(liveX - self._prevLiveX) > self.leanThreshold
-	self._prevLiveX = liveX
-	self._prevLiveY = liveY
-
 	local easeX = self.smoothnessX > 0 and (1 - math.exp(-dt / self.smoothnessX)) or 1
 	local easeY = self.smoothnessY > 0 and (1 - math.exp(-dt / self.smoothnessY)) or 1
+
+	if self._tempTarget then
+		self._currentAngle = 0
+	else
+		local moving = math.abs(liveX - self._prevLiveX) > self.leanThreshold
+		self._prevLiveX = liveX
+		self._prevLiveY = liveY
+		local targetAngle = moving and (self.leanAngle * self._direction) or 0
+		self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * easeX
+	end
+
 	self._followX = self._followX + (liveX - self._followX) * easeX
 	self._followY = self._followY + (liveY - self._followY) * easeY
-
-	local targetAngle = moving and (self.leanAngle * self._direction) or 0
-	self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * easeX
 
 	self.parent.x = self._followX
 	self.parent.y = self._followY
 
-	if self.parent.tweens and self.parent.tweens.y then
-		self.parent.y = self.parent.y + self.parent.tweens.y:getValue()
+	if self.parent.tweens then
+		local function applyOffset(key)
+			local tween = self.parent.tweens[key]
+			if not tween then
+				return 0
+			end
+			local raw = tween:getValue()
+			if tween._smoothness and tween._smoothness > 0 then
+				local sm = string.format("_sm_%s", key)
+				self[sm] = self[sm] or raw
+				self[sm] = self[sm] + (raw - self[sm]) * (1 - math.exp(-dt / tween._smoothness))
+				return self[sm]
+			end
+			return raw
+		end
+		self.parent.x = self.parent.x + applyOffset("x")
+		self.parent.y = self.parent.y + applyOffset("y")
 	end
 end
 

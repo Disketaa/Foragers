@@ -185,6 +185,18 @@ function TweenComponent:attach()
 end
 
 function TweenComponent:update(dt)
+	if self.parent then
+		for _, tweenData in ipairs(self.tweens) do
+			local key = tweenData.target
+			if not self.parent.tweens[key] then
+				local from = parseRandomValue(tweenData.from)
+				local to = parseRandomValue(tweenData.to)
+				local curveFunc = Easing[tweenData.curve] or Easing.BackOut
+				self.parent.tweens[key] = createTween(key, from, to, tweenData.duration, curveFunc, tweenData.loop, tweenData.pingPong)
+				self.parent.tweens[key]:start()
+			end
+		end
+	end
 	for _, tween in pairs(self.parent and self.parent.tweens or {}) do
 		tween:update(dt)
 	end

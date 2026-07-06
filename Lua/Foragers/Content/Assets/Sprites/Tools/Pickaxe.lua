@@ -26,6 +26,15 @@ return {
 			range = 20,
 			cooldown = 0.5,
 			damage = 1,
+			swing = {
+				angleFrom = 0,
+				angleTo = 45,
+				duration = 0.15,
+				offsetX = -8,
+				offsetY = -4,
+				curve = "BackOut",
+				smoothness = 0.75,
+			},
 		},
 	},
 }
