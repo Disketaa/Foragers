@@ -71,8 +71,7 @@ function Follow:update(dt)
 	if self._followX == nil then
 		self._followX = liveX
 		self._followY = liveY
-		self._prevLiveX = liveX
-		self._prevLiveY = liveY
+		self._prevParentX = self.parent.x
 		self._currentAngle = 0
 	end
 
@@ -81,12 +80,13 @@ function Follow:update(dt)
 	local easeX = sx > 0 and (1 - math.exp(-dt / sx)) or 1
 	local easeY = sy > 0 and (1 - math.exp(-dt / sy)) or 1
 
+	-- Lean only during regular character follow, not during deploy flight
 	if self._tempTarget then
 		self._currentAngle = 0
 	else
-		local moving = math.abs(liveX - self._prevLiveX) > self.leanThreshold
-		self._prevLiveX = liveX
-		self._prevLiveY = liveY
+		local dx = self.parent.x - (self._prevParentX or self.parent.x)
+		self._prevParentX = self.parent.x
+		local moving = math.abs(dx) > self.leanThreshold
 		local targetAngle = moving and (self.leanAngle * dir) or 0
 		self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * easeX
 	end
