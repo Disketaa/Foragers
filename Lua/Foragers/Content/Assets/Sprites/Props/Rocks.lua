@@ -11,6 +11,15 @@ return {
 			hp = 3,
 		},
 		{
+			component = "tween",
+			tags = {
+				prop_hit = {
+					{ target = "scale_x", from = 0.5, to = 1, duration = 0.9, curve = "BackOut" },
+					{ target = "scale_y", from = 1.5, to = 1, duration = 0.4, curve = "BackOut" },
+				},
+			},
+		},
+		{
 			component = "spritesheet",
 			spriteSheet = "Content/Assets/Sprites/Props/Rocks.png",
 			columns = 3,

@@ -182,6 +182,12 @@ function TweenComponent:attach()
 			applyTweens(self, self.tags.bush_touch)
 		end
 	end, 10)
+
+	self.parent:on(Events.PROP_HIT, function()
+		if self.tags.prop_hit then
+			applyTweens(self, self.tags.prop_hit)
+		end
+	end, 10)
 end
 
 function TweenComponent:update(dt)

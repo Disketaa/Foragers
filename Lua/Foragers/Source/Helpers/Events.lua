@@ -6,5 +6,6 @@ local Events = {
 	SLOWDOWN_ENTER = "slowdown_enter",
 	SLOWDOWN_EXIT = "slowdown_exit",
 	ANIM_FRAME = "anim_frame",
+	PROP_HIT = "prop_hit",
 }
 return Events

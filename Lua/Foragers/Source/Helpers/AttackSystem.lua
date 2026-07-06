@@ -1,4 +1,5 @@
 local TweenModule = require("Source.Sprite.Components.Tween")
+local Events = require("Source.Helpers.Events")
 
 local attacker = nil
 
@@ -128,6 +129,7 @@ function AttackSystem.update(dt, allObjects)
 	for _, comp in ipairs(attacker.currentTarget.components or {}) do
 		if comp.type == "destructible" and comp.hp > 0 and comp.takeDamage then
 			comp:takeDamage(damage)
+			attacker.currentTarget:emit(Events.PROP_HIT)
 			break
 		end
 	end

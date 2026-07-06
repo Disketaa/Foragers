@@ -11,6 +11,15 @@ return {
 			hp = 7,
 		},
 		{
+			component = "tween",
+			tags = {
+				prop_hit = {
+					{ target = "scale_x", from = 0.8, to = 1, duration = 0.9, curve = "BackOut" },
+					{ target = "scale_y", from = 1.1, to = 1, duration = 0.4, curve = "BackOut" },
+				},
+			},
+		},
+		{
 			component = "collision",
 			mode = "solid",
 			collisionWidth = 6,

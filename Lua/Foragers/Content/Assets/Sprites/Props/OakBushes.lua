@@ -26,6 +26,10 @@ return {
 				bush_touch = {
 					{ target = "angle", from = "-15 | 15", to = 0, duration = 2.5, curve = "BackOut" },
 				},
+				prop_hit = {
+					{ target = "scale_x", from = 0.5, to = 1, duration = 0.9, curve = "BackOut" },
+					{ target = "scale_y", from = 1.5, to = 1, duration = 0.4, curve = "BackOut" },
+				},
 			},
 		},
 		{
