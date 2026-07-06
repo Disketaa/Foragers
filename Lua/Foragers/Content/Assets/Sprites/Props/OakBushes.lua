@@ -55,5 +55,9 @@ return {
 				},
 			},
 		},
+		{
+			component = "shader",
+			shaderName = "Brightness",
+		},
 	},
 }

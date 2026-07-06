@@ -31,6 +31,7 @@ local Destructible = require("Source.Sprite.Components.Destructible")
 local Weapon = require("Source.Sprite.Components.Weapon")
 local Shake = require("Source.Sprite.Components.Shake")
 local ProximityFade = require("Source.Sprite.Components.ProximityFade")
+local ShaderComponent = require("Source.Sprite.Components.Shader")
 
 ComponentRegistry.register("collision", function(data)
 	return Collision.new(data)
@@ -64,6 +65,9 @@ ComponentRegistry.register("shake", function(data)
 end)
 ComponentRegistry.register("proximity_fade", function(data)
 	return ProximityFade.new(data)
+end)
+ComponentRegistry.register("shader", function(data)
+	return ShaderComponent.new(data)
 end)
 
 return ComponentRegistry

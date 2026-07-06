@@ -55,5 +55,9 @@ return {
 			fadeAlpha = 0.5,
 			smoothness = 0.25,
 		},
+		{
+			component = "shader",
+			shaderName = "Brightness",
+		},
 	},
 }

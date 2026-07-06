@@ -35,6 +35,9 @@ function Sprite.new(x, y)
 		tweens = {},
 		animSpeedFactor = 1,
 		_events = EventEmitter.new(),
+		shader = nil,
+		shaderData = nil,
+		_shaderBroken = nil,
 	}, Sprite)
 	return self
 end
@@ -82,6 +85,27 @@ function Sprite:update(dt)
 end
 
 function Sprite:draw()
+	-- Shader is bound before all sprite draws and unset after normal component draws,
+	-- so only drawOnTop (debug wireframes) bypasses it.
+	local hadShader = false
+	if self.shader and not self._shaderBroken then
+		local ok, err = xpcall(function()
+			love.graphics.setShader(self.shader)
+			for k, v in pairs(self.shaderData or {}) do
+				self.shader:send(k, v)
+			end
+		end, debug.traceback)
+		if ok then
+			hadShader = true
+		else
+			Log.error("[Sprite] shader: " .. tostring(err))
+			-- Reset to default shader now so subsequent sprites in this frame
+			-- are not affected by a broken shader that's still bound on the GPU.
+			love.graphics.setShader()
+			self._shaderBroken = true
+		end
+	end
+
 	if self.type == "StaticSprite" and self.image then
 		local sx, sy = 1, 1
 		local rot = 0
@@ -128,6 +152,11 @@ function Sprite:draw()
 			end
 		end
 	end
+
+	if hadShader then
+		love.graphics.setShader()
+	end
+
 	for _, component in ipairs(self.components) do
 		if not component._broken and component.drawOnTop and component.draw then
 			local ok, err = xpcall(component.draw, debug.traceback, component, self.x, self.y)

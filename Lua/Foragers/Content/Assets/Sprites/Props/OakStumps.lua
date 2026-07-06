@@ -48,5 +48,9 @@ return {
 			offsetY = 0,
 			visible = false,
 		},
+		{
+			component = "shader",
+			shaderName = "Brightness",
+		},
 	},
 }

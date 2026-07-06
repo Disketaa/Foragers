@@ -20,28 +20,33 @@ function ShaderLoader.loadAll(basePath)
 			elseif item:match("%.lua$") then
 				local luaPath = fullPath:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
 				local success, data = pcall(require, luaPath)
-				if not success or type(data) ~= "table" or not data.code then
-					return
+				if success and type(data) == "table" and data.code then
+					local ok, shader = pcall(love.graphics.newShader, data.code)
+					if ok then
+						table.insert(ShaderLoader.shaders, {
+							name = data.name or item:gsub("%.lua$", ""),
+							applies_to = data.applies_to or "unknown",
+							priority = data.priority or "background",
+							uniforms = data.uniforms or {},
+							shader = shader,
+							luaPath = luaPath,
+						})
+					end
 				end
-
-				local ok, shader = pcall(love.graphics.newShader, data.code)
-				if not ok then
-					return
-				end
-
-				table.insert(ShaderLoader.shaders, {
-					name = data.name or item:gsub("%.lua$", ""),
-					applies_to = data.applies_to or "unknown",
-					priority = data.priority or "background",
-					uniforms = data.uniforms or {},
-					shader = shader,
-					luaPath = luaPath,
-				})
 			end
 		end
 	end
 
 	scan(basePath)
+end
+
+function ShaderLoader.loadByName(name)
+	for _, s in ipairs(ShaderLoader.shaders or {}) do
+		if s.name == name then
+			return s
+		end
+	end
+	return nil
 end
 
 function ShaderLoader.getByAppliesTo(appliesTo)
