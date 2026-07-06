@@ -99,9 +99,16 @@ function Sprite:draw()
 		if self.flipX then
 			sx = -sx
 		end
+		local alpha = self.alpha or 1
+		if alpha < 1 then
+			love.graphics.setColor(1, 1, 1, alpha)
+		end
 		local ox = (self.frameWidth or self.image:getWidth()) * (self.pivotX or 0)
 		local oy = (self.frameHeight or self.image:getHeight()) * (self.pivotY or 0)
 		love.graphics.draw(self.image, math.floor(self.x + 0.5), math.floor(self.y + 0.5), rot, sx, sy, ox, oy)
+		if alpha < 1 then
+			love.graphics.setColor(1, 1, 1, 1)
+		end
 	end
 	for _, component in ipairs(self.components) do
 		if not component._broken and component.drawBehind and component.draw then

@@ -49,5 +49,11 @@ return {
 			offsetY = 0,
 			visible = false,
 		},
+		{
+			component = "proximity_fade",
+			radius = 15,
+			fadeAlpha = 0.5,
+			smoothness = 0.25,
+		},
 	},
 }

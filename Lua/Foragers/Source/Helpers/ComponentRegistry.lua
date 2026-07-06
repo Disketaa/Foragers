@@ -30,6 +30,7 @@ local Follow = require("Source.Sprite.Components.Follow")
 local Destructible = require("Source.Sprite.Components.Destructible")
 local Weapon = require("Source.Sprite.Components.Weapon")
 local Shake = require("Source.Sprite.Components.Shake")
+local ProximityFade = require("Source.Sprite.Components.ProximityFade")
 
 ComponentRegistry.register("collision", function(data)
 	return Collision.new(data)
@@ -60,6 +61,9 @@ ComponentRegistry.register("weapon", function(data)
 end)
 ComponentRegistry.register("shake", function(data)
 	return Shake.new(data)
+end)
+ComponentRegistry.register("proximity_fade", function(data)
+	return ProximityFade.new(data)
 end)
 
 return ComponentRegistry

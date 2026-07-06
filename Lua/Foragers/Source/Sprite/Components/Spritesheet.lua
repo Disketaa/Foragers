@@ -197,9 +197,16 @@ function Spritesheet:draw(x, y)
 		end
 	end
 
+	local alpha = (self.parent and self.parent.alpha) or 1
+	if alpha < 1 then
+		love.graphics.setColor(1, 1, 1, alpha)
+	end
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), rot, sx, sy, ox, oy)
+	if alpha < 1 then
+		love.graphics.setColor(1, 1, 1, 1)
+	end
 end
 
 return Spritesheet
