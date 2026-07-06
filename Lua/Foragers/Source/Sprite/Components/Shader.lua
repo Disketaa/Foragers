@@ -42,6 +42,16 @@ function ShaderComponent:setBrightness(value)
 	end
 end
 
+function ShaderComponent:update()
+	if not self.parent then return end
+	local brightnessTween = self.parent.tweens and self.parent.tweens.brightness
+	if brightnessTween then
+		self.parent.shaderData.u_brightness = brightnessTween:getValue()
+	elseif self._uniformWhitelist.u_brightness then
+		self.parent.shaderData.u_brightness = self.brightness
+	end
+end
+
 function ShaderComponent:setEnabled(enabled)
 	if enabled then
 		self.parent._shaderBroken = nil

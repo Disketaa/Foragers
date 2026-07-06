@@ -35,6 +35,7 @@ return {
 			component = "tween",
 			tags = {
 				prop_hit = {
+					{ target = "brightness", from = 1, to = 0.5, duration = 0.4, curve = "Sine" },
 					{ target = "scale_x", from = 0.8, to = 1, duration = 1.5, curve = "BackOut" },
 					{ target = "scale_y", from = 1.1, to = 1, duration = 0.6, curve = "BackOut" },
 				},
