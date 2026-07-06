@@ -12,7 +12,6 @@ return {
 	components = {
 		{
 			component = "spritesheet",
-			spriteSheet = "Content/Assets/Sprites/Tiles/GrassTiles.png",
 			columns = 4,
 			rows = 6,
 		},

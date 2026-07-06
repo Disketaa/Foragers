@@ -3,12 +3,33 @@ local Events = require("Source.Helpers.Events")
 local Spritesheet = {}
 Spritesheet.__index = Spritesheet
 
+local function resolveSpriteSheet(data)
+	if data.spriteSheet then
+		return data.spriteSheet
+	end
+	for modPath, modTable in pairs(package.loaded) do
+		if type(modTable) == "table" and type(modTable.components) == "table" then
+			for _, comp in ipairs(modTable.components) do
+				if comp == data then
+					return modPath:gsub("%.", "/") .. ".png"
+				end
+			end
+		end
+	end
+	return nil
+end
+
 function Spritesheet.new(data)
-	if not data or not data.spriteSheet then
+	if not data then
 		return setmetatable({}, Spritesheet)
 	end
 
-	local image = love.graphics.newImage(data.spriteSheet)
+	local spriteSheet = resolveSpriteSheet(data)
+	if not spriteSheet then
+		return setmetatable({}, Spritesheet)
+	end
+
+	local image = love.graphics.newImage(spriteSheet)
 	if not image then
 		return setmetatable({}, Spritesheet)
 	end
@@ -30,12 +51,12 @@ function Spritesheet.new(data)
 	if data.columns then
 		assert(imageW == data.columns * self.frameWidth,
 			string.format("Spritesheet '%s': columns=%d * frameWidth=%d = %d, but imageWidth=%d",
-				data.spriteSheet, data.columns, self.frameWidth, data.columns * self.frameWidth, imageW))
+				spriteSheet, data.columns, self.frameWidth, data.columns * self.frameWidth, imageW))
 	end
 	if data.rows then
 		assert(imageH == data.rows * self.frameHeight,
 			string.format("Spritesheet '%s': rows=%d * frameHeight=%d = %d, but imageHeight=%d",
-				data.spriteSheet, data.rows, self.frameHeight, data.rows * self.frameHeight, imageH))
+				spriteSheet, data.rows, self.frameHeight, data.rows * self.frameHeight, imageH))
 	end
 
 	self.columns = columns

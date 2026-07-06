@@ -6,7 +6,6 @@ return {
 	components = {
 		{
 			component = "spritesheet",
-			spriteSheet = "Content/Assets/Sprites/Particles/SmallExplosion.png",
 			columns = 4,
 			animations = {
 				explosion = { row = 1, frames = 4, speed = 9, loop = false },

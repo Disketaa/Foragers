@@ -75,6 +75,9 @@ function ParticleEmitter:_createParticle(px, py, angle)
 		compData.frameHeight = data.frameHeight
 		compData.pivotX = data.pivotX
 		compData.pivotY = data.pivotY
+		if not compData.spriteSheet then
+			compData.spriteSheet = self.particle:gsub("%.lua$", ".png")
+		end
 
 		local ok, sp = pcall(function()
 			return require("Source.Helpers.ComponentRegistry").create("spritesheet", compData)

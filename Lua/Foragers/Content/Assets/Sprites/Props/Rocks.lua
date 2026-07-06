@@ -41,7 +41,6 @@ return {
 		},
 		{
 			component = "spritesheet",
-			spriteSheet = "Content/Assets/Sprites/Props/Rocks.png",
 			columns = 3,
 		},
 		{

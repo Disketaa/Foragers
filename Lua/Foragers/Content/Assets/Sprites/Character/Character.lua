@@ -25,7 +25,6 @@ return {
 		},
 		{
 			component = "spritesheet",
-			spriteSheet = "Content/Assets/Sprites/Character/Character.png",
 			columns = 4,
 			rows = 4,
 			tags = { idle = "idle", moving = "run", swimming = "swim" },
