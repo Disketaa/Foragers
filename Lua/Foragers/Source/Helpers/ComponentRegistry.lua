@@ -29,6 +29,7 @@ local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 local Follow = require("Source.Sprite.Components.Follow")
 local Destructible = require("Source.Sprite.Components.Destructible")
 local Weapon = require("Source.Sprite.Components.Weapon")
+local Shake = require("Source.Sprite.Components.Shake")
 
 ComponentRegistry.register("collision", function(data)
 	return Collision.new(data)
@@ -56,6 +57,9 @@ ComponentRegistry.register("destructible", function(data)
 end)
 ComponentRegistry.register("weapon", function(data)
 	return Weapon.new(data)
+end)
+ComponentRegistry.register("shake", function(data)
+	return Shake.new(data)
 end)
 
 return ComponentRegistry

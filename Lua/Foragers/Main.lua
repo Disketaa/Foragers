@@ -23,6 +23,9 @@ local canvas = Canvas.new(480, 270, "outer")
 local cursorSprite = nil
 local cameraX = 0
 local cameraY = 0
+local weaponSprite = nil
+local shakeOffsetX = 0
+local shakeOffsetY = 0
 local tileSize = 8
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
@@ -105,6 +108,7 @@ function love.load()
 			table.insert(objects, entry)
 		end
 		AttackSystem.registerAttacker(playerSprite, toolEntries[1] and toolEntries[1].instance)
+		weaponSprite = toolEntries[1] and toolEntries[1].instance
 	end
 
 	updateCamera()
@@ -160,7 +164,7 @@ function love.draw()
 		end
 
 		love.graphics.pop()
-	end, World.backgroundColor)
+	end, World.backgroundColor, shakeOffsetX, shakeOffsetY)
 end
 
 local function removeSpriteFromLists(sprite)
@@ -226,4 +230,21 @@ function love.update(dt)
 	end
 
 	AttackSystem.update(dt, dynamicObjects)
+
+	local shakeComp = nil
+	if weaponSprite then
+		for _, comp in ipairs(weaponSprite.components or {}) do
+			if comp.type == "shake" then
+				shakeComp = comp
+				break
+			end
+		end
+	end
+	if shakeComp and shakeComp.active then
+		shakeOffsetX = shakeComp.offsetX
+		shakeOffsetY = shakeComp.offsetY
+	else
+		shakeOffsetX = 0
+		shakeOffsetY = 0
+	end
 end

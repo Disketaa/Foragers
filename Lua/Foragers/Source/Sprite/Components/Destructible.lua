@@ -1,3 +1,5 @@
+local Events = require("Source.Helpers.Events")
+
 local deadSprites = {}
 
 local Destructible = {}
@@ -14,6 +16,7 @@ end
 function Destructible:takeDamage(amount)
 	self.hp = self.hp - amount
 	if self.hp <= 0 and self.parent then
+		self.parent:emit(Events.PROP_BROKEN)
 		deadSprites[self.parent] = true
 	end
 end

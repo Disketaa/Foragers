@@ -34,10 +34,17 @@ return {
 		},
 		{
 			component = "sound",
+			pitchRandomness = 0.15,
 			volume = 0.7,
 			tags = {
 				bush_touch = {
 					"Content/Assets/Sounds/Steps/Events/BushHit.ogg",
+				},
+				prop_hit = {
+					"Content/Assets/Sounds/Steps/Events/BushHit.ogg",
+				},
+				prop_broken = {
+					"Content/Assets/Sounds/Steps/Events/BushBreak.ogg",
 				},
 			},
 		},

@@ -138,6 +138,9 @@ function AttackSystem.update(dt, allObjects)
 				for _, comp in ipairs(attacker.currentTarget.components or {}) do
 					if comp.type == "destructible" and comp.hp > 0 and comp.takeDamage then
 						comp:takeDamage(damage)
+						if comp.hp <= 0 and ws then
+							ws:emit(Events.PROP_BROKEN)
+						end
 						attacker.currentTarget:emit(Events.PROP_HIT)
 						break
 					end
@@ -162,6 +165,7 @@ function AttackSystem.update(dt, allObjects)
 	angleTween._smoothness = swing.smoothness
 	ws.tweens.swing_angle = angleTween
 	angleTween:start()
+	ws:emit(Events.SWING)
 end
 
 return AttackSystem

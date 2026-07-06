@@ -33,8 +33,14 @@ return {
 				offsetX = -8,
 				offsetY = -4,
 				curve = "Sine",
-				smoothness = 0.15,
+				smoothness = 0.35,
 			},
+		},
+		{
+			component = "shake",
+			magnitude = 1,
+			duration = 0.2,
+			decay = true,
 		},
 	},
 }

@@ -11,6 +11,19 @@ return {
 			hp = 3,
 		},
 		{
+			component = "sound",
+			volume = 0.7,
+			pitchRandomness = 0.15,
+			tags = {
+				prop_hit = {
+					"Content/Assets/Sounds/Steps/Events/WoodHit.ogg",
+				},
+				prop_broken = {
+					"Content/Assets/Sounds/Steps/Events/WoodBreak.ogg",
+				},
+			},
+		},
+		{
 			component = "tween",
 			tags = {
 				prop_hit = {

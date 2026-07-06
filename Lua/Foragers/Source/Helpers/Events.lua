@@ -7,5 +7,7 @@ local Events = {
 	SLOWDOWN_EXIT = "slowdown_exit",
 	ANIM_FRAME = "anim_frame",
 	PROP_HIT = "prop_hit",
+	PROP_BROKEN = "prop_broken",
+	SWING = "swing",
 }
 return Events
