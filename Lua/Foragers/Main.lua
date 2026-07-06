@@ -5,6 +5,7 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 	require("lldebugger").start()
 end
 
+local Sprite = require("Source.Sprite.Sprite")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local WorldGen = require("Source.World.WorldGen")
 local WorldBuilder = require("Source.World.WorldBuilder")
@@ -13,8 +14,10 @@ local ShaderLoader = require("Source.Helpers.ShaderLoader")
 local ModLoader = require("Source.Helpers.ModLoader")
 local DrawOrder = require("Source.Helpers.DrawOrder")
 local AttackSystem = require("Source.Helpers.AttackSystem")
+local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
 local Destructible = require("Source.Sprite.Components.Destructible")
 local Collision = require("Source.Sprite.Components.Collision")
+local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 
 local objects = {}
 local staticObjects = {}
@@ -155,6 +158,8 @@ function love.draw()
 			sprite:draw()
 		end
 
+		ParticleEmitter.drawOrphans()
+
 		if cursorSprite and cursorSprite.instance then
 			local mx, my = love.mouse.getPosition()
 			local wx, wy = screenToWorld(mx, my)
@@ -192,6 +197,60 @@ end
 function love.update(dt)
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
+		if sprite._replaceWith then
+			local luaPath = sprite._replaceWith:gsub("[/\\]", "."):gsub("%.lua$", "")
+			local ok, morphData = pcall(require, luaPath)
+			if ok and morphData then
+				local newSprite = Sprite.new(sprite.x, sprite.y)
+				newSprite.flipX = sprite.flipX
+				newSprite.frameWidth = morphData.frameWidth
+				newSprite.frameHeight = morphData.frameHeight
+				newSprite.pivotX = morphData.pivotX
+				newSprite.pivotY = morphData.pivotY
+				newSprite.sortOffsetY = morphData.sortOffsetY or 0
+				newSprite.layer = morphData.layer or 0
+
+				local hasSpritesheet = false
+				for _, cd in ipairs(morphData.components or {}) do
+					if cd.component == "spritesheet" then
+						hasSpritesheet = true
+						local comp = ComponentRegistry.create("spritesheet", cd)
+						if comp then
+							local numFrames = cd.columns or 1
+							comp:setFrame(love.math.random(0, numFrames - 1))
+							newSprite:addComponent(comp)
+						end
+					elseif cd.component == "collision" then
+						local comp = ComponentRegistry.create("collision", cd)
+						if comp then
+							newSprite:addComponent(comp)
+							if comp.mode == "slowdown" then
+								comp:registerAsSlowdown()
+							else
+								comp:registerAsSolid()
+							end
+						end
+					else
+						local comp = ComponentRegistry.create(cd.component, cd)
+						if comp then
+							newSprite:addComponent(comp)
+						end
+					end
+				end
+
+				if not hasSpritesheet then
+					local pngPath = sprite._replaceWith .. ".png"
+					local pngInfo = love.filesystem.getInfo(pngPath)
+					if pngInfo then
+						newSprite.image = love.graphics.newImage(pngPath)
+					end
+					newSprite.type = "StaticSprite"
+				end
+
+				table.insert(objects, { instance = newSprite, data = morphData })
+				table.insert(dynamicObjects, { instance = newSprite, data = morphData })
+			end
+		end
 		Collision.removeSpriteColliders(sprite)
 		removeSpriteFromLists(sprite)
 	end
@@ -230,6 +289,7 @@ function love.update(dt)
 	end
 
 	AttackSystem.update(dt, dynamicObjects)
+	ParticleEmitter.updateOrphans(dt)
 
 	local shakeComp = nil
 	if weaponSprite then

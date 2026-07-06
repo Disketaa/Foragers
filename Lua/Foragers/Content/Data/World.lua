@@ -14,7 +14,7 @@ return {
 			weight = 4,
 		},
 		{
-			data = "Content.Assets.Sprites.Props.OakTrunks",
+			data = "Content.Assets.Sprites.Props.OakStumps",
 			weight = 5,
 		},
 		{

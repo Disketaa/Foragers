@@ -2,13 +2,21 @@ return {
 	frameWidth = 24,
 	frameHeight = 32,
 	pivotX = 0.5,
-	pivotY = 0.9,
+	pivotY = 0.95,
 	sortOffsetY = 3,
 	layer = 0,
 	components = {
 		{
 			component = "destructible",
 			hp = 7,
+			replaceWith = "Content/Assets/Sprites/Props/OakStumps",
+		},
+		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/SmallExplosion.lua",
+			burstOn = { prop_broken = true },
+			offsetY = -10,
+			layer = "above",
 		},
 		{
 			component = "sound",

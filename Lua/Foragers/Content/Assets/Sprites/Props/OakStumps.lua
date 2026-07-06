@@ -11,6 +11,13 @@ return {
 			hp = 3,
 		},
 		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/SmallExplosion.lua",
+			burstOn = { prop_broken = true },
+			offsetY = -2,
+			layer = "above",
+		},
+		{
 			component = "sound",
 			volume = 0.7,
 			pitchRandomness = 0.15,

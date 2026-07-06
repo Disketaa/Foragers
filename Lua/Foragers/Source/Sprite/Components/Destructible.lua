@@ -9,6 +9,7 @@ function Destructible.new(data)
 	return setmetatable({
 		hp = data.hp or 3,
 		maxHp = data.hp or 3,
+		replaceWith = data.replaceWith,
 		type = "destructible",
 	}, Destructible)
 end
@@ -17,6 +18,9 @@ function Destructible:takeDamage(amount)
 	self.hp = self.hp - amount
 	if self.hp <= 0 and self.parent then
 		self.parent:emit(Events.PROP_BROKEN)
+		if self.replaceWith then
+			self.parent._replaceWith = self.replaceWith
+		end
 		deadSprites[self.parent] = true
 	end
 end
