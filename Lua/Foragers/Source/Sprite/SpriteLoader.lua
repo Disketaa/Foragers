@@ -1,7 +1,58 @@
 local Sprite = require("Source.Sprite.Sprite")
 local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
+local Merge = require("Source.Helpers.Merge")
 
 local SpriteLoader = {}
+
+--- Turn a data table into a live Sprite. Handles field copy, component creation,
+--- and PNG loading. Used by both loadAll() and WorldBuilder.spawnProps().
+---@param data table
+---@param x number
+---@param y number
+---@param pngPath string|nil
+---@return table
+function SpriteLoader.instantiate(data, x, y, pngPath)
+	local sprite = Sprite.new(x, y)
+	sprite.frameWidth = data.frameWidth
+	sprite.frameHeight = data.frameHeight
+	sprite.pivotX = data.pivotX
+	sprite.pivotY = data.pivotY
+	sprite.sortOffsetY = data.sortOffsetY or 0
+	sprite.layer = data.layer or 0
+
+	for _, compData in ipairs(data.components or {}) do
+		if type(compData) == "table" then
+			compData.frameWidth = sprite.frameWidth
+			compData.frameHeight = sprite.frameHeight
+			compData.pivotX = sprite.pivotX
+			compData.pivotY = sprite.pivotY
+			if compData.component == "spritesheet" and pngPath then
+				compData.spriteSheet = pngPath
+			end
+			local component = ComponentRegistry.create(compData.component, compData)
+			if component then
+				sprite:addComponent(component)
+			end
+		end
+	end
+
+	if pngPath then
+		local pngInfo = love.filesystem.getInfo(pngPath)
+		if pngInfo then
+			local ok, image = pcall(function()
+				return love.graphics.newImage(pngPath)
+			end)
+			if ok then
+				sprite.image = image
+				if not next(data.components or {}) then
+					sprite.type = "StaticSprite"
+				end
+			end
+		end
+	end
+
+	return sprite
+end
 
 ---@param assetsPath string
 ---@param spawnCallback function|nil
@@ -21,54 +72,28 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 
 			if info and info.type == "directory" then
 				scan(fullPath)
-			elseif item:match("%.lua$") then
+			elseif item:match("%.lua$") and not item:match("^_") then
 				local luaPath = fullPath:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
 				local success, data = pcall(require, luaPath)
 				if success and type(data) == "table" then
-					local obj = Sprite.new(0, 0)
-					obj.frameWidth = data.frameWidth
-					obj.frameHeight = data.frameHeight
-					obj.pivotX = data.pivotX
-					obj.pivotY = data.pivotY
-					obj.sortOffsetY = data.sortOffsetY or 0
-					obj.layer = data.layer or 0
-
-					for _, compData in ipairs(data.components or {}) do
-						if type(compData) == "table" then
-							compData.frameWidth = obj.frameWidth
-							compData.frameHeight = obj.frameHeight
-							compData.pivotX = obj.pivotX
-							compData.pivotY = obj.pivotY
-							local component = ComponentRegistry.create(compData.component, compData)
-							if component then
-								obj:addComponent(component)
-							end
-						end
+					if data.extends then
+						data = Merge.resolveExtends(data)
 					end
 
 					local pngPath = fullPath:gsub("%.lua$", ".png")
-					local pngInfo = love.filesystem.getInfo(pngPath)
-					if pngInfo then
-						local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
-						if ok then
-							obj.image = image
-							if not next(data.components or {}) then
-								obj.type = "StaticSprite"
-							end
-						end
-					end
+					local sprite = SpriteLoader.instantiate(data, 0, 0, pngPath)
 
 					if spawnCallback then
 						local x, y = spawnCallback(data)
 						if x then
-							obj.x = x
+							sprite.x = x
 						end
 						if y then
-							obj.y = y
+							sprite.y = y
 						end
 					end
 
-					table.insert(objects, { path = fullPath, data = data, instance = obj })
+					table.insert(objects, { path = fullPath, data = data, instance = sprite })
 				end
 			end
 		end

@@ -1,10 +1,10 @@
 return {
+	extends = "Content.Assets.Sprites.Props._Props",
 	frameWidth = 24,
 	frameHeight = 32,
 	pivotX = 0.5,
 	pivotY = 0.95,
 	sortOffsetY = 3,
-	layer = 0,
 	components = {
 		{
 			component = "destructible",
@@ -13,23 +13,7 @@ return {
 		},
 		{
 			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/SmallExplosion.lua",
-			burstOn = { prop_broken = true },
 			offsetY = -10,
-			layer = "above",
-		},
-		{
-			component = "sound",
-			volume = 0.7,
-			pitchRandomness = 0.15,
-			tags = {
-				prop_hit = {
-					"Content/Assets/Sounds/Steps/Events/WoodHit.ogg",
-				},
-				prop_broken = {
-					"Content/Assets/Sounds/Steps/Events/WoodBreak.ogg",
-				},
-			},
 		},
 		{
 			component = "tween",
@@ -42,23 +26,21 @@ return {
 			},
 		},
 		{
-			component = "collision",
-			mode = "solid",
-			collisionWidth = 6,
-			collisionHeight = 6,
-			offsetX = 0,
-			offsetY = 0,
-			visible = false,
+			component = "sound",
+			tags = {
+				prop_hit = {
+					"Content/Assets/Sounds/Steps/Events/WoodHit.ogg",
+				},
+				prop_broken = {
+					"Content/Assets/Sounds/Steps/Events/WoodBreak.ogg",
+				},
+			},
 		},
 		{
 			component = "proximity_fade",
 			radius = 15,
 			fadeAlpha = 0.5,
 			smoothness = 0.25,
-		},
-		{
-			component = "shader",
-			shaderName = "Brightness",
 		},
 	},
 }

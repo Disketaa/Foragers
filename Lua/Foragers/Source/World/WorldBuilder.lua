@@ -1,8 +1,10 @@
 local Sprite = require("Source.Sprite.Sprite")
+local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
 local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
 local Collision = require("Source.Sprite.Components.Collision")
+local Merge = require("Source.Helpers.Merge")
 local WorldConfig = require("Content.Data.World") or {}
 
 local private = {}
@@ -91,27 +93,16 @@ function private.spawnProps(worldData)
 	for _, cfg in ipairs(propConfigs) do
 		local ok, propData = pcall(require, cfg.data)
 		if ok and type(propData) == "table" then
-			local spritesheetData = nil
-			local collidableData = nil
-			local extraComponents = {}
-			for _, cd in ipairs(propData.components or {}) do
-				if cd.component == "spritesheet" then
-					spritesheetData = cd
-				elseif cd.component == "collision" then
-					collidableData = cd
-				else
-					table.insert(extraComponents, cd)
-				end
+			if propData.extends then
+				propData = Merge.resolveExtends(propData)
 			end
 			local propName = cfg.data:match("([^%.]+)$"):lower()
+			local pngPath = cfg.data:gsub("%.", "/") .. ".png"
 			table.insert(loadedProps, {
 				name = propName,
 				weight = cfg.weight or 1,
 				data = propData,
-				spritesheetData = spritesheetData,
-				collidableData = collidableData,
-				extraComponents = extraComponents,
-				pngPath = cfg.data:gsub("%.", "/") .. ".png",
+				pngPath = pngPath,
 			})
 		end
 	end
@@ -166,41 +157,21 @@ function private.spawnProps(worldData)
 			end
 		end
 
-		local sprite = Sprite.new(tile.x, tile.y)
-		sprite.frameWidth = chosen.data.frameWidth
-		sprite.frameHeight = chosen.data.frameHeight
-		sprite.pivotX = chosen.data.pivotX
-		sprite.pivotY = chosen.data.pivotY
-		sprite.sortOffsetY = chosen.data.sortOffsetY or 0
-		sprite.layer = chosen.data.layer or 0
-
-		if chosen.spritesheetData then
-			local component = ComponentRegistry.create("spritesheet", chosen.spritesheetData) or {}
-			local numFrames = chosen.spritesheetData.columns or 1
-			local frameIndex = math.abs(tile.seed + 5000) % numFrames
-			component:setFrame(frameIndex)
-			sprite:addComponent(component)
-		else
-			sprite.image = love.graphics.newImage(chosen.pngPath)
-			sprite.type = "StaticSprite"
-		end
+		local sprite = SpriteLoader.instantiate(chosen.data, tile.x, tile.y, chosen.pngPath)
 
 		sprite.flipX = math.abs(tile.seed + 7777) % 2 == 0
 
-		if chosen.collidableData then
-			local collidableComp = Collision.new(chosen.collidableData)
-			sprite:addComponent(collidableComp)
-			if collidableComp.mode == "slowdown" then
-				collidableComp:registerAsSlowdown()
-			else
-				collidableComp:registerAsSolid()
-			end
-		end
-
-		for _, compData in ipairs(chosen.extraComponents or {}) do
-			local component = ComponentRegistry.create(compData.component, compData)
-			if component then
-				sprite:addComponent(component)
+		for _, comp in ipairs(sprite.components) do
+			if comp.type == "spritesheet" then
+				local numFrames = comp.columns or 1
+				local frameIndex = math.abs(tile.seed + 5000) % numFrames
+				comp:setFrame(frameIndex)
+			elseif comp.type == "collision" then
+				if comp.mode == "slowdown" then
+					comp:registerAsSlowdown()
+				else
+					comp:registerAsSolid()
+				end
 			end
 		end
 

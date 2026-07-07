@@ -7,6 +7,7 @@ end
 
 local Sprite = require("Source.Sprite.Sprite")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
+local Merge = require("Source.Helpers.Merge")
 local WorldGen = require("Source.World.WorldGen")
 local WorldBuilder = require("Source.World.WorldBuilder")
 local Canvas = require("Source.Helpers.Canvas")
@@ -14,7 +15,6 @@ local ShaderLoader = require("Source.Helpers.ShaderLoader")
 local ModLoader = require("Source.Helpers.ModLoader")
 local DrawOrder = require("Source.Helpers.DrawOrder")
 local AttackSystem = require("Source.Helpers.AttackSystem")
-local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
 local Destructible = require("Source.Sprite.Components.Destructible")
 local Collision = require("Source.Sprite.Components.Collision")
 local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
@@ -207,50 +207,24 @@ function love.update(dt)
 			local luaPath = sprite._replaceWith:gsub("[/\\]", "."):gsub("%.lua$", "")
 			local ok, morphData = pcall(require, luaPath)
 			if ok and morphData then
-				local newSprite = Sprite.new(sprite.x, sprite.y)
-				newSprite.flipX = sprite.flipX
-				newSprite.frameWidth = morphData.frameWidth
-				newSprite.frameHeight = morphData.frameHeight
-				newSprite.pivotX = morphData.pivotX
-				newSprite.pivotY = morphData.pivotY
-				newSprite.sortOffsetY = morphData.sortOffsetY or 0
-				newSprite.layer = morphData.layer or 0
-
-				local hasSpritesheet = false
-				for _, cd in ipairs(morphData.components or {}) do
-					if cd.component == "spritesheet" then
-						hasSpritesheet = true
-						local comp = ComponentRegistry.create("spritesheet", cd)
-						if comp then
-							local numFrames = cd.columns or 1
-							comp:setFrame(love.math.random(0, numFrames - 1))
-							newSprite:addComponent(comp)
-						end
-					elseif cd.component == "collision" then
-						local comp = ComponentRegistry.create("collision", cd)
-						if comp then
-							newSprite:addComponent(comp)
-							if comp.mode == "slowdown" then
-								comp:registerAsSlowdown()
-							else
-								comp:registerAsSolid()
-							end
-						end
-					else
-						local comp = ComponentRegistry.create(cd.component, cd)
-						if comp then
-							newSprite:addComponent(comp)
-						end
-					end
+				if morphData.extends then
+					morphData = Merge.resolveExtends(morphData)
 				end
+				local pngPath = sprite._replaceWith .. ".png"
+				local newSprite = SpriteLoader.instantiate(morphData, sprite.x, sprite.y, pngPath)
+				newSprite.flipX = sprite.flipX
 
-				if not hasSpritesheet then
-					local pngPath = sprite._replaceWith .. ".png"
-					local pngInfo = love.filesystem.getInfo(pngPath)
-					if pngInfo then
-						newSprite.image = love.graphics.newImage(pngPath)
+				for _, comp in ipairs(newSprite.components) do
+					if comp.type == "spritesheet" then
+						local numFrames = comp.columns or 1
+						comp:setFrame(love.math.random(0, numFrames - 1))
+					elseif comp.type == "collision" then
+						if comp.mode == "slowdown" then
+							comp:registerAsSlowdown()
+						else
+							comp:registerAsSolid()
+						end
 					end
-					newSprite.type = "StaticSprite"
 				end
 
 				table.insert(objects, { instance = newSprite, data = morphData })
