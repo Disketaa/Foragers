@@ -161,7 +161,7 @@ def add_blank_lines(text: str) -> str:
 def main():
     script_dir = Path(__file__).resolve().parent
     sprites_dir = script_dir.parent.parent / "Content" / "Assets" / "Sprites"
-    order_path = script_dir / "component_order.txt"
+    order_path = script_dir / "ComponentOrder.txt"
 
     if not sprites_dir.is_dir():
         print(f"Error: Sprites directory not found at {sprites_dir}", file=sys.stderr)

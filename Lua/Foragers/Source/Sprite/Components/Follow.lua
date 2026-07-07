@@ -120,9 +120,8 @@ end
 ---@param x number
 ---@param y number
 function Follow:draw(x, y)
-	if not self.parent or not self.parent.image then
-		return
-	end
+	if not self.parent then return end
+	if not self.parent.image then return end
 	local img = self.parent.image
 	local rot = math.rad(self._currentAngle or 0)
 	if self.parent.tweens and self.parent.tweens.swing_angle then

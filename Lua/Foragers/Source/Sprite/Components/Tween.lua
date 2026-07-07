@@ -231,8 +231,7 @@ local function createTween(target, from, to, duration, curve, loop, pingPong)
 	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong)
 end
 
----@param self TweenComponent
----@param tweenSet table[]
+---@param value string|number
 local function parseRandomValue(value)
 	if type(value) == "string" and string.find(value, "|") then
 		local parts = {}

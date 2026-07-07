@@ -120,15 +120,13 @@ function Control:update(dt)
 		self.parent:emit(Events.STATE_CHANGED, newState, oldState)
 	end
 
-	local oldFlip = self.parent.flipX
-	---@type boolean|nil
-	local newFlip
+	local newFlip ---@type boolean|nil
 	if mouseActive then
 		newFlip = self.mouseX < self.parent.x
 	elseif inputX ~= 0 then
 		newFlip = inputX < 0
 	end
-	if newFlip ~= nil and newFlip ~= oldFlip then
+	if newFlip ~= nil and newFlip ~= self.parent.flipX then
 		self.parent.flipX = newFlip
 		self.parent:emit(Events.FLIPPED, newFlip)
 	end

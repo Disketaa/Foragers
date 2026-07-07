@@ -1,6 +1,6 @@
 local ComponentRegistry = {}
 
----@type table<string, function(table):table>
+---@type table<string, fun(table):table>
 local factories = {}
 
 ---@param name string
