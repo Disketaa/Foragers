@@ -9,6 +9,7 @@ return {
 			mode = "slowdown",
 			slowdown = 0.5,
 		},
+
 		{
 			component = "tween",
 			tags = {
@@ -17,6 +18,7 @@ return {
 				},
 			},
 		},
+
 		{
 			component = "sound",
 			tags = {

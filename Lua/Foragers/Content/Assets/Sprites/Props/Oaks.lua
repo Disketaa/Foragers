@@ -11,10 +11,12 @@ return {
 			hp = 7,
 			replaceWith = "Content/Assets/Sprites/Props/OakStumps",
 		},
+
 		{
 			component = "particle_emitter",
 			offsetY = -10,
 		},
+
 		{
 			component = "tween",
 			tags = {
@@ -25,6 +27,7 @@ return {
 				},
 			},
 		},
+
 		{
 			component = "sound",
 			tags = {
@@ -36,6 +39,7 @@ return {
 				},
 			},
 		},
+
 		{
 			component = "proximity_fade",
 			radius = 15,

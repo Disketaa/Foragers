@@ -14,6 +14,7 @@ return {
 			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
 			mouseControl = { slowdownRadius = 15 },
 		},
+
 		{
 			component = "collision",
 			mode = "solid_and_detect",
@@ -23,6 +24,7 @@ return {
 			offsetY = -2,
 			visible = false,
 		},
+
 		{
 			component = "spritesheet",
 			columns = 4,
@@ -35,6 +37,7 @@ return {
 				death = { row = 4, frames = 4, speed = 5, loop = false },
 			},
 		},
+
 		{
 			component = "tween",
 			tags = {
@@ -48,6 +51,7 @@ return {
 				},
 			},
 		},
+
 		{
 			component = "sound",
 			volume = 0.5,
@@ -74,6 +78,7 @@ return {
 				},
 			},
 		},
+
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Dust.lua",

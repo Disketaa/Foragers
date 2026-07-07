@@ -7,6 +7,7 @@ return {
 			component = "shader",
 			shaderName = "Brightness",
 		},
+
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/SmallExplosion.lua",
@@ -14,6 +15,7 @@ return {
 			offsetY = -2,
 			layer = "above",
 		},
+
 		{
 			component = "collision",
 			mode = "solid",
@@ -23,6 +25,7 @@ return {
 			offsetY = 0,
 			visible = false,
 		},
+
 		{
 			component = "tween",
 			tags = {
@@ -33,15 +36,18 @@ return {
 				},
 			},
 		},
+
 		{
 			component = "sound",
 			volume = 0.7,
 			pitchRandomness = 0.15,
 			tags = {},
 		},
+
 		{
 			component = "spritesheet",
 		},
+
 		{
 			component = "destructible",
 			hp = 3,

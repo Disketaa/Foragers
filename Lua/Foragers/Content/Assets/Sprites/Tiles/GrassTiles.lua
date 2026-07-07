@@ -15,6 +15,7 @@ return {
 			columns = 4,
 			rows = 6,
 		},
+
 		{
 			component = "collision",
 			mode = "solid",

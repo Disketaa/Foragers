@@ -8,6 +8,7 @@ return {
 			component = "spritesheet",
 			columns = 3,
 		},
+
 		{
 			component = "sound",
 			tags = {

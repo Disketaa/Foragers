@@ -12,6 +12,7 @@ return {
 				{ target = "y", from = -1, to = 1, duration = 1.0, curve = "OutSine", loop = true, pingPong = true },
 			},
 		},
+
 		{
 			component = "follow",
 			offsetX = 6,
@@ -21,6 +22,7 @@ return {
 			leanAngle = 45,
 			leanThreshold = 0.1,
 		},
+
 		{
 			component = "weapon",
 			range = 20,
@@ -36,12 +38,14 @@ return {
 				smoothness = 0.35,
 			},
 		},
+
 		{
 			component = "shake",
 			magnitude = 1,
 			duration = 0.2,
 			decay = true,
 		},
+
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Spark",

@@ -93,7 +93,6 @@ function love.load()
 		table.insert(objects, entry)
 	end
 
-	-- Link tools to the player
 	local playerSprite = nil
 	for _, entry in ipairs(objects) do
 		if entry.data and entry.data.object == "player" then
@@ -156,14 +155,12 @@ function love.draw()
 		-- Orphan particles behind dynamic sprites (terrain-aligned: dust, sparks near ground)
 		ParticleEmitter.drawOrphans(true)
 
-		-- Dynamic sprites: collect, sort by zKey, draw
 		local sorted = DrawOrder.collect(dynamicObjects)
 		DrawOrder.sort(sorted)
 		for _, sprite in ipairs(sorted) do
 			sprite:draw()
 		end
 
-		-- Orphan particles on top of everything
 		ParticleEmitter.drawOrphans(false)
 
 		if cursorSprite and cursorSprite.instance then
