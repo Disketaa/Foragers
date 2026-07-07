@@ -7,23 +7,15 @@ def find_sprite_lua_files(root: Path) -> list[Path]:
     return sorted(root.rglob("*.lua"))
 
 
-def add_blank_lines(text: str) -> str:
-    lines = text.split("\n")
-    result = []
-
-    def indent_of(line: str) -> str:
-        return line[: len(line) - len(line.lstrip(" \t"))]
-
-    for i, line in enumerate(lines):
-        result.append(line)
-        if i + 1 >= len(lines):
-            continue
-        nxt = lines[i + 1]
-        if (line.strip() == "},"
-                and nxt.strip() == "{"
-                and indent_of(line) == indent_of(nxt)):
-            result.append("")
-    return "\n".join(result)
+def load_component_order(path: Path) -> list[str]:
+    if not path.is_file():
+        return []
+    order = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if s and not s.startswith("#"):
+            order.append(s)
+    return order
 
 
 def matching_brace(text: str, open_idx: int) -> int:
@@ -58,6 +50,41 @@ def split_top_level(inner: str) -> list[str]:
 
 def collapse(s: str) -> str:
     return re.sub(r"\s+", " ", s.strip())
+
+
+def sort_components(text: str, order: list[str]) -> str:
+    pattern = re.compile(r"^([ \t]*)components\s*=\s*\{$", re.MULTILINE)
+    m = pattern.search(text)
+    if not m:
+        return text
+
+    indent = m.group(1)
+    open_idx = m.end() - 1
+    close_idx = matching_brace(text, open_idx)
+    inner = text[open_idx + 1: close_idx]
+
+    entries = split_top_level(inner)
+    if not entries:
+        return text
+
+    order_index = {name: i for i, name in enumerate(order)}
+
+    def component_name(entry: str):
+        cm = re.search(r'component\s*=\s*"([^"]+)"', entry)
+        return cm.group(1) if cm else None
+
+    def sort_key(entry: str):
+        return order_index.get(component_name(entry), len(order))
+
+    sorted_entries = sorted(entries, key=sort_key)
+
+    entry_indent = indent + "\t"
+    joined = f",\n\n{entry_indent}".join(sorted_entries)
+    return (
+        text[:m.start()]
+        + f"{indent}components = {{\n{entry_indent}{joined},\n{indent}}}"
+        + text[close_idx + 1:]
+    )
 
 
 def format_value_list(items: list[str], indent: str) -> str:
@@ -112,12 +139,37 @@ def stringify_tags(text: str) -> str:
     return "".join(out)
 
 
+def add_blank_lines(text: str) -> str:
+    lines = text.split("\n")
+    result = []
+
+    def indent_of(line: str) -> str:
+        return line[: len(line) - len(line.lstrip(" \t"))]
+
+    for i, line in enumerate(lines):
+        result.append(line)
+        if i + 1 >= len(lines):
+            continue
+        nxt = lines[i + 1]
+        if (line.strip() == "},"
+                and nxt.strip() == "{"
+                and indent_of(line) == indent_of(nxt)):
+            result.append("")
+    return "\n".join(result)
+
+
 def main():
-    sprites_dir = Path(__file__).resolve().parent.parent.parent / "Content" / "Assets" / "Sprites"
+    script_dir = Path(__file__).resolve().parent
+    sprites_dir = script_dir.parent.parent / "Content" / "Assets" / "Sprites"
+    order_path = script_dir / "component_order.txt"
 
     if not sprites_dir.is_dir():
         print(f"Error: Sprites directory not found at {sprites_dir}", file=sys.stderr)
         sys.exit(1)
+
+    order = load_component_order(order_path)
+    if not order:
+        print(f"Warning: {order_path} not found or empty — components won't be reordered.")
 
     files = find_sprite_lua_files(sprites_dir)
     if not files:
@@ -127,7 +179,7 @@ def main():
     changed = 0
     for path in files:
         original = path.read_text(encoding="utf-8")
-        updated = add_blank_lines(original)
+        updated = sort_components(original, order) if order else original
         updated = stringify_tags(updated)
         updated = add_blank_lines(updated)
 

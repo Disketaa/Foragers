@@ -7,13 +7,6 @@ return {
 	layer = 0,
 	components = {
 		{
-			component = "tween",
-			tweens = {
-				{ target = "y", from = -1, to = 1, duration = 1.0, curve = "OutSine", loop = true, pingPong = true },
-			},
-		},
-
-		{
 			component = "follow",
 			offsetX = 6,
 			offsetY = -3,
@@ -44,6 +37,13 @@ return {
 			magnitude = 1,
 			duration = 0.2,
 			decay = true,
+		},
+
+		{
+			component = "tween",
+			tweens = {
+				{ target = "y", from = -1, to = 1, duration = 1.0, curve = "OutSine", loop = true, pingPong = true },
+			},
 		},
 
 		{

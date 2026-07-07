@@ -13,19 +13,26 @@ return {
 		},
 
 		{
+			component = "tween",
+			tags = {
+				prop_hit = {
+					{ target = "brightness", from = 1,   to = 0.5, duration = 0.2, curve = "InBack" },
+					{ target = "scale_x",    from = 0.8, to = 1,   duration = 1.5, curve = "OutBack" },
+					{ target = "scale_y",    from = 1.1, to = 1,   duration = 0.6, curve = "OutBack" },
+				},
+			},
+		},
+
+		{
 			component = "particle_emitter",
 			offsetY = -10,
 		},
 
 		{
-			component = "tween",
-			tags = {
-				prop_hit = {
-					{ target = "brightness", from = 1, to = 0.5, duration = 0.2, curve = "InBack" },
-					{ target = "scale_x", from = 0.8, to = 1, duration = 1.5, curve = "OutBack" },
-					{ target = "scale_y", from = 1.1, to = 1, duration = 0.6, curve = "OutBack" },
-				},
-			},
+			component = "proximity_fade",
+			radius = 15,
+			fadeAlpha = 0.5,
+			smoothness = 0.25,
 		},
 
 		{
@@ -34,13 +41,6 @@ return {
 				prop_hit = { "Content/Assets/Sounds/Steps/Events/WoodHit.ogg" },
 				prop_broken = { "Content/Assets/Sounds/Steps/Events/WoodBreak.ogg" },
 			},
-		},
-
-		{
-			component = "proximity_fade",
-			radius = 15,
-			fadeAlpha = 0.5,
-			smoothness = 0.25,
 		},
 	},
 }

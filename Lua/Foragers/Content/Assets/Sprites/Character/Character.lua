@@ -8,11 +8,16 @@ return {
 	layer = 0,
 	components = {
 		{
-			component = "control",
-			movementSpeed = 50,
-			swimmingSpeed = 30,
-			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
-			mouseControl = { slowdownRadius = 15 },
+			component = "spritesheet",
+			columns = 4,
+			rows = 4,
+			tags = { idle = "idle", moving = "run", swimming = "swim" },
+			animations = {
+				idle = { row = 1, frames = 4, speed = 4, loop = true },
+				run = { row = 2, frames = 4, speed = 8, loop = true },
+				swim = { row = 3, frames = 4, speed = 4, loop = true },
+				death = { row = 4, frames = 4, speed = 5, loop = false },
+			},
 		},
 
 		{
@@ -26,16 +31,11 @@ return {
 		},
 
 		{
-			component = "spritesheet",
-			columns = 4,
-			rows = 4,
-			tags = { idle = "idle", moving = "run", swimming = "swim" },
-			animations = {
-				idle = { row = 1, frames = 4, speed = 4, loop = true },
-				run = { row = 2, frames = 4, speed = 8, loop = true },
-				swim = { row = 3, frames = 4, speed = 4, loop = true },
-				death = { row = 4, frames = 4, speed = 5, loop = false },
-			},
+			component = "control",
+			movementSpeed = 50,
+			swimmingSpeed = 30,
+			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
+			mouseControl = { slowdownRadius = 15 },
 		},
 
 		{
@@ -50,6 +50,17 @@ return {
 					{ target = "scale_y", from = 0.75, to = 1.0, duration = 0.5, curve = "OutBack" },
 				},
 			},
+		},
+
+		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/Dust.lua",
+			stepInterval = 2,
+			offsetX = 0,
+			offsetY = 0,
+			inheritFlip = true,
+			layer = "below",
+			emittingStates = { moving = true },
 		},
 
 		{
@@ -73,17 +84,6 @@ return {
 				water_in = { "Content/Assets/Sounds/Steps/Events/WaterIn.ogg" },
 				water_out = { "Content/Assets/Sounds/Steps/Events/WaterOut.ogg" },
 			},
-		},
-
-		{
-			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/Dust.lua",
-			stepInterval = 2,
-			offsetX = 0,
-			offsetY = 0,
-			inheritFlip = true,
-			layer = "below",
-			emittingStates = { moving = true },
 		},
 	},
 }

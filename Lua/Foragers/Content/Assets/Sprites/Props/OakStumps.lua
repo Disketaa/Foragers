@@ -1,14 +1,6 @@
 return {
 	extends = "Content.Assets.Sprites.Props._Props",
-	frameWidth = 8,
-	frameHeight = 8,
-	pivotX = 0.5,
 	components = {
-		{
-			component = "spritesheet",
-			columns = 1,
-		},
-
 		{
 			component = "sound",
 			tags = {

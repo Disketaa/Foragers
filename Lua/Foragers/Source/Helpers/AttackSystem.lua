@@ -19,7 +19,7 @@ local function getWeaponData(sprite)
 			return comp.range, comp.cooldown, comp.damage, comp.swing
 		end
 	end
-		return 20,
+	return 20,
 		0.5,
 		1,
 		{ angleFrom = -30, angleTo = 30, duration = 0.15, offsetX = 0, offsetY = -8, curve = "OutSine", smoothness = 0.02 }
