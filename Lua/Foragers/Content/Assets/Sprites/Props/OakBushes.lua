@@ -13,24 +13,16 @@ return {
 		{
 			component = "tween",
 			tags = {
-				bush_touch = {
-					{ target = "angle", from = "-15 | 15", to = 0, duration = 2.5, curve = "OutBack" },
-				},
+				bush_touch = { { target = "angle", from = "-15 | 15", to = 0, duration = 2.5, curve = "OutBack" } },
 			},
 		},
 
 		{
 			component = "sound",
 			tags = {
-				bush_touch = {
-					"Content/Assets/Sounds/Steps/Events/BushHit.ogg",
-				},
-				prop_hit = {
-					"Content/Assets/Sounds/Steps/Events/BushHit.ogg",
-				},
-				prop_broken = {
-					"Content/Assets/Sounds/Steps/Events/BushBreak.ogg",
-				},
+				bush_touch = { "Content/Assets/Sounds/Steps/Events/BushHit.ogg" },
+				prop_hit = { "Content/Assets/Sounds/Steps/Events/BushHit.ogg" },
+				prop_broken = { "Content/Assets/Sounds/Steps/Events/BushBreak.ogg" },
 			},
 		},
 	},

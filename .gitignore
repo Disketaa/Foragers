@@ -1,6 +1,5 @@
 .*/
 .editorconfig
-/Lua/Foragers/node_modules
 /Workspace/
 bin/
 dotnet-tools.json/
@@ -11,6 +10,8 @@ Lua/Foragers/conf.lua
 Lua/Foragers/Foragers.bat
 Lua/Foragers/lldebugger.lua
 Lua/Foragers/love-run.bat
+Lua/Foragers/node_modules
 Lua/Foragers/package-lock.json
 Lua/Foragers/package.json
+Lua/Foragers/Tools/Lua Formatter/__pycache__
 obj/
