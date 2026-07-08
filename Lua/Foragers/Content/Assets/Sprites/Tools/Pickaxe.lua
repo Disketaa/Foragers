@@ -54,5 +54,13 @@ return {
 			angle = "0...360",
 			layer = "below",
 		},
+
+		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/Swing",
+			burstOn = { swing = true },
+			inheritFlip = true,
+			layer = "below",
+		},
 	},
 }

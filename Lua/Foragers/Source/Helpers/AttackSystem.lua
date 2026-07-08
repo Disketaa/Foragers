@@ -170,6 +170,9 @@ function AttackSystem.update(dt, allObjects)
 	angleTween._smoothness = swing.smoothness
 	ws.tweens.swing_angle = angleTween
 	angleTween:start()
+	ws.flipX = attacker.sprite.flipX
+	ws._lastHitX = nil
+	ws._lastHitY = nil
 	ws:emit(Events.SWING)
 end
 

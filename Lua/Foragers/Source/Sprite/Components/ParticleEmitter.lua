@@ -76,7 +76,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 		compData.pivotX = data.pivotX
 		compData.pivotY = data.pivotY
 		if not compData.spriteSheet then
-			compData.spriteSheet = self.particle:gsub("%.lua$", ".png")
+			compData.spriteSheet = self.particle:gsub("%.lua$", "") .. ".png"
 		end
 
 		local ok, sp = pcall(function()
@@ -167,6 +167,10 @@ function ParticleEmitter:attach()
 			self.parent:on(eventName, function()
 				if not self._particleData then
 					return
+				end
+
+				if self.inheritFlip and self.parent.flipX ~= nil then
+					self._cachedFlipX = self.parent.flipX
 				end
 
 				local count
