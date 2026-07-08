@@ -10,13 +10,13 @@ return {
 		{
 			component = "spritesheet",
 			columns = 4,
-			rows = 4,
-			tags = { idle = "idle", moving = "run", swimming = "swim" },
+			rows = 5,
 			animations = {
 				idle = { row = 1, frames = 4, speed = 4, loop = true },
 				run = { row = 2, frames = 4, speed = 8, loop = true },
-				swim = { row = 3, frames = 4, speed = 4, loop = true },
-				death = { row = 4, frames = 4, speed = 5, loop = false },
+				float = { row = 3, frames = 4, speed = 4, loop = true },
+				swim = { row = 4, frames = 4, speed = 4, loop = true },
+				death = { row = 5, frames = 4, speed = 5, loop = false },
 			},
 		},
 

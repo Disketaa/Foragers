@@ -31,6 +31,7 @@ function Control.new(data)
 		mouseControl = data.mouseControl,
 		tags = data.tags,
 		_grounded = nil,
+		_groundedInitialized = false,
 		_slowdown = 1.0,
 		type = "control",
 	}, Control)
@@ -40,6 +41,7 @@ end
 function Control:attach()
 	self.parent:on(Events.GROUNDED_CHANGED, function(isGrounded)
 		self._grounded = isGrounded
+		self._groundedInitialized = true
 	end, 10)
 	self.parent:on(Events.SLOWDOWN_CHANGED, function(multiplier)
 		self._slowdown = multiplier
@@ -110,10 +112,10 @@ function Control:update(dt)
 
 	local oldState = self.parent._state
 	local newState
-	if self._grounded == false then
-		newState = "swimming"
+	if self._groundedInitialized and self._grounded == false then
+		newState = len > 0 and "swim" or "float"
 	else
-		newState = len > 0 and "moving" or "idle"
+		newState = len > 0 and "run" or "idle"
 	end
 	self.parent._state = newState
 	if newState ~= oldState then

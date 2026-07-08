@@ -87,7 +87,7 @@ function Spritesheet.new(data)
 			}
 		end
 		self.tags = data.tags
-		self.currentAnim = (self.tags and self.tags.idle) or next(self.animations)
+		self.currentAnim = (self.tags and self.tags.idle) or (self.animations.idle and "idle") or next(self.animations)
 		self.currentTime = 0
 		self._lastFrame = nil
 	else
@@ -98,17 +98,12 @@ function Spritesheet.new(data)
 end
 
 function Spritesheet:attach()
-	if not self.tags then
-		return
-	end
 	self.parent:on(Events.STATE_CHANGED, function(newState)
-		if self.tags and self.tags[newState] and self.animations[self.tags[newState]] then
-			local animName = self.tags[newState]
-			if animName ~= self.currentAnim then
-				self.currentAnim = animName
-				self.currentTime = 0
-				self._lastFrame = nil
-			end
+		local animName = self.tags and self.tags[newState] or newState
+		if self.animations[animName] and animName ~= self.currentAnim then
+			self.currentAnim = animName
+			self.currentTime = 0
+			self._lastFrame = nil
 		end
 	end, 5)
 end
