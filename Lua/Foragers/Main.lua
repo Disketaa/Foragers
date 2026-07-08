@@ -152,16 +152,11 @@ function love.draw()
 			end
 		end
 
-		-- Orphan particles behind dynamic sprites (terrain-aligned: dust, sparks near ground)
-		ParticleEmitter.drawOrphans(true)
-
 		local sorted = DrawOrder.collect(dynamicObjects)
 		DrawOrder.sort(sorted)
 		for _, sprite in ipairs(sorted) do
 			sprite:draw()
 		end
-
-		ParticleEmitter.drawOrphans(false)
 
 		if cursorSprite and cursorSprite.instance then
 			local mx, my = love.mouse.getPosition()
@@ -266,7 +261,6 @@ function love.update(dt)
 	end
 
 	AttackSystem.update(dt, dynamicObjects)
-	ParticleEmitter.updateOrphans(dt)
 
 	local shakeComp = nil
 	if weaponSprite then

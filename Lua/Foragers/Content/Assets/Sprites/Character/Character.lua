@@ -47,7 +47,7 @@ return {
 				},
 				splash = {
 					{ target = "scale_x", from = 1.25, to = 1.0, duration = 0.75, curve = "OutBack" },
-					{ target = "scale_y", from = 0.75, to = 1.0, duration = 0.5, curve = "OutBack" },
+					{ target = "scale_y", from = 0.75, to = 1.0, duration = 0.5,  curve = "OutBack" },
 				},
 			},
 		},
@@ -60,7 +60,7 @@ return {
 			offsetY = 0,
 			inheritFlip = true,
 			layer = "below",
-			emittingStates = { moving = true },
+			spawnOn = { moving = true },
 		},
 
 		{

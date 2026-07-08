@@ -49,7 +49,7 @@ return {
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Spark",
-			burstOn = { prop_hit = true },
+			spawnOn = { prop_hit = true },
 			count = "3...5",
 			angle = "0...360",
 			layer = "below",
@@ -58,7 +58,7 @@ return {
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Swing",
-			burstOn = { swing = true },
+			spawnOn = { swing = true },
 			inheritFlip = true,
 			layer = "below",
 		},
