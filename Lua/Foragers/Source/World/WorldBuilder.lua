@@ -19,7 +19,7 @@ local function computeMask(world, x, y)
 	return (top and 1 or 0) + (right and 2 or 0) + (bottom and 4 or 0) + (left and 8 or 0)
 end
 
-function private.buildWorldSprites(worldData, spawnCallback)
+local function buildTerrain(worldData, spawnCallback)
 	local sprites = {}
 
 	Collision.resetTerrain()
@@ -61,7 +61,7 @@ function private.buildWorldSprites(worldData, spawnCallback)
 	return sprites
 end
 
-function private.spawnProps(worldData)
+local function spawnProps(worldData)
 	local props = {}
 	local propConfigs = private.props or {}
 	local coverage = private.propCoverage or 0.3
@@ -167,7 +167,12 @@ function private.spawnProps(worldData)
 	return props
 end
 
+local function build(worldData, spawnCallback)
+	local terrain = buildTerrain(worldData, spawnCallback)
+	local props = spawnProps(worldData) or {}
+	return { terrain = terrain, props = props }
+end
+
 return {
-	buildWorldSprites = private.buildWorldSprites,
-	spawnProps = private.spawnProps,
+	build = build,
 }

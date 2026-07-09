@@ -64,10 +64,11 @@ function love.load()
 	local worldData = WorldGen.generate()
 
 	local charEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
-	local tileEntries = WorldBuilder.buildWorldSprites(worldData, function(data)
+	local result = WorldBuilder.build(worldData, function(data)
 		return data.x, data.y
 	end)
-	local propEntries = WorldBuilder.spawnProps(worldData) or {}
+	local tileEntries = result.terrain
+	local propEntries = result.props or {}
 	local toolEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
 		return 0, 0
 	end) or {}
