@@ -49,7 +49,7 @@ Foragers/
 │   │   ├── EventEmitter.lua         # Event bus (on/emit/removeListener, priority-ordered)
 │   │   ├── Events.lua               # Event name constants (single source of truth)
 │   │   ├── Log.lua                  # Log.error wrapper (extension point for file logging)
-│   │   ├── Math.lua                 # Math utilities (expSmooth)
+│   │   ├── Math.lua                 # Math utilities (expSmooth, parseRandomValue, parseRange)
 │   │   ├── Merge.lua                # Data merge / extends resolution
 │   │   ├── ModLoader.lua            # Mod loader (loadAllMods only, no hot-reload)
 │   │   ├── Path.lua                 # Path conversion helpers (lua/png/moduleToPath)
@@ -61,6 +61,7 @@ Foragers/
 │   │       ├── Collision.lua        # AABB collision, terrain/solid registries
 │   │       ├── Control.lua          # Input; sole writer of _state/flipX
 │   │       ├── Destructible.lua     # HP, takeDamage, dead-sprite tracking
+│   │       ├── Drop.lua             # Drop spawn on PROP_BROKEN (pending queue, scatter tween)
 │   │       ├── Follow.lua           # Follow-target smoothing + deployTo/recall (tools)
 │   │       ├── ParticleEmitter.lua  # Particle spawner
 │   │       ├── Sound.lua            # Sounds triggered by events
@@ -111,13 +112,15 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 - **Destructible** (`Destructible.lua`): HP, `takeDamage`, dead-sprite tracking. Supports `replaceWith` config — a path to another sprite data file (e.g. `"Content/Assets/Sprites/Props/OakStump"`). When the sprite dies, `replaceWith` is stored on `sprite._replaceWith`; Main.lua reads it during dead cleanup and spawns the replacement at the same position (spritesheet → single random frame, collision registered as solid/slowdown, other components added normally).
 
+- **Drop** (`Drop.lua`): subscribes to `PROP_BROKEN` (priority 3). Loads drop sprite data via `pcall(require)`, randomizes count via `Math.parseRandomValue` (supports `"2...4"` range and `"1|2"` choice syntax). Each drop gets an anonymous `drop_pos` component that applies scatter tweens relative to `_dropBaseX`/`_dropBaseY`. Spawned drops accumulate in a module-level `pendingDrops` queue; `Drop.getPending()` drains it once per frame in `Main.lua`. Missing `sprite` field logs an error and silently skips (mod-safe).
+
 - **Follow** (`Follow.lua`): follow-target smoothing with exponential easing; subscribes to `flipped` to cache follow direction (never reads `flipX` in `update()`). `leanAngle` + `leanThreshold` for horizontal-lean on movement. `deployTo(target, offsetX, offsetY)` overrides follow target to a prop (weapon attack); `recall()` restores character follow. Draws `parent.image` with pivot.
 
 - **Tween** (`Tween.lua`): subscribes to `flipped` (10), `state_changed` (10), `prop_hit` (10); drives `parent.tweens` (producer). Supports `loop`, `pingPong`, `Sine` curve (quarter-sine 0→1). Module exports `{Component, Tween, Easing}` — `Tween` data class and `Easing` table are available for non-component consumers (UI, camera) via `require("Source.Sprite.Components.Tween")`.
 
 - **Sound** (`Sound.lua`): subscribes to `grounded_changed` (15), `state_changed` (15), `anim_frame` (15). Uses `base:clone()` on play — pooling rejected as premature optimization (~4 clones/sec, negligible GC pressure; also technically inferior — LÖVE `Source` buffers can't be swapped post-clone, so a shared-tag pool would need N clones *per variant*, not per tag).
 
-- **ParticleEmitter** (`ParticleEmitter.lua`): subscribes to `state_changed` (8), `flipped` (12), `anim_frame` (13). All particles live in `self._particles` (drawn as part of parent's component draw, inheriting its Y-sort position). `spawnOn` config unifies two trigger types: event names (e.g. `{ swing = true }` — burst once per event) and state names (e.g. `{ moving = true }` — continuous emission while in that state, driven by `anim_frame` + `stepInterval`). `inheritFlip` (default true) caches parent `flipX` and applies it to spawned particles. `count` supports range syntax (`"3...5"`). `layer = "below"` sets `drawBehind = true` (renders behind parent). Lazy-requires `ComponentRegistry` inside `_spawn()` to break circular dependency. Spawns particle visuals via `ComponentRegistry.create("spritesheet", data)`, not a direct constructor call.
+- **ParticleEmitter** (`ParticleEmitter.lua`): subscribes to `state_changed` (8), `flipped` (12), `anim_frame` (13). All particles live in `self._particles` (drawn as part of parent's component draw, inheriting its Y-sort position). `spawnOn` config unifies two trigger types: event names (e.g. `{ swing = true }` — burst once per event) and state names (e.g. `{ moving = true }` — continuous emission while in that state, driven by `anim_frame` + `stepInterval`). `inheritFlip` (default true) caches parent `flipX` and applies it to spawned particles. `count` and `angle` support range syntax (`"3...5"`) and choice syntax (`"3|5"`) via `Math.parseRange`. `layer = "below"` sets `drawBehind = true` (renders behind parent). Lazy-requires `ComponentRegistry` inside `_spawn()` to break circular dependency. Spawns particle visuals via `ComponentRegistry.create("spritesheet", data)`, not a direct constructor call.
 
 - **Weapon** (`Weapon.lua`): weapon data container (range, cooldown, damage, swing params). Read-only data, no behavior — pure config consumed by `AttackSystem`.
 
@@ -139,7 +142,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 | `SLOWDOWN_ENTER` | Collision (emitted on slowdown zone sprite) | Tween(10) |
 | `SLOWDOWN_EXIT` | Collision (emitted on slowdown zone sprite) | Tween(10) |
 | `PROP_HIT` | AttackSystem (emitted on damaged target) | Shader(8), Tween(10), Sound(15) |
-| `PROP_BROKEN` | Destructible (emitted on death); AttackSystem (relayed to weapon sprite) | Sound(15), Shake(5) |
+| `PROP_BROKEN` | Destructible (emitted on death); AttackSystem (relayed to weapon sprite) | Drop(3), Shake(5), Sound(15) |
 | `SWING` | AttackSystem (emitted on weapon swing start) | — |
 
 **Rules:**
@@ -158,7 +161,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ## V. Component Registry
 
-`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 10 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"follow"`, `"particle_emitter"`, `"shader"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`. Mods register new types the same way:
+`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 13 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"shader"`, `"shake"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`. Mods register new types the same way:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```
