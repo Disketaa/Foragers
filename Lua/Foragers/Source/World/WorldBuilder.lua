@@ -11,6 +11,14 @@ for k, v in pairs(WorldConfig) do
 	private[k] = v
 end
 
+local tilePngPath
+for k, v in pairs(package.loaded) do
+	if v == TileData then
+		tilePngPath = k:gsub("%.", "/") .. ".png"
+		break
+	end
+end
+
 local function computeMask(world, x, y)
 	local top = world[y - 1] and world[y - 1][x] and world[y - 1][x].active
 	local right = world[y][x + 1] and world[y][x + 1].active
@@ -28,7 +36,7 @@ local function buildTerrain(worldData, spawnCallback)
 		for x = 0, private.width - 1 do
 			local tile = worldData[y][x]
 			if tile.active then
-				local sprite = SpriteLoader.instantiate(TileData, tile.x, tile.y)
+				local sprite = SpriteLoader.instantiate(TileData, tile.x, tile.y, tilePngPath)
 
 				local sx, sy = spawnCallback(tile)
 				if sx then

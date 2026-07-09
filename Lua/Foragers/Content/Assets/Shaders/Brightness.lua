@@ -2,7 +2,7 @@ return {
 	name = "Brightness",
 	applies_to = "sprite",
 	priority = "foreground",
-	uniforms = {},
+	uniforms = { u_brightness = 0.5 },
 	code = [[
 extern float u_brightness;
 

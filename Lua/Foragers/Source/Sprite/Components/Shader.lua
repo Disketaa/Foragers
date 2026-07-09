@@ -20,8 +20,7 @@ function ShaderComponent:attach()
 
 	self.parent.shader = loaded.shader
 
-	local expected = { "u_brightness" }
-	for _, name in ipairs(expected) do
+	for name in pairs(loaded.uniforms or {}) do
 		if self.parent.shader:hasUniform(name) then
 			self._uniformWhitelist[name] = true
 		end

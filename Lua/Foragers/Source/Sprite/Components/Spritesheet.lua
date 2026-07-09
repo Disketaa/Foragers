@@ -3,33 +3,12 @@ local Events = require("Source.Helpers.Events")
 local Spritesheet = {}
 Spritesheet.__index = Spritesheet
 
-local function resolveSpriteSheet(data)
-	if data.spriteSheet then
-		return data.spriteSheet
-	end
-	for modPath, modTable in pairs(package.loaded) do
-		if type(modTable) == "table" and type(modTable.components) == "table" then
-			for _, comp in ipairs(modTable.components) do
-				if comp == data then
-					return modPath:gsub("%.", "/") .. ".png"
-				end
-			end
-		end
-	end
-	return nil
-end
-
 function Spritesheet.new(data)
-	if not data then
+	if not data or not data.spriteSheet then
 		return setmetatable({}, Spritesheet)
 	end
 
-	local spriteSheet = resolveSpriteSheet(data)
-	if not spriteSheet then
-		return setmetatable({}, Spritesheet)
-	end
-
-	local image = love.graphics.newImage(spriteSheet)
+	local image = love.graphics.newImage(data.spriteSheet)
 	if not image then
 		return setmetatable({}, Spritesheet)
 	end

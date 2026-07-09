@@ -69,9 +69,18 @@ function ParticleEmitter:_createParticle(px, py, angle)
 	}
 
 	if data.components and #data.components > 0 then
-		local compData = {}
-		for k, v in pairs(data.components[1]) do
-			compData[k] = v
+		local compData
+		for _, comp in ipairs(data.components) do
+			if comp.component == "spritesheet" then
+				compData = {}
+				for k, v in pairs(comp) do
+					compData[k] = v
+				end
+				break
+			end
+		end
+		if not compData then
+			return
 		end
 		compData.frameWidth = data.frameWidth
 		compData.frameHeight = data.frameHeight
