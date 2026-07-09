@@ -1,24 +1,11 @@
-local Sprite = require("Source.Sprite.Sprite")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
-local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
 local Collision = require("Source.Sprite.Components.Collision")
 local Merge = require("Source.Helpers.Merge")
 local WorldConfig = require("Content.Data.World") or {}
 
 local private = {}
-local tileSize = TileData and TileData.frameWidth or 8
-local compData = TileData and TileData.components and TileData.components[1] or {}
-local collidableData = nil
-if TileData and TileData.components then
-	for _, cd in ipairs(TileData.components) do
-		if cd.component == "collision" then
-			collidableData = cd
-			break
-		end
-	end
-end
 
 for k, v in pairs(WorldConfig) do
 	private[k] = v
@@ -41,11 +28,7 @@ function private.buildWorldSprites(worldData, spawnCallback)
 		for x = 0, private.width - 1 do
 			local tile = worldData[y][x]
 			if tile.active then
-				local sprite = Sprite.new(tile.x, tile.y)
-				sprite.frameWidth = tileSize
-				sprite.frameHeight = tileSize
-				sprite.pivotX = TileData.pivotX
-				sprite.pivotY = TileData.pivotY
+				local sprite = SpriteLoader.instantiate(TileData, tile.x, tile.y)
 
 				local sx, sy = spawnCallback(tile)
 				if sx then
@@ -55,19 +38,16 @@ function private.buildWorldSprites(worldData, spawnCallback)
 					sprite.y = sy
 				end
 
-				local component = ComponentRegistry.create("spritesheet", compData) or {}
-				local mask = computeMask(worldData, x, y)
 				local adj = TileData.adjacency or {}
-				local tileIndex = TilePalette.resolve(mask, adj.tileMap)
+				local tileIndex = TilePalette.resolve(computeMask(worldData, x, y), adj.tileMap)
 				tileIndex = TilePalette.resolveVariant(tileIndex, adj.variants, tile.seed)
-				component:setFrame(tileIndex)
-				sprite:addComponent(component)
 
-				if collidableData then
-					local collidableComp = Collision.new(collidableData)
-					sprite:addComponent(collidableComp)
-					collidableComp.parent = sprite
-					collidableComp:registerAsTerrain()
+				for _, comp in ipairs(sprite.components) do
+					if comp.type == "spritesheet" then
+						comp:setFrame(tileIndex)
+					elseif comp.type == "collision" then
+						comp:registerAsTerrain()
+					end
 				end
 
 				table.insert(sprites, {
