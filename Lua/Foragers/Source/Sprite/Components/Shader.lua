@@ -32,6 +32,7 @@ function ShaderComponent:attach()
 	end
 	if self._uniformWhitelist.u_brightness then
 		self.parent.shaderData.u_brightness = self.brightness
+		self.parent._shaderDirty = true
 	end
 end
 
@@ -39,6 +40,7 @@ function ShaderComponent:setBrightness(value)
 	self.brightness = math.max(0, math.min(1, value))
 	if self._uniformWhitelist.u_brightness then
 		self.parent.shaderData.u_brightness = self.brightness
+		self.parent._shaderDirty = true
 	end
 end
 
@@ -47,8 +49,10 @@ function ShaderComponent:update()
 	local brightnessTween = self.parent.tweens and self.parent.tweens.brightness
 	if brightnessTween then
 		self.parent.shaderData.u_brightness = brightnessTween:getValue()
+		self.parent._shaderDirty = true
 	elseif self._uniformWhitelist.u_brightness then
 		self.parent.shaderData.u_brightness = self.brightness
+		self.parent._shaderDirty = true
 	end
 end
 

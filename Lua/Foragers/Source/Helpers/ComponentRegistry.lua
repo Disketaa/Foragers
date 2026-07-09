@@ -33,41 +33,24 @@ local Shake = require("Source.Sprite.Components.Shake")
 local ProximityFade = require("Source.Sprite.Components.ProximityFade")
 local ShaderComponent = require("Source.Sprite.Components.Shader")
 
-ComponentRegistry.register("collision", function(data)
-	return Collision.new(data)
-end)
-ComponentRegistry.register("control", function(data)
-	return Control.new(data)
-end)
-ComponentRegistry.register("spritesheet", function(data)
-	return Spritesheet.new(data)
-end)
-ComponentRegistry.register("tween", function(data)
-	return TweenModule.Component.new(data)
-end)
-ComponentRegistry.register("sound", function(data)
-	return Sound.new(data)
-end)
-ComponentRegistry.register("particle_emitter", function(data)
-	return ParticleEmitter.new(data)
-end)
-ComponentRegistry.register("follow", function(data)
-	return Follow.new(data)
-end)
-ComponentRegistry.register("destructible", function(data)
-	return Destructible.Component.new(data)
-end)
-ComponentRegistry.register("weapon", function(data)
-	return Weapon.new(data)
-end)
-ComponentRegistry.register("shake", function(data)
-	return Shake.new(data)
-end)
-ComponentRegistry.register("proximity_fade", function(data)
-	return ProximityFade.new(data)
-end)
-ComponentRegistry.register("shader", function(data)
-	return ShaderComponent.new(data)
-end)
+local registry = {
+	collision = Collision,
+	control = Control,
+	spritesheet = Spritesheet,
+	tween = TweenModule.Component,
+	sound = Sound,
+	particle_emitter = ParticleEmitter,
+	follow = Follow,
+	destructible = Destructible.Component,
+	weapon = Weapon,
+	shake = Shake,
+	proximity_fade = ProximityFade,
+	shader = ShaderComponent,
+}
+for name, module in pairs(registry) do
+	ComponentRegistry.register(name, function(data)
+		return module.new(data)
+	end)
+end
 
 return ComponentRegistry

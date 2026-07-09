@@ -290,6 +290,7 @@ function TweenComponent.new(data)
 	return setmetatable({
 		tweens = data.tweens or {},
 		tags = data.tags or {},
+		_tweensInitialized = false,
 		type = "tween",
 	}, TweenComponent)
 end
@@ -323,7 +324,8 @@ function TweenComponent:attach()
 end
 
 function TweenComponent:update(dt)
-	if self.parent then
+	if self.parent and not self._tweensInitialized then
+		self._tweensInitialized = true
 		for _, tweenData in ipairs(self.tweens) do
 			local key = tweenData.target
 			if not self.parent.tweens[key] then

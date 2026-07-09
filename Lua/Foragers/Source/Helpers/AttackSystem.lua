@@ -57,6 +57,7 @@ function AttackSystem.update(dt, allObjects)
 
 	local ws = attacker.weaponSprite
 	local range, cooldown, damage, swing = getWeaponData(ws)
+	local rangeSq = range * range
 	local weaponFollow = getWeaponFollow(ws)
 	local ax, ay = attacker.sprite.x, attacker.sprite.y
 
@@ -72,7 +73,7 @@ function AttackSystem.update(dt, allObjects)
 			if comp.type == "destructible" and comp.hp > 0 then
 				local dx = attacker.currentTarget.x - ax
 				local dy = attacker.currentTarget.y - ay
-				if math.sqrt(dx * dx + dy * dy) <= range then
+				if dx * dx + dy * dy <= rangeSq then
 					targetValid = true
 				end
 				break
@@ -97,7 +98,7 @@ function AttackSystem.update(dt, allObjects)
 					if comp.type == "destructible" and comp.hp > 0 then
 						local dx = sprite.x - ax
 						local dy = sprite.y - ay
-						if math.sqrt(dx * dx + dy * dy) <= range then
+						if dx * dx + dy * dy <= rangeSq then
 							table.insert(candidates, sprite)
 						end
 						break

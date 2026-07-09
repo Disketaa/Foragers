@@ -38,6 +38,7 @@ function Sprite.new(x, y)
 		shader = nil,
 		shaderData = nil,
 		_shaderBroken = nil,
+		_shaderDirty = false,
 	}, Sprite)
 	return self
 end
@@ -101,8 +102,11 @@ function Sprite:draw()
 	if self.shader and not self._shaderBroken then
 		local ok, err = xpcall(function()
 			love.graphics.setShader(self.shader)
-			for k, v in pairs(self.shaderData or {}) do
-				self.shader:send(k, v)
+			if self._shaderDirty then
+				for k, v in pairs(self.shaderData or {}) do
+					self.shader:send(k, v)
+				end
+				self._shaderDirty = false
 			end
 		end, debug.traceback)
 		if ok then
