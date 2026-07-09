@@ -20,6 +20,7 @@ local Destructible = require("Source.Sprite.Components.Destructible")
 local Collision = require("Source.Sprite.Components.Collision")
 local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 local ProximityFade = require("Source.Sprite.Components.ProximityFade")
+local Drop = require("Source.Sprite.Components.Drop")
 
 local objects = {}
 local staticObjects = {}
@@ -233,6 +234,11 @@ function love.update(dt)
 		removeSpriteFromLists(sprite)
 	end
 	Destructible.clearDead()
+
+	for _, sprite in ipairs(Drop.getPending()) do
+		table.insert(objects, { instance = sprite, data = {} })
+		table.insert(dynamicObjects, { instance = sprite, data = {} })
+	end
 
 	ShaderLoader.update(dt)
 	local mouseX, mouseY = love.mouse.getPosition()

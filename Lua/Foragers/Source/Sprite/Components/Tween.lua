@@ -233,17 +233,23 @@ end
 
 ---@param value string|number
 local function parseRandomValue(value)
-	if type(value) == "string" and string.find(value, "|") then
-		local parts = {}
-		for part in string.gmatch(value, "[^|]+") do
-			local trimmed = string.match(part, "^%s*(.-)%s*$")
-			local num = tonumber(trimmed)
-			if num then
-				table.insert(parts, num)
+	if type(value) == "string" then
+		if string.find(value, "|") then
+			local parts = {}
+			for part in string.gmatch(value, "[^|]+") do
+				local trimmed = string.match(part, "^%s*(.-)%s*$")
+				local num = tonumber(trimmed)
+				if num then
+					table.insert(parts, num)
+				end
+			end
+			if #parts > 0 then
+				return parts[love.math.random(1, #parts)]
 			end
 		end
-		if #parts > 0 then
-			return parts[love.math.random(1, #parts)]
+		local min, max = value:match("^(%-?%d+%.?%d*)%.%.%.%s*(%-?%d+%.?%d*)$")
+		if min and max then
+			return love.math.random(tonumber(min), tonumber(max))
 		end
 	end
 	return tonumber(value) or value
@@ -268,7 +274,7 @@ local function applyTweens(self, tweenSet)
 		local tween = self.parent.tweens[tweenData.target]
 		tween.from = from
 		tween.to = to
-		tween.duration = tweenData.duration
+		tween.duration = parseRandomValue(tweenData.duration)
 		tween.curve = curveFunc
 		tween.loop = tweenData.loop or false
 		tween.pingPong = tweenData.pingPong or false
@@ -331,8 +337,9 @@ function TweenComponent:update(dt)
 			if not self.parent.tweens[key] then
 				local from = parseRandomValue(tweenData.from)
 				local to = parseRandomValue(tweenData.to)
+				local dur = parseRandomValue(tweenData.duration)
 				local curveFunc = Easing[tweenData.curve] or Easing.OutBack
-				self.parent.tweens[key] = createTween(key, from, to, tweenData.duration, curveFunc, tweenData.loop,
+				self.parent.tweens[key] = createTween(key, from, to, dur, curveFunc, tweenData.loop,
 					tweenData.pingPong)
 				self.parent.tweens[key]:start()
 			end

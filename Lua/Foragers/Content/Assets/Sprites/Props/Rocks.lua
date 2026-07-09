@@ -13,5 +13,10 @@ return {
 				prop_broken = { "Content/Assets/Sounds/Steps/Events/RockBreak.ogg" },
 			},
 		},
+		{
+			component = "drop",
+			sprite = "Content/Assets/Sprites/Drops/Crystal",
+			amount = "2...4",
+		},
 	},
 }
