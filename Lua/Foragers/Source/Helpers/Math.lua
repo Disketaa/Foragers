@@ -1,9 +1,5 @@
 local Math = {}
 
---- Pick a random value from a `|`-separated list string (e.g., `"-15 | 15"`).
---- Returns nil if no valid numbers found.
----@param value string
----@return number|nil
 local function pickChoice(value)
 	local parts = {}
 	for part in string.gmatch(value, "[^|]+") do
@@ -19,8 +15,6 @@ local function pickChoice(value)
 	return nil
 end
 
---- Parse `"min...max"` range syntax (supports decimals, negatives).
---- Returns min, max or nil, nil if no match.
 local function parseRangeStr(value)
 	local min, max = value:match("^(%-?%d+%.?%d*)%.%.%.%s*(%-?%d+%.?%d*)$")
 	if min and max then
