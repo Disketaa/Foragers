@@ -18,6 +18,8 @@ local function parseRange(value)
 	return value, value
 end
 
+local burstParticles = {}
+
 local ParticleEmitter = {}
 ParticleEmitter.__index = ParticleEmitter
 
@@ -161,7 +163,48 @@ function ParticleEmitter:_burst()
 		local py = hy + self.offsetY + math.random(-self.radius, self.radius)
 		local p = self:_createParticle(px, py, ang)
 		if p then
-			table.insert(self._particles, p)
+			p.drawBehind = self.drawBehind
+			table.insert(burstParticles, p)
+		end
+	end
+end
+
+function ParticleEmitter.updateBursts(dt)
+	for i = #burstParticles, 1, -1 do
+		local p = burstParticles[i]
+		if p.anim then
+			p.anim:update(dt)
+		end
+		p._age = p._age + dt
+		if p._age >= p._duration then
+			table.remove(burstParticles, i)
+		end
+	end
+end
+
+local function drawParticle(p)
+	if p.anim then
+		p.anim:draw(p.x, p.y)
+	else
+		local sx = p.flipX and -1 or 1
+		local ox = p.frameWidth * p.pivotX
+		local oy = p.frameHeight * p.pivotY
+		love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), 0, sx, 1, ox, oy)
+	end
+end
+
+function ParticleEmitter.drawBurstsBehind()
+	for _, p in ipairs(burstParticles) do
+		if p.drawBehind then
+			drawParticle(p)
+		end
+	end
+end
+
+function ParticleEmitter.drawBursts()
+	for _, p in ipairs(burstParticles) do
+		if not p.drawBehind then
+			drawParticle(p)
 		end
 	end
 end

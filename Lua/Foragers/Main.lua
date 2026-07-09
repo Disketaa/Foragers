@@ -152,11 +152,15 @@ function love.draw()
 			end
 		end
 
+		ParticleEmitter.drawBurstsBehind()
+
 		local sorted = DrawOrder.collect(dynamicObjects)
 		DrawOrder.sort(sorted)
 		for _, sprite in ipairs(sorted) do
 			sprite:draw()
 		end
+
+		ParticleEmitter.drawBursts()
 
 		if cursorSprite and cursorSprite.instance then
 			local mx, my = love.mouse.getPosition()
@@ -261,6 +265,7 @@ function love.update(dt)
 	end
 
 	AttackSystem.update(dt, dynamicObjects)
+	ParticleEmitter.updateBursts(dt)
 
 	local shakeComp = nil
 	if weaponSprite then

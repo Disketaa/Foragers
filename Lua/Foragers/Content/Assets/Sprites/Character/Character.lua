@@ -70,13 +70,13 @@ return {
 			pitchRandomness = 0.15,
 			stepInterval = 2,
 			tags = {
-				moving = {
+				run = {
 					"Content/Assets/Sounds/Steps/Grass1.ogg",
 					"Content/Assets/Sounds/Steps/Grass2.ogg",
 					"Content/Assets/Sounds/Steps/Grass3.ogg",
 					"Content/Assets/Sounds/Steps/Grass4.ogg",
 				},
-				swimming = {
+				swim = {
 					"Content/Assets/Sounds/Steps/Water1.ogg",
 					"Content/Assets/Sounds/Steps/Water2.ogg",
 					"Content/Assets/Sounds/Steps/Water3.ogg",
