@@ -118,7 +118,7 @@ local function spawnProps(worldData)
 		return props
 	end
 
-	local oldSeed = love.math.getRandomSeed()
+	local oldLow, oldHigh = love.math.getRandomSeed()
 	love.math.setRandomSeed(numProps > 0 and activeTiles[1].seed or 0)
 
 	for i = 1, math.min(numProps, #activeTiles) do
@@ -162,7 +162,7 @@ local function spawnProps(worldData)
 		})
 	end
 
-	love.math.setRandomSeed(oldSeed)
+	love.math.setRandomSeed(oldLow, oldHigh)
 
 	return props
 end

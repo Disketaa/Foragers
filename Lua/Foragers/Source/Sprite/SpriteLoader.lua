@@ -62,9 +62,6 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 
 	local function scan(path)
 		local items = love.filesystem.getDirectoryItems(path)
-		if not items then
-			return
-		end
 
 		for _, item in ipairs(items) do
 			local fullPath = path .. "/" .. item

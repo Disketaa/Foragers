@@ -84,7 +84,7 @@ function Sound:_play(state)
 	local base = set.baseSources[love.math.random(1, #set.baseSources)]
 	local source = base:clone()
 	source:setVolume(set.volume)
-	local effectivePitch = set.pitch + (math.random() * 2 - 1) * set.pitchRandomness
+	local effectivePitch = set.pitch + (love.math.random() * 2 - 1) * set.pitchRandomness
 	source:setPitch(math.max(0.1, effectivePitch))
 	source:play()
 end

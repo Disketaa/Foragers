@@ -140,7 +140,7 @@ function ParticleEmitter:_burst()
 	end
 
 	local cmin, cmax = parseRange(self.count)
-	local count = math.floor(cmin + math.random() * (cmax - cmin + 1))
+	local count = math.floor(cmin + love.math.random() * (cmax - cmin + 1))
 
 	local hx = self.parent._lastHitX or self.parent.x
 	local hy = self.parent._lastHitY or self.parent.y
@@ -151,12 +151,12 @@ function ParticleEmitter:_burst()
 	end
 
 	for i = 1, count do
-		local baseAngleDeg = angleMin and (angleMin + math.random() * (angleMax - angleMin)) or 0
+		local baseAngleDeg = angleMin and (angleMin + love.math.random() * (angleMax - angleMin)) or 0
 		local coneAng = math.rad(self.cone)
-		local spread = -coneAng / 2 + math.random() * coneAng
+		local spread = -coneAng / 2 + love.math.random() * coneAng
 		local ang = math.rad(baseAngleDeg) + spread
-		local px = hx + self.offsetX + math.random(-self.radius, self.radius)
-		local py = hy + self.offsetY + math.random(-self.radius, self.radius)
+		local px = hx + self.offsetX + love.math.random(-self.radius, self.radius)
+		local py = hy + self.offsetY + love.math.random(-self.radius, self.radius)
 		local p = self:_createParticle(px, py, ang)
 		if p then
 			p.drawBehind = self.drawBehind
