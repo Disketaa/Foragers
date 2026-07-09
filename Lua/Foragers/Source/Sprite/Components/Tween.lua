@@ -1,4 +1,5 @@
 local Events = require("Source.Helpers.Events")
+local Math = require("Source.Helpers.Math")
 
 ---@class Tween
 ---@field target string Property being tweened
@@ -231,34 +232,10 @@ local function createTween(target, from, to, duration, curve, loop, pingPong)
 	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong)
 end
 
----@param value string|number
-local function parseRandomValue(value)
-	if type(value) == "string" then
-		if string.find(value, "|") then
-			local parts = {}
-			for part in string.gmatch(value, "[^|]+") do
-				local trimmed = string.match(part, "^%s*(.-)%s*$")
-				local num = tonumber(trimmed)
-				if num then
-					table.insert(parts, num)
-				end
-			end
-			if #parts > 0 then
-				return parts[love.math.random(1, #parts)]
-			end
-		end
-		local min, max = value:match("^(%-?%d+%.?%d*)%.%.%.%s*(%-?%d+%.?%d*)$")
-		if min and max then
-			return love.math.random(tonumber(min), tonumber(max))
-		end
-	end
-	return tonumber(value) or value
-end
-
 local function applyTweens(self, tweenSet)
 	for _, tweenData in pairs(tweenSet) do
-		local from = parseRandomValue(tweenData.from)
-		local to = parseRandomValue(tweenData.to)
+		local from = Math.parseRandomValue(tweenData.from)
+		local to = Math.parseRandomValue(tweenData.to)
 		local curveFunc = Easing[tweenData.curve] or Easing.OutBack
 		if not self.parent.tweens[tweenData.target] then
 			self.parent.tweens[tweenData.target] = createTween(
@@ -274,7 +251,7 @@ local function applyTweens(self, tweenSet)
 		local tween = self.parent.tweens[tweenData.target]
 		tween.from = from
 		tween.to = to
-		tween.duration = parseRandomValue(tweenData.duration)
+		tween.duration = Math.parseRandomValue(tweenData.duration)
 		tween.curve = curveFunc
 		tween.loop = tweenData.loop or false
 		tween.pingPong = tweenData.pingPong or false
@@ -335,9 +312,9 @@ function TweenComponent:update(dt)
 		for _, tweenData in ipairs(self.tweens) do
 			local key = tweenData.target
 			if not self.parent.tweens[key] then
-				local from = parseRandomValue(tweenData.from)
-				local to = parseRandomValue(tweenData.to)
-				local dur = parseRandomValue(tweenData.duration)
+				local from = Math.parseRandomValue(tweenData.from)
+				local to = Math.parseRandomValue(tweenData.to)
+				local dur = Math.parseRandomValue(tweenData.duration)
 				local curveFunc = Easing[tweenData.curve] or Easing.OutBack
 				self.parent.tweens[key] = createTween(key, from, to, dur, curveFunc, tweenData.loop,
 					tweenData.pingPong)

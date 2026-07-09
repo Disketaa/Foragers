@@ -8,6 +8,12 @@ return {
 		},
 
 		{
+			component = "drop",
+			sprite = "Content/Assets/Sprites/Drops/Crystal",
+			amount = "1|2",
+		},
+
+		{
 			component = "tween",
 			tags = {
 				bush_touch = { { target = "angle", from = "-15 | 15", to = 0, duration = 2.5, curve = "OutBack" } },

@@ -11,6 +11,7 @@ return {
 				{ row = 1, frames = 4, speed = 6, loop = true },
 			},
 		},
+
 		{
 			component = "tween",
 			tweens = {

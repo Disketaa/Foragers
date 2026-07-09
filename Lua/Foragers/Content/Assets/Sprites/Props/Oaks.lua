@@ -13,6 +13,12 @@ return {
 		},
 
 		{
+			component = "drop",
+			sprite = "Content/Assets/Sprites/Drops/Crystal",
+			amount = "3...7",
+		},
+
+		{
 			component = "tween",
 			tags = {
 				prop_hit = {

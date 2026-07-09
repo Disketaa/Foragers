@@ -47,7 +47,7 @@ return {
 				},
 				splash = {
 					{ target = "scale_x", from = 1.25, to = 1.0, duration = 0.75, curve = "OutBack" },
-					{ target = "scale_y", from = 0.75, to = 1.0, duration = 0.5,  curve = "OutBack" },
+					{ target = "scale_y", from = 0.75, to = 1.0, duration = 0.5, curve = "OutBack" },
 				},
 			},
 		},

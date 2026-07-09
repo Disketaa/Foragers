@@ -3,6 +3,7 @@ control
 collision
 follow
 destructible
+drop
 weapon
 shake
 tween

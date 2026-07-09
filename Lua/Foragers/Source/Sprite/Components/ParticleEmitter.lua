@@ -1,22 +1,10 @@
 local Events = require("Source.Helpers.Events")
 local Path = require("Source.Helpers.Path")
+local Math = require("Source.Helpers.Math")
 
 local eventNames = {}
 for _, name in pairs(Events) do
 	eventNames[name] = true
-end
-
-local function parseRange(value)
-	if type(value) == "number" then
-		return value, value
-	end
-	if type(value) == "string" then
-		local min, max = value:match("^(%-?%d+%.?%d*)%.%.%.%s*(%-?%d+%.?%d*)$")
-		if min and max then
-			return tonumber(min), tonumber(max)
-		end
-	end
-	return value, value
 end
 
 local burstParticles = {}
@@ -149,7 +137,7 @@ function ParticleEmitter:_burst()
 		return
 	end
 
-	local cmin, cmax = parseRange(self.count)
+	local cmin, cmax = Math.parseRange(self.count)
 	local count = math.floor(cmin + love.math.random() * (cmax - cmin + 1))
 
 	local hx = self.parent._lastHitX or self.parent.x
@@ -157,7 +145,7 @@ function ParticleEmitter:_burst()
 
 	local angleMin, angleMax
 	if self.angle then
-		angleMin, angleMax = parseRange(self.angle)
+		angleMin, angleMax = Math.parseRange(self.angle)
 	end
 
 	for i = 1, count do

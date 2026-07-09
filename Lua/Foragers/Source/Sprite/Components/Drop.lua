@@ -1,19 +1,8 @@
 local Events = require("Source.Helpers.Events")
 local Path = require("Source.Helpers.Path")
 local Merge = require("Source.Helpers.Merge")
-
-local function parseRange(value)
-	if type(value) == "number" then
-		return value, value
-	end
-	if type(value) == "string" then
-		local min, max = value:match("^(%-?%d+%.?%d*)%.%.%.%s*(%-?%d+%.?%d*)$")
-		if min and max then
-			return tonumber(min), tonumber(max)
-		end
-	end
-	return value, value
-end
+local Log = require("Source.Helpers.Log")
+local Math = require("Source.Helpers.Math")
 
 local pendingDrops = {}
 
@@ -21,6 +10,9 @@ local Drop = {}
 Drop.__index = Drop
 
 function Drop.new(data)
+	if not data.sprite then
+		Log.error("Drop component missing required field 'sprite'")
+	end
 	return setmetatable({
 		sprite = data.sprite,
 		amount = data.amount or "1",
@@ -29,10 +21,10 @@ function Drop.new(data)
 end
 
 function Drop:attach()
+	if not self.sprite then return end
 	self.parent:on(Events.PROP_BROKEN, function()
 		local SpriteLoader = require("Source.Sprite.SpriteLoader")
-		local cmin, cmax = parseRange(self.amount)
-		local count = love.math.random(cmin, cmax)
+		local count = Math.parseRandomValue(self.amount)
 		local luaPath = Path.lua(self.sprite)
 		local ok, dropData = pcall(require, luaPath)
 		if ok and dropData then
