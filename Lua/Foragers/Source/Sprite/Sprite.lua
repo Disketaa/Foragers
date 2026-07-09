@@ -84,9 +84,19 @@ function Sprite:update(dt)
 	self.sortY = self.y + (self.sortOffsetY or 0)
 end
 
+local function drawComponents(sprite, predicate)
+	for _, component in ipairs(sprite.components) do
+		if not component._broken and predicate(component) and component.draw then
+			local ok, err = xpcall(component.draw, debug.traceback, component, sprite.x, sprite.y)
+			if not ok then
+				Log.error(string.format("[%s] draw: %s", component.type or "?", err))
+				component._broken = true
+			end
+		end
+	end
+end
+
 function Sprite:draw()
-	-- Shader is bound before all sprite draws and unset after normal component draws,
-	-- so only drawOnTop (debug wireframes) bypasses it.
 	local hadShader = false
 	if self.shader and not self._shaderBroken then
 		local ok, err = xpcall(function()
@@ -99,8 +109,6 @@ function Sprite:draw()
 			hadShader = true
 		else
 			Log.error("[Sprite] shader: " .. tostring(err))
-			-- Reset to default shader now so subsequent sprites in this frame
-			-- are not affected by a broken shader that's still bound on the GPU.
 			love.graphics.setShader()
 			self._shaderBroken = true
 		end
@@ -134,38 +142,16 @@ function Sprite:draw()
 			love.graphics.setColor(1, 1, 1, 1)
 		end
 	end
-	for _, component in ipairs(self.components) do
-		if not component._broken and component.drawBehind and component.draw then
-			local ok, err = xpcall(component.draw, debug.traceback, component, self.x, self.y)
-			if not ok then
-				Log.error(string.format("[%s] draw: %s", component.type or "?", err))
-				component._broken = true
-			end
-		end
-	end
-	for _, component in ipairs(self.components) do
-		if not component._broken and not component.drawBehind and not component.drawOnTop and component.draw then
-			local ok, err = xpcall(component.draw, debug.traceback, component, self.x, self.y)
-			if not ok then
-				Log.error(string.format("[%s] draw: %s", component.type or "?", err))
-				component._broken = true
-			end
-		end
-	end
+
+	drawComponents(self, function(c) return c.drawBehind end)
+
+	drawComponents(self, function(c) return not c.drawBehind and not c.drawOnTop end)
 
 	if hadShader then
 		love.graphics.setShader()
 	end
 
-	for _, component in ipairs(self.components) do
-		if not component._broken and component.drawOnTop and component.draw then
-			local ok, err = xpcall(component.draw, debug.traceback, component, self.x, self.y)
-			if not ok then
-				Log.error(string.format("[%s] draw: %s", component.type or "?", err))
-				component._broken = true
-			end
-		end
-	end
+	drawComponents(self, function(c) return c.drawOnTop end)
 end
 
 return Sprite
