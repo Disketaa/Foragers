@@ -1,3 +1,5 @@
+local Math = require("Source.Helpers.Math")
+
 ---@class ProximityFade
 ---@field parent Sprite|nil
 ---@field radius number Distance from player that triggers fade
@@ -42,7 +44,7 @@ function ProximityFade:update(dt)
 		target = self.fadeAlpha
 	end
 
-	local speed = self.smoothness > 0 and (1 - math.exp(-dt / self.smoothness)) or 1
+	local speed = Math.expSmooth(dt, self.smoothness)
 	self._currentAlpha = self._currentAlpha + (target - self._currentAlpha) * speed
 	self.parent.alpha = self._currentAlpha
 end

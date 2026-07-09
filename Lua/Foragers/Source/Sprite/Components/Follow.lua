@@ -1,3 +1,5 @@
+local Math = require("Source.Helpers.Math")
+
 ---@class Follow
 ---@field parent Sprite|nil
 ---@field followTarget Sprite|nil
@@ -77,8 +79,8 @@ function Follow:update(dt)
 
 	local sx = self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessX
 	local sy = self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessY
-	local easeX = sx > 0 and (1 - math.exp(-dt / sx)) or 1
-	local easeY = sy > 0 and (1 - math.exp(-dt / sy)) or 1
+	local easeX = Math.expSmooth(dt, sx)
+	local easeY = Math.expSmooth(dt, sy)
 
 	-- Lean only during regular character follow, not during deploy flight
 	if self._tempTarget then
@@ -107,7 +109,7 @@ function Follow:update(dt)
 			if tween._smoothness and tween._smoothness > 0 then
 				local sm = string.format("_sm_%s", key)
 				self[sm] = self[sm] or raw
-				self[sm] = self[sm] + (raw - self[sm]) * (1 - math.exp(-dt / tween._smoothness))
+				self[sm] = self[sm] + (raw - self[sm]) * Math.expSmooth(dt, tween._smoothness)
 				return self[sm]
 			end
 			return raw

@@ -21,6 +21,14 @@ return {
 		},
 
 		{
+			component = "control",
+			movementSpeed = 50,
+			swimmingSpeed = 30,
+			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
+			mouseControl = { slowdownRadius = 15 },
+		},
+
+		{
 			component = "collision",
 			mode = "solid_and_detect",
 			collisionWidth = 2,
@@ -28,14 +36,6 @@ return {
 			offsetX = 0,
 			offsetY = -2,
 			visible = false,
-		},
-
-		{
-			component = "control",
-			movementSpeed = 50,
-			swimmingSpeed = 30,
-			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
-			mouseControl = { slowdownRadius = 15 },
 		},
 
 		{
