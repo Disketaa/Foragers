@@ -49,7 +49,10 @@ Foragers/
 │   │   ├── EventEmitter.lua         # Event bus (on/emit/removeListener, priority-ordered)
 │   │   ├── Events.lua               # Event name constants (single source of truth)
 │   │   ├── Log.lua                  # Log.error wrapper (extension point for file logging)
+│   │   ├── Math.lua                 # Math utilities (expSmooth)
+│   │   ├── Merge.lua                # Data merge / extends resolution
 │   │   ├── ModLoader.lua            # Mod loader (loadAllMods only, no hot-reload)
+│   │   ├── Path.lua                 # Path conversion helpers (lua/png/moduleToPath)
 │   │   └── ShaderLoader.lua         # Shader loading/rendering
 │   ├── Sprite/
 │   │   ├── Sprite.lua               # Base sprite + xpcall-safe component dispatch
