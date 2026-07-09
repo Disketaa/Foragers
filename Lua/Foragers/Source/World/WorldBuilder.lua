@@ -3,6 +3,7 @@ local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
 local Collision = require("Source.Sprite.Components.Collision")
 local Merge = require("Source.Helpers.Merge")
+local Path = require("Source.Helpers.Path")
 local WorldConfig = require("Content.Data.World") or {}
 
 local private = {}
@@ -14,7 +15,7 @@ end
 local tilePngPath
 for k, v in pairs(package.loaded) do
 	if v == TileData then
-		tilePngPath = k:gsub("%.", "/") .. ".png"
+		tilePngPath = Path.moduleToPath(k) .. ".png"
 		break
 	end
 end
@@ -85,7 +86,7 @@ local function spawnProps(worldData)
 				propData = Merge.resolveExtends(propData)
 			end
 			local propName = cfg.data:match("([^%.]+)$"):lower()
-			local pngPath = cfg.data:gsub("%.", "/") .. ".png"
+			local pngPath = Path.moduleToPath(cfg.data) .. ".png"
 			table.insert(loadedProps, {
 				name = propName,
 				weight = cfg.weight or 1,

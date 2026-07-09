@@ -1,5 +1,5 @@
-local World = require("Content.Data.World") or {}
-local Options = require("Content.Data.Options") or {}
+local World = require("Content.Data.World")
+local Options = require("Content.Data.Options")
 
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 	require("lldebugger").start()
@@ -8,6 +8,7 @@ end
 local Sprite = require("Source.Sprite.Sprite")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Merge = require("Source.Helpers.Merge")
+local Path = require("Source.Helpers.Path")
 local WorldGen = require("Source.World.WorldGen")
 local WorldBuilder = require("Source.World.WorldBuilder")
 local Canvas = require("Source.Helpers.Canvas")
@@ -201,7 +202,7 @@ function love.update(dt)
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
 		if sprite._replaceWith then
-			local luaPath = sprite._replaceWith:gsub("[/\\]", "."):gsub("%.lua$", "")
+			local luaPath = Path.lua(sprite._replaceWith)
 			local ok, morphData = pcall(require, luaPath)
 			if ok and morphData then
 				if morphData.extends then

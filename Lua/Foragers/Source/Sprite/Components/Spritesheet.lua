@@ -8,8 +8,8 @@ function Spritesheet.new(data)
 		return setmetatable({}, Spritesheet)
 	end
 
-	local image = love.graphics.newImage(data.spriteSheet)
-	if not image then
+	local ok, image = pcall(love.graphics.newImage, data.spriteSheet)
+	if not ok or not image then
 		return setmetatable({}, Spritesheet)
 	end
 

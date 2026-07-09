@@ -1,6 +1,7 @@
 local Sprite = require("Source.Sprite.Sprite")
 local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
 local Merge = require("Source.Helpers.Merge")
+local Path = require("Source.Helpers.Path")
 
 local SpriteLoader = {}
 
@@ -70,14 +71,14 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 			if info and info.type == "directory" then
 				scan(fullPath)
 			elseif item:match("%.lua$") and not item:match("^_") then
-				local luaPath = fullPath:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
+				local luaPath = Path.lua(fullPath)
 				local success, data = pcall(require, luaPath)
 				if success and type(data) == "table" then
 					if data.extends then
 						data = Merge.resolveExtends(data)
 					end
 
-					local pngPath = fullPath:gsub("%.lua$", ".png")
+					local pngPath = Path.png(fullPath)
 					local sprite = SpriteLoader.instantiate(data, 0, 0, pngPath)
 
 					if spawnCallback then

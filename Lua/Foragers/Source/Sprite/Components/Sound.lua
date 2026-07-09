@@ -1,4 +1,5 @@
 local Events = require("Source.Helpers.Events")
+local Log = require("Source.Helpers.Log")
 
 ---@class Sound
 ---@field parent Sprite|nil
@@ -30,8 +31,12 @@ function Sound.new(data)
 			baseSources = {},
 		}
 		for _, soundPath in ipairs(sounds) do
-			local baseSource = love.audio.newSource(soundPath, "static")
-			table.insert(soundSet.baseSources, baseSource)
+			local ok, baseSource = pcall(love.audio.newSource, soundPath, "static")
+			if not ok then
+				Log.error("Failed to load sound: " .. tostring(soundPath))
+			else
+				table.insert(soundSet.baseSources, baseSource)
+			end
 		end
 		self.soundSets[stateName] = soundSet
 	end

@@ -1,4 +1,5 @@
 local Events = require("Source.Helpers.Events")
+local Path = require("Source.Helpers.Path")
 
 local eventNames = {}
 for _, name in pairs(Events) do
@@ -46,7 +47,7 @@ function ParticleEmitter.new(data)
 		type = "particle_emitter",
 	}, ParticleEmitter)
 
-	local luaPath = self.particle:gsub("[/\\]", "."):gsub("%.lua$", "")
+	local luaPath = Path.lua(self.particle)
 	local success, particleData = pcall(require, luaPath)
 	if success then
 		self._particleData = particleData
@@ -87,7 +88,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 		compData.pivotX = data.pivotX
 		compData.pivotY = data.pivotY
 		if not compData.spriteSheet then
-			compData.spriteSheet = self.particle:gsub("%.lua$", "") .. ".png"
+			compData.spriteSheet = Path.png(self.particle)
 		end
 
 		local ok, sp = pcall(function()
@@ -120,7 +121,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 		particle.anim = sp
 		particle._duration = config.frames / config.speed
 	else
-		local pngPath = self.particle:gsub("%.lua$", ".png")
+		local pngPath = Path.png(self.particle)
 		local pngInfo = love.filesystem.getInfo(pngPath)
 		if not pngInfo then
 			return

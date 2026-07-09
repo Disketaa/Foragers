@@ -38,8 +38,4 @@ function Destructible.clearDead()
 	end
 end
 
-return {
-	Component = Destructible,
-	getDead = Destructible.getDead,
-	clearDead = Destructible.clearDead,
-}
+return Destructible

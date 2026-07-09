@@ -1,3 +1,5 @@
+local Path = require("Source.Helpers.Path")
+
 local ShaderLoader = {
 	shaders = {},
 	time = 0,
@@ -15,13 +17,13 @@ function ShaderLoader.loadAll(basePath)
 			if info and info.type == "directory" then
 				scan(fullPath)
 			elseif item:match("%.lua$") then
-				local luaPath = fullPath:gsub("^/", ""):gsub("/", "."):gsub("%.lua$", "")
+				local luaPath = Path.lua(fullPath)
 				local success, data = pcall(require, luaPath)
 				if success and type(data) == "table" and data.code then
 					local ok, shader = pcall(love.graphics.newShader, data.code)
 					if ok then
 						table.insert(ShaderLoader.shaders, {
-							name = data.name or item:gsub("%.lua$", ""),
+							name = data.name or Path.lua(item),
 							applies_to = data.applies_to or "unknown",
 							priority = data.priority or "background",
 							uniforms = data.uniforms or {},
