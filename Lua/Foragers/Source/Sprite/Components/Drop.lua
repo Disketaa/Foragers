@@ -10,46 +10,59 @@ local Drop = {}
 Drop.__index = Drop
 
 function Drop.new(data)
-	if not data.sprite then
-		Log.error("Drop component missing required field 'sprite'")
+	local drops = {}
+	if data.drops then
+		for _, d in ipairs(data.drops) do
+			if d.sprite then
+				table.insert(drops, { sprite = d.sprite, amount = d.amount or "1" })
+			else
+				Log.error("Drop entry missing required field 'sprite'")
+			end
+		end
+	elseif data.sprite then
+		table.insert(drops, { sprite = data.sprite, amount = data.amount or "1" })
+	end
+	if #drops == 0 then
+		Log.error("Drop component has no drops defined")
 	end
 	return setmetatable({
-		sprite = data.sprite,
-		amount = data.amount or "1",
+		drops = drops,
 		type = "drop",
 	}, Drop)
 end
 
 function Drop:attach()
-	if not self.sprite then return end
+	if #self.drops == 0 then return end
 	self.parent:on(Events.PROP_BROKEN, function()
 		local SpriteLoader = require("Source.Sprite.SpriteLoader")
-		local count = Math.parseRandomValue(self.amount)
-		local luaPath = Path.lua(self.sprite)
-		local ok, dropData = pcall(require, luaPath)
-		if ok and dropData then
-			if dropData.extends then
-				dropData = Merge.resolveExtends(dropData)
-			end
-			local pngPath = self.sprite .. ".png"
-			for i = 1, count do
-				local newSprite = SpriteLoader.instantiate(dropData, self.parent.x, self.parent.y, pngPath)
-				if newSprite then
-					newSprite._dropBaseX = self.parent.x
-					newSprite._dropBaseY = self.parent.y
-					newSprite:addComponent({
-						type = "drop_pos",
-						update = function(self_, dt)
-							local p = self_.parent
-							if p and p.tweens and p.tweens.x then
-								p.x = p._dropBaseX + p.tweens.x:getValue()
-							end
-							if p and p.tweens and p.tweens.y then
-								p.y = p._dropBaseY + p.tweens.y:getValue()
-							end
-						end,
-					})
-					table.insert(pendingDrops, newSprite)
+		for _, dropDef in ipairs(self.drops) do
+			local count = Math.parseRandomValue(dropDef.amount)
+			local luaPath = Path.lua(dropDef.sprite)
+			local ok, dropData = pcall(require, luaPath)
+			if ok and dropData then
+				if dropData.extends then
+					dropData = Merge.resolveExtends(dropData)
+				end
+				local pngPath = dropDef.sprite .. ".png"
+				for i = 1, count do
+					local newSprite = SpriteLoader.instantiate(dropData, self.parent.x, self.parent.y, pngPath)
+					if newSprite then
+						newSprite._dropBaseX = self.parent.x
+						newSprite._dropBaseY = self.parent.y
+						newSprite:addComponent({
+							type = "drop_pos",
+							update = function(self_, dt)
+								local p = self_.parent
+								if p and p.tweens and p.tweens.x then
+									p.x = p._dropBaseX + p.tweens.x:getValue()
+								end
+								if p and p.tweens and p.tweens.y then
+									p.y = p._dropBaseY + p.tweens.y:getValue()
+								end
+							end,
+						})
+						table.insert(pendingDrops, newSprite)
+					end
 				end
 			end
 		end

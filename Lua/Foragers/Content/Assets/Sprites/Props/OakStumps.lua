@@ -3,8 +3,9 @@ return {
 	components = {
 		{
 			component = "drop",
-			sprite = "Content/Assets/Sprites/Drops/Crystal",
-			amount = "1...3",
+			drops = {
+				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "1...3" },
+			},
 		},
 
 		{

@@ -8,8 +8,9 @@ return {
 
 		{
 			component = "drop",
-			sprite = "Content/Assets/Sprites/Drops/Crystal",
-			amount = "2...4",
+			drops = {
+				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "2...4" },
+			},
 		},
 
 		{
