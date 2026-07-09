@@ -8,7 +8,7 @@ Every rule in this document is mandatory. Violating any point is an implementati
 
 ## I. Core Principles
 
-**Documentation first.** Before writing/changing code: read existing code, related modules, LÖVE2D docs (`.kilo/documentation/`, `SYMBOLS.md`), and docs for any library used. Never guess at APIs, invent methods, or change architecture you don't understand.
+**Documentation first.** Before writing/changing code: read existing code, related modules, LÖVE2D docs (`.kilo/documentation/love_api.md`), and docs for any library used. Never guess at APIs, invent methods, or change architecture you don't understand.
 
 **Check before proposing.** Before proposing a refactor, optimization, or architectural change: check section VIII (Rejected / Settled Questions) below. If the same idea was already considered and rejected, don't re-propose it without new information. If you're unsure whether something in the codebase was already discussed, tried, or reverted, check `CHANGELOG.md` before assuming it's unaddressed — it has the full history that this file only summarizes.
 

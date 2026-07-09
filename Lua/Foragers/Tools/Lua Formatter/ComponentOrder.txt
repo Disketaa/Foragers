@@ -1,6 +1,6 @@
 spritesheet
-collision
 control
+collision
 follow
 destructible
 weapon
