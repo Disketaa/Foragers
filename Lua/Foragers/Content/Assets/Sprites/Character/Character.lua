@@ -60,7 +60,7 @@ return {
 			offsetY = 0,
 			inheritFlip = true,
 			layer = "below",
-			spawnOn = { moving = true },
+			spawnOn = { run = true },
 		},
 
 		{

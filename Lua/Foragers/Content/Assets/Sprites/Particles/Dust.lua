@@ -7,7 +7,7 @@ return {
 		{
 			component = "spritesheet",
 			animations = {
-				small_dust = { row = 1, frames = 4, speed = 6, loop = false },
+				{ row = 1, frames = 4, speed = 6, loop = false },
 			},
 		},
 	},

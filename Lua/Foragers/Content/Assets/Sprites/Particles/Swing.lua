@@ -8,7 +8,7 @@ return {
 			component = "spritesheet",
 			columns = 4,
 			animations = {
-				explosion = { row = 1, frames = 4, speed = 16, loop = false },
+				{ row = 1, frames = 4, speed = 16, loop = false },
 			},
 		},
 	},
