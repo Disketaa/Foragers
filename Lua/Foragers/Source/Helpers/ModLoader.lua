@@ -3,7 +3,7 @@ local ModLoader = {}
 
 ---@param path string
 ---@return table|nil
-function ModLoader.loadMod(path)
+local function loadMod(path)
 	local success, mod = pcall(require, path)
 	if not success or type(mod) ~= "table" then
 		return nil
@@ -24,7 +24,7 @@ function ModLoader.loadAllMods(modsPath)
 			local fullPath = modsPath .. "/" .. modName
 			local info = love.filesystem.getInfo(fullPath)
 			if info and info.type == "directory" then
-				local ok, mod = pcall(ModLoader.loadMod, fullPath .. "/Mod")
+				local ok, mod = pcall(loadMod, fullPath .. "/Mod")
 				if ok and mod then
 					mods[modName] = mod
 				end

@@ -8,7 +8,6 @@ Destructible.__index = Destructible
 function Destructible.new(data)
 	return setmetatable({
 		hp = data.hp or 3,
-		maxHp = data.hp or 3,
 		replaceWith = data.replaceWith,
 		type = "destructible",
 	}, Destructible)

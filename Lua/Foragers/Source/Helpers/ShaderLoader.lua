@@ -49,16 +49,6 @@ function ShaderLoader.loadByName(name)
 	return nil
 end
 
-function ShaderLoader.getByAppliesTo(appliesTo)
-	local result = {}
-	for _, s in ipairs(ShaderLoader.shaders or {}) do
-		if s.applies_to == appliesTo then
-			table.insert(result, s)
-		end
-	end
-	return result
-end
-
 function ShaderLoader.update(dt)
 	ShaderLoader.time = ShaderLoader.time + dt
 end

@@ -83,10 +83,4 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY)
 	love.graphics.draw(self.canvas, self.offsetX + viewX, self.offsetY + viewY, 0, self.scale, self.scale)
 end
 
----Get current canvas for direct access
----@return love.Canvas
-function Canvas:getCanvas()
-	return self.canvas
-end
-
 return Canvas
