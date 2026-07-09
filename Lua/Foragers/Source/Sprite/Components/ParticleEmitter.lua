@@ -139,10 +139,6 @@ function ParticleEmitter:_burst()
 		return
 	end
 
-	if self.inheritFlip and self.parent.flipX ~= nil then
-		self._cachedFlipX = self.parent.flipX
-	end
-
 	local cmin, cmax = parseRange(self.count)
 	local count = math.floor(cmin + math.random() * (cmax - cmin + 1))
 

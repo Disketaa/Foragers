@@ -174,7 +174,7 @@ function AttackSystem.update(dt, allObjects)
 	angleTween._smoothness = swing.smoothness
 	ws.tweens.swing_angle = angleTween
 	angleTween:start()
-	ws.flipX = attacker._deployDir == -1
+	ws:emit(Events.FLIPPED, attacker._deployDir == -1)
 	ws._lastHitX = nil
 	ws._lastHitY = nil
 	ws:emit(Events.SWING)
