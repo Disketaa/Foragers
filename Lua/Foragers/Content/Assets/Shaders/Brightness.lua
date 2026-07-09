@@ -19,7 +19,7 @@ vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
 	} else {
 		mixed = mix(texColor.rgb, vec3(1.0), (t - 0.5) * 2.0);
 	}
-	return vec4(mixed, texColor.a);
+	return vec4(mixed, texColor.a * color.a);
 }
 ]],
 }
