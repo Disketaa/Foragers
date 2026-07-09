@@ -83,8 +83,12 @@ function AttackSystem.update(dt, allObjects)
 			end
 		end
 		if not targetValid and weaponFollow then
-			weaponFollow:recall()
-			attacker.currentTarget = nil
+			local committed = attacker._arrived and attacker.cooldownTimer > 0
+			if not committed and not (ws and ws.tweens and ws.tweens.swing_angle) then
+				weaponFollow:recall()
+				attacker.currentTarget = nil
+				attacker.damageTimer = nil
+			end
 		end
 	end
 
