@@ -47,11 +47,6 @@ return {
 		},
 
 		{
-			component = "shader",
-			shaderName = "Brightness",
-		},
-
-		{
 			component = "sound",
 			volume = 0.7,
 			pitchRandomness = 0.15,
@@ -62,6 +57,11 @@ return {
 					pitchRandomness = 0.3,
 				},
 			},
+		},
+
+		{
+			component = "shader",
+			shaders = { "Brightness" },
 		},
 	},
 }

@@ -11,5 +11,5 @@ shake
 tween
 particle_emitter
 proximity_fade
-shader
 sound
+shader

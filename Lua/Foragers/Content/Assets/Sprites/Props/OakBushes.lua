@@ -37,5 +37,10 @@ return {
 				prop_broken = { "Content/Assets/Sounds/Steps/Events/BushBreak.ogg" },
 			},
 		},
+
+		{
+			component = "shader",
+			shaders = { "RedSolid" },
+		},
 	},
 }

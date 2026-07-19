@@ -39,17 +39,17 @@ return {
 		},
 
 		{
-			component = "shader",
-			shaderName = "Brightness",
-		},
-
-		{
 			component = "sound",
 			volume = 0.3,
 			pitchRandomness = 0.4,
 			tags = {
 				arrived = { "Content/Assets/Sounds/Steps/Events/CrystalPling.ogg" },
 			},
+		},
+
+		{
+			component = "shader",
+			shaderName = "Brightness",
 		},
 	},
 }
