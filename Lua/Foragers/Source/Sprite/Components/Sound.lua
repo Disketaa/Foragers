@@ -83,6 +83,10 @@ function Sound:attach()
 	self.parent:on(Events.PROP_BROKEN, function()
 		self:_play("prop_broken")
 	end, 15)
+
+	self.parent:on(Events.PROP_SPAWNED, function()
+		self:_play("prop_spawned")
+	end, 15)
 end
 
 function Sound:_play(state)

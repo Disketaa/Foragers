@@ -19,6 +19,7 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `SLOWDOWN_EXIT` | `"slowdown_exit"` | Collision | Sound(15) |
 | `PROP_HIT` | `"prop_hit"` | AttackSystem | Shader(8), Tween(10), Sound(15) |
 | `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), Shake(5), Sound(15) |
+| `PROP_SPAWNED` | `"prop_spawned"` | PropSpawner | Tween(10), Sound(15) |
 | `SWING` | `"swing"` | AttackSystem | — |
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
 | `TWEEN_COMPLETED` | `"tween_completed"` | Tween | Sound(15) |

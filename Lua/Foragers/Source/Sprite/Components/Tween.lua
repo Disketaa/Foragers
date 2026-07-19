@@ -321,6 +321,12 @@ function TweenComponent:attach()
 			applyTweens(self, self.tags.arrived)
 		end
 	end, 10)
+
+	self.parent:on(Events.PROP_SPAWNED, function()
+		if self.tags.prop_spawned then
+			applyTweens(self, self.tags.prop_spawned)
+		end
+	end, 10)
 end
 
 function TweenComponent:update(dt)

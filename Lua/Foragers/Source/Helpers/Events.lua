@@ -11,5 +11,6 @@ local Events = {
 	SWING = "swing",
 	FOLLOW_ARRIVED = "follow_arrived",
 	TWEEN_COMPLETED = "tween_completed",
+	PROP_SPAWNED = "prop_spawned",
 }
 return Events

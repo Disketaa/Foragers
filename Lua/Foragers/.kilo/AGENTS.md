@@ -118,8 +118,8 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 - **Control** (`Control.lua`): **sole writer** of `parent._state` and `parent.flipX`. Writes field, then emits.
 - **Collision** (`Collision.lua`): AABB collision. Two static registries: `terrainColliders` (grounded) and `solidColliders` (blocking). Emits `grounded_changed`.
 - **Spritesheet** (`Spritesheet.lua`): quad animation. Subscribes to `state_changed` (5), emits `anim_frame`.
-- **Tween** (`Tween.lua`): drives `parent.tweens`. Subscribes to `flipped` (10), `state_changed` (10), `prop_hit` (10).
-- **Sound** (`Sound.lua`): plays sounds on events. Uses `base:clone()` (~4 clones/sec, negligible GC).
+- **Tween** (`Tween.lua`): drives `parent.tweens`. Subscribes to `flipped` (10), `state_changed` (10), `prop_hit` (10), `prop_spawned` (10).
+- **Sound** (`Sound.lua`): plays sounds on events. Uses `base:clone()` (~4 clones/sec, negligible GC). Subscribes to `prop_spawned` (15).
 - **ParticleEmitter** (`ParticleEmitter.lua`): spawns particles on events or states.
 - **Follow** (`Follow.lua`): follow-target smoothing. `deployTo()`/`recall()` for weapon attacks.
 - **Destructible** (`Destructible.lua`): HP, `takeDamage`, dead-sprite tracking. Supports `replaceWith`.
@@ -166,7 +166,7 @@ ComponentRegistry.register("my_component", function(data) return MyComponent.new
 
 - **WorldBuilder.lua** (`Source/World/WorldBuilder.lua`): exports **only** `build(tileData, spawnCallback, playerSprite)`. `playerSprite` (optional) — when provided, excludes the player's tile from initial prop spawn via collision-rect overlap check (replaces old `spawnClearance` config). Internally calls private (non-exported) `buildTerrain()` then `spawnProps()`, in that fixed order — this ordering is enforced by encapsulation, not convention, so it cannot be called out of sequence from outside the module. Both internal steps build sprites via `SpriteLoader.instantiate()` (not manual `Sprite.new()`/`ComponentRegistry.create()` calls) to avoid re-diverging from `SpriteLoader`, and each resets its own collider registry (`Collision.resetTerrain()` / `resetSolids()`) before populating. Props use weighted random + Fisher-Yates shuffle. Consumes `WorldConfig.tileSize`, `WorldConfig.props`, `WorldConfig.propCoverage`. Split from the old Generator.lua.
 
-- **PropSpawner.lua** (`Source/World/PropSpawner.lua`): `init(worldData, worldConfig, opts)` where `opts = {playerSprite}`. `update(dt)` accumulates a timer based on `worldConfig.propSpawnInterval`; when it elapses, collects all active tiles not occupied by any solid/slowdown collider or the player (via point-in-rect using each collider's `.sprite` reference position), picks a random free tile, weighted-random picks a prop from `worldConfig.props`, spawns via `SpriteLoader.instantiate()`, registers collision, and returns the new sprite. The caller (Main.lua) appends it to objects/dynamicObjects. No events — operates directly on Collision's static registries.
+- **PropSpawner.lua** (`Source/World/PropSpawner.lua`): `init(worldData, worldConfig, opts)` where `opts = {playerSprite}`. `update(dt)` accumulates a timer based on `worldConfig.propSpawnInterval`; when it elapses, collects all active tiles not occupied by any solid/slowdown collider or the player (via point-in-rect using each collider's `.sprite` reference position), picks a random free tile, weighted-random picks a prop from `worldConfig.props`, spawns via `SpriteLoader.instantiate()`, emits `PROP_SPAWNED`, registers collision, and returns the new sprite. The caller (Main.lua) appends it to objects/dynamicObjects.
 
 - **DrawOrder.lua** (`Source/Helpers/DrawOrder.lua`): `collect(entries)` fills a reusable module-level buffer with `zKey = layer * 1e6 + sortY * 1e3 + x`; `sort(list)` sorts by `zKey`. Called once per frame, single caller. No double-call guard by design — see Stage 6.2 in the history table for why this was audited and left as-is.
 

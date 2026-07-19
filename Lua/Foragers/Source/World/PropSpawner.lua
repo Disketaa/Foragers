@@ -1,5 +1,6 @@
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Collision = require("Source.Sprite.Components.Collision")
+local Events = require("Source.Helpers.Events")
 local Merge = require("Source.Helpers.Merge")
 local Path = require("Source.Helpers.Path")
 
@@ -141,6 +142,8 @@ local function update(dt)
 	end
 
 	local sprite = SpriteLoader.instantiate(chosen.data, tile.x, tile.y, chosen.pngPath)
+
+	sprite:emit(Events.PROP_SPAWNED)
 
 	sprite.flipX = math.abs(tile.seed + 7777) % 2 == 0
 
