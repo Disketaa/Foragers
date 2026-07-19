@@ -1,4 +1,5 @@
 local Path = require("Source.Helpers.Path")
+local Log = require("Source.Helpers.Log")
 
 local ShaderLoader = {
 	shaders = {},
@@ -72,7 +73,7 @@ function ShaderLoader.compose(names)
 		return entry
 	end
 	if not ok then
-		print(string.format("[ShaderLoader] compose(%s) FAILED: %s", table.concat(names, ","), tostring(entry)))
+		Log.error(string.format("ShaderLoader compose(%s) FAILED: %s", table.concat(names, ","), tostring(entry)))
 	end
 	return nil
 end
@@ -130,8 +131,8 @@ function ShaderLoader._compileProgram(names, meta)
 		.. table.concat(uvCalls, "\n")
 		.. "\n"
 		.. "	vec4 sampled = Texel(texture, uv);\n"
-		-- effect() already declares `color` as a parameter; redeclaring `vec4 color`
-		-- here is a GLSL redefinition error, so assign into the existing parameter.
+		-- effect() already declares `color` as a parameter; redeclaring `vec4 color`
+		-- here is a GLSL redefinition error, so assign into the existing parameter.
 		.. "	color = sampled;\n"
 		.. table.concat(colorCalls, "\n")
 		.. "\n"

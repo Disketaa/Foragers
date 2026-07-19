@@ -40,7 +40,7 @@ return {
 
 		{
 			component = "shader",
-			shaders = { "RedSolid" },
+			shaders = { "Wind" },
 		},
 	},
 }

@@ -58,5 +58,10 @@ return {
 				prop_broken = { "Content/Assets/Sounds/Steps/Events/WoodBreak.ogg" },
 			},
 		},
+
+		{
+			component = "shader",
+			shaders = { "Wind" },
+		},
 	},
 }

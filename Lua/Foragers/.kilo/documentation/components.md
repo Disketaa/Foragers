@@ -28,8 +28,8 @@ description: Quick reference for all 14 components — purpose, config fields, e
 
 `shaders` arrays concatenate on `extends`: the child inherits the parent's shader
 list and appends its own (parent first, no duplicates). So a base `_Props` with
-`shaders = { "Brightness" }` and a child with `shaders = { "RedSolid" }` yields
-`{ "Brightness", "RedSolid" }` for the child, while the base keeps only
+`shaders = { "Brightness" }` and a child with `shaders = { "Wind" }` yields
+`{ "Brightness", "Wind" }` for the child, while the base keeps only
 `{ "Brightness" }`. This differs from `tags` (a map, deep-merged by key) — `shaders`
 is an array, which `Merge.merge` would otherwise replace entirely, dropping the
 inherited shaders.
