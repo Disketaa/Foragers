@@ -20,6 +20,14 @@ Skip lookup only for pure Lua logic or edits that don't touch LÖVE calls.
 
 Known enums/types include: Object, DistanceModel, BlendMode, BodyType, KeyConstant, Scancode, PixelFormat, GraphicsFeature, WrapMode, ... (grep for exact name if unsure)
 
+## Documentation index
+
+| Document | Purpose |
+|---|---|
+| `.kilo/documentation/components.md` | Component cheat sheet — purpose, config, events |
+| `.kilo/documentation/data-format.md` | Sprite data file format specification |
+| `.kilo/documentation/events.md` | Event system reference — all events, emitters, priorities |
+
 ## Read before write — ENFORCED
 
 **BEFORE editing or creating ANY .lua file:**

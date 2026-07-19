@@ -4,6 +4,17 @@
 
 Every rule in this document is mandatory. Violating any point is an implementation error.
 
+## Documentation
+
+| Document | Purpose |
+|---|---|
+| `AGENTS.md` | This file — mandatory rules, architecture, principles |
+| `CHANGELOG.md` | Full history of architecture changes (check before proposing refactors) |
+| `.kilo/documentation/love_api.md` | LÖVE2D API reference (grep, never read top-to-bottom) |
+| `.kilo/documentation/components.md` | Component cheat sheet — purpose, config, events |
+| `.kilo/documentation/data-format.md` | Sprite data file format specification |
+| `.kilo/documentation/events.md` | Event system reference — all events, emitters, priorities |
+
 ---
 
 ## I. Core Principles
@@ -86,6 +97,8 @@ Rules: one module per file, clear file/module names, no junk directories, every 
 
 Sprite is a composite entity; behavior is added via components. **Components never read another component's fields in `update()` — cross-component communication is events only.**
 
+Full component reference: `.kilo/documentation/components.md`
+
 ### Sprite — Error-safe dispatch
 
 `Sprite:update(dt)` and `Sprite:draw()` wrap every component call in `xpcall(handler, debug.traceback)`. On failure:
@@ -95,34 +108,25 @@ Sprite is a composite entity; behavior is added via components. **Components nev
 
 StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
-### Components
+### Components (summary)
 
-- **Sprite** (`Sprite.lua`): holds `x`, `y`, `components`, `tweens`, `_state`, `flipX`. `:update(dt)` drives components with xpcall; `:draw()` draws `image` directly if `type == "StaticSprite"`, else delegates to components. Three draw passes: `drawBehind = true` (background), normal, then `drawOnTop = true` (debug wireframes). `:addComponent()` sets `component.parent`, calls `component:attach()`. `:on/:emit/:removeListener` proxy to `self._events`.
+13 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`.
 
-- **SpriteLoader** (`SpriteLoader.lua`): two responsibilities, kept separate.
-  - `instantiate(data, x, y, pngPath)` — **public**, ~30 lines, the single source of truth for turning a data table into a live `Sprite`: `Sprite.new()`, field copy, `ComponentRegistry.create(compData.component, compData)` per entry in `data.components`, PNG load via pcall, `type = "StaticSprite"` if no components. No file-system dependency — takes `pngPath` as a parameter, so it works identically whether `data` came from a `.lua` file or was built programmatically (e.g. by `WorldBuilder`).
-  - `loadAll(assetsPath, spawnCallback)` — file scanning only. Recursively finds `.lua` files, `require`s each, derives the matching `.png` path, calls `instantiate()`, then `spawnCallback`.
-  - **Rule:** any code that needs to turn a data table into a sprite calls `SpriteLoader.instantiate()`. Never re-implement `Sprite.new()` + `ComponentRegistry.create()` loop elsewhere — that duplication is exactly what caused the old `Generator.lua` to drift out of sync with `SpriteLoader`.
-
-- **Spritesheet** (`Spritesheet.lua`): unified component (merged `Animation.lua`). Subscribes to `state_changed` (priority 5), switches animation. `update()` advances frames, emits `anim_frame`. `draw()` reads `parent.flipX` (render-only) and `parent.tweens.scale_x/y`. Quad generation from `columns`/`rows`; auto-infers from image dimensions if absent, explicit values validated with `assert`.
-
-- **Collision** (`Collision.lua`): AABB collision (`solid`/`detect`/`solid_and_detect`). Two static registries: `terrainColliders` (grounded detection, `registerAsTerrain()`) and `solidColliders` (collision blocking, `registerAsSolid()`). Emits `grounded_changed` on change. Sliding collision resolution (try X, then Y). Never writes `parent._state`/`parent._grounded`.
-
-- **Control** (`Control.lua`): keyboard/mouse input. **Sole writer** of `parent._state` and `parent.flipX`. Writes field, then emits (field-write-before-emit). Subscribes to `grounded_changed` (priority 10), caches into `self._grounded`.
-
-- **Destructible** (`Destructible.lua`): HP, `takeDamage`, dead-sprite tracking. Supports `replaceWith` config — a path to another sprite data file (e.g. `"Content/Assets/Sprites/Props/OakStump"`). When the sprite dies, `replaceWith` is stored on `sprite._replaceWith`; Main.lua reads it during dead cleanup and spawns the replacement at the same position (spritesheet → single random frame, collision registered as solid/slowdown, other components added normally).
-
-- **Drop** (`Drop.lua`): subscribes to `PROP_BROKEN` (priority 3). Loads drop sprite data via `pcall(require)`, randomizes count via `Math.parseRandomValue` (supports `"2...4"` range and `"1|2"` choice syntax). Each drop gets an anonymous `drop_pos` component that applies scatter tweens relative to `_dropBaseX`/`_dropBaseY`. Spawned drops accumulate in a module-level `pendingDrops` queue; `Drop.getPending()` drains it once per frame in `Main.lua`. Missing `sprite` field logs an error and silently skips (mod-safe).
-
-- **Follow** (`Follow.lua`): follow-target smoothing with exponential easing; subscribes to `flipped` to cache follow direction (never reads `flipX` in `update()`). `leanAngle` + `leanThreshold` for horizontal-lean on movement. `deployTo(target, offsetX, offsetY)` overrides follow target to a prop (weapon attack); `recall()` restores character follow. Draws `parent.image` with pivot.
-
-- **Tween** (`Tween.lua`): subscribes to `flipped` (10), `state_changed` (10), `prop_hit` (10); drives `parent.tweens` (producer). Supports `loop`, `pingPong`, `Sine` curve (quarter-sine 0→1). Module exports `{Component, Tween, Easing}` — `Tween` data class and `Easing` table are available for non-component consumers (UI, camera) via `require("Source.Sprite.Components.Tween")`.
-
-- **Sound** (`Sound.lua`): subscribes to `grounded_changed` (15), `state_changed` (15), `anim_frame` (15). Uses `base:clone()` on play — pooling rejected as premature optimization (~4 clones/sec, negligible GC pressure; also technically inferior — LÖVE `Source` buffers can't be swapped post-clone, so a shared-tag pool would need N clones *per variant*, not per tag).
-
-- **ParticleEmitter** (`ParticleEmitter.lua`): subscribes to `state_changed` (8), `flipped` (12), `anim_frame` (13). All particles live in `self._particles` (drawn as part of parent's component draw, inheriting its Y-sort position). `spawnOn` config unifies two trigger types: event names (e.g. `{ swing = true }` — burst once per event) and state names (e.g. `{ moving = true }` — continuous emission while in that state, driven by `anim_frame` + `stepInterval`). `inheritFlip` (default true) caches parent `flipX` and applies it to spawned particles. `count` and `angle` support range syntax (`"3...5"`) and choice syntax (`"3|5"`) via `Math.parseRange`. `layer = "below"` sets `drawBehind = true` (renders behind parent). Lazy-requires `ComponentRegistry` inside `_spawn()` to break circular dependency. Spawns particle visuals via `ComponentRegistry.create("spritesheet", data)`, not a direct constructor call.
-
-- **Weapon** (`Weapon.lua`): weapon data container (range, cooldown, damage, swing params). Read-only data, no behavior — pure config consumed by `AttackSystem`.
+- **Sprite** (`Sprite.lua`): base entity. `:update()` drives components with xpcall; `:draw()` draws `image` directly if `type == "StaticSprite"`, else delegates. Three draw passes: `drawBehind`, normal, `drawOnTop`.
+- **SpriteLoader** (`SpriteLoader.lua`): `instantiate(data, x, y, pngPath)` is the single source of truth for turning data into live sprites. `loadAll()` scans files and calls `instantiate()`.
+- **Control** (`Control.lua`): **sole writer** of `parent._state` and `parent.flipX`. Writes field, then emits.
+- **Collision** (`Collision.lua`): AABB collision. Two static registries: `terrainColliders` (grounded) and `solidColliders` (blocking). Emits `grounded_changed`.
+- **Spritesheet** (`Spritesheet.lua`): quad animation. Subscribes to `state_changed` (5), emits `anim_frame`.
+- **Tween** (`Tween.lua`): drives `parent.tweens`. Subscribes to `flipped` (10), `state_changed` (10), `prop_hit` (10).
+- **Sound** (`Sound.lua`): plays sounds on events. Uses `base:clone()` (~4 clones/sec, negligible GC).
+- **ParticleEmitter** (`ParticleEmitter.lua`): spawns particles on events or states.
+- **Follow** (`Follow.lua`): follow-target smoothing. `deployTo()`/`recall()` for weapon attacks.
+- **Destructible** (`Destructible.lua`): HP, `takeDamage`, dead-sprite tracking. Supports `replaceWith`.
+- **Drop** (`Drop.lua`): spawns drops on `PROP_BROKEN`. Supports range/choice syntax for count.
+- **Weapon** (`Weapon.lua`): data container (range, cooldown, damage, swing). Read-only.
+- **Shake** (`Shake.lua`): screen shake on `PROP_BROKEN`.
+- **ProximityFade** (`ProximityFade.lua`): fades alpha based on player distance.
+- **Shader** (`Shader.lua`): manages shader uniforms (brightness). Subscribes to `prop_hit` (8).
 
 ---
 
@@ -130,20 +134,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 **EventEmitter** (`Source/Helpers/EventEmitter.lua`): `.new()`, `on(event, cb, priority=100)` (lower runs first), `emit(event, ...)`, `removeListener`, `clear`. Dispatch is synchronous, ascending priority.
 
-**Events** (`Source/Helpers/Events.lua`) — single source of truth for event name strings:
-
-| Event | Emitter | Listeners (priority) |
-|---|---|---|
-| `STATE_CHANGED` | Control | Spritesheet(5), Shader(7), ParticleEmitter(8), Tween(10), Sound(15) |
-| `FLIPPED` | Control | Tween(10), Shader(11), ParticleEmitter(12) |
-| `GROUNDED_CHANGED` | Collision | Control(10), Sound(15) |
-| `ANIM_FRAME` | Spritesheet (from `update()`, not `draw()`) | Sound(15), ParticleEmitter(13) |
-| `SLOWDOWN_CHANGED` | Collision | Control(10) |
-| `SLOWDOWN_ENTER` | Collision (emitted on slowdown zone sprite) | Tween(10) |
-| `SLOWDOWN_EXIT` | Collision (emitted on slowdown zone sprite) | Tween(10) |
-| `PROP_HIT` | AttackSystem (emitted on damaged target) | Shader(8), Tween(10), Sound(15) |
-| `PROP_BROKEN` | Destructible (emitted on death); AttackSystem (relayed to weapon sprite) | Drop(3), Shake(5), Sound(15) |
-| `SWING` | AttackSystem (emitted on weapon swing start) | — |
+**Events** (`Source/Helpers/Events.lua`) — single source of truth for event name strings. Full event table with emitters and listeners: `.kilo/documentation/events.md`
 
 **Rules:**
 - Subscriptions happen at construction (`new()`/`attach()`), before the game loop starts — no "first frame" fallback reads needed.
