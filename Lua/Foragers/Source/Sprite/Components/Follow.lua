@@ -7,6 +7,8 @@ local Math = require("Source.Helpers.Math")
 ---@field offsetY number
 ---@field smoothnessX number Seconds to reach target on X (0 = instant)
 ---@field smoothnessY number Seconds to reach target on Y (0 = instant)
+---@field followRadius number|nil Max distance to follow — nil = always follow
+---@field followDelay number|nil Seconds to wait before starting follow (scatter first)
 ---@field leanAngle number Degrees to tilt (flip-aware, based on weapon pos vs target)
 ---@field leanThreshold number Min pixel-delta per frame to trigger lean (lower = more sensitive)
 ---@field type "follow"
@@ -16,17 +18,30 @@ Follow.__index = Follow
 ---@param data table
 ---@return Follow
 function Follow.new(data)
+	local smoothness = data.smoothness and Math.parseRandomValue(data.smoothness)
 	return setmetatable({
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
-		smoothnessX = data.smoothnessX or 0,
-		smoothnessY = data.smoothnessY or 0,
+		smoothnessX = data.smoothnessX and Math.parseRandomValue(data.smoothnessX) or smoothness or 0,
+		smoothnessY = data.smoothnessY and Math.parseRandomValue(data.smoothnessY) or smoothness or 0,
+		followRadius = data.followRadius or nil,
+		followDelay = data.followDelay and Math.parseRandomValue(data.followDelay) or nil,
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
 		_tempOffsetX = 0,
 		_tempOffsetY = 0,
 		type = "follow",
 	}, Follow)
+end
+
+function Follow:attach()
+	if not self.parent then return end
+	for _, comp in ipairs(self.parent.components) do
+		if comp.type == "spritesheet" then
+			self._hasSpritesheet = true
+			return
+		end
+	end
 end
 
 ---@param target Sprite
@@ -70,11 +85,69 @@ function Follow:update(dt)
 		liveY = self.followTarget.y + self.offsetY
 	end
 
+	-- Check if outside activation radius (deploy always overrides)
+	local outsideRadius = not self._tempTarget and self.followRadius
+		and (self.parent.x - liveX)^2 + (self.parent.y - liveY)^2 > self.followRadius^2
+
+	-- Apply tweens outside radius from fixed base (scatter visible, not cumulative)
+	if outsideRadius then
+		if not self._scatterBaseX then
+			local tx, ty = 0, 0
+			if self.parent.tweens then
+				tx = self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
+				ty = self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+			end
+			self._scatterBaseX = self.parent.x - tx
+			self._scatterBaseY = self.parent.y - ty
+		end
+		local tx = self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
+		local ty = self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+		self.parent.x = self._scatterBaseX + tx
+		self.parent.y = self._scatterBaseY + ty
+		return
+	end
+
+	if self.followDelay and not self._delayElapsed then
+		self._delayElapsed = 0
+	end
+	if self.followDelay and self._delayElapsed then
+		self._delayElapsed = self._delayElapsed + dt
+		if self._delayElapsed < self.followDelay then
+			if not self._scatterBaseX then
+				local tx, ty = 0, 0
+				if self.parent.tweens then
+					tx = self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
+					ty = self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+				end
+				self._scatterBaseX = self.parent.x - tx
+				self._scatterBaseY = self.parent.y - ty
+			end
+			local tx = self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
+			local ty = self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+			self.parent.x = self._scatterBaseX + tx
+			self.parent.y = self._scatterBaseY + ty
+			return
+		end
+		self._scatterBaseX = nil
+		self._scatterBaseY = nil
+	end
+
+	-- Inside radius: initialize follow from current position (tween offset already baked in)
 	if self._followX == nil then
-		self._followX = liveX
-		self._followY = liveY
+		if self.followRadius then
+			-- Radius mode: start from current position for smooth entry
+			self._followX = self.parent.x
+			self._followY = self.parent.y
+		else
+			-- Standard mode (tools): snap to target position
+			self._followX = liveX
+			self._followY = liveY
+		end
 		self._prevParentX = self.parent.x
 		self._currentAngle = 0
+		-- Clear scatter base so tweens don't teleport on re-entry
+		self._scatterBaseX = nil
+		self._scatterBaseY = nil
 	end
 
 	local sx = self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessX
@@ -98,31 +171,13 @@ function Follow:update(dt)
 
 	self.parent.x = self._followX
 	self.parent.y = self._followY
-
-	if self.parent.tweens then
-		local function applyOffset(key)
-			local tween = self.parent.tweens[key]
-			if not tween then
-				return 0
-			end
-			local raw = tween:getValue()
-			if tween._smoothness and tween._smoothness > 0 then
-				local sm = string.format("_sm_%s", key)
-				self[sm] = self[sm] or raw
-				self[sm] = self[sm] + (raw - self[sm]) * Math.expSmooth(dt, tween._smoothness)
-				return self[sm]
-			end
-			return raw
-		end
-		self.parent.x = self.parent.x + applyOffset("x")
-		self.parent.y = self.parent.y + applyOffset("y")
-	end
 end
 
 ---@param x number
 ---@param y number
 function Follow:draw(x, y)
 	if not self.parent then return end
+	if self._hasSpritesheet then return end
 	if not self.parent.image then return end
 	local img = self.parent.image
 	local rot = math.rad(self._currentAngle or 0)

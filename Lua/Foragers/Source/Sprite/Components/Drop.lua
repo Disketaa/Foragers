@@ -47,20 +47,31 @@ function Drop:attach()
 				for i = 1, count do
 					local newSprite = SpriteLoader.instantiate(dropData, self.parent.x, self.parent.y, pngPath)
 					if newSprite then
-						newSprite._dropBaseX = self.parent.x
-						newSprite._dropBaseY = self.parent.y
-						newSprite:addComponent({
-							type = "drop_pos",
-							update = function(self_, dt)
-								local p = self_.parent
-								if p and p.tweens and p.tweens.x then
-									p.x = p._dropBaseX + p.tweens.x:getValue()
-								end
-								if p and p.tweens and p.tweens.y then
-									p.y = p._dropBaseY + p.tweens.y:getValue()
-								end
-							end,
-						})
+						-- Skip drop_pos when follow component is present —
+						-- follow already applies tween x/y offsets
+						local hasFollow = false
+						for _, comp in ipairs(newSprite.components) do
+							if comp.type == "follow" then
+								hasFollow = true
+								break
+							end
+						end
+						if not hasFollow then
+							newSprite._dropBaseX = self.parent.x
+							newSprite._dropBaseY = self.parent.y
+							newSprite:addComponent({
+								type = "drop_pos",
+								update = function(self_, dt)
+									local p = self_.parent
+									if p and p.tweens and p.tweens.x then
+										p.x = p._dropBaseX + p.tweens.x:getValue()
+									end
+									if p and p.tweens and p.tweens.y then
+										p.y = p._dropBaseY + p.tweens.y:getValue()
+									end
+								end,
+							})
+						end
 						table.insert(pendingDrops, newSprite)
 					end
 				end

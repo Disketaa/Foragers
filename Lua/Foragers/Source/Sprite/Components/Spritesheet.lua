@@ -1,4 +1,5 @@
 local Events = require("Source.Helpers.Events")
+local Math = require("Source.Helpers.Math")
 
 local Spritesheet = {}
 Spritesheet.__index = Spritesheet
@@ -61,7 +62,7 @@ function Spritesheet.new(data)
 			self.animations[name] = {
 				startIdx = (animDef.row - 1) * columns + 1,
 				frames = numFrames,
-				speed = animDef.speed or 1,
+				speed = animDef.speed and Math.parseRandomValue(animDef.speed) or 1,
 				loop = animDef.loop ~= false,
 			}
 		end

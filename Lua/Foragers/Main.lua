@@ -30,6 +30,7 @@ local cursorSprite = nil
 local cameraX = 0
 local cameraY = 0
 local weaponSprite = nil
+local playerSprite = nil
 local shakeOffsetX = 0
 local shakeOffsetY = 0
 local tileSize = 8
@@ -96,7 +97,7 @@ function love.load()
 		table.insert(objects, entry)
 	end
 
-	local playerSprite = nil
+	playerSprite = nil
 	for _, entry in ipairs(objects) do
 		if entry.data and entry.data.object == "player" then
 			playerSprite = entry.instance
@@ -236,6 +237,13 @@ function love.update(dt)
 	Destructible.clearDead()
 
 	for _, sprite in ipairs(Drop.getPending()) do
+		if playerSprite then
+			for _, comp in ipairs(sprite.components or {}) do
+				if comp.type == "follow" and comp.setFollowTarget then
+					comp:setFollowTarget(playerSprite)
+				end
+			end
+		end
 		table.insert(objects, { instance = sprite, data = {} })
 		table.insert(dynamicObjects, { instance = sprite, data = {} })
 	end
