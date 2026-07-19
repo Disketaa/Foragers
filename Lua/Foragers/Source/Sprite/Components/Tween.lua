@@ -346,6 +346,9 @@ function TweenComponent:update(dt)
 		for _, tween in pairs(self.parent.tweens) do
 			if tween.destroyOnComplete and tween:isFinished() and not tween._destroyHandled then
 				tween._destroyHandled = true
+				if not _pendingDestroy[self.parent] then
+					self.parent:emit(Events.TWEEN_COMPLETED)
+				end
 				_pendingDestroy[self.parent] = true
 			end
 		end

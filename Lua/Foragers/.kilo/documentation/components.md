@@ -17,7 +17,7 @@ description: Quick reference for all 13 components — purpose, config fields, e
 
 | Component | Purpose | Config | Subscribes | Emits |
 |---|---|---|---|---|
-| **tween** | Property animation on events (flip, hit, state, arrival) | `tweens`, `tags` (event→tween mappings), `destroyOnComplete` | FLIPPED (10), STATE_CHANGED (10), PROP_HIT (10), FOLLOW_ARRIVED (10) | — |
+| **tween** | Property animation on events (flip, hit, state, arrival) | `tweens`, `tags` (event→tween mappings), `destroyOnComplete` | FLIPPED (10), STATE_CHANGED (10), PROP_HIT (10), FOLLOW_ARRIVED (10) | TWEEN_COMPLETED |
 | **shake** | Screen shake on death | `magnitude`, `duration`, `decay` | PROP_BROKEN (5) | — |
 | **shader** | Shader uniform management (brightness) | `shaderName`, `brightness` | PROP_HIT (8) | — |
 | **proximity_fade** | Fade alpha based on player distance | `radius`, `fadeAlpha`, `smoothness` | — | — |
@@ -30,7 +30,7 @@ description: Quick reference for all 13 components — purpose, config fields, e
 | **destructible** | HP, takeDamage, dead-sprite tracking | `hp`, `replaceWith` | — | PROP_BROKEN |
 | **drop** | Spawn drops on PROP_BROKEN | `drops` (array of `{sprite, amount}`) | PROP_BROKEN (3) | — |
 | **weapon** | Weapon data container (range, cooldown, damage, swing) | `range`, `cooldown`, `damage`, `swing` | — | — |
-| **sound** | Sound triggered by events | `volume`, `pitch`, `pitchRandomness`, `stepInterval`, `tags` | GROUNDED_CHANGED (15), STATE_CHANGED (15), ANIM_FRAME (15), SLOWDOWN_ENTER (15), PROP_HIT (15), PROP_BROKEN (15) | — |
+| **sound** | Sound triggered by events | `volume`, `pitch`, `pitchRandomness`, `stepInterval`, `tags` | GROUNDED_CHANGED (15), STATE_CHANGED (15), ANIM_FRAME (15), SLOWDOWN_ENTER (15), PROP_HIT (15), PROP_BROKEN (15), TWEEN_COMPLETED (15) | — |
 
 ## Mode field (collision)
 
@@ -68,7 +68,7 @@ tags = { idle = "stand", run = "walk" }  -- "idle" state plays "stand" animation
 
 ## destroyOnComplete (tween)
 
-When a tween finishes and `destroyOnComplete = true`, the parent sprite is removed from the game (same frame as Destructible dead-sprite cleanup). Supports two levels:
+When all `destroyOnComplete` tweens finish, Tween emits `TWEEN_COMPLETED` (Sound subscribes) then removes the parent sprite from the game. Supports two levels:
 
 **Per-tween** — only that specific tween triggers destruction on finish:
 ```lua

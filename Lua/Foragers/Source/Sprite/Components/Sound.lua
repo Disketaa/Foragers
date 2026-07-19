@@ -76,6 +76,10 @@ function Sound:attach()
 		self:_play("prop_hit")
 	end, 15)
 
+	self.parent:on(Events.TWEEN_COMPLETED, function()
+		self:_play("arrived")
+	end, 15)
+
 	self.parent:on(Events.PROP_BROKEN, function()
 		self:_play("prop_broken")
 	end, 15)
