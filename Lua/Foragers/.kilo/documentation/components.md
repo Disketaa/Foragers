@@ -20,10 +20,19 @@ description: Quick reference for all 14 components — purpose, config fields, e
 |---|---|---|---|---|
 | **tween** | Property animation on events (flip, hit, state, arrival, spawned) | `tweens`, `tags` (event→tween mappings), `destroyOnComplete` | FLIPPED (10), STATE_CHANGED (10), PROP_HIT (10), FOLLOW_ARRIVED (10), PROP_SPAWNED (10) | TWEEN_COMPLETED |
 | **shake** | Screen shake on death | `magnitude`, `duration`, `decay` | PROP_BROKEN (5) | — |
-| **shader** | Composes multiple shader modules into one shader (uv-chain → Texel → color-chain) | `shaders` (array of module names) or `shaderName` (single, legacy) | PROP_HIT (8) | — |
-| **proximity_fade** | Fade alpha based on player distance | `radius`, `fadeAlpha`, `smoothness` | — | — |
+| **shader** | Composes multiple shader modules into one shader (uv-chain → Texel → color-chain) | `shaders` (array of module names) or `shaderName` (single, legacy) | PROP_HIT (8) | — || **proximity_fade** | Fade alpha based on player distance | `radius`, `fadeAlpha`, `smoothness` | — | — |
 | **shadow** | Texture-free pixel-perfect shadow (3-rect 1px-rounded shape) | `offsetX`, `offsetY`, `width`, `height` | — (data-only; rendered via `Shadow.renderLayer`) | — |
 | **particle_emitter** | Particle spawning (burst + continuous) | `particle`, `stepInterval`, `offsetX`, `offsetY`, `inheritFlip`, `spawnOn`, `count`, `angle`, `cone`, `radius`, `layer` | STATE_CHANGED (8), FLIPPED (12), ANIM_FRAME (13) | — |
+
+## Shader inheritance
+
+`shaders` arrays concatenate on `extends`: the child inherits the parent's shader
+list and appends its own (parent first, no duplicates). So a base `_Props` with
+`shaders = { "Brightness" }` and a child with `shaders = { "RedSolid" }` yields
+`{ "Brightness", "RedSolid" }` for the child, while the base keeps only
+`{ "Brightness" }`. This differs from `tags` (a map, deep-merged by key) — `shaders`
+is an array, which `Merge.merge` would otherwise replace entirely, dropping the
+inherited shaders.
 
 ## Gameplay
 

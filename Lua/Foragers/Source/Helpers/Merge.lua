@@ -46,6 +46,29 @@ local function _compKey(comp)
 	return comp.component .. ":" .. (comp.mergeKey or "")
 end
 
+-- Shader component merges its `shaders` array by concatenation (parent first,
+-- child appended) so children inherit base shaders plus their own. Arrays
+-- otherwise replace entirely in Merge.merge, which would drop inherited shaders.
+local function _mergeShaderShaders(base, override)
+	local baseList = base.shaders or (base.shaderName and { base.shaderName } or {})
+	local overList = override.shaders or (override.shaderName and { override.shaderName } or {})
+	local seen = {}
+	local result = {}
+	for _, name in ipairs(baseList) do
+		if not seen[name] then
+			seen[name] = true
+			table.insert(result, name)
+		end
+	end
+	for _, name in ipairs(overList) do
+		if not seen[name] then
+			seen[name] = true
+			table.insert(result, name)
+		end
+	end
+	return result
+end
+
 --- Merge data.components with inheritance: match by component key.
 --- Arrays (component lists) are matched and deep-merged by key.
 --- Components in `overrideComponents` with `_remove = true` delete the base entry.
@@ -63,7 +86,12 @@ function Merge.componentMerge(baseComponents, overrideComponents)
 		if comp._remove then
 			byKey[key] = nil
 		elseif byKey[key] then
-			byKey[key] = Merge.merge(byKey[key], comp)
+			local merged = Merge.merge(byKey[key], comp)
+			if comp.component == "shader" then
+				merged.shaders = _mergeShaderShaders(byKey[key], comp)
+				merged.shaderName = nil
+			end
+			byKey[key] = merged
 		else
 			byKey[key] = Merge._deepCopy(comp)
 		end
