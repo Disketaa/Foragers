@@ -75,6 +75,10 @@ Foragers/
 │   │       ├── Drop.lua             # Drop spawn on PROP_BROKEN (pending queue, scatter tween)
 │   │       ├── Follow.lua           # Follow-target smoothing + deployTo/recall (tools)
 │   │       ├── ParticleEmitter.lua  # Particle spawner
+│   │       ├── ProximityFade.lua    # Fades alpha based on player distance
+│   │       ├── ScrollTo.lua         # Smooth camera follow (centers camera on target)
+│   │       ├── Shader.lua           # Shader uniform management (brightness)
+│   │       ├── Shake.lua            # Screen shake on PROP_BROKEN
 │   │       ├── Sound.lua            # Sounds triggered by events
 │   │       ├── Spritesheet.lua      # Unified quad animation + spritesheet (merged Animation)
 │   │       ├── Tween.lua            # Merged Tween component + data class + easing (was Tweens.lua)
@@ -111,7 +115,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ### Components (summary)
 
-13 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`.
+14 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`.
 
 - **Sprite** (`Sprite.lua`): base entity. `:update()` drives components with xpcall; `:draw()` draws `image` directly if `type == "StaticSprite"`, else delegates. Three draw passes: `drawBehind`, normal, `drawOnTop`.
 - **SpriteLoader** (`SpriteLoader.lua`): `instantiate(data, x, y, pngPath)` is the single source of truth for turning data into live sprites. `loadAll()` scans files and calls `instantiate()`.
@@ -153,7 +157,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ## V. Component Registry
 
-`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 13 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"shader"`, `"shake"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`. Mods register new types the same way:
+`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 14 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"scroll_to"`, `"shader"`, `"shake"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`. Mods register new types the same way:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```

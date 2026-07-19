@@ -39,6 +39,11 @@ return {
 		},
 
 		{
+			component = "scroll_to",
+			smoothness = 2.0,
+		},
+
+		{
 			component = "tween",
 			tags = {
 				flip = {
@@ -84,11 +89,6 @@ return {
 				water_in = { "Content/Assets/Sounds/Steps/Events/WaterIn.ogg" },
 				water_out = { "Content/Assets/Sounds/Steps/Events/WaterOut.ogg" },
 			},
-		},
-
-		{
-			component = "scroll_to",
-			smoothness = 2.0,
 		},
 	},
 }

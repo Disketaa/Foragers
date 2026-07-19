@@ -13,6 +13,13 @@ return {
 		},
 
 		{
+			component = "follow",
+			followRadius = 25,
+			followDelay = 0.5,
+			smoothness = "0.25...0.3",
+		},
+
+		{
 			component = "tween",
 			tweens = {
 				{ target = "brightness", from = 1, to = 0.5, duration = 0.66, curve = "InOutCubic" },
@@ -32,10 +39,8 @@ return {
 		},
 
 		{
-			component = "follow",
-			followRadius = 25,
-			followDelay = 0.5,
-			smoothness = "0.25...0.3",
+			component = "shader",
+			shaderName = "Brightness",
 		},
 
 		{
@@ -45,11 +50,6 @@ return {
 			tags = {
 				arrived = { "Content/Assets/Sounds/Steps/Events/CrystalPling.ogg" },
 			},
-		},
-
-		{
-			component = "shader",
-			shaderName = "Brightness",
 		},
 	},
 }
