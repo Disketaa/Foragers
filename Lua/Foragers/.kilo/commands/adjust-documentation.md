@@ -22,6 +22,10 @@ Open each `.md` in `.kilo/documentation/` (except `love_api.md`) and grep for an
 
 Also check `AGENTS.md` — if AGENTS.md has a prose section or table that references what changed, update it.
 
+Also check `.kilo/ABSTRACTIONS.md` — if the change fixes or avoids a trap already
+logged there (or introduces a new one), update or add a short entry so future
+agents don't repeat it.
+
 ## Step 3. Update or add docs
 
 - Add new event rows to `events.md`

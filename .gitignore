@@ -1,9 +1,15 @@
-!Lua/Foragers/.kilo/
-.*/
 .editorconfig
+/Foragers/.clinerules
+/Foragers/.config
+/Foragers/.monogame-docs-md
+/Foragers/.specify
+/Foragers/.vscode
+/Lua/Foragers/.vscode
+/Lua/Foragers/Tools/Lua Formatter/__pycache__
 /Workspace/
 bin/
 dotnet-tools.json/
+Foragers/.kilo/kilo.jsonc
 Lua/Foragers/.luacheckrc
 Lua/Foragers/.stylua.toml
 Lua/Foragers/CLEANUP_PLAN.md
@@ -14,6 +20,4 @@ Lua/Foragers/love-run.bat
 Lua/Foragers/node_modules
 Lua/Foragers/package-lock.json
 Lua/Foragers/package.json
-Lua/Foragers/Tools/Lua Formatter/__pycache__
-Lua/Foragers/Tools/Lua Formatter/component_order.txt
 obj/

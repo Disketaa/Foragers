@@ -14,6 +14,7 @@ Every rule in this document is mandatory. Violating any point is an implementati
 | `.kilo/documentation/components.md` | Component cheat sheet — purpose, config, events |
 | `.kilo/documentation/data-format.md` | Sprite data file format specification |
 | `.kilo/documentation/events.md` | Event system reference — all events, emitters, priorities |
+| `.kilo/ABSTRACTIONS.md` | Hard-won lessons from past work — read the relevant section before coding in that subsystem |
 
 ---
 
