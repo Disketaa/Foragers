@@ -23,7 +23,7 @@ return {
 		},
 		{
 			data = "Content.Assets.Sprites.Props.Oaks",
-			weight = 100000,
+			weight = 1,
 		},
 	},
 }
