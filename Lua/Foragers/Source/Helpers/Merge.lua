@@ -47,24 +47,38 @@ local function _compKey(comp)
 end
 
 -- Shader component merges its `shaders` array by concatenation (parent first,
--- child appended) so children inherit base shaders plus their own. Arrays
--- otherwise replace entirely in Merge.merge, which would drop inherited shaders.
+-- child appended) so children inherit base shaders plus their own. Each entry
+-- may be a string name or a table spec { name=..., u_*=... }. Dedup by name.
 local function _mergeShaderShaders(base, override)
 	local baseList = base.shaders or (base.shaderName and { base.shaderName } or {})
 	local overList = override.shaders or (override.shaderName and { override.shaderName } or {})
 	local seen = {}
 	local result = {}
-	for _, name in ipairs(baseList) do
-		if not seen[name] then
-			seen[name] = true
-			table.insert(result, name)
+	local function add(entry)
+		local spec
+		if type(entry) == "string" then
+			spec = { name = entry }
+		elseif entry.name then
+			spec = entry
+		else
+			local name, params = next(entry)
+			spec = { name = name }
+			if type(params) == "table" then
+				for k, v in pairs(params) do
+					spec[k] = v
+				end
+			end
+		end
+		if not seen[spec.name] then
+			seen[spec.name] = true
+			table.insert(result, spec)
 		end
 	end
-	for _, name in ipairs(overList) do
-		if not seen[name] then
-			seen[name] = true
-			table.insert(result, name)
-		end
+	for _, entry in ipairs(baseList) do
+		add(entry)
+	end
+	for _, entry in ipairs(overList) do
+		add(entry)
 	end
 	return result
 end

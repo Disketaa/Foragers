@@ -4,19 +4,50 @@ local ShaderComponent = {}
 ShaderComponent.__index = ShaderComponent
 
 function ShaderComponent.new(data)
-	local names
+	local specs = {}
+	local names = {}
 	if data.shaders then
-		names = data.shaders
+		for _, s in ipairs(data.shaders) do
+			local spec
+			if type(s) == "string" then
+				spec = { name = s }
+			elseif s.name then
+				spec = s
+			else
+				-- compact form: { ShaderName = { u_* = ... } }
+				local name, params = next(s)
+				spec = { name = name }
+				if type(params) == "table" then
+					for k, v in pairs(params) do
+						spec[k] = v
+					end
+				end
+			end
+			table.insert(specs, spec)
+			table.insert(names, spec.name)
+		end
 	else
-		names = { data.shaderName or "Brightness" }
+		table.insert(specs, { name = data.shaderName or "Brightness" })
+		table.insert(names, specs[1].name)
 	end
-	return setmetatable({
+	local self = setmetatable({
 		type = "shader",
 		shaderNames = names,
+		shaderSpecs = specs,
 		brightness = data.brightness or 0.5,
 		_uniformWhitelist = {},
 		_uniformValues = {},
 	}, ShaderComponent)
+	-- Pull per-shader uniform overrides (u_*) onto the component so attach()
+	-- can read them via self[name]. Later specs override earlier ones.
+	for _, spec in ipairs(specs) do
+		for k, v in pairs(spec) do
+			if k ~= "name" then
+				self[k] = v
+			end
+		end
+	end
+	return self
 end
 
 function ShaderComponent:attach()
@@ -38,6 +69,13 @@ function ShaderComponent:attach()
 			self._uniformValues[name] = v
 			self.parent.shaderData[name] = v
 		end
+	end
+	-- u_seed: per-instance variation. If not explicitly set, derive from position
+	-- so multiple props of the same type sway out of phase.
+	if self._uniformWhitelist.u_seed and self.u_seed == nil then
+		local seed = (self.parent.x or 0) * 0.13 + (self.parent.y or 0) * 0.27
+		self._uniformValues.u_seed = seed
+		self.parent.shaderData.u_seed = seed
 	end
 	self.parent._shaderDirty = true
 end
