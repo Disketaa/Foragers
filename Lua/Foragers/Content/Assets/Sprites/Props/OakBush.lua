@@ -2,6 +2,13 @@ return {
 	extends = "Content.Assets.Sprites.Props._Props",
 	components = {
 		{
+			component = "spritesheet",
+			animations = {
+				{ row = 1, frames = 4, speed = "4...6" },
+			},
+		},
+
+		{
 			component = "shadow",
 			width = 12,
 			height = 6,
@@ -36,11 +43,6 @@ return {
 				prop_hit = { "Content/Assets/Sounds/Steps/Events/BushHit.ogg" },
 				prop_broken = { "Content/Assets/Sounds/Steps/Events/BushBreak.ogg" },
 			},
-		},
-
-		{
-			component = "shader",
-			shaders = { "Skew" },
 		},
 	},
 }

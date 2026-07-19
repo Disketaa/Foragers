@@ -7,6 +7,13 @@ return {
 	sortOffsetY = 3,
 	components = {
 		{
+			component = "spritesheet",
+			animations = {
+				{ row = 1, frames = 4, speed = "4...6" },
+			},
+		},
+
+		{
 			component = "shadow",
 			width = 24,
 			height = 6,
@@ -57,11 +64,6 @@ return {
 				prop_hit = { "Content/Assets/Sounds/Steps/Events/WoodHit.ogg" },
 				prop_broken = { "Content/Assets/Sounds/Steps/Events/WoodBreak.ogg" },
 			},
-		},
-
-		{
-			component = "shader",
-			shaders = { { Skew = { u_amount = 0.05 } } },
 		},
 	},
 }

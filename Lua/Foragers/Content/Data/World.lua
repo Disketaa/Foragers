@@ -19,11 +19,11 @@ return {
 			weight = 5,
 		},
 		{
-			data = "Content.Assets.Sprites.Props.OakBushes",
+			data = "Content.Assets.Sprites.Props.OakBushe",
 			weight = 7,
 		},
 		{
-			data = "Content.Assets.Sprites.Props.Oaks",
+			data = "Content.Assets.Sprites.Props.Oak",
 			weight = 1,
 		},
 	},
