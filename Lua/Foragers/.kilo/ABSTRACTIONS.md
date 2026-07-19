@@ -28,8 +28,10 @@ relevant section before touching that subsystem.
   and returns modified `uv`; `type = "color"` exposes `Name_color(vec4 color)`
   and returns modified `color`. Both are `module = true`.
 - **Shader component reads `shaders` (array) or legacy `shaderName` (string).**
-  Data uses `shaders = { "Brightness", "Wind" }`. Merge collapses by key
-  `"shader:"`, so a child's `shaders` overrides the base into ONE shader component.
+  Data uses `shaders = { "Brightness", "Skew" }`. Each entry may be a string
+  name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader
+  uniform overrides. Merge collapses by key `"shader:"` and concatenates the
+  `shaders` arrays (parent first, dedup by name), preserving spec params.
 - **LÖVE does NOT auto-declare uniforms.** Every uniform must be an `extern` in
   the GLSL source or `shader:send` silently does nothing. `ShaderLoader` injects
   `extern` declarations automatically from each module's `uniforms` table.

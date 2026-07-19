@@ -61,9 +61,7 @@ return {
 
 		{
 			component = "shader",
-			shaders = {
-				{ Skew = { u_amount = 0.05 } },
-			},
+			shaders = { { Skew = { u_amount = 0.05 } } },
 		},
 	},
 }
