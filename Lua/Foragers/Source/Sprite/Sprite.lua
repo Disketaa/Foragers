@@ -147,15 +147,21 @@ function Sprite:draw()
 		end
 	end
 
-	drawComponents(self, function(c) return c.drawBehind end)
+	drawComponents(self, function(c)
+		return c.drawBehind
+	end)
 
-	drawComponents(self, function(c) return not c.drawBehind and not c.drawOnTop end)
+	drawComponents(self, function(c)
+		return not c.drawBehind and not c.drawOnTop
+	end)
 
 	if hadShader then
 		love.graphics.setShader()
 	end
 
-	drawComponents(self, function(c) return c.drawOnTop end)
+	drawComponents(self, function(c)
+		return c.drawOnTop
+	end)
 end
 
 return Sprite

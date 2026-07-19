@@ -117,7 +117,7 @@ local function spawnProps(worldData, playerSprite)
 			if tile.active then
 				local skip = false
 				if playerSprite then
-					local tileRect = {x = tile.x, y = tile.y, w = tileSize, h = tileSize}
+					local tileRect = { x = tile.x, y = tile.y, w = tileSize, h = tileSize }
 					for _, comp in ipairs(playerSprite.components or {}) do
 						if comp.type == "collision" and comp.getRect then
 							if rectsOverlap(tileRect, comp:getRect()) then

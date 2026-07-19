@@ -32,7 +32,9 @@ function Drop.new(data)
 end
 
 function Drop:attach()
-	if #self.drops == 0 then return end
+	if #self.drops == 0 then
+		return
+	end
 	self.parent:on(Events.PROP_BROKEN, function()
 		local SpriteLoader = require("Source.Sprite.SpriteLoader")
 		for _, dropDef in ipairs(self.drops) do

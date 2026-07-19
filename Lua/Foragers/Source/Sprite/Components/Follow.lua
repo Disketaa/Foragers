@@ -38,7 +38,9 @@ function Follow.new(data)
 end
 
 function Follow:attach()
-	if not self.parent then return end
+	if not self.parent then
+		return
+	end
 	for _, comp in ipairs(self.parent.components) do
 		if comp.type == "spritesheet" then
 			self._hasSpritesheet = true
@@ -89,8 +91,9 @@ function Follow:update(dt)
 	end
 
 	-- Check if outside activation radius (deploy always overrides)
-	local outsideRadius = not self._tempTarget and self.followRadius
-		and (self.parent.x - liveX)^2 + (self.parent.y - liveY)^2 > self.followRadius^2
+	local outsideRadius = not self._tempTarget
+		and self.followRadius
+		and (self.parent.x - liveX) ^ 2 + (self.parent.y - liveY) ^ 2 > self.followRadius ^ 2
 
 	-- Apply tweens outside radius from fixed base (scatter visible, not cumulative)
 	if outsideRadius then
@@ -188,9 +191,15 @@ end
 ---@param x number
 ---@param y number
 function Follow:draw(x, y)
-	if not self.parent then return end
-	if self._hasSpritesheet then return end
-	if not self.parent.image then return end
+	if not self.parent then
+		return
+	end
+	if self._hasSpritesheet then
+		return
+	end
+	if not self.parent.image then
+		return
+	end
 	local img = self.parent.image
 	local rot = math.rad(self._currentAngle or 0)
 	if self.parent.tweens and self.parent.tweens.swing_angle then

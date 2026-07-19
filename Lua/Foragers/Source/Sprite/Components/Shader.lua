@@ -44,7 +44,9 @@ function ShaderComponent:setBrightness(value)
 end
 
 function ShaderComponent:update()
-	if not self.parent then return end
+	if not self.parent then
+		return
+	end
 	local brightnessTween = self.parent.tweens and self.parent.tweens.brightness
 	if brightnessTween then
 		self.parent.shaderData.u_brightness = brightnessTween:getValue()

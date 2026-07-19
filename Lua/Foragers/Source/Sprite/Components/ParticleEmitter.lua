@@ -115,7 +115,9 @@ function ParticleEmitter:_createParticle(px, py, angle)
 			return
 		end
 
-		local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
+		local ok, image = pcall(function()
+			return love.graphics.newImage(pngPath)
+		end)
 		if not ok then
 			return
 		end

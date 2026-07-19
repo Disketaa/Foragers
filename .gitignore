@@ -1,10 +1,12 @@
-.*/
 !Lua/Foragers/.kilo/
+.*/
 .editorconfig
 /Workspace/
 bin/
 dotnet-tools.json/
 Lua/Foragers/.luacheckrc
+Lua/Foragers/.stylua.toml
+Lua/Foragers/CLEANUP_PLAN.md
 Lua/Foragers/conf.lua
 Lua/Foragers/Foragers.bat
 Lua/Foragers/lldebugger.lua
@@ -13,6 +15,5 @@ Lua/Foragers/node_modules
 Lua/Foragers/package-lock.json
 Lua/Foragers/package.json
 Lua/Foragers/Tools/Lua Formatter/__pycache__
-obj/
 Lua/Foragers/Tools/Lua Formatter/component_order.txt
-Lua/Foragers/CLEANUP_PLAN.md
+obj/

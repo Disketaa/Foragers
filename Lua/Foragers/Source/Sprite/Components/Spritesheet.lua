@@ -29,14 +29,30 @@ function Spritesheet.new(data)
 	local rows = data.rows or math.floor(imageH / self.frameHeight)
 
 	if data.columns then
-		assert(imageW == data.columns * self.frameWidth,
-			string.format("Spritesheet '%s': columns=%d * frameWidth=%d = %d, but imageWidth=%d",
-				data.spriteSheet, data.columns, self.frameWidth, data.columns * self.frameWidth, imageW))
+		assert(
+			imageW == data.columns * self.frameWidth,
+			string.format(
+				"Spritesheet '%s': columns=%d * frameWidth=%d = %d, but imageWidth=%d",
+				data.spriteSheet,
+				data.columns,
+				self.frameWidth,
+				data.columns * self.frameWidth,
+				imageW
+			)
+		)
 	end
 	if data.rows then
-		assert(imageH == data.rows * self.frameHeight,
-			string.format("Spritesheet '%s': rows=%d * frameHeight=%d = %d, but imageHeight=%d",
-				data.spriteSheet, data.rows, self.frameHeight, data.rows * self.frameHeight, imageH))
+		assert(
+			imageH == data.rows * self.frameHeight,
+			string.format(
+				"Spritesheet '%s': rows=%d * frameHeight=%d = %d, but imageHeight=%d",
+				data.spriteSheet,
+				data.rows,
+				self.frameHeight,
+				data.rows * self.frameHeight,
+				imageH
+			)
+		)
 	end
 
 	self.columns = columns
@@ -50,7 +66,8 @@ function Spritesheet.new(data)
 				row * self.frameHeight,
 				self.frameWidth,
 				self.frameHeight,
-				imageW, imageH
+				imageW,
+				imageH
 			)
 		end
 	end

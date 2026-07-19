@@ -108,59 +108,91 @@ local function _bounceOut(x)
 	end
 end
 
-function Easing.Linear(x) return x end
+function Easing.Linear(x)
+	return x
+end
 
-function Easing.InSine(x) return 1 - math.cos((x * math.pi) / 2) end
+function Easing.InSine(x)
+	return 1 - math.cos((x * math.pi) / 2)
+end
 
-function Easing.OutSine(x) return math.sin((x * math.pi) / 2) end
+function Easing.OutSine(x)
+	return math.sin((x * math.pi) / 2)
+end
 
-function Easing.InOutSine(x) return -(math.cos(math.pi * x) - 1) / 2 end
+function Easing.InOutSine(x)
+	return -(math.cos(math.pi * x) - 1) / 2
+end
 
-function Easing.InQuad(x) return x * x end
+function Easing.InQuad(x)
+	return x * x
+end
 
-function Easing.OutQuad(x) return 1 - (1 - x) * (1 - x) end
+function Easing.OutQuad(x)
+	return 1 - (1 - x) * (1 - x)
+end
 
 function Easing.InOutQuad(x)
 	return x < 0.5 and 2 * x * x or 1 - ((-2 * x + 2) ^ 2) / 2
 end
 
-function Easing.InCubic(x) return x * x * x end
+function Easing.InCubic(x)
+	return x * x * x
+end
 
-function Easing.OutCubic(x) return 1 - ((1 - x) ^ 3) end
+function Easing.OutCubic(x)
+	return 1 - ((1 - x) ^ 3)
+end
 
 function Easing.InOutCubic(x)
 	return x < 0.5 and 4 * x * x * x or 1 - ((-2 * x + 2) ^ 3) / 2
 end
 
-function Easing.InQuart(x) return x * x * x * x end
+function Easing.InQuart(x)
+	return x * x * x * x
+end
 
-function Easing.OutQuart(x) return 1 - ((1 - x) ^ 4) end
+function Easing.OutQuart(x)
+	return 1 - ((1 - x) ^ 4)
+end
 
 function Easing.InOutQuart(x)
 	return x < 0.5 and 8 * x * x * x * x or 1 - ((-2 * x + 2) ^ 4) / 2
 end
 
-function Easing.InQuint(x) return x * x * x * x * x end
+function Easing.InQuint(x)
+	return x * x * x * x * x
+end
 
-function Easing.OutQuint(x) return 1 - ((1 - x) ^ 5) end
+function Easing.OutQuint(x)
+	return 1 - ((1 - x) ^ 5)
+end
 
 function Easing.InOutQuint(x)
 	return x < 0.5 and 16 * x * x * x * x * x or 1 - ((-2 * x + 2) ^ 5) / 2
 end
 
 function Easing.InExpo(x)
-	if x == 0 then return 0 end
+	if x == 0 then
+		return 0
+	end
 	return 2 ^ (10 * x - 10)
 end
 
 function Easing.OutExpo(x)
-	if x == 1 then return 1 end
+	if x == 1 then
+		return 1
+	end
 	return 1 - 2 ^ (-10 * x)
 end
 
 function Easing.InOutExpo(x)
-	if x == 0 then return 0 end
-	if x == 1 then return 1 end
+	if x == 0 then
+		return 0
+	end
+	if x == 1 then
+		return 1
+	end
 	if x < 0.5 then
 		return (2 ^ (20 * x - 10)) / 2
 	else
@@ -177,9 +209,7 @@ function Easing.OutCirc(x)
 end
 
 function Easing.InOutCirc(x)
-	return x < 0.5
-		and (1 - math.sqrt(1 - (2 * x) ^ 2)) / 2
-		or (math.sqrt(1 - ((-2 * x + 2) ^ 2)) + 1) / 2
+	return x < 0.5 and (1 - math.sqrt(1 - (2 * x) ^ 2)) / 2 or (math.sqrt(1 - ((-2 * x + 2) ^ 2)) + 1) / 2
 end
 
 function Easing.InBack(x)
@@ -191,28 +221,38 @@ function Easing.OutBack(x)
 end
 
 function Easing.InOutBack(x)
-	return x < 0.5
-		and ((2 * x) ^ 2 * ((_c2 + 1) * 2 * x - _c2)) / 2
+	return x < 0.5 and ((2 * x) ^ 2 * ((_c2 + 1) * 2 * x - _c2)) / 2
 		or (((2 * x - 2) ^ 2) * ((_c2 + 1) * (x * 2 - 2) + _c2) + 2) / 2
 end
 
 function Easing.InElastic(x)
-	if x == 0 then return 0 end
-	if x == 1 then return 1 end
+	if x == 0 then
+		return 0
+	end
+	if x == 1 then
+		return 1
+	end
 	return -(2 ^ (10 * x - 10)) * math.sin((x * 10 - 10.75) * _c4)
 end
 
 function Easing.OutElastic(x)
-	if x == 0 then return 0 end
-	if x == 1 then return 1 end
+	if x == 0 then
+		return 0
+	end
+	if x == 1 then
+		return 1
+	end
 	return (2 ^ (-10 * x)) * math.sin((x * 10 - 0.75) * _c4) + 1
 end
 
 function Easing.InOutElastic(x)
-	if x == 0 then return 0 end
-	if x == 1 then return 1 end
-	return x < 0.5
-		and -((2 ^ (20 * x - 10)) * math.sin((20 * x - 11.125) * _c5)) / 2
+	if x == 0 then
+		return 0
+	end
+	if x == 1 then
+		return 1
+	end
+	return x < 0.5 and -((2 ^ (20 * x - 10)) * math.sin((20 * x - 11.125) * _c5)) / 2
 		or ((2 ^ (-20 * x + 10)) * math.sin((20 * x - 11.125) * _c5)) / 2 + 1
 end
 
@@ -225,9 +265,7 @@ function Easing.OutBounce(x)
 end
 
 function Easing.InOutBounce(x)
-	return x < 0.5
-		and (1 - _bounceOut(1 - 2 * x)) / 2
-		or (1 + _bounceOut(2 * x - 1)) / 2
+	return x < 0.5 and (1 - _bounceOut(1 - 2 * x)) / 2 or (1 + _bounceOut(2 * x - 1)) / 2
 end
 
 local _pendingDestroy = {}
@@ -340,8 +378,16 @@ function TweenComponent:update(dt)
 				local to = Math.parseRandomValue(tweenData.to)
 				local dur = Math.parseRandomValue(tweenData.duration)
 				local curveFunc = Easing[tweenData.curve] or Easing.OutBack
-				self.parent.tweens[key] = createTween(key, from, to, dur, curveFunc, tweenData.loop,
-					tweenData.pingPong, tweenData.destroyOnComplete)
+				self.parent.tweens[key] = createTween(
+					key,
+					from,
+					to,
+					dur,
+					curveFunc,
+					tweenData.loop,
+					tweenData.pingPong,
+					tweenData.destroyOnComplete
+				)
 				self.parent.tweens[key]:start()
 			end
 		end
