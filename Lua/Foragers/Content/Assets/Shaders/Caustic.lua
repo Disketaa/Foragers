@@ -24,6 +24,8 @@ extern float glow_intensity;
 extern float glow_threshold;
 extern float opacity_variation;
 extern float time;
+extern float camera_x;
+extern float camera_y;
 
 float simpleHash(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
@@ -53,8 +55,11 @@ vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
          1.0,  2.0, 2.0
     );
 
-    vec4 cp = vec4(screen_coords.x / horizontal_scale / 100.0,
-                   screen_coords.y / vertical_scale / 100.0,
+    // bgCanvas has no translate, so subtract camera offset from screen_coords to match world space (no parallax, 1x with world)
+    vec2 world_coords = screen_coords - vec2(camera_x, camera_y);
+
+    vec4 cp = vec4(world_coords.x / horizontal_scale / 100.0,
+                   world_coords.y / vertical_scale / 100.0,
                    0.0, ct);
 
     vec3 tc1 = vec3(cp.x, cp.y, cp.w) * (cm * 0.5);
@@ -83,7 +88,7 @@ vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
 
     if (opacity_variation > 0.0) {
         float scale = max(horizontal_scale, vertical_scale);
-        float noise = smoothNoise(screen_coords * (0.005 / scale) + ct * 0.05);
+        float noise = smoothNoise(world_coords * (0.005 / scale) + ct * 0.05);
         alpha *= mix(1.0, 1.0 - noise, opacity_variation);
     }
 

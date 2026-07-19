@@ -3,6 +3,8 @@ local Path = require("Source.Helpers.Path")
 local ShaderLoader = {
 	shaders = {},
 	time = 0,
+	cameraX = 0,
+	cameraY = 0,
 }
 
 function ShaderLoader.loadAll(basePath)
@@ -52,10 +54,22 @@ function ShaderLoader.update(dt)
 	ShaderLoader.time = ShaderLoader.time + dt
 end
 
+function ShaderLoader.setCamera(x, y)
+	ShaderLoader.cameraX = x
+	ShaderLoader.cameraY = y
+end
+
 function ShaderLoader.drawBackground(canvasWidth, canvasHeight)
 	for _, s in ipairs(ShaderLoader.shaders or {}) do
 		if s.applies_to == "screen" and s.priority == "background" then
 			s.shader:send("time", ShaderLoader.time)
+			-- Send camera uniforms if shader declares them (pcall to avoid error on missing uniform)
+			pcall(function()
+				s.shader:send("camera_x", ShaderLoader.cameraX)
+			end)
+			pcall(function()
+				s.shader:send("camera_y", ShaderLoader.cameraY)
+			end)
 			for name, value in pairs(s.uniforms) do
 				s.shader:send(name, value)
 			end

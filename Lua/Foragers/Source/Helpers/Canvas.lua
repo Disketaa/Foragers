@@ -59,10 +59,14 @@ end
 ---@param clearColor table|nil Optional {r,g,b,a} to clear canvas with instead of transparent
 ---@param viewX number|nil Camera offset X (shifts canvas draw position)
 ---@param viewY number|nil Camera offset Y (shifts canvas draw position)
-function Canvas:draw(drawFunc, clearColor, viewX, viewY)
-	-- fractional offset creates sub-pixel seams with nearest-filtered canvas
+---@param subX number|nil Sub-pixel offset X (0..1, for smooth canvas movement)
+---@param subY number|nil Sub-pixel offset Y (0..1, for smooth canvas movement)
+function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY)
+	-- Floor view offset for pixel-perfect canvas rendering (prevents sub-pixel seams)
 	viewX = math.floor(viewX or 0)
 	viewY = math.floor(viewY or 0)
+	subX = subX or 0
+	subY = subY or 0
 
 	if self.mode == "inner" then
 		local r, g, b =
@@ -80,7 +84,12 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY)
 		drawFunc()
 	end
 	love.graphics.setCanvas()
-	love.graphics.draw(self.canvas, self.offsetX + viewX, self.offsetY + viewY, 0, self.scale, self.scale)
+
+	-- viewX/Y is floored (discrete); subX/subY is the fractional remainder scaled to screen pixels for smooth scroll
+	local finalX = self.offsetX + viewX + subX * self.scale
+	local finalY = self.offsetY + viewY + subY * self.scale
+
+	love.graphics.draw(self.canvas, finalX, finalY, 0, self.scale, self.scale)
 end
 
 return Canvas

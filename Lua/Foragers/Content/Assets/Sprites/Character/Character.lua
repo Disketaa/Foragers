@@ -85,5 +85,10 @@ return {
 				water_out = { "Content/Assets/Sounds/Steps/Events/WaterOut.ogg" },
 			},
 		},
+
+		{
+			component = "scroll_to",
+			smoothness = 2.0,
+		},
 	},
 }

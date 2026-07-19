@@ -1,6 +1,7 @@
 spritesheet
 control
 collision
+scroll_to
 follow
 destructible
 drop

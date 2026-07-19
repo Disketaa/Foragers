@@ -28,9 +28,15 @@ local objects = {}
 local staticObjects = {}
 local dynamicObjects = {}
 local canvas = Canvas.new(480, 270, "outer")
+local bgCanvas = Canvas.new(480, 270, "outer")
 local cursorSprite = nil
 local cameraX = 0
 local cameraY = 0
+local camPixelX = 0
+local camPixelY = 0
+local camSubX = 0
+local camSubY = 0
+local scrollToComp = nil
 local weaponSprite = nil
 local playerSprite = nil
 local shakeOffsetX = 0
@@ -40,9 +46,22 @@ local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
 
 local function updateCamera()
-	-- integer translate only: fractional causes sub-pixel gaps with nearest filtering
-	cameraX = math.floor((canvas.width - worldPixelWidth) / 2)
-	cameraY = math.floor((canvas.height - worldPixelHeight) / 2)
+	if scrollToComp then
+		local targetX, targetY = scrollToComp:getCameraOffset()
+		-- Center camera on target
+		cameraX = (canvas.width / 2) - targetX
+		cameraY = (canvas.height / 2) - targetY
+	else
+		-- fallback: center on world
+		cameraX = math.floor((canvas.width - worldPixelWidth) / 2)
+		cameraY = math.floor((canvas.height - worldPixelHeight) / 2)
+	end
+
+	-- Split into integer pixel offset + fractional sub-pixel remainder
+	camPixelX = math.floor(cameraX)
+	camPixelY = math.floor(cameraY)
+	camSubX = cameraX - camPixelX
+	camSubY = cameraY - camPixelY
 end
 
 local function getSpawnPosition(data)
@@ -119,6 +138,17 @@ function love.load()
 			table.insert(dynamicObjects, entry)
 			table.insert(objects, entry)
 		end
+		-- Find scroll_to component for camera
+		for _, comp in ipairs(playerSprite.components or {}) do
+			if comp.type == "scroll_to" then
+				scrollToComp = comp
+				comp:setFollowTarget(playerSprite)
+				-- Initialize camera to player position for smooth start
+				comp._currentX = playerSprite.x + (comp.offsetX or 0)
+				comp._currentY = playerSprite.y + (comp.offsetY or 0)
+				break
+			end
+		end
 		AttackSystem.registerAttacker(playerSprite, toolEntries[1] and toolEntries[1].instance)
 		weaponSprite = toolEntries[1] and toolEntries[1].instance
 	end
@@ -141,6 +171,7 @@ end
 
 function love.resize(w, h)
 	canvas:resize(w, h)
+	bgCanvas:resize(w, h)
 	updateCamera()
 end
 
@@ -151,11 +182,18 @@ local function screenToWorld(screenX, screenY)
 end
 
 function love.draw()
-	canvas:draw(function()
-		ShaderLoader.drawBackground(canvas.width, canvas.height)
+	ShaderLoader.setCamera(camPixelX, camPixelY)
 
+	-- Background canvas: same movement as world (sticky to camera, no parallax)
+	-- Shader compensates for missing translate via camera_x/y uniform
+	bgCanvas:draw(function()
+		ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
+	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY)
+
+	-- Main world canvas
+	canvas:draw(function()
 		love.graphics.push()
-		love.graphics.translate(cameraX, cameraY)
+		love.graphics.translate(camPixelX, camPixelY)
 
 		-- Static terrain (pre-ordered by generation — no sorting needed)
 		for _, entry in ipairs(staticObjects) do
@@ -183,7 +221,7 @@ function love.draw()
 		end
 
 		love.graphics.pop()
-	end, World.backgroundColor, shakeOffsetX, shakeOffsetY)
+	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY)
 end
 
 local function removeSpriteFromLists(sprite)
@@ -294,6 +332,12 @@ function love.update(dt)
 			entry.instance:update(dt)
 		end
 	end
+
+	-- Update camera from scroll_to component
+	if scrollToComp then
+		scrollToComp:update(dt)
+	end
+	updateCamera()
 
 	AttackSystem.update(dt, dynamicObjects)
 	ParticleEmitter.updateBursts(dt)
