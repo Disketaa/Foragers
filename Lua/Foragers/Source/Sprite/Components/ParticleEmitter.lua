@@ -148,7 +148,7 @@ function ParticleEmitter:_burst()
 		angleMin, angleMax = Math.parseRange(self.angle)
 	end
 
-	for i = 1, count do
+	for _ = 1, count do
 		local baseAngleDeg = angleMin and (angleMin + love.math.random() * (angleMax - angleMin)) or 0
 		local coneAng = math.rad(self.cone)
 		local spread = -coneAng / 2 + love.math.random() * coneAng

@@ -31,12 +31,12 @@ function Spritesheet.new(data)
 	if data.columns then
 		assert(imageW == data.columns * self.frameWidth,
 			string.format("Spritesheet '%s': columns=%d * frameWidth=%d = %d, but imageWidth=%d",
-				spriteSheet, data.columns, self.frameWidth, data.columns * self.frameWidth, imageW))
+				data.spriteSheet, data.columns, self.frameWidth, data.columns * self.frameWidth, imageW))
 	end
 	if data.rows then
 		assert(imageH == data.rows * self.frameHeight,
 			string.format("Spritesheet '%s': rows=%d * frameHeight=%d = %d, but imageHeight=%d",
-				spriteSheet, data.rows, self.frameHeight, data.rows * self.frameHeight, imageH))
+				data.spriteSheet, data.rows, self.frameHeight, data.rows * self.frameHeight, imageH))
 	end
 
 	self.columns = columns

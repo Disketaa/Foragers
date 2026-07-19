@@ -243,7 +243,8 @@ local function applyTweens(self, tweenSet)
 			local from = Math.parseRandomValue(tweenData.from)
 			local to = Math.parseRandomValue(tweenData.to)
 			local curveFunc = Easing[tweenData.curve] or Easing.OutBack
-			local destroyOnComplete = tweenData.destroyOnComplete ~= nil and tweenData.destroyOnComplete or globalDestroyOnComplete
+			local destroyOnComplete = tweenData.destroyOnComplete ~= nil and tweenData.destroyOnComplete
+				or globalDestroyOnComplete
 			if not self.parent.tweens[tweenData.target] then
 				self.parent.tweens[tweenData.target] = createTween(
 					tweenData.target,

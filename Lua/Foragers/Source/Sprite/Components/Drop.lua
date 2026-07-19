@@ -44,7 +44,7 @@ function Drop:attach()
 					dropData = Merge.resolveExtends(dropData)
 				end
 				local pngPath = dropDef.sprite .. ".png"
-				for i = 1, count do
+				for _ = 1, count do
 					local newSprite = SpriteLoader.instantiate(dropData, self.parent.x, self.parent.y, pngPath)
 					if newSprite then
 						-- Skip drop_pos when follow component is present —

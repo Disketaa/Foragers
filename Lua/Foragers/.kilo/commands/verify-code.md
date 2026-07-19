@@ -10,6 +10,10 @@ A task is not complete when the code "runs on launch". Explicitly verify it won'
 
 List every .lua file you created or modified in this task. The checklist below runs **per file individually**, not on the whole project — otherwise it's easy to skip a file that looked "too simple to have anything wrong".
 
+## Step 1.5 Lint check
+
+Run `npm run lint` (or `.\Tools\luacheck.exe Source`) to verify no static analysis errors. Fix any warnings before proceeding.
+
 ## Step 2. Category checklist
 
 For each file from step 1, go through all items. Answer not with "yes/no" but point to a specific line if you find an issue.
