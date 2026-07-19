@@ -22,6 +22,7 @@ description: Quick reference for all 14 components — purpose, config fields, e
 | **shake** | Screen shake on death | `magnitude`, `duration`, `decay` | PROP_BROKEN (5) | — |
 | **shader** | Shader uniform management (brightness) | `shaderName`, `brightness` | PROP_HIT (8) | — |
 | **proximity_fade** | Fade alpha based on player distance | `radius`, `fadeAlpha`, `smoothness` | — | — |
+| **shadow** | Texture-free pixel-perfect shadow (3-rect 1px-rounded shape) | `offsetX`, `offsetY`, `width`, `height` | — (data-only; rendered via `Shadow.renderLayer`) | — |
 | **particle_emitter** | Particle spawning (burst + continuous) | `particle`, `stepInterval`, `offsetX`, `offsetY`, `inheritFlip`, `spawnOn`, `count`, `angle`, `cone`, `radius`, `layer` | STATE_CHANGED (8), FLIPPED (12), ANIM_FRAME (13) | — |
 
 ## Gameplay

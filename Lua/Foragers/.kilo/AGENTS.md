@@ -115,7 +115,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ### Components (summary)
 
-14 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`.
+15 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`.
 
 - **Sprite** (`Sprite.lua`): base entity. `:update()` drives components with xpcall; `:draw()` draws `image` directly if `type == "StaticSprite"`, else delegates. Three draw passes: `drawBehind`, normal, `drawOnTop`.
 - **SpriteLoader** (`SpriteLoader.lua`): `instantiate(data, x, y, pngPath)` is the single source of truth for turning data into live sprites. `loadAll()` scans files and calls `instantiate()`.
@@ -132,6 +132,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 - **Shake** (`Shake.lua`): screen shake on `PROP_BROKEN`.
 - **ProximityFade** (`ProximityFade.lua`): fades alpha based on player distance.
 - **Shader** (`Shader.lua`): manages shader uniforms (brightness). Subscribes to `prop_hit` (8).
+- **Shadow** (`Shadow.lua`): texture-free pixel-perfect shadow. Data-only component (`offsetX`, `offsetY`, `width`, `height`); no `update`/`draw`. The shadow CENTER is the sprite's pivot point in world space (`sprite.x, sprite.y` — where the pivot pixel is drawn) plus `offsetX/offsetY`, so `offset 0,0` centers the shadow exactly on the pivot point for any `pivotX/pivotY`. Mods shift `offsetY` to drop the shadow under the feet. `Shadow.renderLayer(sprites, w, h, camX, camY)` (called from Main inside the world canvas, after terrain and before the sorted sprites, with the world camera translate active) renders every shadow to its own canvas in screen space (`origin()` resets the active translate; the camera offset is baked into the coordinates), then composites that canvas once at `layerAlpha` in screen space — overlapping shadows union instead of summing, and the blend pipeline is touched once per frame. Shape is a 1px-corner-rounded rect drawn with 3 `love.graphics.rectangle` calls (top strip, full-width middle, bottom strip).
 
 ---
 
@@ -157,7 +158,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ## V. Component Registry
 
-`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 14 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"scroll_to"`, `"shader"`, `"shake"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`. Mods register new types the same way:
+`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 15 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"scroll_to"`, `"shader"`, `"shake"`, `"shadow"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`. Mods register new types the same way:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```

@@ -34,6 +34,7 @@ local ProximityFade = require("Source.Sprite.Components.ProximityFade")
 local ShaderComponent = require("Source.Sprite.Components.Shader")
 local Drop = require("Source.Sprite.Components.Drop")
 local ScrollTo = require("Source.Sprite.Components.ScrollTo")
+local Shadow = require("Source.Sprite.Components.Shadow")
 
 local registry = {
 	collision = Collision,
@@ -50,6 +51,7 @@ local registry = {
 	shader = ShaderComponent,
 	drop = Drop,
 	scroll_to = ScrollTo,
+	shadow = Shadow,
 }
 for name, module in pairs(registry) do
 	ComponentRegistry.register(name, function(data)

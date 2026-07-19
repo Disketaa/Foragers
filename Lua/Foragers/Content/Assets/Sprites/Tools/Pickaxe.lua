@@ -7,6 +7,14 @@ return {
 	layer = 0,
 	components = {
 		{
+			component = "shadow",
+			width = 9,
+			height = 3,
+			offsetX = 1,
+			offsetY = 4,
+		},
+
+		{
 			component = "follow",
 			offsetX = 6,
 			offsetY = -3,

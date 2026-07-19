@@ -2,6 +2,14 @@ return {
 	extends = "Content.Assets.Sprites.Props._Props",
 	components = {
 		{
+			component = "shadow",
+			width = 12,
+			height = 6,
+			offsetX = 2,
+			offsetY = 1,
+		},
+
+		{
 			component = "collision",
 			mode = "slowdown",
 			slowdown = 0.5,

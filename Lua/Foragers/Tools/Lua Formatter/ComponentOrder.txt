@@ -1,4 +1,5 @@
 spritesheet
+shadow
 control
 collision
 scroll_to

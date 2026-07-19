@@ -7,6 +7,14 @@ return {
 	sortOffsetY = 3,
 	components = {
 		{
+			component = "shadow",
+			width = 24,
+			height = 6,
+			offsetX = 4,
+			offsetY = 1,
+		},
+
+		{
 			component = "destructible",
 			hp = 7,
 			replaceWith = "Content/Assets/Sprites/Props/OakStumps",

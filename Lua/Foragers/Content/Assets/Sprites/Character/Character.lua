@@ -21,6 +21,14 @@ return {
 		},
 
 		{
+			component = "shadow",
+			width = 12,
+			height = 4,
+			offsetX = 2,
+			offsetY = 0,
+		},
+
+		{
 			component = "control",
 			movementSpeed = 50,
 			swimmingSpeed = 30,

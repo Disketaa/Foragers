@@ -22,6 +22,7 @@ local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 local ProximityFade = require("Source.Sprite.Components.ProximityFade")
 local Drop = require("Source.Sprite.Components.Drop")
 local TweenComponent = require("Source.Sprite.Components.Tween").Component
+local Shadow = require("Source.Sprite.Components.Shadow")
 local PropSpawner = require("Source.World.PropSpawner")
 
 local objects = {}
@@ -201,6 +202,11 @@ function love.draw()
 				entry.instance:draw()
 			end
 		end
+
+		-- Shadow layer: all shadows drawn opaque onto one layer, composited once
+		-- at low alpha (union, not additive). Drawn AFTER terrain so shadows sit
+		-- on top of tiles, but BEFORE dynamic sprites.
+		Shadow.renderLayer(dynamicObjects, canvas.width, canvas.height, camPixelX, camPixelY)
 
 		ParticleEmitter.drawBurstsBehind()
 
