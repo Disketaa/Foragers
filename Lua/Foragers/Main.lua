@@ -22,6 +22,7 @@ local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 local ProximityFade = require("Source.Sprite.Components.ProximityFade")
 local Drop = require("Source.Sprite.Components.Drop")
 local TweenComponent = require("Source.Sprite.Components.Tween").Component
+local PropSpawner = require("Source.World.PropSpawner")
 
 local objects = {}
 local staticObjects = {}
@@ -34,7 +35,7 @@ local weaponSprite = nil
 local playerSprite = nil
 local shakeOffsetX = 0
 local shakeOffsetY = 0
-local tileSize = 8
+local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
 
@@ -68,9 +69,18 @@ function love.load()
 	local worldData = WorldGen.generate()
 
 	local charEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
+
+	playerSprite = nil
+	for _, entry in ipairs(charEntries) do
+		if entry.data and entry.data.object == "player" then
+			playerSprite = entry.instance
+			break
+		end
+	end
+
 	local result = WorldBuilder.build(worldData, function(data)
 		return data.x, data.y
-	end)
+	end, playerSprite)
 	local tileEntries = result.terrain
 	local propEntries = result.props or {}
 	local toolEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
@@ -98,13 +108,6 @@ function love.load()
 		table.insert(objects, entry)
 	end
 
-	playerSprite = nil
-	for _, entry in ipairs(objects) do
-		if entry.data and entry.data.object == "player" then
-			playerSprite = entry.instance
-			break
-		end
-	end
 	if playerSprite then
 		ProximityFade.setPlayer(playerSprite)
 		for _, entry in ipairs(toolEntries) do
@@ -119,6 +122,10 @@ function love.load()
 		AttackSystem.registerAttacker(playerSprite, toolEntries[1] and toolEntries[1].instance)
 		weaponSprite = toolEntries[1] and toolEntries[1].instance
 	end
+
+	PropSpawner.init(worldData, World, {
+		playerSprite = playerSprite,
+	})
 
 	updateCamera()
 
@@ -306,5 +313,11 @@ function love.update(dt)
 	else
 		shakeOffsetX = 0
 		shakeOffsetY = 0
+	end
+
+	local spawned = PropSpawner.update(dt)
+	if spawned then
+		table.insert(objects, { instance = spawned, data = {} })
+		table.insert(dynamicObjects, { instance = spawned, data = {} })
 	end
 end

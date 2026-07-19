@@ -12,6 +12,10 @@ for k, v in pairs(WorldConfig) do
 	private[k] = v
 end
 
+local function rectsOverlap(a, b)
+	return a.x < b.x + b.w and a.x + a.w > b.x and a.y < b.y + b.h and a.y + a.h > b.y
+end
+
 local tilePngPath
 for k, v in pairs(package.loaded) do
 	if v == TileData then
@@ -70,10 +74,11 @@ local function buildTerrain(worldData, spawnCallback)
 	return sprites
 end
 
-local function spawnProps(worldData)
+local function spawnProps(worldData, playerSprite)
 	local props = {}
 	local propConfigs = private.props or {}
 	local coverage = private.propCoverage or 0.3
+	local tileSize = private.tileSize or 8
 
 	Collision.resetSolids()
 	Collision.resetSlowdown()
@@ -105,17 +110,24 @@ local function spawnProps(worldData)
 		totalWeight = totalWeight + p.weight
 	end
 
-	local centerTileX = math.floor(private.width / 2)
-	local centerTileY = math.floor(private.height / 2)
-	local spawnClearance = private.spawnClearance or 1
 	local activeTiles = {}
 	for y = 0, private.height - 1 do
 		for x = 0, private.width - 1 do
 			local tile = worldData[y][x]
 			if tile.active then
-				local dx = x - centerTileX
-				local dy = y - centerTileY
-				if math.abs(dx) > spawnClearance or math.abs(dy) > spawnClearance then
+				local skip = false
+				if playerSprite then
+					local tileRect = {x = tile.x, y = tile.y, w = tileSize, h = tileSize}
+					for _, comp in ipairs(playerSprite.components or {}) do
+						if comp.type == "collision" and comp.getRect then
+							if rectsOverlap(tileRect, comp:getRect()) then
+								skip = true
+								break
+							end
+						end
+					end
+				end
+				if not skip then
 					table.insert(activeTiles, tile)
 				end
 			end
@@ -176,9 +188,9 @@ local function spawnProps(worldData)
 	return props
 end
 
-local function build(worldData, spawnCallback)
+local function build(worldData, spawnCallback, playerSprite)
 	local terrain = buildTerrain(worldData, spawnCallback)
-	local props = spawnProps(worldData) or {}
+	local props = spawnProps(worldData, playerSprite) or {}
 	return { terrain = terrain, props = props }
 end
 

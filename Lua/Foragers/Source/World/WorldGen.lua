@@ -2,7 +2,7 @@ local WorldConfig = require("Content.Data.World") or {}
 local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 
 local private = {}
-local tileSize = TileData and TileData.frameWidth or 8
+local tileSize = WorldConfig.tileSize or (TileData and TileData.frameWidth) or 8
 
 for k, v in pairs(WorldConfig) do
 	private[k] = v

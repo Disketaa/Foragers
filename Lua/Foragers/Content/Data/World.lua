@@ -5,9 +5,10 @@ return {
 	scale = 0.15,
 	detail = 0.3,
 	density = 0.8,
+	tileSize = 8,
 	backgroundColor = { 0.25, 0.74, 0.9 },
-	propCoverage = 0.3,
-	spawnClearance = 1,
+	propCoverage = 0.0,
+	propSpawnInterval = 3.0,
 	props = {
 		{
 			data = "Content.Assets.Sprites.Props.Rocks",

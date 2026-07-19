@@ -82,7 +82,8 @@ Foragers/
 │   └── World/
 │       ├── TilePalette.lua          # Adjacency mask → tile index/variant
 │       ├── WorldBuilder.lua         # Sprite construction from world data (was in Generator)
-│       └── WorldGen.lua             # Pure data generation, no sprite dependencies (was in Generator)
+│       ├── WorldGen.lua             # Pure data generation, no sprite dependencies (was in Generator)
+│       └── PropSpawner.lua          # Periodic prop spawn at unoccupied tiles
 ├── Content/
 │   ├── Assets/{Shaders,Sprites/{Character,Props,Tiles,Tools,UI},...}
 │   └── Data/{Options.lua, World.lua}
@@ -163,7 +164,9 @@ ComponentRegistry.register("my_component", function(data) return MyComponent.new
 
 - **WorldGen.lua** (`Source/World/WorldGen.lua`): `generate(config)` → pure-data world table. `config` is a single table (`{width, height, seed, scale, density, detail}`) — never positional arguments, to avoid silently swapping same-typed parameters. Uses `love.math.noise` + circular island mask. No sprite/component dependencies. Split from the old Generator.lua.
 
-- **WorldBuilder.lua** (`Source/World/WorldBuilder.lua`): exports **only** `build(tileData, config)`. Internally calls private (non-exported) `buildTerrain()` then `spawnProps()`, in that fixed order — this ordering is enforced by encapsulation, not convention, so it cannot be called out of sequence from outside the module. Both internal steps build sprites via `SpriteLoader.instantiate()` (not manual `Sprite.new()`/`ComponentRegistry.create()` calls) to avoid re-diverging from `SpriteLoader`, and each resets its own collider registry (`Collision.resetTerrain()` / `resetSolids()`) before populating. Props use weighted random + Fisher-Yates shuffle. Split from the old Generator.lua.
+- **WorldBuilder.lua** (`Source/World/WorldBuilder.lua`): exports **only** `build(tileData, spawnCallback, playerSprite)`. `playerSprite` (optional) — when provided, excludes the player's tile from initial prop spawn via collision-rect overlap check (replaces old `spawnClearance` config). Internally calls private (non-exported) `buildTerrain()` then `spawnProps()`, in that fixed order — this ordering is enforced by encapsulation, not convention, so it cannot be called out of sequence from outside the module. Both internal steps build sprites via `SpriteLoader.instantiate()` (not manual `Sprite.new()`/`ComponentRegistry.create()` calls) to avoid re-diverging from `SpriteLoader`, and each resets its own collider registry (`Collision.resetTerrain()` / `resetSolids()`) before populating. Props use weighted random + Fisher-Yates shuffle. Consumes `WorldConfig.tileSize`, `WorldConfig.props`, `WorldConfig.propCoverage`. Split from the old Generator.lua.
+
+- **PropSpawner.lua** (`Source/World/PropSpawner.lua`): `init(worldData, worldConfig, opts)` where `opts = {playerSprite}`. `update(dt)` accumulates a timer based on `worldConfig.propSpawnInterval`; when it elapses, collects all active tiles not occupied by any solid/slowdown collider or the player (via point-in-rect using each collider's `.sprite` reference position), picks a random free tile, weighted-random picks a prop from `worldConfig.props`, spawns via `SpriteLoader.instantiate()`, registers collision, and returns the new sprite. The caller (Main.lua) appends it to objects/dynamicObjects. No events — operates directly on Collision's static registries.
 
 - **DrawOrder.lua** (`Source/Helpers/DrawOrder.lua`): `collect(entries)` fills a reusable module-level buffer with `zKey = layer * 1e6 + sortY * 1e3 + x`; `sort(list)` sorts by `zKey`. Called once per frame, single caller. No double-call guard by design — see Stage 6.2 in the history table for why this was audited and left as-is.
 
