@@ -1,6 +1,5 @@
 ---
 description: Check written/changed code for hidden runtime instabilities before task delivery
-agent: code
 ---
 
 # Verify Code Workflow
@@ -57,13 +56,7 @@ For each file from step 1, go through all items. Answer not with "yes/no" but po
 
 ## Step 3. Comments
 
-Comments only if:
-- explain "why", not "what" (code already says what)
-- describe non-obvious contract between functions/modules
-- this is LuaDoc type annotations
-
-Do NOT write a comment if removing it leaves the code
-self-explanatory. When unsure — don't write.
+Run the `adjust-comments` command to verify the rationale-comments-only rule. Do not duplicate that check here.
 
 ## Step 4. Report
 

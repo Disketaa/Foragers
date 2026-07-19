@@ -1,6 +1,5 @@
 ---
 description: Read project rules (AGENTS.md) and LÖVE API docs (love_api.md) before starting a task
-agent: code
 ---
 
 Before doing any work:

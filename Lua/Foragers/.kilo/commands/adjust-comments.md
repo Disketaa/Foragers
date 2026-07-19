@@ -1,6 +1,5 @@
 ---
 description: Check written/changed code for unnecessary and empty comments
-agent: code
 ---
 
 Comments only if:

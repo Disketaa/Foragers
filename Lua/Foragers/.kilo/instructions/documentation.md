@@ -1,6 +1,5 @@
 ---
 description: Read project rules (AGENTS.md) and LÖVE API docs (love_api.md) before starting a task
-agent: code
 ---
 
 Before doing any work:
@@ -20,3 +19,14 @@ Then read ~30 lines from the matched line number. If overloaded (`- Variant 2:`,
 Skip lookup only for pure Lua logic or edits that don't touch LÖVE calls.
 
 Known enums/types include: Object, DistanceModel, BlendMode, BodyType, KeyConstant, Scancode, PixelFormat, GraphicsFeature, WrapMode, ... (grep for exact name if unsure)
+
+## Read before write — ENFORCED
+
+**BEFORE editing or creating ANY .lua file:**
+
+1. **READ the target file.** If editing — read the full file first. Always.
+2. **CHECK existing names.** `ls Source/Sprite/Components/` or `glob` before creating a new file. If `Tween.lua` exists — edit it, do NOT create `Tweenable.lua`.
+3. **READ related modules.** Component? Read `Sprite.lua`, `ComponentRegistry.lua`, `Events.lua` first. Helper? Read `EventEmitter.lua`, `Math.lua`, `Log.lua`.
+4. **GREP for patterns.** Not sure if a function exists? `grep -rn "functionName" Source/` before inventing it.
+
+**NEVER** guess at APIs, method signatures, field names, or file locations. Read the source.

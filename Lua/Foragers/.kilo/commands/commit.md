@@ -1,6 +1,5 @@
 ---
 description: Prepare a commit with staged changes (no push)
-agent: code
 ---
 
 1. Run `git status` and `git diff` to see what changed and why.

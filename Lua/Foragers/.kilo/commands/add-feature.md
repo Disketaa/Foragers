@@ -6,8 +6,7 @@ description: Guide for adding a new feature to Foragers
 
 1. Read `.kilo/AGENTS.md` — architecture rules, component system, event system, error handling
 2. Study the nearest existing implementation of a similar feature
-3. Check `SYMBOLS.md` if available for symbol index
-4. Check `.kilo/documentation/` for LÖVE2D API docs
+3. Check `.kilo/documentation/` for LÖVE2D API docs
 
 ## Adding a new feature
 
@@ -39,14 +38,28 @@ Components communicate via events, not field reads. If a new component needs dat
 
 ### 5. Data files for sprites
 
+PNG image path is **auto-derived** from the `.lua` file path (same name, `.png` extension) — do NOT specify it in the data file. The `spriteSheet` field is injected internally by `SpriteLoader.instantiate()`.
+
 ```lua
 return {
-	spriteSheet = "Content/Assets/Sprites/<Category>/<Name>.png",
-	component = "spritesheet",
-	columns = 4,
-	rows = 4,
-	animations = {
-		idle = { frames = { 0, 1, 2, 3 }, frameDuration = 0.2 },
+	object = "myEntity",          -- string identifier (optional)
+	frameWidth = 16,              -- sprite frame dimensions (required for spritesheet animation)
+	frameHeight = 16,
+	pivotX = 0.5,                 -- draw pivot (0-1), default 0
+	pivotY = 0.75,
+	sortOffsetY = 2,              -- Y-sort draw offset in pixels
+	layer = 0,                    -- draw layer (higher = drawn later)
+	components = {
+		{
+			component = "spritesheet",
+			columns = 4,          -- auto-inferred from image if omitted
+			rows = 5,            -- auto-inferred from image if omitted
+			animations = {
+				idle = { row = 1, frames = 4, speed = 4, loop = true },
+				run  = { row = 2, frames = 4, speed = 8, loop = true },
+			},
+		},
+		-- additional components: collision, tween, sound, etc.
 	},
 }
 ```
@@ -76,7 +89,7 @@ If the feature should be overridable by mods:
 
 | Symptom | Likely cause |
 |---|---|
-| Sprite not visible | Image missing at computed path, or wrong `spriteSheet` path |
+| Sprite not visible | Image missing at computed path (PNG must match `.lua` filename in same directory) |
 | Component not responding | `_broken = true` after earlier error; check console |
 | State never changes | Control is sole writer of `_state` — emit `state_changed` instead of writing directly |
 | Event not received | Wrong priority, wrong event string, or subscription happens too late (must be in `attach()`) |
