@@ -52,6 +52,11 @@ def collapse(s: str) -> str:
     return re.sub(r"\s+", " ", s.strip())
 
 
+def normalize_numbers(text: str) -> str:
+    # Collapse integer-valued floats (1.0 -> 1) but keep fractional ones (2.5).
+    return re.sub(r"\b(\d+)\.0+\b", r"\1", text)
+
+
 def sort_components(text: str, order: list[str]) -> str:
     pattern = re.compile(r"^([ \t]*)components\s*=\s*\{$", re.MULTILINE)
     m = pattern.search(text)
@@ -182,6 +187,7 @@ def main():
         updated = sort_components(original, order) if order else original
         updated = stringify_tags(updated)
         updated = add_blank_lines(updated)
+        updated = normalize_numbers(updated)
 
         if updated != original:
             path.write_text(updated, encoding="utf-8")

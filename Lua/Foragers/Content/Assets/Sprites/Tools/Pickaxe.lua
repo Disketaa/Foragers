@@ -42,7 +42,7 @@ return {
 		{
 			component = "tween",
 			tweens = {
-				{ target = "y", from = -1, to = 1, duration = 1.0, curve = "OutSine", loop = true, pingPong = true },
+				{ target = "y", from = -1, to = 1, duration = 1, curve = "OutSine", loop = true, pingPong = true },
 			},
 		},
 
