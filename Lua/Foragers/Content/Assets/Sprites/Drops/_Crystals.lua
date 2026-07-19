@@ -21,6 +21,14 @@ return {
 				{ target = "scale_x",    from = 0, to = 1,        duration = 1.5,           curve = "OutBack" },
 				{ target = "scale_y",    from = 2, to = 1,        duration = "0.75...1.25", curve = "OutBack" },
 			},
+			tags = {
+				arrived = {
+					destroyOnComplete = true,
+					{ target = "brightness", from = 0.5, to = 1, duration = 0.5, curve = "InOutCubic" },
+					{ target = "scale_x",    from = 1,   to = 0, duration = 0.5, curve = "InOutCubic" },
+					{ target = "scale_y",    from = 1,   to = 2, duration = 0.5, curve = "InOutCubic" },
+				},
+			},
 		},
 
 		{

@@ -10,6 +10,7 @@ local Math = require("Source.Helpers.Math")
 ---@field timer number Elapsed time
 ---@field loop boolean If true, replay from start on finish
 ---@field pingPong boolean If true, oscillate forward then backward
+---@field destroyOnComplete boolean
 local Tween = {}
 Tween.__index = Tween
 
@@ -20,8 +21,8 @@ Tween.__index = Tween
 ---@param curve function
 ---@param loop boolean|nil
 ---@param pingPong boolean|nil
----@return Tween
-function Tween.new(target, from, to, duration, curve, loop, pingPong)
+---@param destroyOnComplete boolean|nil
+function Tween.new(target, from, to, duration, curve, loop, pingPong, destroyOnComplete)
 	return setmetatable({
 		target = target,
 		from = from,
@@ -31,6 +32,7 @@ function Tween.new(target, from, to, duration, curve, loop, pingPong)
 		timer = 0,
 		loop = loop or false,
 		pingPong = pingPong or false,
+		destroyOnComplete = destroyOnComplete or false,
 	}, Tween)
 end
 
@@ -228,34 +230,43 @@ function Easing.InOutBounce(x)
 		or (1 + _bounceOut(2 * x - 1)) / 2
 end
 
-local function createTween(target, from, to, duration, curve, loop, pingPong)
-	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong)
+local _pendingDestroy = {}
+
+local function createTween(target, from, to, duration, curve, loop, pingPong, destroyOnComplete)
+	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong, destroyOnComplete)
 end
 
 local function applyTweens(self, tweenSet)
+	local globalDestroyOnComplete = tweenSet.destroyOnComplete
 	for _, tweenData in pairs(tweenSet) do
-		local from = Math.parseRandomValue(tweenData.from)
-		local to = Math.parseRandomValue(tweenData.to)
-		local curveFunc = Easing[tweenData.curve] or Easing.OutBack
-		if not self.parent.tweens[tweenData.target] then
-			self.parent.tweens[tweenData.target] = createTween(
-				tweenData.target,
-				from,
-				to,
-				tweenData.duration,
-				curveFunc,
-				tweenData.loop,
-				tweenData.pingPong
-			)
+		if type(tweenData) == "table" and tweenData.target then
+			local from = Math.parseRandomValue(tweenData.from)
+			local to = Math.parseRandomValue(tweenData.to)
+			local curveFunc = Easing[tweenData.curve] or Easing.OutBack
+			local destroyOnComplete = tweenData.destroyOnComplete ~= nil and tweenData.destroyOnComplete or globalDestroyOnComplete
+			if not self.parent.tweens[tweenData.target] then
+				self.parent.tweens[tweenData.target] = createTween(
+					tweenData.target,
+					from,
+					to,
+					tweenData.duration,
+					curveFunc,
+					tweenData.loop,
+					tweenData.pingPong,
+					destroyOnComplete
+				)
+			end
+			local tween = self.parent.tweens[tweenData.target]
+			tween.from = from
+			tween.to = to
+			tween.duration = Math.parseRandomValue(tweenData.duration)
+			tween.curve = curveFunc
+			tween.loop = tweenData.loop or false
+			tween.pingPong = tweenData.pingPong or false
+			tween.destroyOnComplete = destroyOnComplete or false
+			tween._destroyHandled = nil
+			tween:start()
 		end
-		local tween = self.parent.tweens[tweenData.target]
-		tween.from = from
-		tween.to = to
-		tween.duration = Math.parseRandomValue(tweenData.duration)
-		tween.curve = curveFunc
-		tween.loop = tweenData.loop or false
-		tween.pingPong = tweenData.pingPong or false
-		tween:start()
 	end
 end
 
@@ -304,6 +315,12 @@ function TweenComponent:attach()
 			applyTweens(self, self.tags.prop_hit)
 		end
 	end, 10)
+
+	self.parent:on(Events.FOLLOW_ARRIVED, function()
+		if self.tags.arrived then
+			applyTweens(self, self.tags.arrived)
+		end
+	end, 10)
 end
 
 function TweenComponent:update(dt)
@@ -317,13 +334,35 @@ function TweenComponent:update(dt)
 				local dur = Math.parseRandomValue(tweenData.duration)
 				local curveFunc = Easing[tweenData.curve] or Easing.OutBack
 				self.parent.tweens[key] = createTween(key, from, to, dur, curveFunc, tweenData.loop,
-					tweenData.pingPong)
+					tweenData.pingPong, tweenData.destroyOnComplete)
 				self.parent.tweens[key]:start()
 			end
 		end
 	end
 	for _, tween in pairs(self.parent and self.parent.tweens or {}) do
 		tween:update(dt)
+	end
+	if self.parent then
+		for _, tween in pairs(self.parent.tweens) do
+			if tween.destroyOnComplete and tween:isFinished() and not tween._destroyHandled then
+				tween._destroyHandled = true
+				_pendingDestroy[self.parent] = true
+			end
+		end
+	end
+end
+
+function TweenComponent.getPendingDestroy()
+	local list = {}
+	for sprite in pairs(_pendingDestroy) do
+		table.insert(list, sprite)
+	end
+	return list
+end
+
+function TweenComponent.clearPendingDestroy()
+	for sprite in pairs(_pendingDestroy) do
+		_pendingDestroy[sprite] = nil
 	end
 end
 

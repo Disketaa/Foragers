@@ -11,13 +11,13 @@ description: Quick reference for all 13 components — purpose, config fields, e
 | **spritesheet** | Quad animation + frame rendering | `columns`, `rows`, `animations`, `tags` | STATE_CHANGED (5) | ANIM_FRAME |
 | **control** | Keyboard/mouse input; sole writer of `_state` and `flipX` | `movementSpeed`, `swimmingSpeed`, `keyboardControl`, `mouseControl` | GROUNDED_CHANGED (10), SLOWDOWN_CHANGED (10) | STATE_CHANGED, FLIPPED |
 | **collision** | AABB collision, terrain/solid registries, grounded detection | `mode`, `collisionWidth`, `collisionHeight`, `offsetX`, `offsetY`, `visible`, `slowdown` | — | GROUNDED_CHANGED, SLOWDOWN_CHANGED, SLOWDOWN_ENTER, SLOWDOWN_EXIT |
-| **follow** | Follow-target smoothing + deployTo/recall (tools) | `offsetX`, `offsetY`, `smoothness`, `smoothnessX`, `smoothnessY`, `followRadius`, `leanAngle`, `leanThreshold` | — | — |
+| **follow** | Follow-target smoothing + deployTo/recall (tools) | `offsetX`, `offsetY`, `smoothness`, `smoothnessX`, `smoothnessY`, `followRadius`, `followDelay`, `leanAngle`, `leanThreshold`, `arrivedThreshold` | — | FOLLOW_ARRIVED |
 
 ## Effects
 
 | Component | Purpose | Config | Subscribes | Emits |
 |---|---|---|---|---|
-| **tween** | Property animation on events (flip, hit, state) | `tags` (event→tween mappings) | FLIPPED (10), STATE_CHANGED (10), PROP_HIT (10) | — |
+| **tween** | Property animation on events (flip, hit, state, arrival) | `tweens`, `tags` (event→tween mappings), `destroyOnComplete` | FLIPPED (10), STATE_CHANGED (10), PROP_HIT (10), FOLLOW_ARRIVED (10) | — |
 | **shake** | Screen shake on death | `magnitude`, `duration`, `decay` | PROP_BROKEN (5) | — |
 | **shader** | Shader uniform management (brightness) | `shaderName`, `brightness` | PROP_HIT (8) | — |
 | **proximity_fade** | Fade alpha based on player distance | `radius`, `fadeAlpha`, `smoothness` | — | — |
@@ -64,4 +64,24 @@ All numeric config fields that accept user/mod data (speed, smoothness, delay, r
 `tags` maps state names → animation names. If omitted, state name = animation name:
 ```lua
 tags = { idle = "stand", run = "walk" }  -- "idle" state plays "stand" animation
+```
+
+## destroyOnComplete (tween)
+
+When a tween finishes and `destroyOnComplete = true`, the parent sprite is removed from the game (same frame as Destructible dead-sprite cleanup). Supports two levels:
+
+**Per-tween** — only that specific tween triggers destruction on finish:
+```lua
+{ target = "scale_x", from = 0, to = 1, duration = 0.5, destroyOnComplete = true },
+```
+
+**Tag-level** — applies to all tweens in the tag set (any can trigger, idempotent):
+```lua
+tags = {
+    arrived = {
+        destroyOnComplete = true,
+        { target = "scale_x", from = 1, to = 0, duration = 0.5 },
+        { target = "scale_y", from = 1, to = 2, duration = 0.5 },
+    },
+},
 ```

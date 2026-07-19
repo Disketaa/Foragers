@@ -20,6 +20,7 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `PROP_HIT` | `"prop_hit"` | AttackSystem | Shader(8), Tween(10), Sound(15) |
 | `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), Shake(5), Sound(15) |
 | `SWING` | `"swing"` | AttackSystem | — |
+| `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
 
 ## Priority conventions
 

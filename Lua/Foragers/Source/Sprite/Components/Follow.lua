@@ -1,3 +1,4 @@
+local Events = require("Source.Helpers.Events")
 local Math = require("Source.Helpers.Math")
 
 ---@class Follow
@@ -28,6 +29,8 @@ function Follow.new(data)
 		followDelay = data.followDelay and Math.parseRandomValue(data.followDelay) or nil,
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
+		arrivedThreshold = data.arrivedThreshold or 3,
+		_arrivedEmitted = false,
 		_tempOffsetX = 0,
 		_tempOffsetY = 0,
 		type = "follow",
@@ -91,6 +94,7 @@ function Follow:update(dt)
 
 	-- Apply tweens outside radius from fixed base (scatter visible, not cumulative)
 	if outsideRadius then
+		self._arrivedEmitted = false
 		if not self._scatterBaseX then
 			local tx, ty = 0, 0
 			if self.parent.tweens then
@@ -171,6 +175,14 @@ function Follow:update(dt)
 
 	self.parent.x = self._followX
 	self.parent.y = self._followY
+
+	if not self._tempTarget and not self._arrivedEmitted then
+		local dist = math.abs(self.parent.x - liveX) + math.abs(self.parent.y - liveY)
+		if dist < (self.arrivedThreshold or 3) then
+			self._arrivedEmitted = true
+			self.parent:emit(Events.FOLLOW_ARRIVED)
+		end
+	end
 end
 
 ---@param x number

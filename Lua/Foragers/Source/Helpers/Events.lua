@@ -9,5 +9,6 @@ local Events = {
 	PROP_HIT = "prop_hit",
 	PROP_BROKEN = "prop_broken",
 	SWING = "swing",
+	FOLLOW_ARRIVED = "follow_arrived",
 }
 return Events
