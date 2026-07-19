@@ -55,6 +55,10 @@ Two trigger types:
 | `"2...4"` | Random 2–4 |
 | `"0\|1"` | 50% chance of 0 or 1 |
 
+## Config value parsing
+
+All numeric config fields that accept user/mod data (speed, smoothness, delay, radius, etc.) MUST be passed through `Math.parseRandomValue()` in the component constructor. Same `min...max` and `a|b|c` syntax as drop amounts (above). Otherwise `"0.3...0.5"` passes as raw string and breaks math operations.
+
 ## Tags (spritesheet animation mapping)
 
 `tags` maps state names → animation names. If omitted, state name = animation name:
