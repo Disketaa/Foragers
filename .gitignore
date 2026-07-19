@@ -1,11 +1,10 @@
 .*/
+!Lua/Foragers/.kilo/
 .editorconfig
 /Workspace/
 bin/
 dotnet-tools.json/
 Lua/Foragers/.luacheckrc
-Lua/Foragers/AGENTS.md
-Lua/Foragers/CHANGELOG.md
 Lua/Foragers/conf.lua
 Lua/Foragers/Foragers.bat
 Lua/Foragers/lldebugger.lua

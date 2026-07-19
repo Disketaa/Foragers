@@ -10,7 +10,7 @@ Every rule in this document is mandatory. Violating any point is an implementati
 
 **Documentation first.** Before writing/changing code: read existing code, related modules, LÖVE2D docs (`.kilo/documentation/love_api.md`), and docs for any library used. Never guess at APIs, invent methods, or change architecture you don't understand.
 
-**Check before proposing.** Before proposing a refactor, optimization, or architectural change: check section VIII (Rejected / Settled Questions) below. If the same idea was already considered and rejected, don't re-propose it without new information. If you're unsure whether something in the codebase was already discussed, tried, or reverted, check `CHANGELOG.md` before assuming it's unaddressed — it has the full history that this file only summarizes.
+**Check before proposing.** Before proposing a refactor, optimization, or architectural change: check section VIII (Rejected / Settled Questions) below. If the same idea was already considered and rejected, don't re-propose it without new information. If you're unsure whether something in the codebase was already discussed, tried, or reverted, check `.kilo/CHANGELOG.md` before assuming it's unaddressed — it has the full history that this file only summarizes.
 
 **Simplicity first.** Fewer lines, fewer entities, fewer abstractions, no magic. No premature complexity, no pattern-for-pattern's-sake, no over-engineering.
 
@@ -216,7 +216,7 @@ Read this before proposing a change in these areas — it was already considered
 | Add a scene/game-state machine (menu, pause, restart) to Main.lua? | **Deferred, not rejected** | Not needed while there's no menu/pause/restart flow planned. If it becomes needed: keep it to a plain string state variable switched on in `love.update`/`love.draw` — no framework, no scene-graph classes. |
 | Add ModLoader integration for mod-provided sprites/tiles/props/world hooks? | **Deferred, not rejected** | `ModLoader` can currently only register new component types — there's no entry point for mod content. Undecided whether mods are a real goal for this project; don't build integration speculatively. |
 
-For the full chronological history of what changed and when (Animation+Spritesheet merge, Tween merge, Generator split, error hardening, etc.), see `CHANGELOG.md` — it's not required reading for a normal task, but check it if you're unsure whether something was already tried, or need to understand why a module looks the way it does.
+For the full chronological history of what changed and when (Animation+Spritesheet merge, Tween merge, Generator split, error hardening, etc.), see `.kilo/CHANGELOG.md` — it's not required reading for a normal task, but check it if you're unsure whether something was already tried, or need to understand why a module looks the way it does.
 
 ---
 
