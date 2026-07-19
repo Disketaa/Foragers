@@ -40,7 +40,8 @@ return {
 
 		{
 			component = "scroll_to",
-			smoothness = 2.0,
+			smoothness = 10,
+			chunkSize = 64,
 		},
 
 		{
