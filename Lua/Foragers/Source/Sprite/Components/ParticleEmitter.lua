@@ -195,19 +195,25 @@ local function drawParticle(p)
 end
 
 function ParticleEmitter.drawBurstsBehind()
+	local prevShader = love.graphics.getShader()
+	love.graphics.setShader()
 	for _, p in ipairs(burstParticles) do
 		if p.drawBehind then
 			drawParticle(p)
 		end
 	end
+	love.graphics.setShader(prevShader)
 end
 
 function ParticleEmitter.drawBursts()
+	local prevShader = love.graphics.getShader()
+	love.graphics.setShader()
 	for _, p in ipairs(burstParticles) do
 		if not p.drawBehind then
 			drawParticle(p)
 		end
 	end
+	love.graphics.setShader(prevShader)
 end
 
 function ParticleEmitter:attach()
@@ -292,6 +298,8 @@ function ParticleEmitter:update(dt)
 end
 
 function ParticleEmitter:draw()
+	local prevShader = love.graphics.getShader()
+	love.graphics.setShader()
 	for _, p in ipairs(self._particles) do
 		if p.anim then
 			p.anim:draw(p.x, p.y)
@@ -302,6 +310,7 @@ function ParticleEmitter:draw()
 			love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), 0, sx, 1, ox, oy)
 		end
 	end
+	love.graphics.setShader(prevShader)
 end
 
 return ParticleEmitter
