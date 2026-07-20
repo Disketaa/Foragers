@@ -24,6 +24,7 @@ local TweenComponent = require("Source.Sprite.Components.Tween").Component
 local Shadow = require("Source.Sprite.Components.Shadow")
 local Events = require("Source.Helpers.Events")
 local PropSpawner = require("Source.World.PropSpawner")
+local TextEmitter = require("Source.UI.Components.TextEmitter")
 
 local objects = {}
 local staticObjects = {}
@@ -218,6 +219,8 @@ function love.draw()
 
 		ParticleEmitter.drawBursts()
 
+		TextEmitter.drawAll()
+
 		if cursorSprite and cursorSprite.instance then
 			local mx, my = love.mouse.getPosition()
 			local wx, wy = screenToWorld(mx, my)
@@ -352,6 +355,7 @@ function love.update(dt)
 
 	AttackSystem.update(dt, dynamicObjects)
 	ParticleEmitter.updateBursts(dt)
+	TextEmitter.updateAll(dt)
 
 	local shakeComp = nil
 	if weaponSprite then

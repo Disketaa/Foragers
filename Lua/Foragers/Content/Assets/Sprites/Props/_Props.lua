@@ -47,6 +47,21 @@ return {
 		},
 
 		{
+			component = "text_emitter",
+			font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
+			event = "prop_hit",
+			color = { 1, 0.91, 0.89 },
+			moveX = "-10|10",
+			moveY = -50,
+			gravity = 200,
+			duration = 0.5,
+			offsetX = 0,
+			offsetY = "-6...-8",
+			destroy = "fade",
+			destroyCurve = "InCubic",
+		},
+
+		{
 			component = "sound",
 			volume = 0.7,
 			pitchRandomness = 0.15,

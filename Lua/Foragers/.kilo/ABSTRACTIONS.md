@@ -68,3 +68,41 @@ relevant section before touching that subsystem.
 - `_G.SHADER_DEBUG` was used temporarily for console prints / file dumps. It is
   removed from `conf.lua` when done. Do not leave debug prints or
   `love.filesystem.write` of generated shaders in shipped code.
+
+## SpriteFont / Text / TextEmitter (Source/Sprite/Components/SpriteFont.lua, Source/UI/Text.lua, Source/UI/Components/TextEmitter.lua)
+
+- **`utf8Next` MUST index glyphs by VISUAL char, not byte.** The `chars` table
+  mixes Latin (1 byte) and Cyrillic/digits (2+ bytes). Old code used the byte
+  offset as the cell index, so a 2-byte char (e.g. digit `'1'`) landed on the
+  wrong quad (byte 185 → cell 185, but the real cell was 119). Build
+  `_charIndex`/`_charWidth` by incrementing a counter per decoded char, never by
+  `i = i + #char`. This is shared by `Text.lua` and `TextEmitter`, so a wrong
+  index corrupts ALL text rendering, not just one component.
+- **LuaJIT is Lua 5.1 — no `utf8` module, no `goto`.** Decode multi-byte manually
+  by leading byte: `>=0xC0` → len 2, `>=0xE0` → len 3, `>=0xF0` → len 4; a stray
+  continuation byte → len 1 (treat as unknown glyph). Do not reach for the Lua 5.3
+  `utf8` library or `goto` — neither exists here.
+- **TextEmitter lives in `Source/UI/Components/`, NOT `Source/Sprite/Components/`.**
+  It is a floating-damage-number emitter, not a sprite behavior. It is registered
+  in `ComponentRegistry` as `text_emitter` but is driven by global
+  `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` called from `Main.lua`
+  (NOT via the per-sprite component loop). Do not move it into the sprite
+  component folder or wire it into `Sprite:update`.
+- **`drawAll` must disable the active shader then restore it.** Sprites may have a
+  shader bound; text drawn inside the world canvas must not inherit it. Save
+  `love.graphics.getShader()`, `setShader(nil)`, draw, then restore.
+- **Parse random params PER EMIT, not in `new`.** `moveX/moveY/gravity/duration/
+  offsetX/offsetY` accept `"a|b"` choice and `"min...max"` range via
+  `Math.parseRandomValue`. If you parse them once in `new`, every hit shows the
+  same value. Re-roll inside the `PROP_HIT` handler so each hit varies.
+- **Keep `curve` a SEPARATE field from `destroy`.** Do not combine into one string
+  like `"scale,InCubic"`. `destroy` (`"fade"|"scale"|"instant"`) controls the
+  animated property; `curve` (default `"Linear"`) is the easing name applied via
+  `Tween.Easing[t.curve](p)`. Matches the Tween component's separate-field
+  convention.
+- **Animated property always goes 1→0.** `fade` → alpha, `scale` → scale,
+  `instant` → stays 1. Do not add `startAlpha/endAlpha/startScale/endScale`
+  knobs — the prop always animates to zero.
+- **TextEmitter requires `Tween` ONLY for its `Easing` table.** No circular dep:
+  `require("Source/Sprite/Components/Tween")` for `Tween.Easing` only. Do not pull
+  in the whole Tween component lifecycle.

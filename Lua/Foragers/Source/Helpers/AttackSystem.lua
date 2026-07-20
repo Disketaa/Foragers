@@ -142,7 +142,7 @@ function AttackSystem.update(dt, allObjects)
 						if comp.hp <= 0 and ws then
 							ws:emit(Events.PROP_BROKEN)
 						end
-						attacker.currentTarget:emit(Events.PROP_HIT)
+						attacker.currentTarget:emit(Events.PROP_HIT, damage)
 						if ws then
 							ws._lastHitX = attacker.currentTarget.x
 							ws._lastHitY = attacker.currentTarget.y

@@ -50,6 +50,31 @@ type sway out of phase.
 | **weapon** | Weapon data container (range, cooldown, damage, swing) | `range`, `cooldown`, `damage`, `swing` | — | — |
 | **sound** | Sound triggered by events | `volume`, `pitch`, `pitchRandomness`, `stepInterval`, `tags` | GROUNDED_CHANGED (15), STATE_CHANGED (15), ANIM_FRAME (15), SLOWDOWN_ENTER (15), PROP_HIT (15), PROP_BROKEN (15), TWEEN_COMPLETED (15), PROP_SPAWNED (15) | — |
 
+## UI / HUD
+
+| Component | Purpose | Config | Subscribes | Emits |
+|---|---|---|---|---|
+| **text_emitter** | Floating text on events (e.g. damage numbers). Registered in `ComponentRegistry` but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `Main.lua` — NOT via the per-sprite component loop (its `update`/`draw` are no-ops). | `font`, `text`, `event`, `color`, `moveX`, `moveY`, `gravity`, `duration`, `offsetX`, `offsetY`, `destroy`, `destroyCurve` | PROP_HIT (5) | — |
+
+### text_emitter config
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `font` | string | `Content.Assets.Sprites.UI.Fonts.Tinylorder` | Module path to a font data file (spritesheet + spritefont) |
+| `text` | string | nil | Fixed text. If nil, the emitted event payload (e.g. damage number) is used as the text |
+| `event` | string | `"prop_hit"` | Event the emitter listens to |
+| `color` | table | `{1,1,1}` | RGB tint (0–1) |
+| `moveX` | number/`"a|b"`/`"min...max"` | `0` | Horizontal drift speed (px/s); re-rolled per emit |
+| `moveY` | number/range/choice | `-120` | Vertical drift speed (px/s, negative = up); re-rolled per emit |
+| `gravity` | number/range/choice | `400` | Downward accel (px/s²); re-rolled per emit |
+| `duration` | number/range/choice | `0.8` | Lifetime seconds; re-rolled per emit |
+| `offsetX` | number/range/choice | `0` | Spawn X offset from parent pivot; re-rolled per emit |
+| `offsetY` | number/range/choice | `-8` | Spawn Y offset from parent pivot; re-rolled per emit |
+| `destroy` | `"fade"`/`"scale"`/`"instant"` | `"fade"` | Animated property: `fade`→alpha 1→0, `scale`→scale 1→0, `instant`→stays 1 |
+| `destroyCurve` | string | `"Linear"` | Easing name from `Tween.Easing` shaping the destroy animation |
+
+Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text is drawn with the **font's** pivot as the glyph origin (Tinylorder uses `pivotX=0, pivotY=0`, so text is top-left anchored at the base). Random fields (`moveX/moveY/gravity/duration/offsetX/offsetY`) are parsed via `Math.parseRandomValue` **inside the event handler**, not in `new`, so each emit re-rolls choice/range strings. `drawAll` saves/restores the active shader so text is never tinted by a sprite shader.
+
 ## Mode field (collision)
 
 | Mode | Behavior |
@@ -114,7 +139,7 @@ tags = {
 
 ## chars field (spritefont)
 
-The `chars` string defines the character set. Each character's position in the string maps 1:1 to the spritesheet quad index (1‑based). Only characters present in `chars` can be rendered; unknown chars are skipped with a gap of `frameWidth + charSpacing`.
+The `chars` string defines the character set. Each **visual character's** position in the string maps 1:1 to the spritesheet quad index (1‑based). The index is built by iterating UTF-8 by visual char (not byte), so multi-byte glyphs (Cyrillic, etc.) land on the correct cell — a 2-byte char does NOT consume two cells. Only characters present in `chars` can be rendered; unknown chars are skipped with a gap of `frameWidth + charSpacing`.
 
 ## spacing field (spritefont)
 

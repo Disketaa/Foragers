@@ -1,6 +1,30 @@
 local SpriteFont = {}
 SpriteFont.__index = SpriteFont
 
+-- LuaJIT (Lua 5.1) has no utf8 module; string ops are byte-based. The font
+-- `chars` string contains multi-byte UTF-8 (Cyrillic), so we must iterate by
+-- visual character, not byte, when building the char->cell index.
+local function utf8Next(str, i)
+	local n = #str
+	if i > n then
+		return nil
+	end
+	local b = str:byte(i)
+	local len = 1
+	if b >= 0x80 then
+		if b < 0xC0 then
+			len = 1 -- stray continuation byte: treat as 1 byte
+		elseif b < 0xE0 then
+			len = 2
+		elseif b < 0xF0 then
+			len = 3
+		else
+			len = 4
+		end
+	end
+	return i + len, str:sub(i, i + len - 1)
+end
+
 function SpriteFont.new(data)
 	if not data or not data.chars then
 		return setmetatable({ type = "spritefont", text = "" }, SpriteFont)
@@ -17,16 +41,23 @@ function SpriteFont.new(data)
 		_charWidth = {},
 	}, SpriteFont)
 
-	for i = 1, #self.chars do
-		local c = self.chars:sub(i, i)
-		self._charIndex[c] = i
+	local vi = 0
+	local i = 1
+	while i <= #self.chars do
+		local nextI, c = utf8Next(self.chars, i)
+		self._charIndex[c] = vi + 1
+		vi = vi + 1
+		i = nextI
 	end
 
 	for _, entry in ipairs(self.spacing) do
 		local w = entry[1]
 		local chars = entry[2]
-		for i = 1, #chars do
-			self._charWidth[chars:sub(i, i)] = w
+		local ci = 1
+		while ci <= #chars do
+			local nextCi, c = utf8Next(chars, ci)
+			self._charWidth[c] = w
+			ci = nextCi
 		end
 	end
 
