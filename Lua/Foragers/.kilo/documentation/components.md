@@ -1,5 +1,5 @@
 ---
-description: Quick reference for all 14 components — purpose, config fields, events.
+description: Quick reference for all components — purpose, config fields, events.
 ---
 
 # Component Cheat Sheet
@@ -13,6 +13,7 @@ description: Quick reference for all 14 components — purpose, config fields, e
 | **collision** | AABB collision, terrain/solid registries, grounded detection | `mode`, `collisionWidth`, `collisionHeight`, `offsetX`, `offsetY`, `visible`, `slowdown` | — | GROUNDED_CHANGED, SLOWDOWN_CHANGED, SLOWDOWN_ENTER, SLOWDOWN_EXIT |
 | **follow** | Follow-target smoothing + deployTo/recall (tools) | `offsetX`, `offsetY`, `smoothness`, `smoothnessX`, `smoothnessY`, `followRadius`, `followDelay`, `leanAngle`, `leanThreshold`, `arrivedThreshold` | — | FOLLOW_ARRIVED |
 | **scroll_to** | Smooth camera follow (centers camera on target via expSmooth) | `smoothness`, `offsetX`, `offsetY`, `chunkSize` | — | — |
+| **spritefont** | Text rendering using parent spritesheet quads | `chars`, `spacing`, `charSpacing`, `color` (set per-instance via Text) | — | — |
 
 ## Effects
 
@@ -110,3 +111,31 @@ tags = {
     },
 },
 ```
+
+## chars field (spritefont)
+
+The `chars` string defines the character set. Each character's position in the string maps 1:1 to the spritesheet quad index (1‑based). Only characters present in `chars` can be rendered; unknown chars are skipped with a gap of `frameWidth + charSpacing`.
+
+## spacing field (spritefont)
+
+Per‑character width overrides, specified as an array of `{ width, chars }` pairs:
+```lua
+{ { 9, "Mmw" }, { 7, "+>" }, { 5, ".li-" } }
+```
+Characters not listed use `frameWidth` as their advance width. Spaces always advance by `frameWidth + charSpacing`.
+
+## color field (spritefont)
+
+Color is **per-instance**, not baked into font data. Set it via `Text.new({ color = {r,g,b,a} })` or `text:setColor(color)`. Default in component constructor is `{0,0,0,1}` (black) — the component always receives a color; font data files should omit this field to avoid confusing a font default with a text instance override.
+
+## Text object (Source/UI/Text.lua)
+
+`Text` creates a Sprite with `spritesheet` + `spritefont` components via `SpriteLoader.instantiate()` and provides a simple API:
+
+- `Text.new(opts)` / `Text.new(text, x, y, fontPath)` — constructs a text sprite
+- `text:setText(str)`
+- `text:setColor({r,g,b,a})`
+- `text:setPosition(x, y)`
+- `text:draw()` — delegates to the internal sprite draw
+
+Default font path: `Content.Assets.Sprites.UI.Fonts.Tinylorder` (8×8, 16 columns). The font PNG must have white characters on transparent background so `setColor` tints correctly.
