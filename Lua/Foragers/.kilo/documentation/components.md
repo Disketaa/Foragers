@@ -22,7 +22,7 @@ description: Quick reference for all 14 components — purpose, config fields, e
 | **shake** | Screen shake on death | `magnitude`, `duration`, `decay` | PROP_BROKEN (5) | — |
 | **shader** | Composes shader modules (uv-chain → Texel → color-chain); auto-maps any `parent.tweens.<name>` → uniform `u_<name>` | `shaders` (array; each entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides) or `shaderName` (single, legacy) | PROP_HIT (8) | — || **proximity_fade** | Fade alpha based on player distance | `radius`, `fadeAlpha`, `smoothness` | — | — |
 | **shadow** | Texture-free pixel-perfect shadow (3-rect 1px-rounded shape) | `offsetX`, `offsetY`, `width`, `height` | — (data-only; rendered via `Shadow.renderLayer`) | — |
-| **particle_emitter** | Particle spawning (burst + continuous) | `particle`, `stepInterval`, `offsetX`, `offsetY`, `inheritFlip`, `spawnOn`, `count`, `angle`, `cone`, `radius`, `layer` | STATE_CHANGED (8), FLIPPED (12), ANIM_FRAME (13) | — |
+| **particle_emitter** | Particle spawning (burst + continuous + timed) | `particle`, `stepInterval`, `interval`, `offsetX`, `offsetY`, `inheritFlip`, `spawnOn`, `count`, `angle`, `cone`, `radius`, `layer` | STATE_CHANGED (8), FLIPPED (12), ANIM_FRAME (13) | — |
 
 ## Shader inheritance
 
@@ -63,6 +63,10 @@ type sway out of phase.
 Two trigger types:
 - **Event names** (e.g. `{ prop_broken = true }`) — burst once per event
 - **State names** (e.g. `{ run = true }`) — continuous emission while in that state, driven by ANIM_FRAME + stepInterval
+
+## interval field (particle_emitter)
+
+Timer-driven emission independent of state. `interval = 0.6` spawns one particle every 0.6 seconds. No state change required — works on any sprite regardless of control component.
 
 ## drop amount syntax
 

@@ -51,5 +51,12 @@ return {
 			component = "shader",
 			shaderName = "Brightness",
 		},
+
+		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/CrystalSpark",
+			interval = 0.2,
+			layer = "below",
+		},
 	},
 }

@@ -16,6 +16,7 @@ function ParticleEmitter.new(data)
 	local self = setmetatable({
 		particle = data.particle,
 		stepInterval = data.stepInterval or 2,
+		interval = data.interval or 0,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
 		inheritFlip = data.inheritFlip ~= false,
@@ -29,6 +30,7 @@ function ParticleEmitter.new(data)
 		_spawnOn = data.spawnOn or {},
 		_particles = {},
 		_stepCounter = 0,
+		_intervalTimer = 0,
 		_emitting = false,
 		_cachedFlipX = false,
 		_particleData = nil,
@@ -260,6 +262,16 @@ function ParticleEmitter:update(dt)
 		p._age = p._age + dt
 		if p._age >= p._duration then
 			table.remove(self._particles, i)
+		end
+	end
+
+	if self.interval and self.interval > 0 and self._particleData then
+		self._intervalTimer = self._intervalTimer + dt
+		while self._intervalTimer >= self.interval do
+			self._intervalTimer = self._intervalTimer - self.interval
+			if #self._particles < self.maxParticles then
+				self:_spawn()
+			end
 		end
 	end
 end
