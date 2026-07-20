@@ -104,7 +104,7 @@ return {
 		{
 			component = "shader",
 			shaders = {
-				{ Tint = { u_tint_color = { 0.8, 0.5, 0.7 } } },
+				{ Tint = { u_tint_color = { 0.8, 0.5, 0.7 }, u_additive = 1 } },
 			},
 		},
 	},

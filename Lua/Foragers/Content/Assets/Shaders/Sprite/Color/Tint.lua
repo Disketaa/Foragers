@@ -5,6 +5,7 @@ return {
 	uniforms = {
 		u_tint_color = { 1, 0, 1 },
 		u_tint_mix = 0,
+		u_additive = 0,
 	},
 	code = [[
 vec4 Tint_color(vec4 color) {
@@ -13,7 +14,9 @@ vec4 Tint_color(vec4 color) {
 		return color;
 	}
 	vec3 tinted = mix(color.rgb, u_tint_color, t);
-	return vec4(tinted, color.a);
+	vec3 added = color.rgb + u_tint_color * t;
+	vec3 result = mix(tinted, added, u_additive);
+	return vec4(result, color.a);
 }
 ]],
 }
