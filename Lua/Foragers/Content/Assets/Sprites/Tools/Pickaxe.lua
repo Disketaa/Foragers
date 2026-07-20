@@ -52,6 +52,9 @@ return {
 			tweens = {
 				{ target = "y", from = -1, to = 1, duration = 1, curve = "OutSine", loop = true, pingPong = true },
 			},
+			tags = {
+				prop_hit = { { target = "brightness", from = 1, to = 0.5, duration = 0.1, curve = "OutCubic" } },
+			},
 		},
 
 		{
@@ -69,6 +72,11 @@ return {
 			spawnOn = { swing = true },
 			inheritFlip = true,
 			layer = "below",
+		},
+
+		{
+			component = "shader",
+			shaders = { "Brightness" },
 		},
 	},
 }
