@@ -366,6 +366,12 @@ function TweenComponent:attach()
 			applyTweens(self, self.tags.prop_spawned)
 		end
 	end, 10)
+
+	self.parent:on(Events.PICKUP, function()
+		if self.tags.pickup then
+			applyTweens(self, self.tags.pickup)
+		end
+	end, 10)
 end
 
 function TweenComponent:update(dt)

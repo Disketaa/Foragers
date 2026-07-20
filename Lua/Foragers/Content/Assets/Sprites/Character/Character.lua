@@ -63,6 +63,7 @@ return {
 					{ target = "scale_x", from = 1.25, to = 1, duration = 0.75, curve = "OutBack" },
 					{ target = "scale_y", from = 0.75, to = 1, duration = 0.5, curve = "OutBack" },
 				},
+				pickup = { { target = "brightness", from = 0.9, to = 0.5, duration = 0.5, curve = "OutCubic" } },
 			},
 		},
 
@@ -98,6 +99,11 @@ return {
 				water_in = { "Content/Assets/Sounds/Steps/Events/WaterIn.ogg" },
 				water_out = { "Content/Assets/Sounds/Steps/Events/WaterOut.ogg" },
 			},
+		},
+
+		{
+			component = "shader",
+			shaders = { "Brightness" },
 		},
 	},
 }

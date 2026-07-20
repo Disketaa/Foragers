@@ -22,6 +22,7 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `PROP_SPAWNED` | `"prop_spawned"` | PropSpawner | Tween(10), Sound(15) |
 | `SWING` | `"swing"` | AttackSystem | — |
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
+| `PICKUP` | `"pickup"` | Main.lua (pendingDestroy) | Tween(10) |
 | `TWEEN_COMPLETED` | `"tween_completed"` | Tween | Sound(15) |
 
 ## Priority conventions

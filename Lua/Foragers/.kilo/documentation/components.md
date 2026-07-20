@@ -18,7 +18,7 @@ description: Quick reference for all 14 components — purpose, config fields, e
 
 | Component | Purpose | Config | Subscribes | Emits |
 |---|---|---|---|---|
-| **tween** | Property animation on events (flip, hit, state, arrival, spawned) | `tweens`, `tags` (event→tween mappings), `destroyOnComplete` | FLIPPED (10), STATE_CHANGED (10), PROP_HIT (10), FOLLOW_ARRIVED (10), PROP_SPAWNED (10) | TWEEN_COMPLETED |
+| **tween** | Property animation on events (flip, hit, state, arrival, spawned, pickup) | `tweens`, `tags` (event→tween mappings), `destroyOnComplete` | FLIPPED (10), STATE_CHANGED (10), PROP_HIT (10), FOLLOW_ARRIVED (10), PROP_SPAWNED (10), PICKUP (10) | TWEEN_COMPLETED |
 | **shake** | Screen shake on death | `magnitude`, `duration`, `decay` | PROP_BROKEN (5) | — |
 | **shader** | Composes multiple shader modules into one shader (uv-chain → Texel → color-chain) | `shaders` (array; each entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides) or `shaderName` (single, legacy) | PROP_HIT (8) | — || **proximity_fade** | Fade alpha based on player distance | `radius`, `fadeAlpha`, `smoothness` | — | — |
 | **shadow** | Texture-free pixel-perfect shadow (3-rect 1px-rounded shape) | `offsetX`, `offsetY`, `width`, `height` | — (data-only; rendered via `Shadow.renderLayer`) | — |

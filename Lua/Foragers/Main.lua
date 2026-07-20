@@ -22,6 +22,7 @@ local ProximityFade = require("Source.Sprite.Components.ProximityFade")
 local Drop = require("Source.Sprite.Components.Drop")
 local TweenComponent = require("Source.Sprite.Components.Tween").Component
 local Shadow = require("Source.Sprite.Components.Shadow")
+local Events = require("Source.Helpers.Events")
 local PropSpawner = require("Source.World.PropSpawner")
 
 local objects = {}
@@ -301,6 +302,11 @@ function love.update(dt)
 
 	local destroyedTweens = TweenComponent.getPendingDestroy()
 	for _, sprite in ipairs(destroyedTweens) do
+		for _, comp in ipairs(sprite.components or {}) do
+			if comp.type == "follow" and comp.followTarget then
+				comp.followTarget:emit(Events.PICKUP, sprite)
+			end
+		end
 		Collision.removeSpriteColliders(sprite)
 		removeSpriteFromLists(sprite)
 	end
