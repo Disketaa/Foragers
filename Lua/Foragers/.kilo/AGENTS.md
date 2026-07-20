@@ -82,8 +82,11 @@ Foragers/
 │   │       ├── Shake.lua            # Screen shake on PROP_BROKEN
 │   │       ├── Sound.lua            # Sounds triggered by events
 │   │       ├── Spritesheet.lua      # Unified quad animation + spritesheet (merged Animation)
+│   │       ├── SpriteFont.lua       # Text rendering via spritesheet quads
 │   │       ├── Tween.lua            # Merged Tween component + data class + easing (was Tweens.lua)
 │   │       └── Weapon.lua           # Weapon data container (range, cooldown, damage, swing)
+│   ├── UI/
+│   │   └── Text.lua                 # Text object: sprite + spritefont components
 │   └── World/
 │       ├── TilePalette.lua          # Adjacency mask → tile index/variant
 │       ├── WorldBuilder.lua         # Sprite construction from world data (was in Generator)
@@ -116,7 +119,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ### Components (summary)
 
-15 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`.
+16 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`.
 
 - **Sprite** (`Sprite.lua`): base entity. `:update()` drives components with xpcall; `:draw()` draws `image` directly if `type == "StaticSprite"`, else delegates. Three draw passes: `drawBehind`, normal, `drawOnTop`.
 - **SpriteLoader** (`SpriteLoader.lua`): `instantiate(data, x, y, pngPath)` is the single source of truth for turning data into live sprites. `loadAll()` scans files and calls `instantiate()`.
@@ -134,6 +137,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 - **ProximityFade** (`ProximityFade.lua`): fades alpha based on player distance.
 - **Shader** (`Shader.lua`): composes multiple shader modules (`shaders` array) into one shader via `ShaderLoader.compose`; drives uniforms from any `parent.tweens.<target>` matching `u_<target>` (e.g. `brightness` → `u_brightness`, `tint_mix` → `u_tint_mix`) in `update()`. Subscribes to `prop_hit` (8). Each `shaders` entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides; `u_seed` auto-derives from sprite position if unset.
 - **Shadow** (`Shadow.lua`): texture-free pixel-perfect shadow. Data-only component (`offsetX`, `offsetY`, `width`, `height`); no `update`/`draw`. The shadow CENTER is the sprite's pivot point in world space (`sprite.x, sprite.y` — where the pivot pixel is drawn) plus `offsetX/offsetY`, so `offset 0,0` centers the shadow exactly on the pivot point for any `pivotX/pivotY`. Mods shift `offsetY` to drop the shadow under the feet. `Shadow.renderLayer(sprites, w, h, camX, camY)` (called from Main inside the world canvas, after terrain and before the sorted sprites, with the world camera translate active) renders every shadow to its own canvas in screen space (`origin()` resets the active translate; the camera offset is baked into the coordinates), then composites that canvas once at `layerAlpha` in screen space — overlapping shadows union instead of summing, and the blend pipeline is touched once per frame. Shape is a 1px-corner-rounded rect drawn with 3 `love.graphics.rectangle` calls (top strip, full-width middle, bottom strip).
+- **SpriteFont** (`SpriteFont.lua`): text rendering using parent sprite's spritesheet quads. Builds char→quad and char→width maps from `chars`/`spacing` data. No event subscriptions, no update logic. Color set per-instance via `Text` API.
 
 ---
 
