@@ -102,7 +102,7 @@ function ShaderLoader._compileProgram(names, meta)
 		uniforms[u] = v
 	end
 
-	-- LÖVE does NOT auto-declare uniforms; each must be an `extern` in the source.
+	-- LOVE does NOT auto-declare uniforms; each must be an extern in the source.
 	local decls = {}
 	for u, v in pairs(uniforms) do
 		local typ = "float"
@@ -131,8 +131,10 @@ function ShaderLoader._compileProgram(names, meta)
 		.. table.concat(uvCalls, "\n")
 		.. "\n"
 		.. "	vec4 sampled = Texel(texture, uv);\n"
-		-- effect() already declares `color` as a parameter; redeclaring `vec4 color`
-		-- here is a GLSL redefinition error, so assign into the existing parameter.
+		-- effect() already declares color as a parameter; redeclaring vec4 color
+
+		-- here is a GLSL redefinition error, so assign into the existing parameter.
+
 		.. "	color = sampled;\n"
 		.. table.concat(colorCalls, "\n")
 		.. "\n"
