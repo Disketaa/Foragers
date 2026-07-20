@@ -131,7 +131,6 @@ function ShaderLoader._compileProgram(names, meta)
 		.. table.concat(uvCalls, "\n")
 		.. "\n"
 		.. "	vec4 sampled = Texel(texture, uv);\n"
-		-- effect() already declares `color`; redeclaring vec4 color is a GLSL error, so assign into the existing parameter
 		.. "	color = sampled;\n"
 		.. table.concat(colorCalls, "\n")
 		.. "\n"
