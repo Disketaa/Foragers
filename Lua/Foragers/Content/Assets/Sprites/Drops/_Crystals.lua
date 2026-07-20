@@ -56,6 +56,7 @@ return {
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/CrystalSpark",
 			interval = 0.2,
+			moving = true,
 			layer = "below",
 		},
 	},

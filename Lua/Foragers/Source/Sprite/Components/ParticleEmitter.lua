@@ -17,6 +17,7 @@ function ParticleEmitter.new(data)
 		particle = data.particle,
 		stepInterval = data.stepInterval or 2,
 		interval = data.interval or 0,
+		moving = data.moving or false,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
 		inheritFlip = data.inheritFlip ~= false,
@@ -31,6 +32,8 @@ function ParticleEmitter.new(data)
 		_particles = {},
 		_stepCounter = 0,
 		_intervalTimer = 0,
+		_lastParentX = nil,
+		_lastParentY = nil,
 		_emitting = false,
 		_cachedFlipX = false,
 		_particleData = nil,
@@ -266,11 +269,23 @@ function ParticleEmitter:update(dt)
 	end
 
 	if self.interval and self.interval > 0 and self._particleData then
-		self._intervalTimer = self._intervalTimer + dt
-		while self._intervalTimer >= self.interval do
-			self._intervalTimer = self._intervalTimer - self.interval
-			if #self._particles < self.maxParticles then
-				self:_spawn()
+		local shouldAccumulate = true
+		if self.moving then
+			if not self.parent then
+				shouldAccumulate = false
+			else
+				shouldAccumulate = self.parent.x ~= self._lastParentX or self.parent.y ~= self._lastParentY
+				self._lastParentX = self.parent.x
+				self._lastParentY = self.parent.y
+			end
+		end
+		if shouldAccumulate then
+			self._intervalTimer = self._intervalTimer + dt
+			while self._intervalTimer >= self.interval do
+				self._intervalTimer = self._intervalTimer - self.interval
+				if #self._particles < self.maxParticles then
+					self:_spawn()
+				end
 			end
 		end
 	end
