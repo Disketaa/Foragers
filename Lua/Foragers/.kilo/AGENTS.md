@@ -78,7 +78,7 @@ Foragers/
 │   │       ├── ParticleEmitter.lua  # Particle spawner
 │   │       ├── ProximityFade.lua    # Fades alpha based on player distance
 │   │       ├── ScrollTo.lua         # Smooth camera follow (centers camera on target)
-│   │       ├── Shader.lua           # Shader uniform management (brightness)
+│   │       ├── Shader.lua           # Shader uniform management (generic tween→uniforms)
 │   │       ├── Shake.lua            # Screen shake on PROP_BROKEN
 │   │       ├── Sound.lua            # Sounds triggered by events
 │   │       ├── Spritesheet.lua      # Unified quad animation + spritesheet (merged Animation)
@@ -132,7 +132,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 - **Weapon** (`Weapon.lua`): data container (range, cooldown, damage, swing). Read-only.
 - **Shake** (`Shake.lua`): screen shake on `PROP_BROKEN`.
 - **ProximityFade** (`ProximityFade.lua`): fades alpha based on player distance.
-- **Shader** (`Shader.lua`): composes multiple shader modules (`shaders` array) into one shader via `ShaderLoader.compose`; drives uniforms (`u_time`, `u_brightness` tween) in `update()`. Subscribes to `prop_hit` (8). Each `shaders` entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides; `u_seed` auto-derives from sprite position if unset.
+- **Shader** (`Shader.lua`): composes multiple shader modules (`shaders` array) into one shader via `ShaderLoader.compose`; drives uniforms from any `parent.tweens.<target>` matching `u_<target>` (e.g. `brightness` → `u_brightness`, `tint_mix` → `u_tint_mix`) in `update()`. Subscribes to `prop_hit` (8). Each `shaders` entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides; `u_seed` auto-derives from sprite position if unset.
 - **Shadow** (`Shadow.lua`): texture-free pixel-perfect shadow. Data-only component (`offsetX`, `offsetY`, `width`, `height`); no `update`/`draw`. The shadow CENTER is the sprite's pivot point in world space (`sprite.x, sprite.y` — where the pivot pixel is drawn) plus `offsetX/offsetY`, so `offset 0,0` centers the shadow exactly on the pivot point for any `pivotX/pivotY`. Mods shift `offsetY` to drop the shadow under the feet. `Shadow.renderLayer(sprites, w, h, camX, camY)` (called from Main inside the world canvas, after terrain and before the sorted sprites, with the world camera translate active) renders every shadow to its own canvas in screen space (`origin()` resets the active translate; the camera offset is baked into the coordinates), then composites that canvas once at `layerAlpha` in screen space — overlapping shadows union instead of summing, and the blend pipeline is touched once per frame. Shape is a 1px-corner-rounded rect drawn with 3 `love.graphics.rectangle` calls (top strip, full-width middle, bottom strip).
 
 ---

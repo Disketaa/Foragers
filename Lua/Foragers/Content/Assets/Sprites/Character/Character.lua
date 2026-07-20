@@ -63,7 +63,7 @@ return {
 					{ target = "scale_x", from = 1.25, to = 1, duration = 0.75, curve = "OutBack" },
 					{ target = "scale_y", from = 0.75, to = 1, duration = 0.5, curve = "OutBack" },
 				},
-				pickup = { { target = "brightness", from = 0.9, to = 0.5, duration = 0.5, curve = "OutCubic" } },
+				pickup = { { target = "tint_mix", from = 0.5, to = 0, duration = 0.5, curve = "OutCubic" } },
 			},
 		},
 
@@ -103,7 +103,9 @@ return {
 
 		{
 			component = "shader",
-			shaders = { "Brightness" },
+			shaders = {
+				{ Tint = { u_tint_color = { 0.8, 0.5, 0.7 } } },
+			},
 		},
 	},
 }

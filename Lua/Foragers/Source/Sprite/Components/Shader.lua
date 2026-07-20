@@ -105,11 +105,17 @@ function ShaderComponent:update()
 		self:_setUniform("u_time", ShaderLoader.time)
 	end
 
-	local brightnessTween = self.parent.tweens and self.parent.tweens.brightness
-	if brightnessTween and self._uniformWhitelist.u_brightness then
-		self:_setUniform("u_brightness", brightnessTween:getValue())
-	elseif self._uniformWhitelist.u_brightness then
-		self:_setUniform("u_brightness", self.brightness)
+	if self._uniformWhitelist then
+		for uniformName in pairs(self._uniformWhitelist) do
+			if uniformName ~= "u_time" then
+				local target = uniformName:match("^u_(.+)$")
+				if target then
+					local tween = self.parent.tweens and self.parent.tweens[target]
+					local value = tween and tween:getValue() or self._uniformValues[uniformName]
+					self:_setUniform(uniformName, value)
+				end
+			end
+		end
 	end
 end
 

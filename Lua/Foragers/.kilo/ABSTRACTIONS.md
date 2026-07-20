@@ -23,7 +23,15 @@ relevant section before touching that subsystem.
   color-chain. A module that re-`Texel`s overwrites the earlier sample (last
   wins), so stacking color modules via separate `Texel` calls does not compose.
 - **`compose(names)` is cached by joined name.** Repeat calls with the same
-  module set return the cached program — do not expect a fresh shader.
+  module set return the cached SHADER OBJECT — do not expect a fresh shader.
+- **Cached shader → shared GPU state.** All sprites with the same shader
+  composition (e.g. `{ "Brightness" }`) get the SAME shader object.
+  `shader:send()` writes to the shared GPU uniform. If you skip re-sending
+  defaults every frame, one sprite's tweened uniform leaks to all others during
+  draw (last `send` wins). The ShaderComponent must re-send EVERY whitelisted
+  uniform every frame in `update()`, regardless of whether a tween is active.
+  Removing the per-frame fallback (e.g. the old `elseif self.brightness` path)
+  breaks every sprite without an active tween.
 - **Module types:** `type = "uv"` exposes `Name_uv(vec2 uv, vec2 screen_coords)`
   and returns modified `uv`; `type = "color"` exposes `Name_color(vec4 color)`
   and returns modified `color`. Both are `module = true`.
