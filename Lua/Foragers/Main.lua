@@ -5,7 +5,6 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 	require("lldebugger").start()
 end
 
-local Sprite = require("Source.Sprite.Sprite")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Merge = require("Source.Helpers.Merge")
 local Path = require("Source.Helpers.Path")
@@ -162,7 +161,7 @@ function love.load()
 
 	ModLoader.loadAllMods("Mods")
 
-	cursorSprite = SpriteLoader.loadAll("Content/Assets/Sprites/UI", function(data)
+	cursorSprite = SpriteLoader.loadAll("Content/Assets/Sprites/UI", function(_)
 		return 0, 0
 	end)[1]
 	if cursorSprite and cursorSprite.instance then

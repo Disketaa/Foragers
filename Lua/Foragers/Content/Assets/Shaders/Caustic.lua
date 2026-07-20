@@ -55,7 +55,8 @@ vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
          1.0,  2.0, 2.0
     );
 
-    // bgCanvas has no translate, so subtract camera offset from screen_coords to match world space (no parallax, 1x with world)
+    // bgCanvas has no translate, so subtract camera offset from screen_coords to match world space
+    // (no parallax, 1x with world)
     vec2 world_coords = screen_coords - vec2(camera_x, camera_y);
 
     vec4 cp = vec4(world_coords.x / horizontal_scale / 100.0,

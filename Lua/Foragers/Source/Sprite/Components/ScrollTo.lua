@@ -6,7 +6,8 @@ local Math = require("Source.Helpers.Math")
 ---@field smoothness number Seconds to reach target (higher = slower)
 ---@field offsetX number Camera offset X from target center
 ---@field offsetY number Camera offset Y from target center
----@field chunkSize number World-unit size of a camera chunk; when > 0 the camera snaps to chunk centers instead of tracking the target every frame (kills pixel-perfect jitter)
+---@field chunkSize number World-unit size of a camera chunk; when > 0 the camera snaps to
+	--- chunk centers instead of tracking the target every frame (kills pixel-perfect jitter)
 ---@field type "scroll_to"
 local ScrollTo = {}
 ScrollTo.__index = ScrollTo

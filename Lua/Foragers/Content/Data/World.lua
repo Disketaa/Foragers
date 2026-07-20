@@ -19,7 +19,7 @@ return {
 			weight = 5,
 		},
 		{
-			data = "Content.Assets.Sprites.Props.OakBushe",
+			data = "Content.Assets.Sprites.Props.OakBush",
 			weight = 7,
 		},
 		{
