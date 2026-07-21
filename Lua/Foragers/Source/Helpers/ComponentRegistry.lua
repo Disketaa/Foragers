@@ -37,6 +37,7 @@ local ScrollTo = require("Source.Sprite.Components.ScrollTo")
 local Shadow = require("Source.Sprite.Components.Shadow")
 local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
+local UI = require("Source.UI.Components.UI")
 
 local registry = {
 	collision = Collision,
@@ -56,6 +57,7 @@ local registry = {
 	shadow = Shadow,
 	spritefont = SpriteFont,
 	text_emitter = TextEmitter,
+	ui = UI,
 }
 for name, module in pairs(registry) do
 	ComponentRegistry.register(name, function(data)

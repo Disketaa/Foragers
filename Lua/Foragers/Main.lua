@@ -25,6 +25,7 @@ local Shadow = require("Source.Sprite.Components.Shadow")
 local Events = require("Source.Helpers.Events")
 local PropSpawner = require("Source.World.PropSpawner")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
+local UIComponent = require("Source.UI.Components.UI")
 
 local objects = {}
 local staticObjects = {}
@@ -43,6 +44,7 @@ local weaponSprite = nil
 local playerSprite = nil
 local shakeOffsetX = 0
 local shakeOffsetY = 0
+local uiSprites = {}
 local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
@@ -163,11 +165,28 @@ function love.load()
 
 	ModLoader.loadAllMods("Mods")
 
-	cursorSprite = SpriteLoader.loadAll("Content/Assets/Sprites/UI", function(_)
-		return 0, 0
-	end)[1]
-	if cursorSprite and cursorSprite.instance then
+	-- Cursor loaded separately: has no "ui" component, follows mouse instead of anchor.
+	local cursorData = require("Content.Assets.Sprites.UI.Cursor")
+	local cursorObj = SpriteLoader.instantiate(cursorData, 0, 0, "Content/Assets/Sprites/UI/Cursor.png")
+	if cursorObj then
+		cursorSprite = { instance = cursorObj, data = cursorData }
 		love.mouse.setVisible(false)
+	end
+
+	-- All sprites in Content/Assets/Sprites/UI/ with a "ui" component → screen-fixed layer.
+	local uiEntries = SpriteLoader.loadAll("Content/Assets/Sprites/UI") or {}
+	for _, entry in ipairs(uiEntries) do
+		for _, comp in ipairs(entry.instance.components or {}) do
+			if comp.type == "ui" then
+				table.insert(uiSprites, { sprite = entry.instance, ui = comp })
+				break
+			end
+		end
+	end
+	for _, ui in ipairs(uiSprites) do
+		local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
+		local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
+		ui.sprite.x, ui.sprite.y = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
 	end
 end
 
@@ -175,6 +194,11 @@ function love.resize(w, h)
 	canvas:resize(w, h)
 	bgCanvas:resize(w, h)
 	updateCamera()
+	for _, ui in ipairs(uiSprites) do
+		local ew = ui.sprite.frameWidth or ui.sprite.image:getWidth()
+		local eh = ui.sprite.frameHeight or ui.sprite.image:getHeight()
+		ui.sprite.x, ui.sprite.y = UIComponent.calculate(ui.ui, canvas.width, canvas.height, ew, eh)
+	end
 end
 
 local function screenToWorld(screenX, screenY)
@@ -221,16 +245,26 @@ function love.draw()
 
 		TextEmitter.drawAll()
 
-		if cursorSprite and cursorSprite.instance then
-			local mx, my = love.mouse.getPosition()
-			local wx, wy = screenToWorld(mx, my)
-			cursorSprite.instance.x = wx
-			cursorSprite.instance.y = wy
-			cursorSprite.instance:draw()
-		end
-
-		love.graphics.pop()
+		love.graphics.pop() -- world layer end
 	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY)
+
+	-- UI + cursor drawn outside canvas: screen-fixed, no camera shake/sub-pixel jitter
+	love.graphics.push()
+	love.graphics.origin()
+	love.graphics.translate(canvas.offsetX, canvas.offsetY)
+	love.graphics.scale(canvas.scale, canvas.scale)
+	for _, ui in ipairs(uiSprites) do
+		ui.sprite:draw()
+	end
+	if cursorSprite and cursorSprite.instance then
+		local mx, my = love.mouse.getPosition()
+		local cx = (mx - canvas.offsetX) / canvas.scale
+		local cy = (my - canvas.offsetY) / canvas.scale
+		cursorSprite.instance.x = cx
+		cursorSprite.instance.y = cy
+		cursorSprite.instance:draw()
+	end
+	love.graphics.pop()
 end
 
 local function removeSpriteFromLists(sprite)

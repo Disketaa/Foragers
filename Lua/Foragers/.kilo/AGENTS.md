@@ -86,6 +86,9 @@ Foragers/
 │   │       ├── Tween.lua            # Merged Tween component + data class + easing (was Tweens.lua)
 │   │       └── Weapon.lua           # Weapon data container (range, cooldown, damage, swing)
 │   ├── UI/
+│   │   ├── Components/
+│   │   │   ├── TextEmitter.lua      # Floating damage text (driven globally, not per-sprite)
+│   │   │   └── UI.lua               # Data-only component: screen-positioning (horizontal/vertical/offset)
 │   │   └── Text.lua                 # Text object: sprite + spritefont components
 │   └── World/
 │       ├── TilePalette.lua          # Adjacency mask → tile index/variant
@@ -119,7 +122,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ### Components (summary)
 
-16 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`.
+17 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `ui`.
 
 - **Sprite** (`Sprite.lua`): base entity. `:update()` drives components with xpcall; `:draw()` draws `image` directly if `type == "StaticSprite"`, else delegates. Three draw passes: `drawBehind`, normal, `drawOnTop`.
 - **SpriteLoader** (`SpriteLoader.lua`): `instantiate(data, x, y, pngPath)` is the single source of truth for turning data into live sprites. `loadAll()` scans files and calls `instantiate()`.
@@ -138,6 +141,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 - **Shader** (`Shader.lua`): composes multiple shader modules (`shaders` array) into one shader via `ShaderLoader.compose`; drives uniforms from any `parent.tweens.<target>` matching `u_<target>` (e.g. `brightness` → `u_brightness`, `tint_mix` → `u_tint_mix`) in `update()`. Subscribes to `prop_hit` (8). Each `shaders` entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides; `u_seed` auto-derives from sprite position if unset.
 - **Shadow** (`Shadow.lua`): texture-free pixel-perfect shadow. Data-only component (`offsetX`, `offsetY`, `width`, `height`); no `update`/`draw`. The shadow CENTER is the sprite's pivot point in world space (`sprite.x, sprite.y` — where the pivot pixel is drawn) plus `offsetX/offsetY`, so `offset 0,0` centers the shadow exactly on the pivot point for any `pivotX/pivotY`. Mods shift `offsetY` to drop the shadow under the feet. `Shadow.renderLayer(sprites, w, h, camX, camY)` (called from Main inside the world canvas, after terrain and before the sorted sprites, with the world camera translate active) renders every shadow to its own canvas in screen space (`origin()` resets the active translate; the camera offset is baked into the coordinates), then composites that canvas once at `layerAlpha` in screen space — overlapping shadows union instead of summing, and the blend pipeline is touched once per frame. Shape is a 1px-corner-rounded rect drawn with 3 `love.graphics.rectangle` calls (top strip, full-width middle, bottom strip).
 - **SpriteFont** (`SpriteFont.lua`): text rendering using parent sprite's spritesheet quads. Builds char→quad and char→width maps from `chars`/`spacing` data. No event subscriptions, no update logic. Color set per-instance via `Text` API. The `chars` string is iterated by **visual UTF-8 char** (not byte) — multi-byte glyphs (Cyrillic, etc.) map to one cell each, so a 2-byte char does NOT consume two quad cells. LuaJIT is Lua 5.1: no `utf8` module, manual UTF-8 decode by leading byte.
+- **UI** (`Source/UI/Components/UI.lua`): data-only component for screen-positioning. No `update`/`draw` — positioned by Main using `UI.calculate()`. Config: `horizontal` (`"left"|"center"|"right"`), `vertical` (`"top"|"center"|"bottom"`), `offsetX`, `offsetY`. Any sprite in `Content/Assets/Sprites/UI/` with a `"ui"` component is automatically screen-fixed after the world canvas `pop()`.
 - **TextEmitter** (`Source/UI/Components/TextEmitter.lua`): floating text on events (damage numbers). Registered in `ComponentRegistry` as `text_emitter`, but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `Main.lua` — its per-sprite `update`/`draw` are no-ops. Subscribes to `prop_hit` (5); uses the event payload (damage) as text when `text` is nil. Random motion/offset fields re-rolled per emit via `Math.parseRandomValue`. `destroy` (`fade`/`scale`/`instant`) + `destroyCurve` (easing name) shape the 1→0 animation. Lives in `Source/UI/Components/`, NOT `Source/Sprite/Components/`.
 
 ---
@@ -164,7 +168,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ## V. Component Registry
 
-`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 15 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"scroll_to"`, `"shader"`, `"shake"`, `"shadow"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`. Mods register new types the same way:
+`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 17 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"scroll_to"`, `"shader"`, `"shake"`, `"shadow"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`, `"spritefont"`, `"ui"`. Mods register new types the same way:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```

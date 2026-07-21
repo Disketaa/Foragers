@@ -156,8 +156,8 @@ function Spritesheet:draw(x, y)
 		quad = self.quads[anim.startIdx + frameIndex - 1]
 	elseif self._currentIndex then
 		quad = self.quads[self._currentIndex]
-	else
-		return
+	elseif self.quads and #self.quads > 0 then
+		quad = self.quads[1]
 	end
 
 	if not quad then

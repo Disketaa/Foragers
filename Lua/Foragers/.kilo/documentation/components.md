@@ -55,6 +55,7 @@ type sway out of phase.
 | Component | Purpose | Config | Subscribes | Emits |
 |---|---|---|---|---|
 | **text_emitter** | Floating text on events (e.g. damage numbers). Registered in `ComponentRegistry` but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `Main.lua` — NOT via the per-sprite component loop (its `update`/`draw` are no-ops). | `font`, `text`, `event`, `color`, `moveX`, `moveY`, `gravity`, `duration`, `offsetX`, `offsetY`, `destroy`, `destroyCurve` | PROP_HIT (5) | — |
+| **ui** | Data-only screen-positioning. No `update`/`draw` — positioned by Main using `UI.calculate()`. Any sprite in `Content/Assets/Sprites/UI/` with this component is drawn after the world canvas `pop()`. | `horizontal` (`"left"`/`"center"`/`"right"`), `vertical` (`"top"`/`"center"`/`"bottom"`), `offsetX`, `offsetY` | — | — |
 
 ### text_emitter config
 
@@ -64,7 +65,7 @@ type sway out of phase.
 | `text` | string | nil | Fixed text. If nil, the emitted event payload (e.g. damage number) is used as the text |
 | `event` | string | `"prop_hit"` | Event the emitter listens to |
 | `color` | table | `{1,1,1}` | RGB tint (0–1) |
-| `moveX` | number/`"a|b"`/`"min...max"` | `0` | Horizontal drift speed (px/s); re-rolled per emit |
+| `moveX` | number/`"a\|b"`/`"min...max"` | `0` | Horizontal drift speed (px/s); re-rolled per emit |
 | `moveY` | number/range/choice | `-120` | Vertical drift speed (px/s, negative = up); re-rolled per emit |
 | `gravity` | number/range/choice | `400` | Downward accel (px/s²); re-rolled per emit |
 | `duration` | number/range/choice | `0.8` | Lifetime seconds; re-rolled per emit |
@@ -74,6 +75,17 @@ type sway out of phase.
 | `destroyCurve` | string | `"Linear"` | Easing name from `Tween.Easing` shaping the destroy animation |
 
 Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text is drawn with the **font's** pivot as the glyph origin (Tinylorder uses `pivotX=0, pivotY=0`, so text is top-left anchored at the base). Random fields (`moveX/moveY/gravity/duration/offsetX/offsetY`) are parsed via `Math.parseRandomValue` **inside the event handler**, not in `new`, so each emit re-rolls choice/range strings. `drawAll` saves/restores the active shader so text is never tinted by a sprite shader.
+
+### ui config
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `horizontal` | `"left"`/`"center"`/`"right"` | `"left"` | Horizontal anchor. `"left"`: `x = offsetX`. `"center"`: centered + offsetX. `"right"`: `x = containerW - elemW - offsetX`. |
+| `vertical` | `"top"`/`"center"`/`"bottom"` | `"top"` | Vertical anchor. `"top"`: `y = offsetY`. `"center"`: centered + offsetY. `"bottom"`: `y = containerH - elemH - offsetY`. |
+| `offsetX` | number | `0` | Pixel offset added after anchor calculation |
+| `offsetY` | number | `0` | Pixel offset added after anchor calculation |
+
+Positioned by `Main.lua` at load and on every `love.resize()` — `UI.calculate(comp, canvasW, canvasH, elemW, elemH)` returns the final `x, y` in canvas-space. Drawn after `love.graphics.pop()` so UI is fixed on screen regardless of camera.
 
 ## Mode field (collision)
 
