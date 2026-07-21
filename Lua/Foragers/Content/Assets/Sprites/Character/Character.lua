@@ -8,6 +8,17 @@ return {
 	layer = 0,
 	components = {
 		{
+			component = "player_stats",
+			critChance = 0,
+			critMult = 1.5,
+			level = 1,
+			experience = 0,
+			xpCurve = { base = 10, growth = 1.35 },
+			hunger = 100,
+			maxHunger = 100,
+		},
+
+		{
 			component = "spritesheet",
 			columns = 4,
 			rows = 5,
