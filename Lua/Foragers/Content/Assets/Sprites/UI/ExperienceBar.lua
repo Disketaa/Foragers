@@ -1,6 +1,6 @@
 return {
-	frameWidth = 23,
-	frameHeight = 23,
+	frameWidth = 19,
+	frameHeight = 20,
 	pivotX = 0.5,
 	pivotY = 0.5,
 	layer = 0,
@@ -13,7 +13,7 @@ return {
 		{
 			component = "tween",
 			tags = {
-				count = {
+				counter_tick = {
 					{ target = "scale_x", from = 1.05, to = 1, duration = 0.5, curve = "OutBack" },
 					{ target = "scale_y", from = 1.05, to = 1, duration = 0.5, curve = "OutBack" },
 					{ target = "tint_mix", from = 0.4, to = 0, duration = 0.3, curve = "OutCubic" },
@@ -26,6 +26,14 @@ return {
 			tags = {
 				level_up = { "Content/Assets/Sounds/Steps/Events/LevelUp.ogg" },
 			},
+		},
+
+		{
+			component = "ui",
+			horizontal = "center",
+			vertical = "top",
+			offsetX = 0,
+			offsetY = 4,
 		},
 
 		{
@@ -49,14 +57,6 @@ return {
 			shaders = {
 				{ Tint = { u_tint_color = { 0.47, 0.39, 0.77 }, u_additive = 1 } },
 			},
-		},
-
-		{
-			component = "ui",
-			horizontal = "center",
-			vertical = "top",
-			offsetX = 0,
-			offsetY = 0,
 		},
 	},
 }

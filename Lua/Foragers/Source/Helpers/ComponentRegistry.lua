@@ -22,7 +22,7 @@ end
 
 local Collision = require("Source.Sprite.Components.Collision")
 local Control = require("Source.Sprite.Components.Control")
-local Spritesheet = require("Source.Sprite.Components.Spritesheet")
+local SpriteSheet = require("Source.Sprite.Components.SpriteSheet")
 local TweenModule = require("Source.Sprite.Components.Tween")
 local Sound = require("Source.Sprite.Components.Sound")
 local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
@@ -45,7 +45,7 @@ local Pickup = require("Source.Sprite.Components.Pickup")
 local registry = {
 	collision = Collision,
 	control = Control,
-	spritesheet = Spritesheet,
+	spritesheet = SpriteSheet,
 	tween = TweenModule.Component,
 	sound = Sound,
 	particle_emitter = ParticleEmitter,

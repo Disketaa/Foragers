@@ -1,17 +1,18 @@
 local Events = require("Source.Helpers.Events")
+local Log = require("Source.Helpers.Log")
 local Math = require("Source.Helpers.Math")
 
-local Spritesheet = {}
-Spritesheet.__index = Spritesheet
+local SpriteSheet = {}
+SpriteSheet.__index = SpriteSheet
 
-function Spritesheet.new(data)
+function SpriteSheet.new(data)
 	if not data or not data.spriteSheet then
-		return setmetatable({}, Spritesheet)
+		return setmetatable({}, SpriteSheet)
 	end
 
 	local ok, image = pcall(love.graphics.newImage, data.spriteSheet)
 	if not ok or not image then
-		return setmetatable({}, Spritesheet)
+		return setmetatable({}, SpriteSheet)
 	end
 
 	local self = setmetatable({
@@ -21,7 +22,7 @@ function Spritesheet.new(data)
 		frameHeight = data.frameHeight or 8,
 		pivotX = data.pivotX or 0.5,
 		pivotY = data.pivotY or 0.5,
-	}, Spritesheet)
+	}, SpriteSheet)
 
 	local imageW, imageH = image:getWidth(), image:getHeight()
 
@@ -32,7 +33,7 @@ function Spritesheet.new(data)
 		assert(
 			imageW == data.columns * self.frameWidth,
 			string.format(
-				"Spritesheet '%s': columns=%d * frameWidth=%d = %d, but imageWidth=%d",
+				"SpriteSheet '%s': columns=%d * frameWidth=%d = %d, but imageWidth=%d",
 				data.spriteSheet,
 				data.columns,
 				self.frameWidth,
@@ -45,7 +46,7 @@ function Spritesheet.new(data)
 		assert(
 			imageH == data.rows * self.frameHeight,
 			string.format(
-				"Spritesheet '%s': rows=%d * frameHeight=%d = %d, but imageHeight=%d",
+				"SpriteSheet '%s': rows=%d * frameHeight=%d = %d, but imageHeight=%d",
 				data.spriteSheet,
 				data.rows,
 				self.frameHeight,
@@ -94,7 +95,7 @@ function Spritesheet.new(data)
 	return self
 end
 
-function Spritesheet:attach()
+function SpriteSheet:attach()
 	self.parent:on(Events.STATE_CHANGED, function(newState)
 		local animName = self.tags and self.tags[newState] or newState
 		if self.animations[animName] and animName ~= self.currentAnim then
@@ -105,7 +106,7 @@ function Spritesheet:attach()
 	end, 5)
 end
 
-function Spritesheet:update(dt)
+function SpriteSheet:update(dt)
 	if not self.currentAnim or not self.animations then
 		return
 	end
@@ -132,7 +133,7 @@ function Spritesheet:update(dt)
 	end
 end
 
-function Spritesheet:setFrame(index)
+function SpriteSheet:setFrame(index)
 	if not self.quads then
 		return
 	end
@@ -141,7 +142,7 @@ function Spritesheet:setFrame(index)
 	end
 end
 
-function Spritesheet:draw(x, y)
+function SpriteSheet:draw(x, y)
 	if not self.quads then
 		return
 	end
@@ -162,6 +163,27 @@ function Spritesheet:draw(x, y)
 
 	if not quad then
 		return
+	end
+
+	-- Sprite is the visual owner: wrap draw with parent shader
+	local hadShader = false
+	if self.parent and self.parent.shader and not self.parent._shaderBroken then
+		local ok, err = xpcall(function()
+			love.graphics.setShader(self.parent.shader)
+			if self.parent._shaderDirty then
+				for k, v in pairs(self.parent.shaderData or {}) do
+					self.parent.shader:send(k, v)
+				end
+				self.parent._shaderDirty = false
+			end
+		end, debug.traceback)
+		if ok then
+			hadShader = true
+		else
+			Log.error("[SpriteSheet] shader: " .. tostring(err))
+			love.graphics.setShader()
+			self.parent._shaderBroken = true
+		end
 	end
 
 	local sx, sy = 1, 1
@@ -199,6 +221,10 @@ function Spritesheet:draw(x, y)
 	if alpha < 1 then
 		love.graphics.setColor(1, 1, 1, 1)
 	end
+
+	if hadShader then
+		love.graphics.setShader()
+	end
 end
 
-return Spritesheet
+return SpriteSheet

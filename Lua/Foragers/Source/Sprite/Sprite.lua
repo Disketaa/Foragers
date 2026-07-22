@@ -98,27 +98,28 @@ local function drawComponents(sprite, predicate)
 end
 
 function Sprite:draw()
-	local hadShader = false
-	if self.shader and not self._shaderBroken then
-		local ok, err = xpcall(function()
-			love.graphics.setShader(self.shader)
-			if self._shaderDirty then
-				for k, v in pairs(self.shaderData or {}) do
-					self.shader:send(k, v)
-				end
-				self._shaderDirty = false
-			end
-		end, debug.traceback)
-		if ok then
-			hadShader = true
-		else
-			Log.error("[Sprite] shader: " .. tostring(err))
-			love.graphics.setShader()
-			self._shaderBroken = true
-		end
-	end
-
 	if self.type == "StaticSprite" and self.image then
+		-- StaticSprite: shader wraps only the sprite image draw
+		local hadShader = false
+		if self.shader and not self._shaderBroken then
+			local ok, err = xpcall(function()
+				love.graphics.setShader(self.shader)
+				if self._shaderDirty then
+					for k, v in pairs(self.shaderData or {}) do
+						self.shader:send(k, v)
+					end
+					self._shaderDirty = false
+				end
+			end, debug.traceback)
+			if ok then
+				hadShader = true
+			else
+				Log.error("[Sprite] shader: " .. tostring(err))
+				love.graphics.setShader()
+				self._shaderBroken = true
+			end
+		end
+
 		local sx, sy = 1, 1
 		local rot = 0
 		if self.tweens then
@@ -145,8 +146,15 @@ function Sprite:draw()
 		if alpha < 1 then
 			love.graphics.setColor(1, 1, 1, 1)
 		end
+
+		if hadShader then
+			love.graphics.setShader()
+		end
 	end
 
+	-- Component draws: shader is managed by SpriteSheet, not here.
+	-- This ensures text overlays (counter label, spritefont, text_emitter)
+	-- draw without the sprite's tint shader.
 	drawComponents(self, function(c)
 		return c.drawBehind
 	end)
@@ -154,10 +162,6 @@ function Sprite:draw()
 	drawComponents(self, function(c)
 		return not c.drawBehind and not c.drawOnTop
 	end)
-
-	if hadShader then
-		love.graphics.setShader()
-	end
 
 	drawComponents(self, function(c)
 		return c.drawOnTop
