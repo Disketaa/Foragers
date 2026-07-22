@@ -45,7 +45,7 @@ def load_plugin(name: str, plugins_dir: Path):
 
 def main():
     script_dir = Path(__file__).resolve().parent
-    config_path = script_dir / "formatter.toml"
+    config_path = script_dir / "Settings.toml"
 
     if not config_path.is_file():
         print(f"Error: Config file not found at {config_path}", file=sys.stderr)
