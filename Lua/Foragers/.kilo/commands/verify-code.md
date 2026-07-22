@@ -12,7 +12,7 @@ List every .lua file you created or modified in this task. The checklist below r
 
 ## Step 1.5 Lint check
 
-Run `npm run lint` (or `.\Tools\luacheck.exe Source`) to verify no static analysis errors. Fix any warnings before proceeding.
+Run `.\Tools\luacheck.exe Source/` to verify no static analysis errors. Fix any warnings before proceeding.
 
 ## Step 2. Category checklist
 
@@ -37,9 +37,9 @@ For each file from step 1, go through all items. Answer not with "yes/no" but po
 - Do `drawBehind` and `drawOnTop` conflict on the same component? (Lua allows both flags, but behavior is undefined.)
 
 **2.5 Single-writer rule and event model**
-- Does the component NOT write `parent._state` or `parent.flipX` directly, unless it's Control? (Violates the single-writer rule from `.kilo/AGENTS.md` §IV.)
-- Does the component NOT read another component's fields in `update()`? Even through `parent`? (Cross-component communication — events only.)
-- If a new component subscribes to an event — is the priority chosen with a gap of 5 (5/10/15/20)?
+- Does the component NOT write `parent._state` or `parent.flipX` directly, unless it's Control? (Violates the single-writer rule from `.kilo/AGENTS.md` §I.)
+- Does the component NOT read another component's fields in `update()`? Even through `parent`? (Cross-component communication — events only — AGENTS.md §I.)
+- If a new component subscribes to an event — is the priority chosen with a gap of 5 (5/10/15/20)? (AGENTS.md §X — exception: STATE_CHANGED/FLIPPED use tight priorities 7↔8, 10↔11↔12.)
 - Are all event references string constants from `Source/Helpers/Events.lua`?
 
 **2.6 Design constants in config**

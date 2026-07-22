@@ -25,9 +25,9 @@ New game content (items, entities, world config, sprites, animations) goes in `C
 
 Components communicate via events, not field reads. If a new component needs data from another:
 - Subscribe to an existing event from `Events.lua`
-- If no existing event fits the signal, add it to `Events.lua` and update execution order table in AGENTS.md
-- Never read another component's fields in `update()` (two exceptions documented in AGENTS.md §IV)
-- Use priority gaps of 5 when subscribing
+- If no existing event fits the signal, add it to `Events.lua` and add its row to `events.md` with documented emitters and priorities
+- Never read another component's fields in `update()` (four field exceptions documented in AGENTS.md §X)
+- Use priority gaps of 5 when subscribing (AGENTS.md §X)
 
 ### 4. Error handling
 
@@ -95,9 +95,27 @@ If the feature should be overridable by mods:
 | Event not received | Wrong priority, wrong event string, or subscription happens too late (must be in `attach()`) |
 | Tween not animating | Tween subscribes to `state_changed` and `flipped` — trigger one of these, or check the tween data syntax |
 
+## Pre-flight to-do check
+
+Before finishing, verify each:
+
+- [ ] All gameplay values in `Content/Data/` or `Content/Assets/Sprites/`, not hardcoded (AGENTS.md §I)
+- [ ] Components communicate via events only — no field reads across components in `update()` (§I, §X)
+- [ ] `parent._state` never written outside Control — emit `state_changed` instead (§I)
+- [ ] Priority gaps of 5 on all event subscriptions (§X)
+- [ ] No manual `Sprite.new()` / `ComponentRegistry.create()` — used `SpriteLoader.instantiate()` (§I)
+- [ ] Every new event constant in `Events.lua` has a row in `events.md` (§II)
+- [ ] Mod errors won't crash base game — all mod code wrapped in `pcall` (§V)
+- [ ] All changed docs cross-referenced: `components.md`, `events.md`, `data-format.md` if applicable (§II)
+- [ ] Rationale comments only — no "what" comments that just restate code (§V)
+- [ ] Stale section references in docs updated to match current AGENTS.md chapter numbers (§II)
+
 ## Reference
 
-- `.kilo/AGENTS.md` — full architecture, component rules, event table, error handling
+- `.kilo/AGENTS.md` — full architecture, component rules, event system, error handling
+- `.kilo/documentation/components.md` — component config fields, subscribed/emitted events
+- `.kilo/documentation/events.md` — all events, emitters, listener priorities
+- `.kilo/documentation/data-format.md` — sprite data file format
 - `Source/Sprite/Sprite.lua` — base sprite, xpcall dispatch
 - `Source/Helpers/Events.lua` — all event constants
 - `Source/Helpers/ComponentRegistry.lua` — component registration
