@@ -43,8 +43,6 @@ return {
 			component = "control",
 			movementSpeed = 50,
 			swimmingSpeed = 30,
-			keyboardControl = { keys = { up = "w", down = "s", left = "a", right = "d" } },
-			mouseControl = { slowdownRadius = 15 },
 		},
 
 		{
