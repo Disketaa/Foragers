@@ -1,6 +1,6 @@
 [targets]
 # Directories to process (relative to project root). Use "*" for everything.
-folders = ["Content", "Source"]
+folders = ["Content/Assets/Sprites", "Content/Assets/UI"]
 exclude_folders = []
 exclude_files = []
 
@@ -15,9 +15,6 @@ enabled = true
 collapse_integer_floats = true
 
 [Modules.AddBlankLines]
-enabled = true
-
-[Modules.TrimTrailingWhitespace]
 enabled = true
 
 [component_order]
