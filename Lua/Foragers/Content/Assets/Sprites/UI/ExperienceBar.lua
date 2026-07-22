@@ -34,7 +34,7 @@ return {
 			field = "experience",
 			sourceType = "player_stats",
 			smoothness = 0.3,
-			curve = "InOutCubic",
+			curve = "OutCubic",
 			label = {
 				font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
 				charSpacing = -4,
