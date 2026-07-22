@@ -1,4 +1,5 @@
 .editorconfig
+*.pyc
 /Foragers/.clinerules
 /Foragers/.config
 /Foragers/.monogame-docs-md
