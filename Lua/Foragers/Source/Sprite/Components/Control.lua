@@ -10,14 +10,14 @@ local Options = require("Content.Data.Options")
 ---@field mouseY number|nil Mouse Y in world coordinates
 ---@field tags table<string, string>|nil Mapping of states to animation names
 ---@field _grounded boolean|nil Grounded state cached from grounded_changed event
----@field _slowdown number Speed multiplier from collision zones (1.0 = normal)
+---@field _slowdown number Speed multiplier from collision zones (1 = normal)
 ---@field type "control"
 local Control = {}
 Control.__index = Control
 
 local function calculateSpeedMultiplier(distance, slowdownRadius)
 	if not slowdownRadius or slowdownRadius <= 0 then
-		return 1.0
+		return 1
 	end
 	return math.max(0, math.min(1, distance / slowdownRadius))
 end
@@ -88,7 +88,7 @@ function Control.new(data)
 		tags = data.tags,
 		_grounded = nil,
 		_groundedInitialized = false,
-		_slowdown = 1.0,
+		_slowdown = 1,
 		type = "control",
 	}, Control)
 	return self

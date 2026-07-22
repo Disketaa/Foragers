@@ -142,7 +142,7 @@ function Collision:update(dt)
 		_slowdownCurr[k] = nil
 	end
 
-	local currentSlowdown = 1.0
+	local currentSlowdown = 1
 	for _, r in ipairs(slowdownColliders) do
 		if checkAABB(myRect, r) then
 			if r.slowdown and r.slowdown < currentSlowdown then
@@ -187,7 +187,7 @@ end
 -- For slowdown zones (bushes, etc.); baked once at world generation
 function Collision:registerAsSlowdown()
 	local rect = self:getRect()
-	rect.slowdown = self.slowdown or 1.0
+	rect.slowdown = self.slowdown or 1
 	rect.sprite = self.parent
 	table.insert(slowdownColliders, rect)
 end

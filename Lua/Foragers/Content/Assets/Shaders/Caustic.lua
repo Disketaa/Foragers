@@ -35,33 +35,33 @@ float smoothNoise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
     float a = simpleHash(i);
-    float b = simpleHash(i + vec2(1.0, 0.0));
-    float c = simpleHash(i + vec2(0.0, 1.0));
-    float d = simpleHash(i + vec2(1.0, 1.0));
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+    float b = simpleHash(i + vec2(1, 0));
+    float c = simpleHash(i + vec2(0, 1));
+    float d = simpleHash(i + vec2(1, 1));
+    vec2 u = f * f * (3 - 2 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1 - u.x) + (d - b) * u.x * u.y;
 }
 
 vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
-    if (threshold >= 1.0 && glow_intensity <= 0.0) {
-        return vec4(0.0);
+    if (threshold >= 1 && glow_intensity <= 0) {
+        return vec4(0);
     }
 
     float ct = time * speed;
 
     mat3 cm = mat3(
-        -2.0, -1.0, 2.0,
-         3.0, -2.0, 1.0,
-         1.0,  2.0, 2.0
+        -2, -1, 2,
+         3, -2, 1,
+         1,  2, 2
     );
 
     // bgCanvas has no translate, so subtract camera offset from screen_coords to match world space
     // (no parallax, 1x with world)
     vec2 world_coords = screen_coords - vec2(camera_x, camera_y);
 
-    vec4 cp = vec4(world_coords.x / horizontal_scale / 100.0,
-                   world_coords.y / vertical_scale / 100.0,
-                   0.0, ct);
+    vec4 cp = vec4(world_coords.x / horizontal_scale / 100,
+                   world_coords.y / vertical_scale / 100,
+                   0, ct);
 
     vec3 tc1 = vec3(cp.x, cp.y, cp.w) * (cm * 0.5);
     cp = vec4(tc1.x, tc1.y, cp.z, tc1.z);
@@ -75,11 +75,11 @@ vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
     cp = vec4(tc3.x, tc3.y, cp.z, tc3.z);
     float r3 = length(0.5 - fract(cp.xyw));
 
-    float ci = 1.0 - pow(min(min(r1, r2), r3), 7.0) * 25.0;
-    float base = 1.0 - smoothstep(threshold, threshold + 0.3, ci);
-    float glow = (1.0 - smoothstep(glow_threshold, glow_threshold + 0.6, ci)) * glow_intensity;
+    float ci = 1 - pow(min(min(r1, r2), r3), 7) * 25;
+    float base = 1 - smoothstep(threshold, threshold + 0.3, ci);
+    float glow = (1 - smoothstep(glow_threshold, glow_threshold + 0.6, ci)) * glow_intensity;
 
-    if (sharpness > 0.0) {
+    if (sharpness > 0) {
         float cutoff = 0.5 + sharpness * 0.5;
         base = mix(base, step(cutoff, base), sharpness);
         glow = mix(glow, step(cutoff, glow), sharpness);
@@ -87,13 +87,13 @@ vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
 
     float alpha = base;
 
-    if (opacity_variation > 0.0) {
+    if (opacity_variation > 0) {
         float scale = max(horizontal_scale, vertical_scale);
         float noise = smoothNoise(world_coords * (0.005 / scale) + ct * 0.05);
-        alpha *= mix(1.0, 1.0 - noise, opacity_variation);
+        alpha *= mix(1, 1 - noise, opacity_variation);
     }
 
-    vec3 fc = caustic_color + vec3(1.0) * glow;
+    vec3 fc = caustic_color + vec3(1) * glow;
     return vec4(fc, alpha);
 }
 ]],

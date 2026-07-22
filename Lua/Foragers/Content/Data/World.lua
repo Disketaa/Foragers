@@ -8,20 +8,23 @@ return {
 	tileSize = 8,
 	backgroundColor = { 0.25, 0.74, 0.9 },
 	propCoverage = 0.3,
-	propSpawnInterval = 3.0,
+	propSpawnInterval = 3,
 	props = {
 		{
 			data = "Content.Assets.Sprites.Props.Rocks",
 			weight = 4,
 		},
+
 		{
 			data = "Content.Assets.Sprites.Props.OakStumps",
 			weight = 5,
 		},
+
 		{
 			data = "Content.Assets.Sprites.Props.OakBush",
 			weight = 7,
 		},
+
 		{
 			data = "Content.Assets.Sprites.Props.Oak",
 			weight = 1,

@@ -10,7 +10,7 @@ return {
 	code = [[
 vec4 Tint_color(vec4 color) {
 	float t = u_tint_mix;
-	if (t == 0.0 || color.a == 0.0) {
+	if (t == 0 || color.a == 0) {
 		return color;
 	}
 	vec3 tinted = mix(color.rgb, u_tint_color, t);

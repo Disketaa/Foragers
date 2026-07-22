@@ -24,8 +24,8 @@ function Sound.new(data)
 	for stateName, config in pairs(self.tags) do
 		local sounds = config.sounds or config
 		local soundSet = {
-			volume = config.volume or data.volume or 1.0,
-			pitch = config.pitch or data.pitch or 1.0,
+			volume = config.volume or data.volume or 1,
+			pitch = config.pitch or data.pitch or 1,
 			pitchRandomness = config.pitchRandomness or data.pitchRandomness or 0,
 			stepInterval = config.stepInterval or data.stepInterval or 1,
 			baseSources = {},

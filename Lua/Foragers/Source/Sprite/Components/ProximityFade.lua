@@ -24,7 +24,7 @@ function ProximityFade.new(data)
 		radius = data.radius or 32,
 		fadeAlpha = data.fadeAlpha or 0.3,
 		smoothness = data.smoothness or 0.2,
-		_currentAlpha = 1.0,
+		_currentAlpha = 1,
 		type = "proximity_fade",
 	}, ProximityFade)
 end
@@ -39,7 +39,7 @@ function ProximityFade:update(dt)
 	local dy = self.parent.y - playerRef.y
 	local dist = math.sqrt(dx * dx + dy * dy)
 
-	local target = 1.0
+	local target = 1
 	if dist < self.radius then
 		target = self.fadeAlpha
 	end
