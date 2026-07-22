@@ -14,5 +14,7 @@ local Events = {
 	PICKUP = "pickup",
 	PROP_SPAWNED = "prop_spawned",
 	VALUE_CHANGED = "value_changed",
+	COUNTER_TICK = "counter_tick",
+	COUNTER_WRAP = "counter_wrap",
 }
 return Events

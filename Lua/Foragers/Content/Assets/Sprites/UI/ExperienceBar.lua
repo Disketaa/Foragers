@@ -11,6 +11,24 @@ return {
 		},
 
 		{
+			component = "tween",
+			tags = {
+				count = {
+					{ target = "scale_x", from = 1.05, to = 1, duration = 0.5, curve = "OutBack" },
+					{ target = "scale_y", from = 1.05, to = 1, duration = 0.5, curve = "OutBack" },
+					{ target = "tint_mix", from = 0.4, to = 0, duration = 0.3, curve = "OutCubic" },
+				},
+			},
+		},
+
+		{
+			component = "sound",
+			tags = {
+				level_up = { "Content/Assets/Sounds/Steps/Events/LevelUp.ogg" },
+			},
+		},
+
+		{
 			component = "counter",
 			mode = "progress",
 			field = "experience",
@@ -23,6 +41,13 @@ return {
 				color = { 0.95, 0.68, 0.87 },
 				offsetX = 1,
 				offsetY = -1,
+			},
+		},
+
+		{
+			component = "shader",
+			shaders = {
+				{ Tint = { u_tint_color = { 0.47, 0.39, 0.77 }, u_additive = 1 } },
 			},
 		},
 

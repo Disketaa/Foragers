@@ -22,6 +22,7 @@ function Counter.new(data)
 		_targetProgress = 0,
 		_tweenTime = 0,
 		_tweenDuration = 0,
+		_lastLevel = nil,
 	}, Counter)
 
 	if data.label then
@@ -109,6 +110,7 @@ function Counter:setPlayerSprite(sprite)
 				if self._labelFont then
 					self._labelText = tostring(comp.level or "")
 				end
+				self._lastLevel = comp.level
 			end
 			break
 		end
@@ -139,6 +141,14 @@ function Counter:onValueChanged(data)
 		self._targetProgress = target
 		self._tweenDuration = 0
 		self:_setFrame(target)
+	end
+	-- Emit counter events on parent sprite for downstream effects (e.g. tween tint)
+	if self.parent then
+		if data.level ~= nil and self._lastLevel ~= nil and data.level ~= self._lastLevel then
+			self.parent:emit(Events.COUNTER_WRAP)
+		end
+		self.parent:emit(Events.COUNTER_TICK)
+		self._lastLevel = data.level
 	end
 end
 

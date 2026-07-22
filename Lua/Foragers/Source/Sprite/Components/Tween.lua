@@ -372,6 +372,18 @@ function TweenComponent:attach()
 			applyTweens(self, self.tags.pickup)
 		end
 	end, 10)
+
+	self.parent:on(Events.COUNTER_TICK, function()
+		if self.tags.count then
+			applyTweens(self, self.tags.count)
+		end
+	end, 10)
+
+	self.parent:on(Events.COUNTER_WRAP, function()
+		if self.tags.cycle then
+			applyTweens(self, self.tags.cycle)
+		end
+	end, 10)
 end
 
 function TweenComponent:update(dt)
