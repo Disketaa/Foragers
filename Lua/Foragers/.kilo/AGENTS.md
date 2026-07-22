@@ -49,7 +49,7 @@ Grep, don't read top-to-bottom. If unsure whether a doc applies, read it.
 .\Tools\luacheck.exe Source/
 
 # Format (run from project root)
-python "Tools/Lua Formatter/formatter.py"
+python "Tools/LuaFormatter/Formatter.py"
 
 # Run game (standalone)
 "C:\Path\To\love.exe" .

@@ -6,7 +6,7 @@
 /Foragers/.specify
 /Foragers/.vscode
 /Lua/Foragers/.vscode
-/Lua/Foragers/Tools/Lua Formatter/__pycache__
+/Lua/Foragers/Tools/LuaFormatter/__pycache__
 /Workspace/
 bin/
 dotnet-tools.json/

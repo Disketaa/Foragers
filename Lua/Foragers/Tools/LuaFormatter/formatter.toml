@@ -4,17 +4,17 @@ folders = ["Content/Assets/Sprites", "Content/Assets/UI"]
 exclude_folders = []
 exclude_files = []
 
-[optimizations.component_sort]
+[optimizations.ComponentSort]
 enabled = true
 
-[optimizations.stringify_tags]
+[optimizations.StringifyTags]
 enabled = true
 
-[optimizations.normalize_numbers]
+[optimizations.NormalizeNumbers]
 enabled = true
 collapse_integer_floats = true
 
-[optimizations.add_blank_lines]
+[optimizations.AddBlankLines]
 enabled = true
 
 [component_order]

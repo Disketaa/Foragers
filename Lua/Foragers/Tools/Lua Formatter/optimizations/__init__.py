@@ -1,1 +1,0 @@
-# Lua Formatter optimizations package
