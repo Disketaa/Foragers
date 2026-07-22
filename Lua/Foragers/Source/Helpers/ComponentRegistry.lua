@@ -39,6 +39,7 @@ local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
 local UI = require("Source.UI.Components.UI")
 local PlayerStats = require("Source.Sprite.Components.PlayerStats")
+local Pickup = require("Source.Sprite.Components.Pickup")
 
 local registry = {
 	collision = Collision,
@@ -60,6 +61,7 @@ local registry = {
 	text_emitter = TextEmitter,
 	ui = UI,
 	player_stats = PlayerStats,
+	pickup = Pickup,
 }
 for name, module in pairs(registry) do
 	ComponentRegistry.register(name, function(data)

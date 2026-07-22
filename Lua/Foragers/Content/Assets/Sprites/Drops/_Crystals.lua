@@ -59,5 +59,10 @@ return {
 			component = "shader",
 			shaderName = "Brightness",
 		},
+
+		{
+			component = "pickup",
+			xp = 1,
+		},
 	},
 }

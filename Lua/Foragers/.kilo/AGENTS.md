@@ -85,7 +85,8 @@ Foragers/
 │   │       ├── SpriteFont.lua       # Text rendering via spritesheet quads
 │   │       ├── Tween.lua            # Merged Tween component + data class + easing (was Tweens.lua)
 	│   │       ├── Weapon.lua           # Weapon data container (range, cooldown, damage, swing)
-	│   │       └── PlayerStats.lua     # Player stats: crit, level, xp, hunger
+	│   │       ├── PlayerStats.lua     # Player stats: crit, level, xp, hunger
+	│   │       └── Pickup.lua          # XP grant on FOLLOW_ARRIVED (data-driven amount)
 │   ├── UI/
 │   │   ├── Components/
 │   │   │   ├── TextEmitter.lua      # Floating damage text (driven globally, not per-sprite)
@@ -123,7 +124,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ### Components (summary)
 
-18 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `ui`, `player_stats`.
+19 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `ui`, `player_stats`, `pickup`.
 
 - **Sprite** (`Sprite.lua`): base entity. `:update()` drives components with xpcall; `:draw()` draws `image` directly if `type == "StaticSprite"`, else delegates. Three draw passes: `drawBehind`, normal, `drawOnTop`.
 - **SpriteLoader** (`SpriteLoader.lua`): `instantiate(data, x, y, pngPath)` is the single source of truth for turning data into live sprites. `loadAll()` scans files and calls `instantiate()`.
@@ -138,6 +139,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 - **Drop** (`Drop.lua`): spawns drops on `PROP_BROKEN`. Supports range/choice syntax for count.
 - **Weapon** (`Weapon.lua`): data container (range, cooldown, damage, swing). Read-only.
 - **PlayerStats** (`PlayerStats.lua`): player stat container (critChance, critMult, level, experience, xpCurve, hunger, maxHunger). Provides `xpForNextLevel()`, `addExperience(amount)`, `consumeHunger(amount)`, `restoreHunger(amount)`, `isHungry()`.
+- **Pickup** (`Pickup.lua`): XP grant on `FOLLOW_ARRIVED` (data-driven amount).
 - **Shake** (`Shake.lua`): screen shake on `PROP_BROKEN`.
 - **ProximityFade** (`ProximityFade.lua`): fades alpha based on player distance.
 - **Shader** (`Shader.lua`): composes multiple shader modules (`shaders` array) into one shader via `ShaderLoader.compose`; drives uniforms from any `parent.tweens.<target>` matching `u_<target>` (e.g. `brightness` → `u_brightness`, `tint_mix` → `u_tint_mix`) in `update()`. Subscribes to `prop_hit` (8). Each `shaders` entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides; `u_seed` auto-derives from sprite position if unset.
@@ -170,7 +172,7 @@ StaticSprite rendering and `sortY` update are trivial — not wrapped.
 
 ## V. Component Registry
 
-`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 18 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"scroll_to"`, `"shader"`, `"shake"`, `"shadow"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`, `"spritefont"`, `"ui"`, `"player_stats"`. Mods register new types the same way:
+`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 19 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"pickup"`, `"scroll_to"`, `"shader"`, `"shake"`, `"shadow"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`, `"spritefont"`, `"ui"`, `"player_stats"`. Mods register new types the same way:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```

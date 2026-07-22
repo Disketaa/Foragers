@@ -8,5 +8,9 @@ return {
 			offsetX = 1,
 			offsetY = 4,
 		},
+		{
+			component = "pickup",
+			xp = 5,
+		},
 	},
 }
