@@ -57,7 +57,7 @@ type sway out of phase.
 | Component | Purpose | Config | Subscribes | Emits |
 |---|---|---|---|---|
 | **text_emitter** | Floating text on events (e.g. damage numbers). Registered in `ComponentRegistry` but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `Main.lua` — NOT via the per-sprite component loop (its `update`/`draw` are no-ops). | `font`, `text`, `event`, `color`, `moveX`, `moveY`, `gravity`, `duration`, `offsetX`, `offsetY`, `destroy`, `destroyCurve` | PROP_HIT (5) | — |
-| **counter** | Maps a value from a source component (e.g. `player_stats`) to a spritesheet frame. Event-driven — subscribes to `VALUE_CHANGED` on the source sprite via `setPlayerSprite()`. `update()` drives smooth tween animation. | `mode` (`"fraction"`/`"progress"`), `field`, `maxField`, `sourceType`, `frames`, `smoothness`, `curve` | VALUE_CHANGED (5) on source sprite | — |
+| **counter** | Maps a value from a source component (e.g. `player_stats`) to a spritesheet frame. Event-driven — subscribes to `VALUE_CHANGED` on the source sprite via `setPlayerSprite()`. `update()` drives smooth tween animation. Optional `label` overlays text (level). | `mode` (`"fraction"`/`"progress"`), `field`, `maxField`, `sourceType`, `frames`, `smoothness`, `curve`, `label` | VALUE_CHANGED (5) on source sprite | — |
 | **ui** | Data-only screen-positioning. No `update`/`draw` — positioned by Main using `UI.calculate()`. Any sprite in `Content/Assets/Sprites/UI/` with this component is drawn after the world canvas `pop()`. | `horizontal` (`"left"`/`"center"`/`"right"`), `vertical` (`"top"`/`"center"`/`"bottom"`), `offsetX`, `offsetY` | — | — |
 
 ### text_emitter config
@@ -90,6 +90,21 @@ Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text
 | `frames` | number | spritesheet columns | Total frames in the animation (frame 1 = 0%, frame N = 100%). |
 | `smoothness` | number | `0` | Tween duration in seconds. `0` = instant jump. `>0` = smooth animation between old and new frame. |
 | `curve` | string | `"OutBack"` | Easing curve name from `Tween.Easing` (e.g. `"OutBack"`, `"Linear"`, `"InCubic"`). Ignored when `smoothness = 0`. |
+| `label` | table | nil | Optional text overlay config block (see below). |
+
+### label config (inside counter)
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `font` | string | `"Content.Assets.Sprites.UI.Fonts.Tinylorder"` | Font data module path for the text spritesheet. |
+| `charSpacing` | number | font's charSpacing | Pixel spacing between characters. Overrides the font data default. |
+| `color` | table | `{1,1,1}` | RGBA tint (0–1). |
+| `offsetX` | number | `0` | X offset from parent's draw origin (top-left of sprite). |
+| `offsetY` | number | `0` | Y offset from parent's draw origin. |
+| `hAlign` | `"left"`/`"center"`/`"right"` | `"center"` | Horizontal text alignment relative to offsetX. |
+| `vAlign` | `"top"`/`"center"`/`"bottom"` | `"center"` | Vertical text alignment relative to offsetY. |
+
+The label text content is `tostring(data.level)` from the `VALUE_CHANGED` payload. The font spritesheet is loaded once in `attach()`. Drawn in `draw()` over the parent sprite.
 
 Connected via `Main.lua`: `counter:setPlayerSprite(playerSprite)` subscribes to `VALUE_CHANGED` on the player and syncs initial value. `update()` drives the smoothing tween.
 

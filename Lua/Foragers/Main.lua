@@ -186,7 +186,10 @@ function love.load()
 	for _, ui in ipairs(uiSprites) do
 		local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
 		local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
-		ui.sprite.x, ui.sprite.y = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
+		local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
+		-- Shift draw origin by pivot so visual anchor matches calculated position
+		ui.sprite.x = px + (ui.sprite.pivotX or 0) * w
+		ui.sprite.y = py + (ui.sprite.pivotY or 0) * h
 	end
 
 	-- Wire counter components to player sprite (event-driven, no polling)
@@ -208,7 +211,9 @@ function love.resize(w, h)
 	for _, ui in ipairs(uiSprites) do
 		local ew = ui.sprite.frameWidth or ui.sprite.image:getWidth()
 		local eh = ui.sprite.frameHeight or ui.sprite.image:getHeight()
-		ui.sprite.x, ui.sprite.y = UIComponent.calculate(ui.ui, canvas.width, canvas.height, ew, eh)
+		local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, ew, eh)
+		ui.sprite.x = px + (ui.sprite.pivotX or 0) * ew
+		ui.sprite.y = py + (ui.sprite.pivotY or 0) * eh
 	end
 end
 

@@ -16,3 +16,4 @@ text_emitter
 proximity_fade
 sound
 shader
+counter

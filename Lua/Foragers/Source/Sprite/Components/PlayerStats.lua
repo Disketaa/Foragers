@@ -40,10 +40,9 @@ end
 ---@return boolean leveledUp
 function PlayerStats:addExperience(amount)
 	self.experience = self.experience + amount
-	local needed = self:xpForNextLevel()
 	local leveledUp = false
-	if self.experience >= needed then
-		self.experience = self.experience - needed
+	while self.experience >= self:xpForNextLevel() do
+		self.experience = self.experience - self:xpForNextLevel()
 		self.level = self.level + 1
 		leveledUp = true
 	end
@@ -53,6 +52,7 @@ function PlayerStats:addExperience(amount)
 			field = "experience",
 			value = self.experience,
 			maxValue = self:xpForNextLevel(),
+			level = self.level,
 		})
 	end
 	return leveledUp

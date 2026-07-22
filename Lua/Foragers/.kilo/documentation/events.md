@@ -22,7 +22,7 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `PROP_HIT` payload | — | AttackSystem emits `PROP_HIT` with the damage number as the first arg (`emit(PROP_HIT, damage)`). `text_emitter` uses this payload as the display text when its `text` field is nil. | — |
 | `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), Shake(5), Sound(15) |
 | `PROP_SPAWNED` | `"prop_spawned"` | PropSpawner | Tween(10), Sound(15) |
-| `VALUE_CHANGED` payload | — | PlayerStats emits `VALUE_CHANGED` with `{ sourceType, field, value, maxValue }` in `addExperience()` when XP changes. Counter uses `field` to filter and `value/maxValue` for frame. | — |
+| `VALUE_CHANGED` payload | — | PlayerStats emits `VALUE_CHANGED` with `{ sourceType, field, value, maxValue, level }` in `addExperience()` when XP changes. Counter uses `field` to filter and `value/maxValue` for frame; `level` drives optional label text. | — |
 | `SWING` | `"swing"` | AttackSystem | — |
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
 | `PICKUP` | `"pickup"` | Main.lua (pendingDestroy) | Tween(10) |
