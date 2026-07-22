@@ -374,14 +374,14 @@ function TweenComponent:attach()
 	end, 10)
 
 	self.parent:on(Events.COUNTER_TICK, function()
-		if self.tags.count then
-			applyTweens(self, self.tags.count)
+		if self.tags.counter_tick then
+			applyTweens(self, self.tags.counter_tick)
 		end
 	end, 10)
 
 	self.parent:on(Events.COUNTER_WRAP, function()
-		if self.tags.cycle then
-			applyTweens(self, self.tags.cycle)
+		if self.tags.counter_wrap then
+			applyTweens(self, self.tags.counter_wrap)
 		end
 	end, 10)
 end

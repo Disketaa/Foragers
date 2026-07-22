@@ -23,6 +23,8 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), Shake(5), Sound(15) |
 | `PROP_SPAWNED` | `"prop_spawned"` | PropSpawner | Tween(10), Sound(15) |
 | `VALUE_CHANGED` payload | — | PlayerStats emits `VALUE_CHANGED` with `{ sourceType, field, value, maxValue, level }` in `addExperience()` when XP changes. Counter uses `field` to filter and `value/maxValue` for frame; `level` drives optional label text. | — |
+| `COUNTER_TICK` | `"counter_tick"` | Counter | Tween(10) |
+| `COUNTER_WRAP` | `"counter_wrap"` | Counter | Tween(10), Sound(15) |
 | `SWING` | `"swing"` | AttackSystem | — |
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
 | `PICKUP` | `"pickup"` | Main.lua (pendingDestroy) | Tween(10) |
