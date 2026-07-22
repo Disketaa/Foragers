@@ -1,0 +1,42 @@
+[targets]
+# Directories to process (relative to project root). Use "*" for everything.
+folders = ["Content/Assets/Sprites", "Content/Assets/UI"]
+exclude_folders = []
+exclude_files = []
+
+[optimizations.component_sort]
+enabled = true
+
+[optimizations.stringify_tags]
+enabled = true
+
+[optimizations.normalize_numbers]
+enabled = true
+collapse_integer_floats = true
+
+[optimizations.add_blank_lines]
+enabled = true
+
+[component_order]
+order = [
+    "player_stats",
+    "spritesheet",
+    "spritefont",
+    "shadow",
+    "control",
+    "collision",
+    "scroll_to",
+    "follow",
+    "destructible",
+    "drop",
+    "weapon",
+    "shake",
+    "tween",
+    "particle_emitter",
+    "text_emitter",
+    "proximity_fade",
+    "sound",
+    "ui",
+    "counter",
+    "shader",
+]

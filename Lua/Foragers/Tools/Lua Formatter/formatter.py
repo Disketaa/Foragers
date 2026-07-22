@@ -1,193 +1,120 @@
-import re
+import importlib.util
 import sys
 from pathlib import Path
 
 
-def find_sprite_lua_files(root: Path) -> list[Path]:
-    return sorted(root.rglob("*.lua"))
+def load_config(config_path: Path) -> dict:
+    """Load formatter configuration from TOML file."""
+    try:
+        import tomllib
+    except ImportError:
+        print("Error: tomllib not available (Python 3.11+ required)", file=sys.stderr)
+        sys.exit(1)
+
+    raw = config_path.read_text(encoding="utf-8")
+    return tomllib.loads(raw)
 
 
-def load_component_order(path: Path) -> list[str]:
-    if not path.is_file():
-        return []
-    order = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        s = line.strip()
-        if s and not s.startswith("#"):
-            order.append(s)
-    return order
-
-
-def matching_brace(text: str, open_idx: int) -> int:
-    depth = 0
-    for i in range(open_idx, len(text)):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            depth -= 1
-            if depth == 0:
-                return i
-    raise ValueError("Unbalanced braces")
-
-
-def split_top_level(inner: str) -> list[str]:
-    parts, depth, cur = [], 0, ""
-    for ch in inner:
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-        if ch == "," and depth == 0:
-            if cur.strip():
-                parts.append(cur.strip())
-            cur = ""
-        else:
-            cur += ch
-    if cur.strip():
-        parts.append(cur.strip())
-    return parts
-
-
-def collapse(s: str) -> str:
-    return re.sub(r"\s+", " ", s.strip())
-
-
-def normalize_numbers(text: str) -> str:
-    # Collapse integer-valued floats (1.0 -> 1) but keep fractional ones (2.5).
-    return re.sub(r"\b(\d+)\.0+\b", r"\1", text)
-
-
-def sort_components(text: str, order: list[str]) -> str:
-    pattern = re.compile(r"^([ \t]*)components\s*=\s*\{$", re.MULTILINE)
-    m = pattern.search(text)
-    if not m:
-        return text
-
-    indent = m.group(1)
-    open_idx = m.end() - 1
-    close_idx = matching_brace(text, open_idx)
-    inner = text[open_idx + 1: close_idx]
-
-    entries = split_top_level(inner)
-    if not entries:
-        return text
-
-    order_index = {name: i for i, name in enumerate(order)}
-
-    def component_name(entry: str):
-        cm = re.search(r'component\s*=\s*"([^"]+)"', entry)
-        return cm.group(1) if cm else None
-
-    def sort_key(entry: str):
-        return order_index.get(component_name(entry), len(order))
-
-    sorted_entries = sorted(entries, key=sort_key)
-
-    entry_indent = indent + "\t"
-    joined = f",\n\n{entry_indent}".join(sorted_entries)
-    return (
-        text[:m.start()]
-        + f"{indent}components = {{\n{entry_indent}{joined},\n{indent}}}"
-        + text[close_idx + 1:]
-    )
-
-
-def format_value_list(items: list[str], indent: str) -> str:
-    flat = [collapse(it) for it in items]
-    if len(flat) == 1:
-        item = flat[0]
-        if item.startswith("{") and item.endswith("}"):
-            inner = item[1:-1].strip()
-            item = "{ " + inner + " }"
-        return "{ " + item + " }"
-    body = ",\n".join(f"{indent}\t{it}" for it in flat)
-    return "{\n" + body + ",\n" + indent + "}"
-
-
-def format_key_entries(inner: str, indent: str) -> str:
-    out = []
-    for entry in split_top_level(inner):
-        m = re.match(r"^(\w+)\s*=\s*\{", entry)
-        if not m:
-            out.append(f"{indent}\t{collapse(entry)},")
+def find_lua_files(
+    root: Path,
+    exclude_folders: list[str],
+    exclude_files: list[str],
+) -> list[Path]:
+    """Find all .lua files under root, respecting exclusions."""
+    exclude_set = set(exclude_files)
+    files = []
+    for path in sorted(root.rglob("*.lua")):
+        if any(excluded in path.parts for excluded in exclude_folders):
             continue
-        key = m.group(1)
-        open_idx = m.end() - 1
-        close_idx = matching_brace(entry, open_idx)
-        items = split_top_level(entry[open_idx + 1: close_idx])
-        if not items:
-            out.append(f"{indent}\t{key} = {{}},")
+        if path.name in exclude_set:
             continue
-        value_str = format_value_list(items, indent + "\t")
-        out.append(f"{indent}\t{key} = {value_str},")
-    return "\n".join(out)
+        files.append(path)
+    return files
 
 
-def stringify_tags(text: str) -> str:
-    pattern = re.compile(r"^[ \t]*tags\s*=\s*\{$", re.MULTILINE)
-    out, pos = [], 0
-    for m in pattern.finditer(text):
-        if m.start() < pos:
-            continue
-        out.append(text[pos:m.start()])
-        indent = re.match(r"[ \t]*", m.group()).group()
-        open_idx = m.end() - 1
-        close_idx = matching_brace(text, open_idx)
-        inner = text[open_idx + 1: close_idx]
-        if inner.strip():
-            body = format_key_entries(inner, indent)
-            out.append(f"{indent}tags = {{\n{body}\n{indent}}}")
-        else:
-            out.append(f"{indent}tags = {{}}")
-        pos = close_idx + 1
-    out.append(text[pos:])
-    return "".join(out)
-
-
-def add_blank_lines(text: str) -> str:
-    lines = text.split("\n")
-    result = []
-
-    def indent_of(line: str) -> str:
-        return line[: len(line) - len(line.lstrip(" \t"))]
-
-    for i, line in enumerate(lines):
-        result.append(line)
-        if i + 1 >= len(lines):
-            continue
-        nxt = lines[i + 1]
-        if (line.strip() == "},"
-                and nxt.strip() == "{"
-                and indent_of(line) == indent_of(nxt)):
-            result.append("")
-    return "\n".join(result)
+def load_plugin(name: str, plugins_dir: Path):
+    """Dynamically load an optimization plugin by name."""
+    plugin_path = plugins_dir / f"{name}.py"
+    if not plugin_path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location(name, plugin_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def main():
     script_dir = Path(__file__).resolve().parent
-    sprites_dir = script_dir.parent.parent / "Content" / "Assets" / "Sprites"
-    order_path = script_dir / "ComponentOrder.txt"
+    config_path = script_dir / "formatter.toml"
 
-    if not sprites_dir.is_dir():
-        print(f"Error: Sprites directory not found at {sprites_dir}", file=sys.stderr)
+    if not config_path.is_file():
+        print(f"Error: Config file not found at {config_path}", file=sys.stderr)
         sys.exit(1)
 
-    order = load_component_order(order_path)
-    if not order:
-        print(f"Warning: {order_path} not found or empty — components won't be reordered.")
+    config = load_config(config_path)
 
-    files = find_sprite_lua_files(sprites_dir)
-    if not files:
-        print(f"No .lua files found in {sprites_dir}")
+    # --- Resolve target folders ---
+    targets = config.get("targets", {})
+    folders = targets.get("folders", [])
+    exclude_folders = targets.get("exclude_folders", [])
+    exclude_files = targets.get("exclude_files", [])
+
+    if not folders:
+        print("Error: No target folders specified in config", file=sys.stderr)
+        sys.exit(1)
+
+    project_root = script_dir.parent.parent
+    resolved_folders = []
+    for folder in folders:
+        if folder == "*":
+            resolved_folders = [project_root]
+            break
+        resolved = project_root / folder
+        if resolved.is_dir():
+            resolved_folders.append(resolved)
+        else:
+            print(f"Warning: Target folder not found: {resolved}", file=sys.stderr)
+
+    if not resolved_folders:
+        print("Error: No valid target folders found", file=sys.stderr)
+        sys.exit(1)
+
+    # --- Collect files ---
+    all_files = []
+    for folder in resolved_folders:
+        all_files.extend(find_lua_files(folder, exclude_folders, exclude_files))
+
+    if not all_files:
+        print("No .lua files found in target folders")
         sys.exit(0)
 
+    # --- Load enabled optimizations ---
+    optimizations_config = config.get("optimizations", {})
+    plugins_dir = script_dir / "optimizations"
+
+    enabled_plugins = []
+    for opt_name, opt_config in optimizations_config.items():
+        if isinstance(opt_config, dict) and not opt_config.get("enabled", True):
+            continue
+        module = load_plugin(opt_name, plugins_dir)
+        if module is None:
+            print(f"Warning: Unknown optimization '{opt_name}' — skipping", file=sys.stderr)
+            continue
+        if not hasattr(module, "apply"):
+            print(f"Warning: Optimization '{opt_name}' missing apply() — skipping", file=sys.stderr)
+            continue
+        enabled_plugins.append((opt_name, module, opt_config))
+
+    if not enabled_plugins:
+        print("Warning: No optimizations enabled", file=sys.stderr)
+
+    # --- Process files ---
     changed = 0
-    for path in files:
+    for path in all_files:
         original = path.read_text(encoding="utf-8")
-        updated = sort_components(original, order) if order else original
-        updated = stringify_tags(updated)
-        updated = add_blank_lines(updated)
-        updated = normalize_numbers(updated)
+        updated = original
+        for opt_name, module, opt_config in enabled_plugins:
+            updated = module.apply(updated, config)
 
         if updated != original:
             path.write_text(updated, encoding="utf-8")
@@ -196,7 +123,7 @@ def main():
         else:
             print(f"No changes: {path}")
 
-    print(f"\nDone. {changed} file(s) updated out of {len(files)} total.")
+    print(f"\nDone. {changed} file(s) updated out of {len(all_files)} total.")
 
 
 if __name__ == "__main__":
