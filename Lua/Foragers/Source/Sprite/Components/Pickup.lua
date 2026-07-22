@@ -12,6 +12,7 @@ Pickup.__index = Pickup
 function Pickup.new(data)
 	return setmetatable({
 		xp = data.xp or 1,
+		_pending = false,
 		type = "pickup",
 	}, Pickup)
 end
@@ -21,9 +22,14 @@ function Pickup:attach()
 		return
 	end
 	self.parent:on(Events.FOLLOW_ARRIVED, function()
-		if not self.parent then
+		self._pending = true
+	end, 5)
+
+	self.parent:on(Events.TWEEN_COMPLETED, function()
+		if not self._pending or not self.parent then
 			return
 		end
+		self._pending = false
 		for _, comp in ipairs(self.parent.components) do
 			if comp.type == "follow" and comp.followTarget then
 				for _, pcomp in ipairs(comp.followTarget.components) do
