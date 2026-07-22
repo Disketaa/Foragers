@@ -88,12 +88,12 @@ def main():
         print("No .lua files found in target folders")
         sys.exit(0)
 
-    # --- Load enabled optimizations ---
-    optimizations_config = config.get("optimizations", {})
-    plugins_dir = script_dir / "optimizations"
+    # --- Load enabled Modules ---
+    modules_config = config.get("Modules", {})
+    plugins_dir = script_dir / "Modules"
 
     enabled_plugins = []
-    for opt_name, opt_config in optimizations_config.items():
+    for opt_name, opt_config in modules_config.items():
         if isinstance(opt_config, dict) and not opt_config.get("enabled", True):
             continue
         module = load_plugin(opt_name, plugins_dir)
@@ -106,7 +106,7 @@ def main():
         enabled_plugins.append((opt_name, module, opt_config))
 
     if not enabled_plugins:
-        print("Warning: No optimizations enabled", file=sys.stderr)
+        print("Warning: No Modules enabled", file=sys.stderr)
 
     # --- Process files ---
     changed = 0
