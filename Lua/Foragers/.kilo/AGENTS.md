@@ -1,238 +1,208 @@
-# AGENTS.md
+# AGENTS.md — MANDATORY FOR ALL TASKS
 
-## STATUS: MANDATORY
+**BEFORE EVERY TASK: Read this file, then read `.kilo/ABSTRACTIONS.md`. If the task touches LÖVE2D APIs, grep `.kilo/documentation/love_api.md`. If it touches components, read `.kilo/documentation/components.md`. If it touches events, read `.kilo/documentation/events.md`. If unsure whether a doc applies, read it. Non-negotiable. No exceptions.**
 
-Every rule in this document is mandatory. Violating any point is an implementation error.
+Every rule in this document is mandatory. Violating any point is an implementation error. "I didn't know" is not valid — the docs were available and you were told to read them.
 
-## Documentation
+**When implementation speed conflicts with architectural quality, architecture wins.**
+
+---
+
+## I. Critical Constraints
+
+These rules are NEVER optional. Violating any is an implementation error.
+
+- **NEVER guess at APIs.** Read existing code, related modules, and LÖVE2D docs before writing. If you don't understand the architecture, you MUST NOT change it.
+- **NEVER read another component's fields in `update()`.** Cross-component communication is events only.
+- **NEVER hardcode gameplay values.** Data goes in `Content/Data/` or `Content/Assets/Sprites/`, logic in `Source/`.
+- **NEVER instantiate sprites manually** with `Sprite.new()` / `ComponentRegistry.create()`. MUST use `SpriteLoader.instantiate()`.
+- **NEVER propose a refactor** without first checking Section XII (Rejected Questions) and `.kilo/CHANGELOG.md`.
+- **NEVER write code before reading** the target file, related modules, and existing patterns.
+- **MUST keep changes minimal.** No surprise refactors, mass renames, project-wide style changes, or unrequested architectural rework.
+- **MUST justify every new dependency.** Prefer engine APIs and already-used libraries. Don't duplicate engine functionality.
+- **Control is the SOLE writer** of `parent._state` and `parent.flipX`. If another component needs to force a state, it MUST emit `state_changed` and let Control reconcile — it NEVER writes `_state` itself.
+
+---
+
+## II. Documentation
+
+Grep, don't read top-to-bottom. If unsure whether a doc applies, read it.
 
 | Document | Purpose |
 |---|---|
-| `AGENTS.md` | This file — mandatory rules, architecture, principles |
-| `CHANGELOG.md` | Full history of architecture changes (check before proposing refactors) |
-| `.kilo/documentation/love_api.md` | LÖVE2D API reference (grep, never read top-to-bottom) |
+| `.kilo/documentation/love_api.md` | LÖVE2D API reference (grep, ~4800 lines) |
 | `.kilo/documentation/components.md` | Component cheat sheet — purpose, config, events |
 | `.kilo/documentation/data-format.md` | Sprite data file format specification |
 | `.kilo/documentation/events.md` | Event system reference — all events, emitters, priorities |
-| `.kilo/ABSTRACTIONS.md` | Hard-won lessons from past work — read the relevant section before coding in that subsystem |
+| `.kilo/ABSTRACTIONS.md` | Hard-won lessons — read relevant section before coding in that subsystem |
+| `.kilo/CHANGELOG.md` | Full history of architecture changes (check before proposing refactors) |
 
 ---
 
-## I. Core Principles
+## III. Commands
 
-**Documentation first.** Before writing/changing code: read existing code, related modules, LÖVE2D docs (`.kilo/documentation/love_api.md`), and docs for any library used. Never guess at APIs, invent methods, or change architecture you don't understand.
+```bash
+# Lint single file
+.\Tools\luacheck.exe Source/Sprite/Components/MyComponent.lua
 
-**Check before proposing.** Before proposing a refactor, optimization, or architectural change: check section VIII (Rejected / Settled Questions) below. If the same idea was already considered and rejected, don't re-propose it without new information. If you're unsure whether something in the codebase was already discussed, tried, or reverted, check `.kilo/CHANGELOG.md` before assuming it's unaddressed — it has the full history that this file only summarizes.
+# Lint all source
+.\Tools\luacheck.exe Source/
 
-**Simplicity first.** Fewer lines, fewer entities, fewer abstractions, no magic. No premature complexity, no pattern-for-pattern's-sake, no over-engineering.
+# Format (run from project root)
+python "Tools/Lua Formatter/formatter.py"
 
-**Modular architecture.** One module = one responsibility. High cohesion inside a module, low coupling between modules, predictable public interfaces, minimal dependencies. No god objects, no do-everything managers, no circular or hidden dependencies.
+# Run game (standalone)
+"C:\Path\To\love.exe" .
 
-**Composition over inheritance.** Inheritance only for genuine "is-a" relationships. No deep inheritance chains, no architecture built around base classes. Justify every new dependency.
-
-**Data-driven design.** Game data (config, balance, items, entities, world, content, mods, sprites/components, GLSL shaders embedded in Lua, tweens/easing curves, tag→animation/tween mappings) lives in Lua data files, not in code. No hardcoded parameters, no duplicated data, no balance values in logic code.
-
-**Modding first.** Data must be overridable, mods can extend or replace content, mod errors must be handled safely (never crash the base game).
-
-**Rationale comments only.** Comment only to explain *why*, document a non-obvious contract, or as LuaDoc type annotations. If code is self-explanatory without it, don't write it. When unsure, don't write it.
-
-**Read before write.** Study the target file, related modules, and existing patterns before editing. No blind rewrites, no introducing a new style into an existing system, no unnecessary architectural breakage.
-
-**Minimal changes.** No surprise refactors, mass renames, project-wide style changes, or unrequested architectural rework. Fix only what the task requires.
-
-**LÖVE2D first.** Check LÖVE2D's built-in capabilities before reaching for a third-party solution. Prefer engine APIs and already-used libraries. Don't duplicate engine functionality or add a dependency for one function.
-
-**Performance aware.** Working implementation → measure → optimize, in that order. No premature micro-optimization or complexity added for hypothetical performance.
+# Run game — VS Code F5 (debugger)
+# conf.lua must have t.console = false
+```
 
 ---
 
-## II. File Organization
+## IV. Good and Bad Examples
+
+- GOOD: `Source/Sprite/Components/Pickup.lua` — minimal, data-driven, one responsibility
+- GOOD: event subscription in `attach()` with priority gap of 5
+- GOOD: data in `Content/Data/` or `Content/Assets/Sprites/`, logic in `Source/`
+- BAD: any component reading `parent._state` in `update()` — violates single-writer rule
+- BAD: reading another component's fields in `update()` — use events
+- BAD: hardcoded gameplay values — use data files
+- BAD: manual `Sprite.new()` / `ComponentRegistry.create()` — use `SpriteLoader.instantiate()`
+
+---
+
+## V. Core Principles
+
+- **Simplicity first.** Fewer lines, fewer entities, fewer abstractions, no magic. No premature complexity.
+- **Modular architecture.** One module = one responsibility. High cohesion, low coupling, no god objects.
+- **Composition over inheritance.** Inheritance only for genuine "is-a" relationships.
+- **Data-driven design.** Game data lives in Lua data files, not in code. No hardcoded parameters.
+- **Modding first.** Data MUST be overridable. Mod errors MUST NEVER crash the base game.
+- **Rationale comments only.** Comment only to explain *why* or document a non-obvious contract.
+- **LÖVE2D first.** Check LÖVE2D's built-in capabilities before reaching for a third-party solution.
+- **Performance aware.** Working implementation → measure → optimize. No premature micro-optimization.
+
+---
+
+## VI. File Organization
 
 ```
 Foragers/
 ├── conf.lua
 ├── Main.lua
 ├── Source/
-│   ├── Helpers/
-│   │   ├── Canvas.lua               # Virtual canvas (inner/outer modes)
-│   │   ├── AttackSystem.lua         # Weapon attack loop: target pick, deploy, damage, tween
-│   │   ├── ComponentRegistry.lua    # Component factory registry
-│   │   ├── DrawOrder.lua            # zKey sort buffer (reusable module-level)
-│   │   ├── EventEmitter.lua         # Event bus (on/emit/removeListener, priority-ordered)
-│   │   ├── Events.lua               # Event name constants (single source of truth)
-│   │   ├── Log.lua                  # Log.error wrapper (extension point for file logging)
-│   │   ├── Math.lua                 # Math utilities (expSmooth, parseRandomValue, parseRange)
-│   │   ├── Merge.lua                # Data merge / extends resolution
-│   │   ├── ModLoader.lua            # Mod loader (loadAllMods only, no hot-reload)
-│   │   ├── Path.lua                 # Path conversion helpers (lua/png/moduleToPath)
-│   │   └── ShaderLoader.lua         # Shader loading/rendering
+│   ├── Helpers/          # EventEmitter, Events, ComponentRegistry, DrawOrder, Log, Math, Merge, ModLoader, Path, ShaderLoader, Canvas, AttackSystem
 │   ├── Sprite/
-│   │   ├── Sprite.lua               # Base sprite + xpcall-safe component dispatch
-│   │   ├── SpriteLoader.lua         # File scanning + shared sprite instantiation
-│   │   └── Components/
-│   │       ├── Collision.lua        # AABB collision, terrain/solid registries
-│   │       ├── Control.lua          # Input; sole writer of _state/flipX
-│   │       ├── Destructible.lua     # HP, takeDamage, dead-sprite tracking
-│   │       ├── Drop.lua             # Drop spawn on PROP_BROKEN (pending queue, scatter tween)
-│   │       ├── Follow.lua           # Follow-target smoothing + deployTo/recall (tools)
-│   │       ├── ParticleEmitter.lua  # Particle spawner
-│   │       ├── ProximityFade.lua    # Fades alpha based on player distance
-│   │       ├── ScrollTo.lua         # Smooth camera follow (centers camera on target)
-│   │       ├── Shader.lua           # Shader uniform management (generic tween→uniforms)
-│   │       ├── Shake.lua            # Screen shake on PROP_BROKEN
-│   │       ├── Sound.lua            # Sounds triggered by events
-│   │       ├── Spritesheet.lua      # Unified quad animation + spritesheet (merged Animation)
-│   │       ├── SpriteFont.lua       # Text rendering via spritesheet quads
-│   │       ├── Tween.lua            # Merged Tween component + data class + easing (was Tweens.lua)
-	│   │       ├── Weapon.lua           # Weapon data container (range, cooldown, damage, swing)
-	│   │       ├── PlayerStats.lua     # Player stats: crit, level, xp, hunger
-	│   │       └── Pickup.lua          # XP grant on FOLLOW_ARRIVED (data-driven amount)
+│   │   ├── Sprite.lua
+│   │   ├── SpriteLoader.lua
+│   │   └── Components/   # collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, proximity_fade, shader, drop, scroll_to, shadow, spritefont, ui, player_stats, pickup
 │   ├── UI/
-│   │   ├── Components/
-│   │   │   ├── TextEmitter.lua      # Floating damage text (driven globally, not per-sprite)
-│   │   │   └── UI.lua               # Data-only component: screen-positioning (horizontal/vertical/offset)
-│   │   └── Text.lua                 # Text object: sprite + spritefont components
-│   └── World/
-│       ├── TilePalette.lua          # Adjacency mask → tile index/variant
-│       ├── WorldBuilder.lua         # Sprite construction from world data (was in Generator)
-│       ├── WorldGen.lua             # Pure data generation, no sprite dependencies (was in Generator)
-│       └── PropSpawner.lua          # Periodic prop spawn at unoccupied tiles
+│   │   ├── Components/   # TextEmitter, UI
+│   │   └── Text.lua
+│   └── World/            # TilePalette, WorldBuilder, WorldGen, PropSpawner
 ├── Content/
 │   ├── Assets/{Shaders,Sprites/{Character,Props,Tiles,Tools,UI},...}
 │   └── Data/{Options.lua, World.lua}
-└── Mods/<Name>/Mod.lua              # { name }, may call ComponentRegistry.register
+└── Mods/<Name>/Mod.lua   # { name }, may call ComponentRegistry.register
 ```
 
-Rules: one module per file, clear file/module names, no junk directories, every folder has an obvious purpose.
+Rules: one module per file, clear file/module names, no junk directories.
 
 ---
 
-## III. Component System
+## VII. Git Workflow
 
-Sprite is a composite entity; behavior is added via components. **Components never read another component's fields in `update()` — cross-component communication is events only.**
+- Commit format: short summary, capitalized, describing what was done (not "updated file X")
+- See `.kilo/commands/commit.md` for full workflow
+- MUST NOT push unless explicitly asked
+
+---
+
+## VIII. When Stuck
+
+- Read the relevant docs in `.kilo/documentation/` for the subsystem you're working on
+- Check `.kilo/CHANGELOG.md` if unsure whether something was already tried
+- Check Section XII (Rejected Questions) before proposing a change
+- Propose a short plan — do NOT guess
+
+---
+
+## IX. Component System
+
+Sprite is a composite entity; behavior is added via components.
 
 Full component reference: `.kilo/documentation/components.md`
 
-### Sprite — Error-safe dispatch
+### Key constraints
 
-`Sprite:update(dt)` and `Sprite:draw()` wrap every component call in `xpcall(handler, debug.traceback)`. On failure:
-1. `Log.error()` prints the error and stack trace (visible when `t.console = true`)
-2. `component._broken = true` — component is skipped in all future frames (no error spam)
-3. Other components continue unaffected
+All Critical Constraints in Section I apply here.
 
-StaticSprite rendering and `sortY` update are trivial — not wrapped.
+### Error-safe dispatch
 
-### Components (summary)
+`Sprite:update(dt)` and `Sprite:draw()` wrap every component call in `xpcall`. On failure: `component._broken = true` — skipped on all future frames. Other components continue.
 
-19 core components: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `ui`, `player_stats`, `pickup`.
+### Component list
 
-- **Sprite** (`Sprite.lua`): base entity. `:update()` drives components with xpcall; `:draw()` draws `image` directly if `type == "StaticSprite"`, else delegates. Three draw passes: `drawBehind`, normal, `drawOnTop`.
-- **SpriteLoader** (`SpriteLoader.lua`): `instantiate(data, x, y, pngPath)` is the single source of truth for turning data into live sprites. `loadAll()` scans files and calls `instantiate()`.
-- **Control** (`Control.lua`): **sole writer** of `parent._state` and `parent.flipX`. Writes field, then emits.
-- **Collision** (`Collision.lua`): AABB collision. Two static registries: `terrainColliders` (grounded) and `solidColliders` (blocking). Emits `grounded_changed`.
-- **Spritesheet** (`Spritesheet.lua`): quad animation. Subscribes to `state_changed` (5), emits `anim_frame`.
-- **Tween** (`Tween.lua`): drives `parent.tweens`. Subscribes to `flipped` (10), `state_changed` (10), `prop_hit` (10), `prop_spawned` (10).
-- **Sound** (`Sound.lua`): plays sounds on events. Uses `base:clone()` (~4 clones/sec, negligible GC). Subscribes to `prop_spawned` (15).
-- **ParticleEmitter** (`ParticleEmitter.lua`): spawns particles on events or states.
-- **Follow** (`Follow.lua`): follow-target smoothing. `deployTo()`/`recall()` for weapon attacks.
-- **Destructible** (`Destructible.lua`): HP, `takeDamage`, dead-sprite tracking. Supports `replaceWith`.
-- **Drop** (`Drop.lua`): spawns drops on `PROP_BROKEN`. Supports range/choice syntax for count.
-- **Weapon** (`Weapon.lua`): data container (range, cooldown, damage, swing). Read-only.
-- **PlayerStats** (`PlayerStats.lua`): player stat container (critChance, critMult, level, experience, xpCurve, hunger, maxHunger). Provides `xpForNextLevel()`, `addExperience(amount)`, `consumeHunger(amount)`, `restoreHunger(amount)`, `isHungry()`.
-- **Pickup** (`Pickup.lua`): XP grant on `FOLLOW_ARRIVED` (data-driven amount).
-- **Shake** (`Shake.lua`): screen shake on `PROP_BROKEN`.
-- **ProximityFade** (`ProximityFade.lua`): fades alpha based on player distance.
-- **Shader** (`Shader.lua`): composes multiple shader modules (`shaders` array) into one shader via `ShaderLoader.compose`; drives uniforms from any `parent.tweens.<target>` matching `u_<target>` (e.g. `brightness` → `u_brightness`, `tint_mix` → `u_tint_mix`) in `update()`. Subscribes to `prop_hit` (8). Each `shaders` entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides; `u_seed` auto-derives from sprite position if unset.
-- **Shadow** (`Shadow.lua`): texture-free pixel-perfect shadow. Data-only component (`offsetX`, `offsetY`, `width`, `height`); no `update`/`draw`. The shadow CENTER is the sprite's pivot point in world space (`sprite.x, sprite.y` — where the pivot pixel is drawn) plus `offsetX/offsetY`, so `offset 0,0` centers the shadow exactly on the pivot point for any `pivotX/pivotY`. Mods shift `offsetY` to drop the shadow under the feet. `Shadow.renderLayer(sprites, w, h, camX, camY)` (called from Main inside the world canvas, after terrain and before the sorted sprites, with the world camera translate active) renders every shadow to its own canvas in screen space (`origin()` resets the active translate; the camera offset is baked into the coordinates), then composites that canvas once at `layerAlpha` in screen space — overlapping shadows union instead of summing, and the blend pipeline is touched once per frame. Shape is a 1px-corner-rounded rect drawn with 3 `love.graphics.rectangle` calls (top strip, full-width middle, bottom strip).
-- **SpriteFont** (`SpriteFont.lua`): text rendering using parent sprite's spritesheet quads. Builds char→quad and char→width maps from `chars`/`spacing` data. No event subscriptions, no update logic. Color set per-instance via `Text` API. The `chars` string is iterated by **visual UTF-8 char** (not byte) — multi-byte glyphs (Cyrillic, etc.) map to one cell each, so a 2-byte char does NOT consume two quad cells. LuaJIT is Lua 5.1: no `utf8` module, manual UTF-8 decode by leading byte.
-- **UI** (`Source/UI/Components/UI.lua`): data-only component for screen-positioning. No `update`/`draw` — positioned by Main using `UI.calculate()`. Config: `horizontal` (`"left"|"center"|"right"`), `vertical` (`"top"|"center"|"bottom"`), `offsetX`, `offsetY`. Any sprite in `Content/Assets/Sprites/UI/` with a `"ui"` component is automatically screen-fixed after the world canvas `pop()`.
-- **TextEmitter** (`Source/UI/Components/TextEmitter.lua`): floating text on events (damage numbers). Registered in `ComponentRegistry` as `text_emitter`, but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `Main.lua` — its per-sprite `update`/`draw` are no-ops. Subscribes to `prop_hit` (5); uses the event payload (damage) as text when `text` is nil. Random motion/offset fields re-rolled per emit via `Math.parseRandomValue`. `destroy` (`fade`/`scale`/`instant`) + `destroyCurve` (easing name) shape the 1→0 animation. Lives in `Source/UI/Components/`, NOT `Source/Sprite/Components/`.
+19 core: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `ui`, `player_stats`, `pickup`.
 
 ---
 
-## IV. Event System
+## X. Event System
 
-**EventEmitter** (`Source/Helpers/EventEmitter.lua`): `.new()`, `on(event, cb, priority=100)` (lower runs first), `emit(event, ...)`, `removeListener`, `clear`. Dispatch is synchronous, ascending priority.
+Full event table: `.kilo/documentation/events.md`
 
-**Events** (`Source/Helpers/Events.lua`) — single source of truth for event name strings. Full event table with emitters and listeners: `.kilo/documentation/events.md`
-
-**Rules:**
-- Subscriptions happen at construction (`new()`/`attach()`), before the game loop starts — no "first frame" fallback reads needed.
-- Priority gaps of 5 (5/10/15) leave room to insert future listeners without renumbering.
-- **Priority gaps:** STATE_CHANGED and FLIPPED rows use tight priorities (7↔8, 10↔11↔12) — inserting Shader between existing listeners left no gap of 5 without renumbering existing components, which was deemed higher risk than tight spacing.
-- **Field exceptions** (only these four, justify before adding more):
-  1. `parent.flipX` / `parent._state` — plain fields, readable **only inside `draw()`** for rendering (sprite flip, debug). Never read in `update()`/logic.
-   2. `parent.tweens` — single producer (Tween) / multi-consumer (Spritesheet, Follow, Shader), continuous numeric data; not worth an event per frame.
-  3. `parent.alpha` — render-only opacity (0–1), written by ProximityFade in `update()`, read by Sprite/Spritesheet/Follow in `draw()`. Same justification as `parent.flipX`: continuous render parameter, not worth an event per frame.
-  4. `parent.shader` / `parent.shaderData` — per-sprite shader reference and uniform data. Shader reference is set once on component attach, read in draw(). shaderData is written by ShaderComponent in update(), read by Sprite in draw(). Same justification as tweens: uniform values are continuous render parameters (brightness) that change every frame; not worth an event per uniform per frame.
-- **Field-write-before-emit**: if a signal has both a field and an event (`_state`, `flipX`), write the field first, then emit.
-- **Single-writer rule**: `_state` has exactly one writer, Control. If Collision needs to force a state (e.g. "swimming"), it emits `state_changed` and lets Control reconcile the field on its next tick — it never writes `_state` itself.
+- Subscriptions happen at construction (`new()`/`attach()`), before the game loop starts.
+- Priority gaps of 5 (5/10/15) leave room for future listeners.
+  - **EXCEPTION:** STATE_CHANGED and FLIPPED use tight priorities (7↔8, 10↔11↔12) — renumbering existing components was deemed higher risk than tight spacing.
+- **Field exceptions** (ONLY these four, justify before adding more):
+  1. `parent.flipX` / `parent._state` — readable ONLY inside `draw()` for rendering. NEVER read in `update()`/logic.
+  2. `parent.tweens` — single producer (Tween) / multi-consumer, continuous numeric data.
+  3. `parent.alpha` — render-only opacity (0–1), written by ProximityFade in `update()`, read in `draw()`.
+  4. `parent.shader` / `parent.shaderData` — set once on attach, read in draw(). shaderData written in update(), read in draw().
+- **Field-write-before-emit:** if a signal has both a field and an event, write the field first, then emit.
+- **Single-writer rule:** `_state` has exactly one writer, Control. NEVER write `_state` from another component.
 
 ---
 
-## V. Component Registry
+## XI. Component Registry
 
-`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)` (nil if unknown). Pre-registers the 19 core components on module load — `"collision"`, `"control"`, `"destructible"`, `"drop"`, `"follow"`, `"particle_emitter"`, `"proximity_fade"`, `"pickup"`, `"scroll_to"`, `"shader"`, `"shake"`, `"shadow"`, `"sound"`, `"spritesheet"`, `"tween"`, `"weapon"`, `"spritefont"`, `"ui"`, `"player_stats"`. Mods register new types the same way:
+`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 19 core components. Mods register new types:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```
 
 ---
 
-## VI. World / Shader / Draw / Tween / Mod Systems
+## XII. Rejected / Settled Questions
 
-- **WorldGen.lua** (`Source/World/WorldGen.lua`): `generate(config)` → pure-data world table. `config` is a single table (`{width, height, seed, scale, density, detail}`) — never positional arguments, to avoid silently swapping same-typed parameters. Uses `love.math.noise` + circular island mask. No sprite/component dependencies. Split from the old Generator.lua.
-
-- **WorldBuilder.lua** (`Source/World/WorldBuilder.lua`): exports **only** `build(tileData, spawnCallback, playerSprite)`. `playerSprite` (optional) — when provided, excludes the player's tile from initial prop spawn via collision-rect overlap check (replaces old `spawnClearance` config). Internally calls private (non-exported) `buildTerrain()` then `spawnProps()`, in that fixed order — this ordering is enforced by encapsulation, not convention, so it cannot be called out of sequence from outside the module. Both internal steps build sprites via `SpriteLoader.instantiate()` (not manual `Sprite.new()`/`ComponentRegistry.create()` calls) to avoid re-diverging from `SpriteLoader`, and each resets its own collider registry (`Collision.resetTerrain()` / `resetSolids()`) before populating. Props use weighted random + Fisher-Yates shuffle. Consumes `WorldConfig.tileSize`, `WorldConfig.props`, `WorldConfig.propCoverage`. Split from the old Generator.lua.
-
-- **PropSpawner.lua** (`Source/World/PropSpawner.lua`): `init(worldData, worldConfig, opts)` where `opts = {playerSprite}`. `update(dt)` accumulates a timer based on `worldConfig.propSpawnInterval`; when it elapses, collects all active tiles not occupied by any solid/slowdown collider or the player (via point-in-rect using each collider's `.sprite` reference position), picks a random free tile, weighted-random picks a prop from `worldConfig.props`, spawns via `SpriteLoader.instantiate()`, emits `PROP_SPAWNED`, registers collision, and returns the new sprite. The caller (Main.lua) appends it to objects/dynamicObjects.
-
-- **DrawOrder.lua** (`Source/Helpers/DrawOrder.lua`): `collect(entries)` fills a reusable module-level buffer with `zKey = layer * 1e6 + sortY * 1e3 + x`; `sort(list)` sorts by `zKey`. Called once per frame, single caller. No double-call guard by design — see Stage 6.2 in the history table for why this was audited and left as-is.
-
-- **ShaderLoader.lua** (`Source/Helpers/ShaderLoader.lua`): scans `Content/Assets/Shaders/` recursively; building-block modules are `.lua` files with `module=true` and `type="uv"|"color"` (uv modules return modified `uv`, color modules return modified `color`; exactly one `Texel` call in the generated `effect`); `compose(names)` builds and caches a program (uv-chain → `Texel` → color-chain); legacy standalone shaders use `code` directly. Compiles GLSL via `love.graphics.newShader`; `update(dt)`.
-
-- **Canvas.lua** (`Source/Helpers/Canvas.lua`): virtual canvas, `mode="inner"` (fixed res, centered/bordered) or `"outer"` (fills window). `:draw(drawFunc, clearColor)`, `:resize(w, h)`.
-
-- **TilePalette.lua** (`Source/World/TilePalette.lua`): `resolve(mask, tileMap)`, `resolveVariant(index, variants, seed)`.
-
-- **ModLoader.lua** (`Source/Helpers/ModLoader.lua`): `loadAllMods(path)` scans and loads each `Mod.lua`. All wrapped in `pcall` — a broken mod cannot crash the game. **Hot-reload (`reloadAll()`) was removed** — fragile `package.loaded[nil]` pattern with no real use case.
-
----
-
-## VII. Error Handling & Debugging
-
-### Error isolation
-
-- `Sprite:update()` and `Sprite:draw()` wrap every `component:update(dt)` / `component:draw()` in `xpcall(component.fn, debug.traceback, component, dt)`.
-- On failure: `Log.error("[component_type]" .. msg)` prints the component type and full Lua stack trace.
-- `component._broken = true` skips the component on all subsequent frames.
-- StaticSprite rendering and `sortY` update are not wrapped (trivial, cannot fail silently).
-
-### Log.lua
-
-`Source/Helpers/Log.lua` — single extension point for all error output. Currently wraps `print("[ERROR] " .. msg)`. Swap the implementation here (e.g., to file I/O) to change where all errors go, without touching callers.
-
-### conf.lua — console = false
-
-`t.console = false` in `conf.lua` is **required** when using the VS Code Lua Debugger (`lua-local`/LuaPanda). Setting `t.console = true` causes a black screen on F5 launch. When running standalone (`.bat`/`.exe` without debugger), you may set `t.console = true` to see `Log.error()` output in a console window, but this breaks the VS Code debugger.
-
----
-
-## VIII. Rejected / Settled Questions
-
-Read this before proposing a change in these areas — it was already considered and closed. Don't re-litigate without a genuinely new argument or new evidence (e.g. profiling data that didn't exist before).
+Read this before proposing a change in these areas — already considered and closed.
 
 | Question | Verdict | Why |
 |---|---|---|
-| Pool `Sound` sources instead of `base:clone()`? | **Rejected** | ~4 clones/sec at current usage — negligible GC pressure, no measured stutter. Also technically inferior: LÖVE `Source` buffers can't be swapped after `clone()`, so a pool would need N clones *per sound variant*, not per tag — more memory than the thing it replaces. Revisit only if profiling shows an actual problem (e.g. many NPCs with footsteps at once). |
-| Guard `DrawOrder.collect()` against being called twice per frame? | **Rejected** | Moving the buffer clear to the start of `collect()` doesn't fix anything — data from a first call is still lost either way. It's slightly slower per frame (clears the full buffer instead of just the tail) and there is no double-call site in the codebase, planned or otherwise. The module-level `sortBuffer` remains shared state; if a second caller is ever introduced, solve it by passing an explicit buffer, not by reordering the clear. |
-| Add a scene/game-state machine (menu, pause, restart) to Main.lua? | **Deferred, not rejected** | Not needed while there's no menu/pause/restart flow planned. If it becomes needed: keep it to a plain string state variable switched on in `love.update`/`love.draw` — no framework, no scene-graph classes. |
-| Add ModLoader integration for mod-provided sprites/tiles/props/world hooks? | **Deferred, not rejected** | `ModLoader` can currently only register new component types — there's no entry point for mod content. Undecided whether mods are a real goal for this project; don't build integration speculatively. |
+| Pool `Sound` sources instead of `base:clone()`? | **Rejected** | ~4 clones/sec — negligible GC. Pooling needs N clones per variant, more memory. Revisit only with profiling. |
+| Guard `DrawOrder.collect()` against double-call? | **Rejected** | No double-call site exists. Buffer clear doesn't fix it either way. |
+| Scene/game-state machine (menu, pause, restart)? | **Deferred** | Not needed yet. If needed: plain string state variable, no framework. |
+| ModLoader integration for mod content? | **Deferred** | Currently only registers component types. No entry point for mod content yet. |
 
-For the full chronological history of what changed and when (Animation+Spritesheet merge, Tween merge, Generator split, error hardening, etc.), see `.kilo/CHANGELOG.md` — it's not required reading for a normal task, but check it if you're unsure whether something was already tried, or need to understand why a module looks the way it does.
+Full history: `.kilo/CHANGELOG.md`
 
 ---
 
-## IX. Completion Criteria
+## XIII. Output-Time Self-Check
 
-A task is done only if: it works; the architecture is intact; new dependencies are justified; modding is not broken; the code follows every rule above. **When implementation speed conflicts with architectural quality, architecture wins.**
+Before generating an implementation, verify internally:
+
+- [ ] Which files MUST be read?
+- [ ] Which existing pattern is closest?
+- [ ] Which AGENTS.md rules apply?
+- [ ] Am I changing architecture or only implementing the requested task?
+- [ ] Am I introducing a duplicate system?
+- [ ] Am I violating single-writer or cross-component rules?
+- [ ] Am I hardcoding values that belong in data files?
+
+---
+
+## XIV. Completion Criteria
+
+A task is done ONLY if: it works; the architecture is intact; new dependencies are justified; modding is not broken; the code follows every rule above.
