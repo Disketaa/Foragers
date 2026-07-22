@@ -11,11 +11,20 @@ return {
 		},
 
 		{
+			component = "counter",
+			mode = "progress",
+			field = "experience",
+			sourceType = "player_stats",
+			smoothness = 0.3,
+			curve = "InOutCubic",
+		},
+
+		{
 			component = "ui",
 			horizontal = "center",
-			vertical = "bottom",
+			vertical = "top",
 			offsetX = 0,
-			offsetY = 8,
+			offsetY = 0,
 		},
 	},
 }

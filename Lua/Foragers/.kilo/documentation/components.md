@@ -48,7 +48,7 @@ type sway out of phase.
 | **destructible** | HP, takeDamage, dead-sprite tracking | `hp`, `replaceWith` | — | PROP_BROKEN |
 | **drop** | Spawn drops on PROP_BROKEN | `drops` (array of `{sprite, amount}`) | PROP_BROKEN (3) | — |
 | **weapon** | Weapon data container (range, cooldown, damage, swing) | `range`, `cooldown`, `damage`, `swing` | — | — |
-| **player_stats** | Player stats container (crit, level, xp, hunger) | `critChance`, `critMult`, `level`, `experience`, `xpCurve`, `hunger`, `maxHunger` | — | — |
+| **player_stats** | Player stats container (crit, level, xp, hunger) | `critChance`, `critMult`, `level`, `experience`, `xpCurve`, `hunger`, `maxHunger` | — | VALUE_CHANGED |
 | **pickup** | Grants XP to player on collection | `xp` (number) | FOLLOW_ARRIVED (5) | — |
 | **sound** | Sound triggered by events | `volume`, `pitch`, `pitchRandomness`, `stepInterval`, `tags` | GROUNDED_CHANGED (15), STATE_CHANGED (15), ANIM_FRAME (15), SLOWDOWN_ENTER (15), PROP_HIT (15), PROP_BROKEN (15), TWEEN_COMPLETED (15), PROP_SPAWNED (15) | — |
 
@@ -57,6 +57,7 @@ type sway out of phase.
 | Component | Purpose | Config | Subscribes | Emits |
 |---|---|---|---|---|
 | **text_emitter** | Floating text on events (e.g. damage numbers). Registered in `ComponentRegistry` but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `Main.lua` — NOT via the per-sprite component loop (its `update`/`draw` are no-ops). | `font`, `text`, `event`, `color`, `moveX`, `moveY`, `gravity`, `duration`, `offsetX`, `offsetY`, `destroy`, `destroyCurve` | PROP_HIT (5) | — |
+| **counter** | Maps a value from a source component (e.g. `player_stats`) to a spritesheet frame. Event-driven — subscribes to `VALUE_CHANGED` on the source sprite via `setPlayerSprite()`. `update()` drives smooth tween animation. | `mode` (`"fraction"`/`"progress"`), `field`, `maxField`, `sourceType`, `frames`, `smoothness`, `curve` | VALUE_CHANGED (5) on source sprite | — |
 | **ui** | Data-only screen-positioning. No `update`/`draw` — positioned by Main using `UI.calculate()`. Any sprite in `Content/Assets/Sprites/UI/` with this component is drawn after the world canvas `pop()`. | `horizontal` (`"left"`/`"center"`/`"right"`), `vertical` (`"top"`/`"center"`/`"bottom"`), `offsetX`, `offsetY` | — | — |
 
 ### text_emitter config
@@ -77,6 +78,20 @@ type sway out of phase.
 | `destroyCurve` | string | `"Linear"` | Easing name from `Tween.Easing` shaping the destroy animation |
 
 Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text is drawn with the **font's** pivot as the glyph origin (Tinylorder uses `pivotX=0, pivotY=0`, so text is top-left anchored at the base). Random fields (`moveX/moveY/gravity/duration/offsetX/offsetY`) are parsed via `Math.parseRandomValue` **inside the event handler**, not in `new`, so each emit re-rolls choice/range strings. `drawAll` saves/restores the active shader so text is never tinted by a sprite shader.
+
+### counter config
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `mode` | `"fraction"`/`"progress"` | `"fraction"` | `"fraction"`: `value / maxField`. `"progress"`: XP progress within current level (uses `xpForNextLevel()` on source). |
+| `field` | string | `"experience"` | Field name on the source component to read as current value. |
+| `maxField` | string | nil | For `"fraction"` mode — field name on the source component to read as maximum value. |
+| `sourceType` | string | `"player_stats"` | Component type to find on the watched sprite. |
+| `frames` | number | spritesheet columns | Total frames in the animation (frame 1 = 0%, frame N = 100%). |
+| `smoothness` | number | `0` | Tween duration in seconds. `0` = instant jump. `>0` = smooth animation between old and new frame. |
+| `curve` | string | `"OutBack"` | Easing curve name from `Tween.Easing` (e.g. `"OutBack"`, `"Linear"`, `"InCubic"`). Ignored when `smoothness = 0`. |
+
+Connected via `Main.lua`: `counter:setPlayerSprite(playerSprite)` subscribes to `VALUE_CHANGED` on the player and syncs initial value. `update()` drives the smoothing tween.
 
 ### ui config
 

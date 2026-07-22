@@ -17,10 +17,12 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `SLOWDOWN_CHANGED` | `"slowdown_changed"` | Collision | Control(10) |
 | `SLOWDOWN_ENTER` | `"slowdown_enter"` | Collision | Sound(15) |
 | `SLOWDOWN_EXIT` | `"slowdown_exit"` | Collision | Sound(15) |
+| `VALUE_CHANGED` | `"value_changed"` | PlayerStats | Counter(5) |
 | `PROP_HIT` | `"prop_hit"` | AttackSystem | Shader(8), TextEmitter(5), Tween(10), Sound(15) |
 | `PROP_HIT` payload | — | AttackSystem emits `PROP_HIT` with the damage number as the first arg (`emit(PROP_HIT, damage)`). `text_emitter` uses this payload as the display text when its `text` field is nil. | — |
 | `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), Shake(5), Sound(15) |
 | `PROP_SPAWNED` | `"prop_spawned"` | PropSpawner | Tween(10), Sound(15) |
+| `VALUE_CHANGED` payload | — | PlayerStats emits `VALUE_CHANGED` with `{ sourceType, field, value, maxValue }` in `addExperience()` when XP changes. Counter uses `field` to filter and `value/maxValue` for frame. | — |
 | `SWING` | `"swing"` | AttackSystem | — |
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
 | `PICKUP` | `"pickup"` | Main.lua (pendingDestroy) | Tween(10) |
@@ -53,6 +55,6 @@ Only these four fields may be read across components without events:
 ## Adding a new event
 
 1. Add constant to `Source/Helpers/Events.lua`
-2. Add row to AGENTS.md event table
+2. Add row to events.md event table
 3. Use `sprite:emit(Events.MY_EVENT, ...)` in emitter
 4. Subscribe with `sprite:on(Events.MY_EVENT, callback, priority)`

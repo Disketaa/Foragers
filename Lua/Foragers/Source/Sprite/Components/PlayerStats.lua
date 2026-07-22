@@ -8,6 +8,7 @@
 ---@field hunger number Current hunger
 ---@field maxHunger number Maximum hunger
 ---@field type string
+local Events = require("Source.Helpers.Events")
 local PlayerStats = {}
 PlayerStats.__index = PlayerStats
 
@@ -40,12 +41,21 @@ end
 function PlayerStats:addExperience(amount)
 	self.experience = self.experience + amount
 	local needed = self:xpForNextLevel()
+	local leveledUp = false
 	if self.experience >= needed then
 		self.experience = self.experience - needed
 		self.level = self.level + 1
-		return true
+		leveledUp = true
 	end
-	return false
+	if self.parent then
+		self.parent:emit(Events.VALUE_CHANGED, {
+			sourceType = "player_stats",
+			field = "experience",
+			value = self.experience,
+			maxValue = self:xpForNextLevel(),
+		})
+	end
+	return leveledUp
 end
 
 ---@return boolean

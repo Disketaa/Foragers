@@ -13,5 +13,6 @@ local Events = {
 	TWEEN_COMPLETED = "tween_completed",
 	PICKUP = "pickup",
 	PROP_SPAWNED = "prop_spawned",
+	VALUE_CHANGED = "value_changed",
 }
 return Events

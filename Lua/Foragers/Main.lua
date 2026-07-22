@@ -188,6 +188,17 @@ function love.load()
 		local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
 		ui.sprite.x, ui.sprite.y = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
 	end
+
+	-- Wire counter components to player sprite (event-driven, no polling)
+	if playerSprite then
+		for _, ui in ipairs(uiSprites) do
+			for _, comp in ipairs(ui.sprite.components or {}) do
+				if comp.type == "counter" and comp.setPlayerSprite then
+					comp:setPlayerSprite(playerSprite)
+				end
+			end
+		end
+	end
 end
 
 function love.resize(w, h)
@@ -390,6 +401,13 @@ function love.update(dt)
 	AttackSystem.update(dt, dynamicObjects)
 	ParticleEmitter.updateBursts(dt)
 	TextEmitter.updateAll(dt)
+
+	-- Update UI sprites (for counter animations, etc.)
+	for _, ui in ipairs(uiSprites) do
+		if ui.sprite and ui.sprite.update then
+			ui.sprite:update(dt)
+		end
+	end
 
 	local shakeComp = nil
 	if weaponSprite then
