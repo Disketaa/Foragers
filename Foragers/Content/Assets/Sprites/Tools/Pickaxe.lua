@@ -75,6 +75,13 @@ return {
 		},
 
 		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/Crosshair",
+			spawnOn = { target_selected = true },
+			layer = "below",
+		},
+
+		{
 			component = "shader",
 			shaders = { "Brightness" },
 		},

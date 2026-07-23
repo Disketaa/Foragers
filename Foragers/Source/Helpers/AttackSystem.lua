@@ -116,6 +116,11 @@ function AttackSystem.update(dt, allObjects)
 			attacker.currentTarget = chosen
 			attacker._deployDir = deployDir
 			attacker._arrived = false
+			if ws then
+				ws._lastHitX = chosen.x
+				ws._lastHitY = chosen.y
+				ws:emit(Events.TARGET_SELECTED)
+			end
 		end
 	end
 

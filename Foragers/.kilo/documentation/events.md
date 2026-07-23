@@ -26,6 +26,7 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `COUNTER_TICK` | `"counter_tick"` | Counter | Tween(10) |
 | `COUNTER_WRAP` | `"counter_wrap"` | Counter | Tween(10), Sound(15) |
 | `SWING` | `"swing"` | AttackSystem | — |
+| `TARGET_SELECTED` | `"target_selected"` | AttackSystem | ParticleEmitter(5) |
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
 | `PICKUP` | `"pickup"` | Main.lua (pendingDestroy) | Tween(10) |
 | `TWEEN_COMPLETED` | `"tween_completed"` | Tween | Sound(15) |
