@@ -28,6 +28,7 @@ function Follow.new(data)
 		followDelay = data.followDelay or nil,
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
+		accelerate = data.accelerate or 0,
 		arrivedThreshold = data.arrivedThreshold or 3,
 		_arrivedEmitted = false,
 		_tempOffsetX = 0,
@@ -97,6 +98,7 @@ function Follow:update(dt)
 	-- Apply tweens outside radius from fixed base (scatter visible, not cumulative)
 	if outsideRadius then
 		self._arrivedEmitted = false
+		self._elapsedFollowTime = nil
 		if not self._scatterBaseX then
 			local tx, ty = 0, 0
 			if self.parent.tweens then
@@ -151,13 +153,16 @@ function Follow:update(dt)
 		end
 		self._prevParentX = self.parent.x
 		self._currentAngle = 0
+		self._elapsedFollowTime = 0
 		-- Clear scatter base so tweens don't teleport on re-entry
 		self._scatterBaseX = nil
 		self._scatterBaseY = nil
 	end
 
-	local sx = self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessX
-	local sy = self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessY
+	self._elapsedFollowTime = (self._elapsedFollowTime or 0) + dt
+	local accelFactor = 1 + self.accelerate * self._elapsedFollowTime
+	local sx = (self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessX) / accelFactor
+	local sy = (self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessY) / accelFactor
 	local easeX = Math.expSmooth(dt, sx)
 	local easeY = Math.expSmooth(dt, sy)
 

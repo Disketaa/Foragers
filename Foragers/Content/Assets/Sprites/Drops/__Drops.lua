@@ -17,6 +17,7 @@ return {
 			followRadius = 25,
 			followDelay = 0.5,
 			smoothness = "0.25..0.3",
+			accelerate = "10",
 		},
 
 		{
