@@ -125,6 +125,12 @@ relevant section before touching that subsystem.
   explicitly after loading, or `speed = "4..8"` stays a string and crashes in
   `_createParticle`.
 
+## Particle detach pattern (Source/Sprite/Components/ParticleEmitter.lua)
+
+- **Components that outlive their parent belong in a global pool, not kept alive via invisible corpse sprites.** `ParticleEmitter.detachAll(sprite)` is called from `Main.lua` before dead-sprite cleanup. It sets `parent = nil`, stops spawning, and moves the component to `detachedEmitters`. Global `updateDetached(dt)`/`drawDetached()`/`drawDetachedBehind()` loop until `#_particles == 0` then self-clean.
+- **`_burst` and `_spawn` must guard `self.parent` before accessing parent fields.** Event listeners subscribed before detach could theoretically fire after parent=nil — guard defensively even if no caller emits on dead sprites.
+- **Particle aging loop runs unconditionally (attached and detached).** The `_detached` early-return goes between aging and spawning — aging must always run so particles expire and cleanup triggers.
+
 ## Pain points from migration (Math.parseRandomValue → ValueParser)
 
 - **Don't blacklist fields by name for per-event re-roll.** Early approach used

@@ -23,7 +23,7 @@ description: Quick reference for all components — purpose, config fields, even
 | **shake** | Screen shake on death | `magnitude`, `duration`, `decay` | PROP_BROKEN (5) | — |
 | **shader** | Composes shader modules (uv-chain → Texel → color-chain); auto-maps any `parent.tweens.<name>` → uniform `u_<name>` | `shaders` (array; each entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides) or `shaderName` (single, legacy) | PROP_HIT (8) | — || **proximity_fade** | Fade alpha based on player distance | `radius`, `fadeAlpha`, `smoothness` | — | — |
 | **shadow** | Texture-free pixel-perfect shadow (3-rect 1px-rounded shape) | `offsetX`, `offsetY`, `width`, `height` | — (data-only; rendered via `Shadow.renderLayer`) | — |
-| **particle_emitter** | Particle spawning (burst + continuous + timed) | `particle`, `stepInterval`, `interval`, `moving`, `offsetX`, `offsetY`, `inheritFlip`, `spawnOn`, `count`, `angle`, `cone`, `radius`, `layer` | STATE_CHANGED (8), FLIPPED (12), ANIM_FRAME (13) | — |
+| **particle_emitter** | Particle spawning (burst + continuous + timed). Detaches on parent destroy — existing particles finish in world space | `particle`, `stepInterval`, `interval`, `moving`, `offsetX`, `offsetY`, `inheritFlip`, `spawnOn`, `count`, `angle`, `cone`, `radius`, `layer` | STATE_CHANGED (8), FLIPPED (12), ANIM_FRAME (13) | — |
 
 ## Shader inheritance
 
@@ -141,6 +141,22 @@ Timer-driven emission independent of state. `interval = 0.6` spawns one particle
 ## moving field (particle_emitter)
 
 When `moving = true`, the interval timer only accumulates while the parent sprite's position changes between frames. Combine with `interval` for movement-only particles (e.g. trail while following, not while idle). `moving = false` (default) spawns regardless of movement.
+
+## detach behavior (particle_emitter)
+
+Particle emitters are automatically detached from the parent sprite when the sprite is destroyed. This happens in two paths in `Main.lua`:
+
+- **Destructible death:** `Destructible.getDead()` → `ParticleEmitter.detachAll(sprite)` → sprite cleanup
+- **Tween destroyOnComplete:** `TweenComponent.getPendingDestroy()` → `ParticleEmitter.detachAll(sprite)` → sprite cleanup
+
+`detachAll` iterates the sprite's components, finds all `particle_emitter` entries, sets `parent = nil` and `_emitting = false`, then moves them into a global `detachedEmitters` pool.
+
+After detachment:
+- **No new particles are spawned** — interval/step/event/spawnOn triggers are dead without a parent
+- **Existing particles continue animating** — age, animation frame, and draw all proceed normally
+- **Auto-cleanup** — `ParticleEmitter.updateDetached(dt)` (called from `Main.lua` each frame) removes the emitter from `detachedEmitters` once `#_particles == 0`
+
+Detached emitters are drawn in world space at the same layering as live emitters (behind sprites if `layer = "below"`, in front otherwise), via `ParticleEmitter.drawDetachedBehind()` and `ParticleEmitter.drawDetached()` in the `love.draw` canvas callback.
 
 ## drop amount syntax
 

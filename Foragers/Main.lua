@@ -250,6 +250,7 @@ function love.draw()
 		Shadow.renderLayer(dynamicObjects, canvas.width, canvas.height, camPixelX, camPixelY)
 
 		ParticleEmitter.drawBurstsBehind()
+		ParticleEmitter.drawDetachedBehind()
 
 		local sorted = DrawOrder.collect(dynamicObjects)
 		DrawOrder.sort(sorted)
@@ -258,6 +259,7 @@ function love.draw()
 		end
 
 		ParticleEmitter.drawBursts()
+		ParticleEmitter.drawDetached()
 
 		TextEmitter.drawAll()
 
@@ -308,6 +310,7 @@ end
 function love.update(dt)
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
+		ParticleEmitter.detachAll(sprite)
 		if sprite._replaceWith then
 			local luaPath = Path.lua(sprite._replaceWith)
 			local ok, morphData = pcall(require, luaPath)
@@ -355,6 +358,7 @@ function love.update(dt)
 
 	local destroyedTweens = TweenComponent.getPendingDestroy()
 	for _, sprite in ipairs(destroyedTweens) do
+		ParticleEmitter.detachAll(sprite)
 		for _, comp in ipairs(sprite.components or {}) do
 			if comp.type == "follow" and comp.followTarget then
 				comp.followTarget:emit(Events.PICKUP, sprite)
@@ -405,6 +409,7 @@ function love.update(dt)
 
 	AttackSystem.update(dt, dynamicObjects)
 	ParticleEmitter.updateBursts(dt)
+	ParticleEmitter.updateDetached(dt)
 	TextEmitter.updateAll(dt)
 
 	-- Update UI sprites (for counter animations, etc.)

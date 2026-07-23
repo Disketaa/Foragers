@@ -8,6 +8,7 @@ for _, name in pairs(Events) do
 end
 
 local burstParticles = {}
+local detachedEmitters = {}
 
 local ParticleEmitter = {}
 ParticleEmitter.__index = ParticleEmitter
@@ -147,7 +148,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 end
 
 function ParticleEmitter:_burst()
-	if not self._particleData then
+	if not self._particleData or not self.parent then
 		return
 	end
 
@@ -223,6 +224,52 @@ function ParticleEmitter.drawBursts()
 	love.graphics.setShader(prevShader)
 end
 
+--- Detach all particle_emitter components from a dying sprite.
+--- Detached emitters stop spawning but keep updating existing particles
+--- in world space until all particles expire, then self-clean.
+function ParticleEmitter.detachAll(sprite)
+	for _, comp in ipairs(sprite.components or {}) do
+		if comp.type == "particle_emitter" and not comp._broken then
+			comp._detached = true
+			comp._emitting = false
+			comp.parent = nil
+			table.insert(detachedEmitters, comp)
+		end
+	end
+end
+
+function ParticleEmitter.updateDetached(dt)
+	for i = #detachedEmitters, 1, -1 do
+		local emitter = detachedEmitters[i]
+		emitter:update(dt)
+		if #emitter._particles == 0 then
+			table.remove(detachedEmitters, i)
+		end
+	end
+end
+
+function ParticleEmitter.drawDetachedBehind()
+	local prevShader = love.graphics.getShader()
+	love.graphics.setShader()
+	for _, emitter in ipairs(detachedEmitters) do
+		if emitter.drawBehind then
+			emitter:draw()
+		end
+	end
+	love.graphics.setShader(prevShader)
+end
+
+function ParticleEmitter.drawDetached()
+	local prevShader = love.graphics.getShader()
+	love.graphics.setShader()
+	for _, emitter in ipairs(detachedEmitters) do
+		if not emitter.drawBehind then
+			emitter:draw()
+		end
+	end
+	love.graphics.setShader(prevShader)
+end
+
 function ParticleEmitter:attach()
 	for trigger, val in pairs(self._spawnOn) do
 		if val and eventNames[trigger] then
@@ -263,6 +310,9 @@ function ParticleEmitter:attach()
 end
 
 function ParticleEmitter:_spawn()
+	if not self.parent then
+		return
+	end
 	local p = self:_createParticle(self.parent.x + self.offsetX, self.parent.y + self.offsetY)
 	if p then
 		table.insert(self._particles, p)
@@ -270,6 +320,7 @@ function ParticleEmitter:_spawn()
 end
 
 function ParticleEmitter:update(dt)
+	-- Age existing particles (always runs, even when detached)
 	for i = #self._particles, 1, -1 do
 		local p = self._particles[i]
 		if p.anim then
@@ -279,6 +330,11 @@ function ParticleEmitter:update(dt)
 		if p._age >= p._duration then
 			table.remove(self._particles, i)
 		end
+	end
+
+	-- Detached: no spawning, only let existing particles finish
+	if self._detached then
+		return
 	end
 
 	if self.interval and self.interval > 0 and self._particleData then
