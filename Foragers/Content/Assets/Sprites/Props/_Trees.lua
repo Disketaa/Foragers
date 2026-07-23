@@ -1,5 +1,5 @@
 return {
-	extends = "Content.Assets.Sprites.Props._Props",
+	extends = "Content.Assets.Sprites.Props.__Props",
 	frameWidth = 24,
 	frameHeight = 32,
 	pivotX = 0.5,
@@ -24,7 +24,7 @@ return {
 		{
 			component = "destructible",
 			hp = 7,
-			replaceWith = "Content/Assets/Sprites/Props/OakStumps",
+			replaceWith = "Content/Assets/Sprites/Props/OakStump",
 		},
 
 		{

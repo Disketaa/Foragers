@@ -1,5 +1,5 @@
 return {
-	extends = "Content.Assets.Sprites.Props._Props",
+	extends = "Content.Assets.Sprites.Props.__Props",
 	components = {
 		{
 			component = "shadow",
