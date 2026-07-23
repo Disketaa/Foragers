@@ -35,8 +35,31 @@ function PlayerStats:attach()
 	if not self.parent then
 		return
 	end
+	self._currentState = "idle"
+
 	self.parent:on(Events.PROP_HIT, function()
 		self:consumeSatiety(1)
+	end, 5)
+
+	self.parent:on(Events.STATE_CHANGED, function(newState)
+		self._currentState = newState
+	end, 5)
+
+	self.parent:on(Events.ANIM_FRAME, function(frameIndex)
+		local state = self._currentState
+		if state == "run" and (frameIndex == 2 or frameIndex == 4) then
+			if love.math.random() < 0.5 then
+				self:consumeSatiety(1)
+			end
+		elseif state == "swim" then
+			if love.math.random() < 0.75 then
+				self:consumeSatiety(1)
+			end
+		elseif state == "idle" or state == "float" then
+			if love.math.random() < 0.1 then
+				self:consumeSatiety(1)
+			end
+		end
 	end, 5)
 end
 

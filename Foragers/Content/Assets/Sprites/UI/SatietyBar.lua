@@ -14,9 +14,9 @@ return {
 			component = "tween",
 			tags = {
 				counter_tick = {
-					{ target = "scale_x", from = 1.05, to = 1, duration = 0.5, curve = "OutBack" },
-					{ target = "scale_y", from = 1.05, to = 1, duration = 0.5, curve = "OutBack" },
-					{ target = "tint_mix", from = 0.4, to = 0, duration = 0.3, curve = "OutCubic" },
+					{ target = "scale_x", from = 1.025, to = 1, duration = 0.3, curve = "OutBack" },
+					{ target = "scale_y", from = 1.025, to = 1, duration = 0.3, curve = "OutBack" },
+					{ target = "tint_mix", from = 0.3, to = 0, duration = 0.3, curve = "OutCubic" },
 				},
 			},
 		},
