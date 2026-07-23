@@ -92,8 +92,8 @@ relevant section before touching that subsystem.
   shader bound; text drawn inside the world canvas must not inherit it. Save
   `love.graphics.getShader()`, `setShader(nil)`, draw, then restore.
 - **Parse random params PER EMIT, not in `new`.** `moveX/moveY/gravity/duration/
-  offsetX/offsetY` accept `"a|b"` choice and `"min...max"` range via
-  `Math.parseRandomValue`. If you parse them once in `new`, every hit shows the
+  offsetX/offsetY` accept `"a|b"` choice and `"min..max"` range via
+  `ValueParser.call`. If you parse them once in `new`, every hit shows the
   same value. Re-roll inside the `PROP_HIT` handler so each hit varies.
 - **Keep `curve` a SEPARATE field from `destroy`.** Do not combine into one string
   like `"scale,InCubic"`. `destroy` (`"fade"|"scale"|"instant"`) controls the
@@ -106,3 +106,21 @@ relevant section before touching that subsystem.
 - **TextEmitter requires `Tween` ONLY for its `Easing` table.** No circular dep:
   `require("Source/Sprite/Components/Tween")` for `Tween.Easing` only. Do not pull
   in the whole Tween component lifecycle.
+
+## ValueParser (Source/Helpers/ValueParser.lua) — __raw contract
+
+- **`ValueParser.table(tbl)` resolves all strings in place.** Any field whose
+  resolved value differs from the original gets stored in `tbl.__raw[field]`. This
+  is how per-event re-rolling works: components call `ValueParser.call(tbl, field)`
+  which re-resolves from `__raw` if present. Without `__raw`, `call` returns the
+  already-resolved number — no re-roll.
+- **`SpriteLoader.instantiate()` copies `compData.__raw` to the component instance**
+  after `ComponentRegistry.create()`. If a component constructor creates a new table
+  (Drop.new entry, TextEmitter new()), `__raw` is NOT on the new table — the
+  SpriteLoader copy only applies to the top-level component instance. Drop fixes
+  this by manually copying `d.__raw` to each new entry. Any future component that
+  builds nested tables from resolved data must do the same.
+- **Particle data loaded via `require` in `ParticleEmitter.new()` bypasses
+  `SpriteLoader.instantiate()`** — must call `ValueParser.table(particleData)`
+  explicitly after loading, or `speed = "4..8"` stays a string and crashes in
+  `_createParticle`.

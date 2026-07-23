@@ -2,7 +2,7 @@ local Events = require("Source.Helpers.Events")
 local Path = require("Source.Helpers.Path")
 local Merge = require("Source.Helpers.Merge")
 local Log = require("Source.Helpers.Log")
-local Math = require("Source.Helpers.Math")
+local ValueParser = require("Source.Helpers.ValueParser")
 
 local pendingDrops = {}
 
@@ -14,13 +14,21 @@ function Drop.new(data)
 	if data.drops then
 		for _, d in ipairs(data.drops) do
 			if d.sprite then
-				table.insert(drops, { sprite = d.sprite, amount = d.amount or "1" })
+				local entry = { sprite = d.sprite, amount = d.amount or "1" }
+				if d.__raw then
+					entry.__raw = d.__raw
+				end
+				table.insert(drops, entry)
 			else
 				Log.error("Drop entry missing required field 'sprite'")
 			end
 		end
 	elseif data.sprite then
-		table.insert(drops, { sprite = data.sprite, amount = data.amount or "1" })
+		local entry = { sprite = data.sprite, amount = data.amount or "1" }
+		if data.__raw then
+			entry.__raw = data.__raw
+		end
+		table.insert(drops, entry)
 	end
 	if #drops == 0 then
 		Log.error("Drop component has no drops defined")
@@ -38,7 +46,7 @@ function Drop:attach()
 	self.parent:on(Events.PROP_BROKEN, function()
 		local SpriteLoader = require("Source.Sprite.SpriteLoader")
 		for _, dropDef in ipairs(self.drops) do
-			local count = Math.parseRandomValue(dropDef.amount)
+			local count = ValueParser.call(dropDef, "amount")
 			local luaPath = Path.lua(dropDef.sprite)
 			local ok, dropData = pcall(require, luaPath)
 			if ok and dropData then

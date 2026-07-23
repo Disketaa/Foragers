@@ -1,6 +1,6 @@
 local Events = require("Source.Helpers.Events")
 local Path = require("Source.Helpers.Path")
-local Math = require("Source.Helpers.Math")
+local ValueParser = require("Source.Helpers.ValueParser")
 
 local eventNames = {}
 for _, name in pairs(Events) do
@@ -43,6 +43,7 @@ function ParticleEmitter.new(data)
 	local luaPath = Path.lua(self.particle)
 	local success, particleData = pcall(require, luaPath)
 	if success then
+		ValueParser.table(particleData)
 		self._particleData = particleData
 	end
 
@@ -144,7 +145,7 @@ function ParticleEmitter:_burst()
 		return
 	end
 
-	local cmin, cmax = Math.parseRange(self.count)
+	local cmin, cmax = ValueParser.callRange(self, "count")
 	local count = math.floor(cmin + love.math.random() * (cmax - cmin + 1))
 
 	local hx = self.parent._lastHitX or self.parent.x
@@ -152,7 +153,7 @@ function ParticleEmitter:_burst()
 
 	local angleMin, angleMax
 	if self.angle then
-		angleMin, angleMax = Math.parseRange(self.angle)
+		angleMin, angleMax = ValueParser.callRange(self, "angle")
 	end
 
 	for _ = 1, count do

@@ -1,5 +1,5 @@
 local Path = require("Source.Helpers.Path")
-local Math = require("Source.Helpers.Math")
+local ValueParser = require("Source.Helpers.ValueParser")
 local Easing = require("Source.Sprite.Components.Tween").Easing
 
 local activeTexts = {}
@@ -99,12 +99,12 @@ function TextEmitter:attach()
 		end
 
 		-- re-roll random params per emit so choice/range strings vary each hit
-		local moveX = Math.parseRandomValue(self.moveX)
-		local moveY = Math.parseRandomValue(self.moveY)
-		local gravity = Math.parseRandomValue(self.gravity)
-		local duration = Math.parseRandomValue(self.duration)
-		local offsetX = Math.parseRandomValue(self.offsetX)
-		local offsetY = Math.parseRandomValue(self.offsetY)
+		local moveX = ValueParser.call(self, "moveX")
+		local moveY = ValueParser.call(self, "moveY")
+		local gravity = ValueParser.call(self, "gravity")
+		local duration = ValueParser.call(self, "duration")
+		local offsetX = ValueParser.call(self, "offsetX")
+		local offsetY = ValueParser.call(self, "offsetY")
 
 		local baseX = self.parent.x + offsetX
 		local baseY = self.parent.y + offsetY

@@ -16,7 +16,7 @@ ScrollTo.__index = ScrollTo
 ---@return ScrollTo
 function ScrollTo.new(data)
 	return setmetatable({
-		smoothness = Math.parseRandomValue(data.smoothness) or 0.1,
+		smoothness = data.smoothness or 0.1,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
 		chunkSize = data.chunkSize or 0,

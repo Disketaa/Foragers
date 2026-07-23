@@ -1,5 +1,5 @@
 local Events = require("Source.Helpers.Events")
-local Math = require("Source.Helpers.Math")
+local ValueParser = require("Source.Helpers.ValueParser")
 
 ---@class Tween
 ---@field target string Property being tweened
@@ -278,8 +278,9 @@ local function applyTweens(self, tweenSet)
 	local globalDestroyOnComplete = tweenSet.destroyOnComplete
 	for _, tweenData in pairs(tweenSet) do
 		if type(tweenData) == "table" and tweenData.target then
-			local from = Math.parseRandomValue(tweenData.from)
-			local to = Math.parseRandomValue(tweenData.to)
+			local from = ValueParser.call(tweenData, "from")
+			local to = ValueParser.call(tweenData, "to")
+			local dur = ValueParser.call(tweenData, "duration")
 			local curveFunc = Easing[tweenData.curve] or Easing.OutBack
 			local destroyOnComplete = tweenData.destroyOnComplete ~= nil and tweenData.destroyOnComplete
 				or globalDestroyOnComplete
@@ -288,7 +289,7 @@ local function applyTweens(self, tweenSet)
 					tweenData.target,
 					from,
 					to,
-					tweenData.duration,
+					dur,
 					curveFunc,
 					tweenData.loop,
 					tweenData.pingPong,
@@ -298,7 +299,7 @@ local function applyTweens(self, tweenSet)
 			local tween = self.parent.tweens[tweenData.target]
 			tween.from = from
 			tween.to = to
-			tween.duration = Math.parseRandomValue(tweenData.duration)
+			tween.duration = dur
 			tween.curve = curveFunc
 			tween.loop = tweenData.loop or false
 			tween.pingPong = tweenData.pingPong or false
@@ -392,9 +393,9 @@ function TweenComponent:update(dt)
 		for _, tweenData in ipairs(self.tweens) do
 			local key = tweenData.target
 			if not self.parent.tweens[key] then
-				local from = Math.parseRandomValue(tweenData.from)
-				local to = Math.parseRandomValue(tweenData.to)
-				local dur = Math.parseRandomValue(tweenData.duration)
+				local from = ValueParser.call(tweenData, "from")
+				local to = ValueParser.call(tweenData, "to")
+				local dur = ValueParser.call(tweenData, "duration")
 				local curveFunc = Easing[tweenData.curve] or Easing.OutBack
 				self.parent.tweens[key] = createTween(
 					key,

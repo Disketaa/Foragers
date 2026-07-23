@@ -12,7 +12,7 @@ return {
 		{
 			component = "drop",
 			drops = {
-				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "1...3" },
+				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "1..3" },
 			},
 		},
 

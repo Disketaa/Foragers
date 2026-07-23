@@ -56,7 +56,7 @@ return {
 			gravity = 200,
 			duration = 0.5,
 			offsetX = 0,
-			offsetY = "-6...-8",
+			offsetY = "-6..-8",
 			destroy = "fade",
 			destroyCurve = "InCubic",
 		},

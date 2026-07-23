@@ -61,8 +61,8 @@ return {
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Spark",
 			spawnOn = { prop_hit = true },
-			count = "3...5",
-			angle = "0...360",
+			count = "3..5",
+			angle = "0..360",
 			layer = "below",
 		},
 

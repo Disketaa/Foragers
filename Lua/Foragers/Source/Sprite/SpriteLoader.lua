@@ -2,6 +2,7 @@ local Sprite = require("Source.Sprite.Sprite")
 local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
 local Merge = require("Source.Helpers.Merge")
 local Path = require("Source.Helpers.Path")
+local ValueParser = require("Source.Helpers.ValueParser")
 
 local SpriteLoader = {}
 
@@ -13,6 +14,7 @@ local SpriteLoader = {}
 ---@param pngPath string|nil
 ---@return table
 function SpriteLoader.instantiate(data, x, y, pngPath)
+	ValueParser.table(data)
 	local sprite = Sprite.new(x, y)
 	sprite.frameWidth = data.frameWidth
 	sprite.frameHeight = data.frameHeight
@@ -32,6 +34,9 @@ function SpriteLoader.instantiate(data, x, y, pngPath)
 			end
 			local component = ComponentRegistry.create(compData.component, compData)
 			if component then
+				if compData.__raw then
+					component.__raw = compData.__raw
+				end
 				sprite:addComponent(component)
 			end
 		end

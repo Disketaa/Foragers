@@ -19,14 +19,13 @@ Follow.__index = Follow
 ---@param data table
 ---@return Follow
 function Follow.new(data)
-	local smoothness = data.smoothness and Math.parseRandomValue(data.smoothness)
 	return setmetatable({
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
-		smoothnessX = data.smoothnessX and Math.parseRandomValue(data.smoothnessX) or smoothness or 0,
-		smoothnessY = data.smoothnessY and Math.parseRandomValue(data.smoothnessY) or smoothness or 0,
+		smoothnessX = data.smoothnessX or data.smoothness or 0,
+		smoothnessY = data.smoothnessY or data.smoothness or 0,
 		followRadius = data.followRadius or nil,
-		followDelay = data.followDelay and Math.parseRandomValue(data.followDelay) or nil,
+		followDelay = data.followDelay or nil,
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
 		arrivedThreshold = data.arrivedThreshold or 3,

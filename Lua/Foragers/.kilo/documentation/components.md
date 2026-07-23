@@ -68,7 +68,7 @@ type sway out of phase.
 | `text` | string | nil | Fixed text. If nil, the emitted event payload (e.g. damage number) is used as the text |
 | `event` | string | `"prop_hit"` | Event the emitter listens to |
 | `color` | table | `{1,1,1}` | RGB tint (0–1) |
-| `moveX` | number/`"a\|b"`/`"min...max"` | `0` | Horizontal drift speed (px/s); re-rolled per emit |
+| `moveX` | number/`"a|b"`/`"min..max"` | `0` | Horizontal drift speed (px/s); re-rolled per emit |
 | `moveY` | number/range/choice | `-120` | Vertical drift speed (px/s, negative = up); re-rolled per emit |
 | `gravity` | number/range/choice | `400` | Downward accel (px/s²); re-rolled per emit |
 | `duration` | number/range/choice | `0.8` | Lifetime seconds; re-rolled per emit |
@@ -77,7 +77,7 @@ type sway out of phase.
 | `destroy` | `"fade"`/`"scale"`/`"instant"` | `"fade"` | Animated property: `fade`→alpha 1→0, `scale`→scale 1→0, `instant`→stays 1 |
 | `destroyCurve` | string | `"Linear"` | Easing name from `Tween.Easing` shaping the destroy animation |
 
-Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text is drawn with the **font's** pivot as the glyph origin (Tinylorder uses `pivotX=0, pivotY=0`, so text is top-left anchored at the base). Random fields (`moveX/moveY/gravity/duration/offsetX/offsetY`) are parsed via `Math.parseRandomValue` **inside the event handler**, not in `new`, so each emit re-rolls choice/range strings. `drawAll` saves/restores the active shader so text is never tinted by a sprite shader.
+Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text is drawn with the **font's** pivot as the glyph origin (Tinylorder uses `pivotX=0, pivotY=0`, so text is top-left anchored at the base). Random fields (`moveX/moveY/gravity/duration/offsetX/offsetY`) are resolved via `ValueParser.call(self, "field")` **inside the event handler**, not in `new`, so each emit re-rolls choice/range strings. `drawAll` saves/restores the active shader so text is never tinted by a sprite shader.
 
 ### counter config
 
@@ -147,12 +147,14 @@ When `moving = true`, the interval timer only accumulates while the parent sprit
 | Format | Meaning |
 |---|---|
 | `"1"` | Always 1 |
-| `"2...4"` | Random 2–4 |
+| `"2..4"` | Random 2–4 |
 | `"0\|1"` | 50% chance of 0 or 1 |
 
 ## Config value parsing
 
-All numeric config fields that accept user/mod data (speed, smoothness, delay, radius, etc.) MUST be passed through `Math.parseRandomValue()` in the component constructor. Same `min...max` and `a|b|c` syntax as drop amounts (above). Otherwise `"0.3...0.5"` passes as raw string and breaks math operations.
+All numeric config fields that accept user/mod data (speed, smoothness, delay, radius, etc.) MUST be passed through `ValueParser.value()` in the component constructor, or use `ValueParser.call(self, "field")` for per-event re-rolling. Same `min..max` and `a|b|c` syntax as drop amounts (above). Otherwise `"0.3..0.5"` passes as raw string and breaks math operations.
+
+The `ValueParser.table(data)` call in `SpriteLoader.instantiate()` auto-resolves all strings at load time and stores originals in `tbl.__raw` — components that need per-event re-rolling call `ValueParser.call(tbl, field)`.
 
 ## Tags (spritesheet animation mapping)
 

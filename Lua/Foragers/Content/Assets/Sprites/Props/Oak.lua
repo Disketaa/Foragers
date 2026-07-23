@@ -9,7 +9,7 @@ return {
 		{
 			component = "spritesheet",
 			animations = {
-				{ row = 1, frames = 4, speed = "4...6" },
+				{ row = 1, frames = 4, speed = "4..6" },
 			},
 		},
 
@@ -31,7 +31,7 @@ return {
 			component = "drop",
 			drops = {
 				{ sprite = "Content/Assets/Sprites/Drops/MediumCrystal", amount = "0|1" },
-				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "1...3" },
+				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "1..3" },
 			},
 		},
 
