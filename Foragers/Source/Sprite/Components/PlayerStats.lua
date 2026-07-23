@@ -5,8 +5,8 @@
 ---@field level number Current level
 ---@field experience number Current XP
 ---@field xpCurve {base:number, growth:number} XP-per-level formula
----@field hunger number Current hunger
----@field maxHunger number Maximum hunger
+---@field satiety number Current satiety
+---@field maxSatiety number Maximum satiety
 ---@field type string
 local Events = require("Source.Helpers.Events")
 local PlayerStats = {}
@@ -25,10 +25,19 @@ function PlayerStats.new(data)
 			base = xpCurve.base or 10,
 			growth = xpCurve.growth or 1.35,
 		},
-		hunger = data.hunger or 100,
-		maxHunger = data.maxHunger or 100,
+		satiety = data.satiety or 100,
+		maxSatiety = data.maxSatiety or 100,
 		type = "player_stats",
 	}, PlayerStats)
+end
+
+function PlayerStats:attach()
+	if not self.parent then
+		return
+	end
+	self.parent:on(Events.PROP_HIT, function()
+		self:consumeSatiety(1)
+	end, 5)
 end
 
 ---@return number XP required for the current level
@@ -58,19 +67,32 @@ function PlayerStats:addExperience(amount)
 	return leveledUp
 end
 
----@return boolean
-function PlayerStats:isHungry()
-	return self.hunger <= 0
+---@param amount number
+function PlayerStats:consumeSatiety(amount)
+	self.satiety = math.max(0, self.satiety - amount)
+	if self.parent then
+		self.parent:emit(Events.VALUE_CHANGED, {
+			sourceType = "player_stats",
+			field = "satiety",
+			value = self.satiety,
+			maxValue = self.maxSatiety,
+			level = self.level,
+		})
+	end
 end
 
 ---@param amount number
-function PlayerStats:consumeHunger(amount)
-	self.hunger = math.max(0, self.hunger - amount)
-end
-
----@param amount number
-function PlayerStats:restoreHunger(amount)
-	self.hunger = math.min(self.maxHunger, self.hunger + amount)
+function PlayerStats:restoreSatiety(amount)
+	self.satiety = math.min(self.maxSatiety, self.satiety + amount)
+	if self.parent then
+		self.parent:emit(Events.VALUE_CHANGED, {
+			sourceType = "player_stats",
+			field = "satiety",
+			value = self.satiety,
+			maxValue = self.maxSatiety,
+			level = self.level,
+		})
+	end
 end
 
 return PlayerStats

@@ -153,6 +153,9 @@ function AttackSystem.update(dt, allObjects)
 							ws._lastHitY = attacker.currentTarget.y
 							ws:emit(Events.PROP_HIT)
 						end
+						if attacker.sprite then
+							attacker.sprite:emit(Events.PROP_HIT, damage)
+						end
 						break
 					end
 				end

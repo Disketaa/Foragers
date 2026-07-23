@@ -26,5 +26,10 @@ return {
 				arrived = { "Content/Assets/Sounds/Steps/Events/Eat.ogg" },
 			},
 		},
+
+		{
+			component = "pickup",
+			satiety = 15,
+		},
 	},
 }

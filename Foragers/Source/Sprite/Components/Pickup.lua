@@ -12,6 +12,7 @@ Pickup.__index = Pickup
 function Pickup.new(data)
 	return setmetatable({
 		xp = data.xp or 1,
+		satiety = data.satiety,
 		_pending = false,
 		type = "pickup",
 	}, Pickup)
@@ -34,7 +35,11 @@ function Pickup:attach()
 			if comp.type == "follow" and comp.followTarget then
 				for _, pcomp in ipairs(comp.followTarget.components) do
 					if pcomp.type == "player_stats" then
-						pcomp:addExperience(self.xp)
+						if self.satiety then
+							pcomp:restoreSatiety(self.satiety)
+						else
+							pcomp:addExperience(self.xp)
+						end
 						break
 					end
 				end
