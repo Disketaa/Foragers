@@ -35,47 +35,72 @@ function Counter.new(data)
 		self._labelVAlign = data.label.vAlign or "center"
 	end
 
+	if data.icon then
+		self._iconSprite = data.icon.sprite
+		self._iconOffsetX = data.icon.offsetX or 0
+		self._iconOffsetY = data.icon.offsetY or 0
+	end
+	self._iconCurrentIndex = 1
+
 	return self
 end
 
 function Counter:attach()
-	if not self._labelFont then
-		return
-	end
 	local Path = require("Source.Helpers.Path")
 	local SpriteLoader = require("Source.Sprite.SpriteLoader")
-	local luaPath = Path.moduleToPath(self._labelFont)
-	local pngPath = luaPath .. ".png"
-	local ok, fontData = pcall(require, self._labelFont)
-	if not ok or not fontData then
-		self._labelFont = nil
-		return
-	end
-	local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
-	if not sprite then
-		self._labelFont = nil
-		return
-	end
-	for _, comp in ipairs(sprite.components) do
-		if comp.type == "spritesheet" then
-			self._labelImage = comp.image
-			self._labelQuads = comp.quads
-			self._labelFrameW = comp.frameWidth
-			self._labelFrameH = comp.frameHeight
-			self._labelPivotX = comp.pivotX or 0.5
-			self._labelPivotY = comp.pivotY or 0.5
-		elseif comp.type == "spritefont" then
-			self._labelCharIndex = comp._charIndex
-			self._labelCharWidth = comp._charWidth
-			-- label charSpacing overrides font default if set
-			if self._labelCharSpacing == nil then
-				self._labelCharSpacing = comp.charSpacing
+
+	if self._labelFont then
+		local luaPath = Path.moduleToPath(self._labelFont)
+		local pngPath = luaPath .. ".png"
+		local ok, fontData = pcall(require, self._labelFont)
+		if ok and fontData then
+			local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
+			if sprite then
+				for _, comp in ipairs(sprite.components) do
+					if comp.type == "spritesheet" then
+						self._labelImage = comp.image
+						self._labelQuads = comp.quads
+						self._labelFrameW = comp.frameWidth
+						self._labelFrameH = comp.frameHeight
+						self._labelPivotX = comp.pivotX or 0.5
+						self._labelPivotY = comp.pivotY or 0.5
+					elseif comp.type == "spritefont" then
+						self._labelCharIndex = comp._charIndex
+						self._labelCharWidth = comp._charWidth
+						-- label charSpacing overrides font default if set
+						if self._labelCharSpacing == nil then
+							self._labelCharSpacing = comp.charSpacing
+						end
+					end
+				end
 			end
 		end
+		-- Require both spritesheet and spritefont for label to work
+		if not self._labelImage or not self._labelCharIndex then
+			self._labelFont = nil
+		end
 	end
-	-- Require both spritesheet and spritefont for label to work
-	if not self._labelImage or not self._labelCharIndex then
-		self._labelFont = nil
+
+	if self._iconSprite then
+		local luaPath = Path.moduleToPath(self._iconSprite)
+		local pngPath = luaPath .. ".png"
+		local ok, iconData = pcall(require, self._iconSprite)
+		if ok and iconData then
+			local sprite = SpriteLoader.instantiate(iconData, 0, 0, pngPath)
+			if sprite then
+				for _, comp in ipairs(sprite.components) do
+					if comp.type == "spritesheet" then
+						self._iconImage = comp.image
+						self._iconQuads = comp.quads
+						self._iconFrameW = comp.frameWidth
+						self._iconFrameH = comp.frameHeight
+						self._iconPivotX = comp.pivotX or 0.5
+						self._iconPivotY = comp.pivotY or 0.5
+						self._iconColumns = comp.columns or 1
+					end
+				end
+			end
+		end
 	end
 end
 
@@ -183,9 +208,25 @@ function Counter:_setFrame(progress)
 	local numFrames = self.frames or spritesheet.columns or 1
 	-- frame 1 = 0%, frame N = 100%
 	spritesheet._currentIndex = math.floor(math.max(0, math.min(1, progress)) * (numFrames - 1)) + 1
+
+	if self._iconQuads then
+		local iconNumFrames = self._iconColumns or 1
+		self._iconCurrentIndex = math.min(math.floor(progress * iconNumFrames) + 1, iconNumFrames)
+	end
 end
 
 function Counter:draw(x, y)
+	if self._iconImage and self._iconQuads then
+		local quad = self._iconQuads[self._iconCurrentIndex]
+		if quad then
+			local ox = self._iconFrameW * self._iconPivotX
+			local oy = self._iconFrameH * self._iconPivotY
+			local ix = x + self._iconOffsetX
+			local iy = y + self._iconOffsetY
+			love.graphics.draw(self._iconImage, quad, math.floor(ix + 0.5), math.floor(iy + 0.5), 0, 1, 1, ox, oy)
+		end
+	end
+
 	if not self._labelFont or not self._labelImage or not self._labelQuads or not self._labelCharSpacing then
 		return
 	end

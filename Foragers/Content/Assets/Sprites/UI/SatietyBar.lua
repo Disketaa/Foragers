@@ -37,12 +37,8 @@ return {
 			sourceType = "player_stats",
 			smoothness = 0.3,
 			curve = "OutCubic",
-			label = {
-				font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
-				charSpacing = -4,
-				color = { 0.95, 0.68, 0.87 },
-				offsetX = 1,
-				offsetY = -1,
+			icon = {
+				sprite = "Content.Assets.Sprites.UI.Icons.Satiety",
 			},
 		},
 
