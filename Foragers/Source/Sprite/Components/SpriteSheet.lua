@@ -1,5 +1,6 @@
 local Events = require("Source.Helpers.Events")
 local Log = require("Source.Helpers.Log")
+local ValueParser = require("Source.Helpers.ValueParser")
 
 local SpriteSheet = {}
 SpriteSheet.__index = SpriteSheet
@@ -79,7 +80,7 @@ function SpriteSheet.new(data)
 			self.animations[name] = {
 				startIdx = (animDef.row - 1) * columns + 1,
 				frames = numFrames,
-				speed = animDef.speed or 1,
+				speed = ValueParser.call(animDef, "speed") or 1,
 				loop = animDef.loop ~= false,
 			}
 		end
