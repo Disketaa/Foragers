@@ -31,6 +31,11 @@ return {
 		},
 
 		{
+			data = "Content.Assets.Sprites.Props.Turnip",
+			weight = 4,
+		},
+
+		{
 			data = "Content.Assets.Sprites.Props.BirchBush",
 			weight = 5,
 		},

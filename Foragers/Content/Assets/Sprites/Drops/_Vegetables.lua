@@ -3,24 +3,19 @@ return {
 	components = {
 		{
 			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/CrystalSpark",
-			interval = 0.1,
+			particle = "Content/Assets/Sprites/Particles/Leaves",
+			interval = 0.2,
 			moving = true,
 			layer = "below",
 		},
 
 		{
 			component = "sound",
-			volume = 0.3,
+			volume = 0.9,
 			pitchRandomness = 0.4,
 			tags = {
-				arrived = { "Content/Assets/Sounds/Steps/Events/CrystalPling.ogg" },
+				arrived = { "Content/Assets/Sounds/Steps/Events/Eat.ogg" },
 			},
-		},
-
-		{
-			component = "pickup",
-			xp = 1,
 		},
 	},
 }

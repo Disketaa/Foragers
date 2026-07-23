@@ -23,13 +23,6 @@ return {
 		},
 
 		{
-			component = "drop",
-			drops = {
-				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "1|2" },
-			},
-		},
-
-		{
 			component = "tween",
 			tags = {
 				prop_touch = { { target = "angle", from = "-15|15", to = 0, duration = 2.5, curve = "OutBack" } },
@@ -39,9 +32,9 @@ return {
 		{
 			component = "sound",
 			tags = {
-				prop_touch = { "Content/Assets/Sounds/Steps/Events/BushHit.ogg" },
-				prop_hit = { "Content/Assets/Sounds/Steps/Events/BushHit.ogg" },
-				prop_broken = { "Content/Assets/Sounds/Steps/Events/BushBreak.ogg" },
+				prop_touch = { "Content/Assets/Sounds/Steps/Events/VegetableHit.ogg" },
+				prop_hit = { "Content/Assets/Sounds/Steps/Events/VegetableHit.ogg" },
+				prop_broken = { "Content/Assets/Sounds/Steps/Events/VegetableBreak.ogg" },
 			},
 		},
 	},

@@ -345,8 +345,8 @@ function TweenComponent:attach()
 	end, 10)
 
 	self.parent:on(Events.SLOWDOWN_ENTER, function()
-		if self.tags.bush_touch then
-			applyTweens(self, self.tags.bush_touch)
+		if self.tags.prop_touch then
+			applyTweens(self, self.tags.prop_touch)
 		end
 	end, 10)
 

@@ -69,7 +69,7 @@ function Sound:attach()
 	end, 15)
 
 	self.parent:on(Events.SLOWDOWN_ENTER, function()
-		self:_play("bush_touch")
+		self:_play("prop_touch")
 	end, 15)
 
 	self.parent:on(Events.PROP_HIT, function()
