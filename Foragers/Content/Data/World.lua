@@ -32,7 +32,12 @@ return {
 
 		{
 			data = "Content.Assets.Sprites.Props.Turnip",
-			weight = 4,
+			weight = 400,
+		},
+
+		{
+			data = "Content.Assets.Sprites.Props.Carrot",
+			weight = 400,
 		},
 
 		{

@@ -17,7 +17,7 @@ return {
 			followRadius = 25,
 			followDelay = 0.5,
 			smoothness = "0.25..0.3",
-			accelerate = "10",
+			accelerate = "5",
 		},
 
 		{
@@ -32,6 +32,7 @@ return {
 			tags = {
 				arrived = {
 					destroyOnComplete = true,
+					{ target = "angle", from = 0, to = 0, duration = 0.3 },
 					{ target = "brightness", from = 0.5, to = 1, duration = 0.3, curve = "OutCubic" },
 					{ target = "scale_x", from = 1, to = 0, duration = 0.3, curve = "InOutCubic" },
 					{ target = "scale_y", from = 1, to = 2, duration = 0.3, curve = "InOutCubic" },

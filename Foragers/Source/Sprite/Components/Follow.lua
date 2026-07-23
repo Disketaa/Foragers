@@ -29,6 +29,7 @@ function Follow.new(data)
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
 		accelerate = data.accelerate or 0,
+		rotate = data.rotate == true,
 		arrivedThreshold = data.arrivedThreshold or 3,
 		_arrivedEmitted = false,
 		_tempOffsetX = 0,
@@ -154,6 +155,7 @@ function Follow:update(dt)
 		self._prevParentX = self.parent.x
 		self._currentAngle = 0
 		self._elapsedFollowTime = 0
+		self.parent.angle = 0
 		-- Clear scatter base so tweens don't teleport on re-entry
 		self._scatterBaseX = nil
 		self._scatterBaseY = nil
@@ -161,6 +163,12 @@ function Follow:update(dt)
 
 	self._elapsedFollowTime = (self._elapsedFollowTime or 0) + dt
 	local accelFactor = 1 + self.accelerate * self._elapsedFollowTime
+
+	-- Spin faster as acceleration builds, stops when outside radius (early return above)
+	if self.rotate and accelFactor > 1 then
+		self.parent.angle = (self.parent.angle or 0) + (accelFactor - 1) * dt * 360
+	end
+
 	local sx = (self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessX) / accelFactor
 	local sy = (self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessY) / accelFactor
 	local easeX = Math.expSmooth(dt, sx)
