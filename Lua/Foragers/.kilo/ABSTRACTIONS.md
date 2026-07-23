@@ -124,3 +124,53 @@ relevant section before touching that subsystem.
   `SpriteLoader.instantiate()`** — must call `ValueParser.table(particleData)`
   explicitly after loading, or `speed = "4..8"` stays a string and crashes in
   `_createParticle`.
+
+## Pain points from migration (Math.parseRandomValue → ValueParser)
+
+- **Don't blacklist fields by name for per-event re-roll.** Early approach used
+  `_perEvent = { tags = true, tweens = true, moveX = true, ... }` in
+  `ValueParser.table()` to skip resolving those fields. Every new component with
+  per-event fields needed an entry. Replaced by `__raw` + `ValueParser.call()`
+  approach: resolve everything, store raw copies, let components opt in per field.
+- **Triple-dot range typo (`"4...6"`) silently fails.** The range parser matches
+  exactly `%.%.` (two dots). `"4...6"` has three dots → no match → `tonumber`
+  returns nil → string stays as-is → crashes later. Every data file had this bug.
+  Write range strings as `"min..max"`, never `"min...max"`.
+- **`__raw` must be copied manually when constructor creates new tables.**
+  `Drop.new` iterates `data.drops` and builds fresh entry tables. The entries
+  lose `d.__raw`. `ValueParser.call(entry, "amount")` falls through to the
+  resolved number. Fix: copy `d.__raw` to each new entry. Any future component
+  pattern that copies fields instead of storing the reference must do the same.
+
+## ValueParser verification checklist
+
+`ValueParser.table(data)` resolves every `"min..max"` / `"a|b|c"` string in the
+entire data tree. These fields are safe to randomize:
+
+| Field | Works? | Constraint |
+|---|---|---|
+| Top-level: `frameWidth`, `frameHeight`, `pivotX`, `pivotY`, `layer`, `sortOffsetY` | **Yes** | frameWidth/Height must match PNG columns/rows at runtime |
+| `spritesheet` speed | **Yes** | — |
+| `follow` smoothness, smoothnessX/Y, followDelay | **Yes** | — |
+| `scroll_to` smoothness | **Yes** | — |
+| `tween` from, to, duration (base + tags) | **Yes** (re-rolled per event via `ValueParser.call`) | — |
+| `drop` amount | **Yes** (re-rolled per break via `ValueParser.call`) | — |
+| `text_emitter` moveX/Y, gravity, duration, offsetX/Y | **Yes** (re-rolled per emit via `ValueParser.call`) | — |
+| `particle_emitter` count, angle | **Yes** (re-rolled per burst via `ValueParser.callRange`) | — |
+| `collision` offsetX/Y, collisionWidth/Height, slowdown | **Yes** | — |
+| `shadow` offsetX/Y, width, height | **Yes** | — |
+| `sound` volume, pitch, pitchRandomness | **Yes** | — |
+| `shake` magnitude, duration, decay | **Yes** | — |
+| `proximity_fade` radius, fadeAlpha, smoothness | **Yes** | — |
+| Any numeric field in any component | **Yes** | — |
+
+**Fields that MUST stay fixed (random breaks the system):**
+| Field | Why |
+|---|---|
+| `component` (string like `"spritesheet"`) | Not random — stays string, passes through |
+| `event`, `mode`, `destroy`, `curve`, `hAlign`, `vAlign` | Enum strings — pass through |
+| `object`, `extends` | Identifiers — pass through |
+| `chars`, `spacing`, `tags` (spritesheet animation names) | Structural data — pass through |
+| `shaders` (array of strings) | Shader names — pass through |
+| `font` (module path) | Must resolve to a valid require — pass through |
+| `sprite` (particle/drop asset path) | Must resolve to a valid require — pass through |

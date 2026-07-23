@@ -198,6 +198,7 @@ Before generating an implementation, verify internally:
 - [ ] Which AGENTS.md rules apply?
 - [ ] Am I changing architecture or only implementing the requested task?
 - [ ] Am I introducing a duplicate system?
+- [ ] Am I using `ValueParser.call()` for per-event re-roll instead of reading the field directly? (load-time resolve gives a fixed number; call re-rolls from `__raw`)
 - [ ] Am I violating single-writer or cross-component rules?
 - [ ] Am I hardcoding values that belong in data files?
 
