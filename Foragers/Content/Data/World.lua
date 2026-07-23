@@ -9,6 +9,7 @@ return {
 	backgroundColor = { 0.25, 0.74, 0.9 },
 	propCoverage = 0.4,
 	propSpawnInterval = 3,
+	borderTileOffset = 8,
 	props = {
 		{
 			data = "Content.Assets.Sprites.Props.Rocks",

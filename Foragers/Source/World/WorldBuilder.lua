@@ -188,9 +188,43 @@ local function spawnProps(worldData, playerSprite)
 	return props
 end
 
+local function buildBorder()
+	local borderTileOffset = private.borderTileOffset or 0
+	local borderSize = math.min(private.width, private.height) + 2 * borderTileOffset
+	if borderSize <= 0 then
+		return
+	end
+
+	local tileSize = private.tileSize or 8
+	local borderLeft = math.floor((private.width - borderSize) / 2)
+	local borderTop = math.floor((private.height - borderSize) / 2)
+
+	local rects = {
+		{ x = borderLeft * tileSize, y = borderTop * tileSize, w = borderSize * tileSize, h = tileSize },
+		{
+			x = borderLeft * tileSize,
+			y = (borderTop + borderSize - 1) * tileSize,
+			w = borderSize * tileSize,
+			h = tileSize,
+		},
+		{ x = borderLeft * tileSize, y = borderTop * tileSize, w = tileSize, h = borderSize * tileSize },
+		{
+			x = (borderLeft + borderSize - 1) * tileSize,
+			y = borderTop * tileSize,
+			w = tileSize,
+			h = borderSize * tileSize,
+		},
+	}
+
+	for _, rect in ipairs(rects) do
+		Collision.addSolid(rect)
+	end
+end
+
 local function build(worldData, spawnCallback, playerSprite)
 	local terrain = buildTerrain(worldData, spawnCallback)
 	local props = spawnProps(worldData, playerSprite) or {}
+	buildBorder()
 	return { terrain = terrain, props = props }
 end
 

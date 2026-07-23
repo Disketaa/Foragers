@@ -172,6 +172,10 @@ function Collision:update(dt)
 	self._prevY = self.parent.y
 end
 
+function Collision.addSolid(rect)
+	table.insert(solidColliders, rect)
+end
+
 -- For static tiles only; baked once at world generation
 function Collision:registerAsTerrain()
 	table.insert(terrainColliders, self:getRect())
