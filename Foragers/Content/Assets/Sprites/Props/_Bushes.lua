@@ -39,9 +39,9 @@ return {
 		{
 			component = "sound",
 			tags = {
-				prop_touch = { "Content/Assets/Sounds/Steps/Events/BushHit.ogg" },
-				prop_hit = { "Content/Assets/Sounds/Steps/Events/BushHit.ogg" },
-				prop_broken = { "Content/Assets/Sounds/Steps/Events/BushBreak.ogg" },
+				prop_touch = { "Content/Assets/Sounds/Events/BushHit.ogg" },
+				prop_hit = { "Content/Assets/Sounds/Events/BushHit.ogg" },
+				prop_broken = { "Content/Assets/Sounds/Events/BushBreak.ogg" },
 			},
 		},
 	},

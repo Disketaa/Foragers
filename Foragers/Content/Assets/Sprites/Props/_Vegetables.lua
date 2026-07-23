@@ -32,9 +32,9 @@ return {
 		{
 			component = "sound",
 			tags = {
-				prop_touch = { "Content/Assets/Sounds/Steps/Events/VegetableHit.ogg" },
-				prop_hit = { "Content/Assets/Sounds/Steps/Events/VegetableHit.ogg" },
-				prop_broken = { "Content/Assets/Sounds/Steps/Events/VegetableBreak.ogg" },
+				prop_touch = { "Content/Assets/Sounds/Events/VegetableHit.ogg" },
+				prop_hit = { "Content/Assets/Sounds/Events/VegetableHit.ogg" },
+				prop_broken = { "Content/Assets/Sounds/Events/VegetableBreak.ogg" },
 			},
 		},
 	},

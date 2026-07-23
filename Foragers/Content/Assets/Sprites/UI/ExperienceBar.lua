@@ -24,7 +24,7 @@ return {
 		{
 			component = "sound",
 			tags = {
-				level_up = { "Content/Assets/Sounds/Steps/Events/LevelUp.ogg" },
+				level_up = { "Content/Assets/Sounds/Events/LevelUp.ogg" },
 			},
 		},
 

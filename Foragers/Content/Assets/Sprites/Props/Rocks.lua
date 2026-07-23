@@ -24,8 +24,8 @@ return {
 		{
 			component = "sound",
 			tags = {
-				prop_hit = { "Content/Assets/Sounds/Steps/Events/RockHit.ogg" },
-				prop_broken = { "Content/Assets/Sounds/Steps/Events/RockBreak.ogg" },
+				prop_hit = { "Content/Assets/Sounds/Events/RockHit.ogg" },
+				prop_broken = { "Content/Assets/Sounds/Events/RockBreak.ogg" },
 			},
 		},
 	},

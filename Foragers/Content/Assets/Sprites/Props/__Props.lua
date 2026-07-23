@@ -67,7 +67,7 @@ return {
 			pitchRandomness = 0.15,
 			tags = {
 				prop_spawned = {
-					sounds = { "Content/Assets/Sounds/Steps/Events/Pop.ogg" },
+					sounds = { "Content/Assets/Sounds/Events/Pop.ogg" },
 					volume = 0.4,
 					pitchRandomness = 0.3,
 				},

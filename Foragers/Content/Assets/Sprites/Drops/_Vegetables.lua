@@ -23,7 +23,7 @@ return {
 			volume = 0.9,
 			pitchRandomness = 0.4,
 			tags = {
-				arrived = { "Content/Assets/Sounds/Steps/Events/Eat.ogg" },
+				arrived = { "Content/Assets/Sounds/Events/Eat.ogg" },
 			},
 		},
 

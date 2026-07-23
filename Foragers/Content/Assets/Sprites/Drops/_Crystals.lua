@@ -14,7 +14,7 @@ return {
 			volume = 0.3,
 			pitchRandomness = 0.4,
 			tags = {
-				arrived = { "Content/Assets/Sounds/Steps/Events/CrystalPling.ogg" },
+				arrived = { "Content/Assets/Sounds/Events/CrystalPling.ogg" },
 			},
 		},
 
