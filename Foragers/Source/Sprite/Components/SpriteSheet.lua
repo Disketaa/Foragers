@@ -207,7 +207,7 @@ function SpriteSheet:draw(x, y)
 
 	if not tweenTbl or not tweenTbl.angle then
 		if self.parent and self.parent.angle then
-			rot = self.parent.angle
+			rot = math.rad(self.parent.angle)
 		end
 	end
 

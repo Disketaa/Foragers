@@ -3,6 +3,7 @@ return {
 	frameHeight = 8,
 	pivotX = 0.5,
 	pivotY = 0.5,
+	angle = "0|45",
 	components = {
 		{
 			component = "spritesheet",

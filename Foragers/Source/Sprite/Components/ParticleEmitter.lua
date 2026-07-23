@@ -60,8 +60,14 @@ function ParticleEmitter:_createParticle(px, py, angle)
 		x = px,
 		y = py,
 		_age = 0,
-		angle = angle or 0,
+		angle = math.deg(angle or 0),
 	}
+
+	-- Per-particle visual rotation from data file
+	local dataAngleRaw = self._particleData.__raw and self._particleData.__raw.angle
+	if dataAngleRaw then
+		particle.angle = ValueParser.value(dataAngleRaw)
+	end
 
 	if data.components and #data.components > 0 then
 		local compData
@@ -99,7 +105,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 
 		sp.parent = {
 			flipX = self._cachedFlipX,
-			angle = angle or 0,
+			angle = particle.angle,
 			emit = function(event, ...)
 				if self.parent then
 					self.parent:emit(event, ...)
@@ -191,7 +197,7 @@ local function drawParticle(p)
 		local sx = p.flipX and -1 or 1
 		local ox = p.frameWidth * p.pivotX
 		local oy = p.frameHeight * p.pivotY
-		love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), 0, sx, 1, ox, oy)
+		love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), math.rad(p.angle or 0), sx, 1, ox, oy)
 	end
 end
 
@@ -308,7 +314,16 @@ function ParticleEmitter:draw()
 			local sx = p.flipX and -1 or 1
 			local ox = p.frameWidth * p.pivotX
 			local oy = p.frameHeight * p.pivotY
-			love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), 0, sx, 1, ox, oy)
+			love.graphics.draw(
+				p.image,
+				math.floor(p.x + 0.5),
+				math.floor(p.y + 0.5),
+				math.rad(p.angle or 0),
+				sx,
+				1,
+				ox,
+				oy
+			)
 		end
 	end
 	love.graphics.setShader(prevShader)

@@ -23,6 +23,13 @@ function SpriteLoader.instantiate(data, x, y, pngPath)
 	sprite.sortOffsetY = data.sortOffsetY or 0
 	sprite.layer = data.layer or 0
 
+	-- Copy angle, re-rolling per instance if raw string exists
+	if data.__raw and data.__raw.angle then
+		sprite.angle = ValueParser.value(data.__raw.angle)
+	else
+		sprite.angle = data.angle
+	end
+
 	for _, compData in ipairs(data.components or {}) do
 		if type(compData) == "table" then
 			compData.frameWidth = sprite.frameWidth

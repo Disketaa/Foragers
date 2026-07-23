@@ -133,6 +133,9 @@ function Sprite:draw()
 				rot = math.rad(self.tweens.angle:getValue())
 			end
 		end
+		if rot == 0 and self.angle then
+			rot = math.rad(self.angle)
+		end
 		if self.flipX then
 			sx = -sx
 		end
