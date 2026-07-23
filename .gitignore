@@ -1,11 +1,5 @@
-.editorconfig
 *.pyc
-/Foragers/.clinerules
+/Foragers/.kilo/kilo.jsonc
 /Foragers/.vscode
+/Foragers/node_modules/
 /Workspace/
-bin/
-dotnet-tools.json/
-Foragers/.kilo/kilo.jsonc
-Foragers/node_modules/
-Foragers/Tools/LuaFormatter/__pycache__/
-obj/
