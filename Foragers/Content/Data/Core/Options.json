@@ -1,7 +1,0 @@
-{
-	"GamepadDeadzone": 0.2,
-	"MouseStopRadius": 4.0,
-	"MouseFullSpeedRadius": 64.0,
-	"DebugMode": false,
-	"Shaders": true
-}

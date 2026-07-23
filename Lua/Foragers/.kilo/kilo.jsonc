@@ -1,7 +1,0 @@
-{
-  "$schema": "https://app.kilo.ai/config.json",
-  "instructions": [
-    ".kilo/AGENTS.md",
-    ".kilo/instructions/documentation.md"
-  ]
-}
