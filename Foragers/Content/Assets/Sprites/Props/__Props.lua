@@ -54,10 +54,10 @@ return {
 			moveX = "-10|10",
 			moveY = -50,
 			gravity = 200,
-			duration = 0.5,
+			duration = 0.8,
 			offsetX = 0,
 			offsetY = "-6..-8",
-			destroy = "fade",
+			destroy = "scale",
 			destroyCurve = "InCubic",
 		},
 
