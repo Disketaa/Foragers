@@ -97,8 +97,6 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShade
 	if screenShader then
 		love.graphics.setShader()
 	end
-
-	return self.canvas
 end
 
 return Canvas
