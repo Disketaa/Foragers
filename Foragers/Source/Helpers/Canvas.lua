@@ -61,7 +61,8 @@ end
 ---@param viewY number|nil Camera offset Y (shifts canvas draw position)
 ---@param subX number|nil Sub-pixel offset X (0..1, for smooth canvas movement)
 ---@param subY number|nil Sub-pixel offset Y (0..1, for smooth canvas movement)
-function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY)
+---@param screenShader Shader|nil Optional shader applied when drawing canvas to screen (post-process)
+function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShader)
 	-- Floor view offset for pixel-perfect canvas rendering (prevents sub-pixel seams)
 	viewX = math.floor(viewX or 0)
 	viewY = math.floor(viewY or 0)
@@ -89,7 +90,15 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY)
 	local finalX = self.offsetX + viewX + subX * self.scale
 	local finalY = self.offsetY + viewY + subY * self.scale
 
+	if screenShader then
+		love.graphics.setShader(screenShader)
+	end
 	love.graphics.draw(self.canvas, finalX, finalY, 0, self.scale, self.scale)
+	if screenShader then
+		love.graphics.setShader()
+	end
+
+	return self.canvas
 end
 
 return Canvas

@@ -45,6 +45,7 @@ local playerSprite = nil
 local shakeOffsetX = 0
 local shakeOffsetY = 0
 local uiSprites = {}
+local saturationShader = nil
 local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
@@ -88,6 +89,9 @@ function love.load()
 	love.graphics.setBackgroundColor(unpack(bg))
 
 	ShaderLoader.loadAll("Content/Assets/Shaders")
+
+	saturationShader = love.graphics.newShader(require("Content.Assets.Shaders.Saturation"))
+	saturationShader:send("u_saturation", 1)
 
 	local worldData = WorldGen.generate()
 
@@ -201,6 +205,15 @@ function love.load()
 				end
 			end
 		end
+
+		playerSprite:on(Events.VALUE_CHANGED, function(data)
+			if data.field ~= "satiety" then
+				return
+			end
+			local f = data.value / math.max(1, data.maxValue)
+			local s = f >= 0.33 and 1 or f / 0.33
+			saturationShader:send("u_saturation", math.max(0, math.min(1, s)))
+		end, 5)
 	end
 end
 
@@ -230,7 +243,7 @@ function love.draw()
 	-- Shader compensates for missing translate via camera_x/y uniform
 	bgCanvas:draw(function()
 		ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
-	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY)
+	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY, saturationShader)
 
 	-- Main world canvas
 	canvas:draw(function()
@@ -264,7 +277,7 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY)
+	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY, saturationShader)
 
 	-- UI + cursor drawn outside canvas: screen-fixed, no camera shake/sub-pixel jitter
 	love.graphics.push()
