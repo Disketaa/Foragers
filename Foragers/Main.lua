@@ -45,6 +45,7 @@ local playerSprite = nil
 local shakeOffsetX = 0
 local shakeOffsetY = 0
 local uiSprites = {}
+local saturationShader = nil
 local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
@@ -88,6 +89,17 @@ function love.load()
 	love.graphics.setBackgroundColor(unpack(bg))
 
 	ShaderLoader.loadAll("Content/Assets/Shaders")
+
+	saturationShader = love.graphics.newShader([[
+		extern float u_saturation;
+		vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
+			vec4 pixel = Texel(texture, tex_coords);
+			float lum = dot(pixel.rgb, vec3(0.299, 0.587, 0.114));
+			pixel.rgb = mix(vec3(lum), pixel.rgb, u_saturation);
+			return pixel * color;
+		}
+	]])
+	saturationShader:send("u_saturation", 1)
 
 	local worldData = WorldGen.generate()
 
@@ -223,6 +235,30 @@ local function screenToWorld(screenX, screenY)
 	return cx - cameraX, cy - cameraY
 end
 
+local function updateSaturation()
+	if not saturationShader or not playerSprite then
+		return
+	end
+	local statsComp = nil
+	for _, comp in ipairs(playerSprite.components or {}) do
+		if comp.type == "player_stats" then
+			statsComp = comp
+			break
+		end
+	end
+	if not statsComp then
+		return
+	end
+	local f = statsComp.satiety / math.max(1, statsComp.maxSatiety)
+	local s
+	if f >= 0.33 then
+		s = 1
+	else
+		s = f / 0.33
+	end
+	saturationShader:send("u_saturation", math.max(0, math.min(1, s)))
+end
+
 function love.draw()
 	ShaderLoader.setCamera(camPixelX, camPixelY)
 
@@ -230,7 +266,7 @@ function love.draw()
 	-- Shader compensates for missing translate via camera_x/y uniform
 	bgCanvas:draw(function()
 		ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
-	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY)
+	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY, saturationShader)
 
 	-- Main world canvas
 	canvas:draw(function()
@@ -264,7 +300,7 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY)
+	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY, saturationShader)
 
 	-- UI + cursor drawn outside canvas: screen-fixed, no camera shake/sub-pixel jitter
 	love.graphics.push()
@@ -441,4 +477,6 @@ function love.update(dt)
 		table.insert(objects, { instance = spawned, data = {} })
 		table.insert(dynamicObjects, { instance = spawned, data = {} })
 	end
+
+	updateSaturation()
 end
