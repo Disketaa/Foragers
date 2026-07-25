@@ -374,7 +374,14 @@ function love.update(dt)
 		ParticleEmitter.detachAll(sprite)
 		for _, comp in ipairs(sprite.components or {}) do
 			if comp.type == "follow" and comp.followTarget then
-				comp.followTarget:emit(Events.PICKUP, sprite)
+				local text = ""
+				for _, pcomp in ipairs(sprite.components or {}) do
+					if pcomp.type == "pickup" and pcomp.satiety then
+						text = "+" .. tostring(pcomp.satiety)
+						break
+					end
+				end
+				comp.followTarget:emit(Events.PICKUP, text)
 			end
 		end
 		Collision.removeSpriteColliders(sprite)

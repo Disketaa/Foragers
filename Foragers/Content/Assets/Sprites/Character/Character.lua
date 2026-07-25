@@ -77,6 +77,20 @@ return {
 		},
 
 		{
+			component = "text_emitter",
+			event = "pickup",
+			color = { 0.6, 1, 0.6 },
+			moveX = "-15|15",
+			moveY = -30,
+			gravity = 130,
+			duration = 0.7,
+			offsetX = -5,
+			offsetY = -3,
+			destroy = "scale",
+			destroyCurve = "InCubic",
+		},
+
+		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Dust.lua",
 			stepInterval = 2,
