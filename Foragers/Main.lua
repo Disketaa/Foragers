@@ -236,30 +236,6 @@ local function screenToWorld(screenX, screenY)
 	return cx - cameraX, cy - cameraY
 end
 
-local function updateSaturation()
-	if not saturationShader or not playerSprite then
-		return
-	end
-	local statsComp = nil
-	for _, comp in ipairs(playerSprite.components or {}) do
-		if comp.type == "player_stats" then
-			statsComp = comp
-			break
-		end
-	end
-	if not statsComp then
-		return
-	end
-	local f = statsComp.satiety / math.max(1, statsComp.maxSatiety)
-	local s
-	if f >= 0.33 then
-		s = 1
-	else
-		s = f / 0.33
-	end
-	saturationShader:send("u_saturation", math.max(0, math.min(1, s)))
-end
-
 function love.draw()
 	ShaderLoader.setCamera(camPixelX, camPixelY)
 
@@ -478,6 +454,4 @@ function love.update(dt)
 		table.insert(objects, { instance = spawned, data = {} })
 		table.insert(dynamicObjects, { instance = spawned, data = {} })
 	end
-
-	updateSaturation()
 end
