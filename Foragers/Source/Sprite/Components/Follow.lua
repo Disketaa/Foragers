@@ -160,8 +160,8 @@ function Follow:update(dt)
 	local accelFactor = 1 + self.accelerate * self._elapsedFollowTime
 
 	-- Spin faster as acceleration builds, stops when outside radius (early return above)
-	if self.rotate and accelFactor > 1 then
-		self.parent.angle = (self.parent.angle or 0) + (accelFactor - 1) * dt * 360
+	if self.rotate and not self._arrivedEmitted and accelFactor > 1 then
+		self.parent.angle = (self.parent.angle or 0) + (accelFactor - 1) * dt * 180
 	end
 
 	local sx = (self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessX) / accelFactor
