@@ -60,15 +60,17 @@ function AttackSystem.update(dt, allObjects)
 	cleanupTween(ws, "swing_angle")
 
 	local targetValid = false
-		if attacker.currentTarget then
-			local dc = attacker.currentTarget:findComponent("destructible", function(c) return c.hp > 0 end)
-			if dc then
-				local dx = attacker.currentTarget.x - ax
-				local dy = attacker.currentTarget.y - ay
-				if dx * dx + dy * dy <= rangeSq then
-					targetValid = true
-				end
+	if attacker.currentTarget then
+		local dc = attacker.currentTarget:findComponent("destructible", function(c)
+			return c.hp > 0
+		end)
+		if dc then
+			local dx = attacker.currentTarget.x - ax
+			local dy = attacker.currentTarget.y - ay
+			if dx * dx + dy * dy <= rangeSq then
+				targetValid = true
 			end
+		end
 		if not targetValid and weaponFollow then
 			local committed = attacker._arrived and attacker.cooldownTimer > 0
 			if not committed and not (ws and ws.tweens and ws.tweens.swing_angle) then
@@ -83,7 +85,9 @@ function AttackSystem.update(dt, allObjects)
 		local candidates = {}
 		for _, entry in ipairs(allObjects) do
 			local sprite = entry.instance
-			if sprite and sprite:findComponent("destructible", function(c) return c.hp > 0 end) then
+			if sprite and sprite:findComponent("destructible", function(c)
+				return c.hp > 0
+			end) then
 				local dx = sprite.x - ax
 				local dy = sprite.y - ay
 				if dx * dx + dy * dy <= rangeSq then
@@ -126,7 +130,9 @@ function AttackSystem.update(dt, allObjects)
 		if attacker.damageTimer <= 0 then
 			attacker.damageTimer = nil
 			if attacker.currentTarget then
-				local dc = attacker.currentTarget:findComponent("destructible", function(c) return c.hp > 0 and c.takeDamage end)
+				local dc = attacker.currentTarget:findComponent("destructible", function(c)
+					return c.hp > 0 and c.takeDamage
+				end)
 				if dc then
 					dc:takeDamage(damage)
 					if dc.hp <= 0 and ws then

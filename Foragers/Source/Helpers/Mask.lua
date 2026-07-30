@@ -32,7 +32,9 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 		for _, entry in ipairs(entries) do
 			local sprite = entry.instance or entry
 			if sprite and sprite.components then
-				local hasSilhouette = sprite:findComponent("silhouette", function(c) return c.mode ~= "mask" and not c._broken end)
+				local hasSilhouette = sprite:findComponent("silhouette", function(c)
+					return c.mode ~= "mask" and not c._broken
+				end)
 				if hasSilhouette then
 					local rot = 0
 					local t = sprite.tweens
@@ -46,8 +48,10 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 						rot = math.rad(sprite.angle)
 					end
 
-				local spritesheet = sprite:findComponent("spritesheet", function(c) return not c._broken end)
-				if spritesheet then
+					local spritesheet = sprite:findComponent("spritesheet", function(c)
+						return not c._broken
+					end)
+					if spritesheet then
 						local px = math.floor(sprite.x + 0.5) + camX
 						local py = math.floor(sprite.y + 0.5) + camY
 						spritesheet:drawCurrentFrame(px, py, rot)
