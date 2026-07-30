@@ -96,7 +96,7 @@ Foragers/
 │   ├── Sprite/
 │   │   ├── Sprite.lua
 │   │   ├── SpriteLoader.lua
-│   │   └── Components/   # collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, proximity_fade, shader, drop, scroll_to, shadow, spritefont, ui, player_stats, pickup
+│   │   └── Components/   # collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, ui, player_stats, pickup
 │   ├── UI/
 │   │   ├── Components/   # TextEmitter, UI
 │   │   └── Text.lua
@@ -144,7 +144,7 @@ All Critical Constraints in Section I apply here.
 
 ### Component list
 
-20 core: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `proximity_fade`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `ui`, `player_stats`, `pickup`, `counter`.
+19 core: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `ui`, `player_stats`, `pickup`, `counter`.
 
 ---
 
@@ -155,11 +155,10 @@ Full event table: `.kilo/documentation/events.md`
 - Subscriptions happen at construction (`new()`/`attach()`), before the game loop starts.
 - Priority gaps of 5 (5/10/15) leave room for future listeners.
   - **EXCEPTION:** STATE_CHANGED and FLIPPED use tight priorities (7↔8, 10↔11↔12) — renumbering existing components was deemed higher risk than tight spacing.
-- **Field exceptions** (ONLY these four, justify before adding more):
+- **Field exceptions** (ONLY these three, justify before adding more):
   1. `parent.flipX` / `parent._state` — readable ONLY inside `draw()` for rendering. NEVER read in `update()`/logic.
   2. `parent.tweens` — single producer (Tween) / multi-consumer, continuous numeric data.
-  3. `parent.alpha` — render-only opacity (0–1), written by ProximityFade in `update()`, read in `draw()`.
-  4. `parent.shader` / `parent.shaderData` — set once on attach, read in draw(). shaderData written in update(), read in draw().
+  3. `parent.shader` / `parent.shaderData` — set once on attach, read in draw(). shaderData written in update(), read in draw().
 - **Field-write-before-emit:** if a signal has both a field and an event, write the field first, then emit.
 - **Single-writer rule:** `_state` has exactly one writer, Control. NEVER write `_state` from another component.
 

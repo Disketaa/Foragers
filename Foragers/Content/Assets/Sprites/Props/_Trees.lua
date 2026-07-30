@@ -52,13 +52,6 @@ return {
 		},
 
 		{
-			component = "proximity_fade",
-			radius = 15,
-			fadeAlpha = 0.5,
-			smoothness = 0.25,
-		},
-
-		{
 			component = "sound",
 			tags = {
 				prop_hit = { "Content/Assets/Sounds/Events/WoodHit.ogg" },
