@@ -60,17 +60,15 @@ function AttackSystem.update(dt, allObjects)
 	cleanupTween(ws, "swing_angle")
 
 	local targetValid = false
-	if attacker.currentTarget then
-		for _, comp in ipairs(attacker.currentTarget.components or {}) do
-			if comp.type == "destructible" and comp.hp > 0 then
+		if attacker.currentTarget then
+			local dc = attacker.currentTarget:findComponent("destructible", function(c) return c.hp > 0 end)
+			if dc then
 				local dx = attacker.currentTarget.x - ax
 				local dy = attacker.currentTarget.y - ay
 				if dx * dx + dy * dy <= rangeSq then
 					targetValid = true
 				end
-				break
 			end
-		end
 		if not targetValid and weaponFollow then
 			local committed = attacker._arrived and attacker.cooldownTimer > 0
 			if not committed and not (ws and ws.tweens and ws.tweens.swing_angle) then
@@ -85,16 +83,11 @@ function AttackSystem.update(dt, allObjects)
 		local candidates = {}
 		for _, entry in ipairs(allObjects) do
 			local sprite = entry.instance
-			if sprite then
-				for _, comp in ipairs(sprite.components or {}) do
-					if comp.type == "destructible" and comp.hp > 0 then
-						local dx = sprite.x - ax
-						local dy = sprite.y - ay
-						if dx * dx + dy * dy <= rangeSq then
-							table.insert(candidates, sprite)
-						end
-						break
-					end
+			if sprite and sprite:findComponent("destructible", function(c) return c.hp > 0 end) then
+				local dx = sprite.x - ax
+				local dy = sprite.y - ay
+				if dx * dx + dy * dy <= rangeSq then
+					table.insert(candidates, sprite)
 				end
 			end
 		end
@@ -133,22 +126,20 @@ function AttackSystem.update(dt, allObjects)
 		if attacker.damageTimer <= 0 then
 			attacker.damageTimer = nil
 			if attacker.currentTarget then
-				for _, comp in ipairs(attacker.currentTarget.components or {}) do
-					if comp.type == "destructible" and comp.hp > 0 and comp.takeDamage then
-						comp:takeDamage(damage)
-						if comp.hp <= 0 and ws then
-							ws:emit(Events.PROP_BROKEN)
-						end
-						attacker.currentTarget:emit(Events.PROP_HIT, damage)
-						if ws then
-							ws._lastHitX = attacker.currentTarget.x
-							ws._lastHitY = attacker.currentTarget.y
-							ws:emit(Events.PROP_HIT)
-						end
-						if attacker.sprite then
-							attacker.sprite:emit(Events.PROP_HIT, damage)
-						end
-						break
+				local dc = attacker.currentTarget:findComponent("destructible", function(c) return c.hp > 0 and c.takeDamage end)
+				if dc then
+					dc:takeDamage(damage)
+					if dc.hp <= 0 and ws then
+						ws:emit(Events.PROP_BROKEN)
+					end
+					attacker.currentTarget:emit(Events.PROP_HIT, damage)
+					if ws then
+						ws._lastHitX = attacker.currentTarget.x
+						ws._lastHitY = attacker.currentTarget.y
+						ws:emit(Events.PROP_HIT)
+					end
+					if attacker.sprite then
+						attacker.sprite:emit(Events.PROP_HIT, damage)
 					end
 				end
 			end

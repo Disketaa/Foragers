@@ -228,13 +228,11 @@ end
 --- Detached emitters stop spawning but keep updating existing particles
 --- in world space until all particles expire, then self-clean.
 function ParticleEmitter.detachAll(sprite)
-	for _, comp in ipairs(sprite.components or {}) do
-		if comp.type == "particle_emitter" and not comp._broken then
-			comp._detached = true
-			comp._emitting = false
-			comp.parent = nil
-			table.insert(detachedEmitters, comp)
-		end
+	for _, comp in ipairs(sprite:getComponents("particle_emitter", function(c) return not c._broken end)) do
+		comp._detached = true
+		comp._emitting = false
+		comp.parent = nil
+		table.insert(detachedEmitters, comp)
 	end
 end
 

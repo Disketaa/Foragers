@@ -63,14 +63,12 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
 				if sprite and sprite.components then
-					for _, comp in ipairs(sprite.components) do
-						if comp.type == "shadow" and not comp._broken then
-							local cx = math.floor(sprite.x + 0.5) + comp.offsetX + camX
-							local cy = math.floor(sprite.y + 0.5) + comp.offsetY + camY
-							local x = cx - math.floor(comp.width / 2)
-							local y = cy - math.floor(comp.height / 2)
-							drawShape(x, y, comp.width, comp.height)
-						end
+					for _, comp in ipairs(sprite:getComponents("shadow", function(c) return not c._broken end)) do
+						local cx = math.floor(sprite.x + 0.5) + comp.offsetX + camX
+						local cy = math.floor(sprite.y + 0.5) + comp.offsetY + camY
+						local x = cx - math.floor(comp.width / 2)
+						local y = cy - math.floor(comp.height / 2)
+						drawShape(x, y, comp.width, comp.height)
 					end
 				end
 			end

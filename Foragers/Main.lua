@@ -78,6 +78,14 @@ local function getSpawnPosition(data)
 	return 0, 0
 end
 
+local function positionUI(ui)
+	local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
+	local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
+	local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
+	ui.sprite.x = px + (ui.sprite.pivotX or 0) * w
+	ui.sprite.y = py + (ui.sprite.pivotY or 0) * h
+end
+
 function love.load()
 	print("Love2D project started")
 	love.graphics.setDefaultFilter("nearest", "nearest")
@@ -137,24 +145,19 @@ function love.load()
 
 	if playerSprite then
 		for _, entry in ipairs(toolEntries) do
-			for _, comp in ipairs(entry.instance.components or {}) do
-				if comp.type == "follow" and comp.setFollowTarget then
-					comp:setFollowTarget(playerSprite)
-				end
+			local follow = entry.instance:findComponent("follow", function(c) return c.setFollowTarget end)
+			if follow then
+				follow:setFollowTarget(playerSprite)
 			end
 			table.insert(dynamicObjects, entry)
 			table.insert(objects, entry)
 		end
-		-- Find scroll_to component for camera
-		for _, comp in ipairs(playerSprite.components or {}) do
-			if comp.type == "scroll_to" then
-				scrollToComp = comp
-				comp:setFollowTarget(playerSprite)
-				-- Initialize camera to player position for smooth start
-				comp._currentX = playerSprite.x + (comp.offsetX or 0)
-				comp._currentY = playerSprite.y + (comp.offsetY or 0)
-				break
-			end
+		local scrollComp = playerSprite:findComponent("scroll_to", function(c) return c.setFollowTarget end)
+		if scrollComp then
+			scrollToComp = scrollComp
+			scrollComp:setFollowTarget(playerSprite)
+			scrollComp._currentX = playerSprite.x + (scrollComp.offsetX or 0)
+			scrollComp._currentY = playerSprite.y + (scrollComp.offsetY or 0)
 		end
 		AttackSystem.registerAttacker(playerSprite, toolEntries[1] and toolEntries[1].instance)
 		weaponSprite = toolEntries[1] and toolEntries[1].instance
@@ -187,21 +190,15 @@ function love.load()
 		end
 	end
 	for _, ui in ipairs(uiSprites) do
-		local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
-		local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
-		local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
-		-- Shift draw origin by pivot so visual anchor matches calculated position
-		ui.sprite.x = px + (ui.sprite.pivotX or 0) * w
-		ui.sprite.y = py + (ui.sprite.pivotY or 0) * h
+		positionUI(ui)
 	end
 
 	-- Wire counter components to player sprite (event-driven, no polling)
 	if playerSprite then
 		for _, ui in ipairs(uiSprites) do
-			for _, comp in ipairs(ui.sprite.components or {}) do
-				if comp.type == "counter" and comp.setPlayerSprite then
-					comp:setPlayerSprite(playerSprite)
-				end
+			local counter = ui.sprite:findComponent("counter", function(c) return c.setPlayerSprite end)
+			if counter then
+				counter:setPlayerSprite(playerSprite)
 			end
 		end
 
@@ -221,11 +218,7 @@ function love.resize(w, h)
 	bgCanvas:resize(w, h)
 	updateCamera()
 	for _, ui in ipairs(uiSprites) do
-		local ew = ui.sprite.frameWidth or ui.sprite.image:getWidth()
-		local eh = ui.sprite.frameHeight or ui.sprite.image:getHeight()
-		local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, ew, eh)
-		ui.sprite.x = px + (ui.sprite.pivotX or 0) * ew
-		ui.sprite.y = py + (ui.sprite.pivotY or 0) * eh
+		positionUI(ui)
 	end
 end
 
@@ -370,10 +363,9 @@ function love.update(dt)
 
 	for _, sprite in ipairs(Drop.getPending()) do
 		if playerSprite then
-			for _, comp in ipairs(sprite.components or {}) do
-				if comp.type == "follow" and comp.setFollowTarget then
-					comp:setFollowTarget(playerSprite)
-				end
+			local follow = sprite:findComponent("follow", function(c) return c.setFollowTarget end)
+			if follow then
+				follow:setFollowTarget(playerSprite)
 			end
 		end
 		table.insert(objects, { instance = sprite, data = {} })
@@ -383,17 +375,11 @@ function love.update(dt)
 	local destroyedTweens = TweenComponent.getPendingDestroy()
 	for _, sprite in ipairs(destroyedTweens) do
 		ParticleEmitter.detachAll(sprite)
-		for _, comp in ipairs(sprite.components or {}) do
-			if comp.type == "follow" and comp.followTarget then
-				local text = ""
-				for _, pcomp in ipairs(sprite.components or {}) do
-					if pcomp.type == "pickup" and pcomp.satiety then
-						text = "+" .. tostring(pcomp.satiety)
-						break
-					end
-				end
-				comp.followTarget:emit(Events.PICKUP, text)
-			end
+		local follow = sprite:findComponent("follow", function(c) return c.followTarget end)
+		if follow then
+			local pickup = sprite:findComponent("pickup", function(c) return c.satiety end)
+			local text = pickup and ("+" .. tostring(pickup.satiety)) or ""
+			follow.followTarget:emit(Events.PICKUP, text)
 		end
 		Collision.removeSpriteColliders(sprite)
 		removeSpriteFromLists(sprite)
@@ -405,27 +391,19 @@ function love.update(dt)
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
 	local isMouseDown = love.mouse.isDown(1)
 
-	-- Save pre-move positions for collision resolution
-	for _, entry in ipairs(objects) do
-		if entry.instance then
-			for _, comp in ipairs(entry.instance.components or {}) do
-				if comp.type == "collision" and comp.mode ~= "solid" then
-					comp._prevX = entry.instance.x
-					comp._prevY = entry.instance.y
-				end
-			end
-		end
-	end
-
+	-- Save pre-move positions for collision resolution + process control + update
 	for _, entry in ipairs(objects) do
 		if entry.instance and entry.instance.update then
-			for _, comp in ipairs(entry.instance.components or {}) do
-				if comp.type == "control" then
-					if comp.mouseControl and isMouseDown then
-						comp:setMousePosition(worldX, worldY)
-					else
-						comp.mouseX, comp.mouseY = nil, nil
-					end
+			for _, comp in ipairs(entry.instance:getComponents("collision", function(c) return c.mode ~= "solid" end)) do
+				comp._prevX = entry.instance.x
+				comp._prevY = entry.instance.y
+			end
+			local control = entry.instance:findComponent("control")
+			if control then
+				if control.mouseControl and isMouseDown then
+					control:setMousePosition(worldX, worldY)
+				else
+					control.mouseX, control.mouseY = nil, nil
 				end
 			end
 			entry.instance:update(dt)
@@ -450,15 +428,7 @@ function love.update(dt)
 		end
 	end
 
-	local shakeComp = nil
-	if weaponSprite then
-		for _, comp in ipairs(weaponSprite.components or {}) do
-			if comp.type == "shake" then
-				shakeComp = comp
-				break
-			end
-		end
-	end
+	local shakeComp = weaponSprite and weaponSprite:findComponent("shake") or nil
 	if shakeComp and shakeComp.active then
 		shakeOffsetX = shakeComp.offsetX
 		shakeOffsetY = shakeComp.offsetY

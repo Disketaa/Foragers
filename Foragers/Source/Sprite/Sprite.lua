@@ -71,13 +71,24 @@ function Sprite:addComponent(component)
 	end
 end
 
---- Find first component of given type.
-function Sprite:findComponent(type)
+--- Find first component of given type, optionally matching predicate.
+function Sprite:findComponent(type, predicate)
 	for _, comp in ipairs(self.components or {}) do
-		if comp.type == type then
+		if comp.type == type and (not predicate or predicate(comp)) then
 			return comp
 		end
 	end
+end
+
+--- Find all components of given type, optionally matching predicate.
+function Sprite:getComponents(type, predicate)
+	local result = {}
+	for _, comp in ipairs(self.components or {}) do
+		if comp.type == type and (not predicate or predicate(comp)) then
+			table.insert(result, comp)
+		end
+	end
+	return result
 end
 
 --- Bind parent shader if present. Returns true if shader was set.
