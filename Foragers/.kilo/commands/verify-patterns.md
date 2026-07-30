@@ -108,3 +108,10 @@ For **every** result, ask: **"Is this controlled/affected by sprite pivot?"**
 2. `love.graphics.draw` without pivot-based origin (`ox`, `oy`)
 3. Offset computed from sprite edge instead of from pivot
 4. `ox`/`oy` computed without multiplying by `pivotX`/`pivotY`
+
+## 12. Shared utilities — no duplicated directory scanning
+
+```
+grep -rn "local function scan" Source/
+```
+Any hit outside `Path.lua` means a file has its own directory-walking loop instead of using `Path.scanDirectory`. Extract to the shared utility.

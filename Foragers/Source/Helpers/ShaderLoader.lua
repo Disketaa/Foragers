@@ -13,47 +13,35 @@ function ShaderLoader.loadAll(basePath)
 	ShaderLoader.shaders = {}
 	ShaderLoader.modules = {}
 
-	local function scan(path)
-		local items = love.filesystem.getDirectoryItems(path)
-
-		for _, item in ipairs(items) do
-			local fullPath = path .. "/" .. item
-			local info = love.filesystem.getInfo(fullPath)
-			if info and info.type == "directory" then
-				scan(fullPath)
-			elseif item:match("%.lua$") then
-				local luaPath = Path.lua(fullPath)
-				local success, data = pcall(require, luaPath)
-				if success and type(data) == "table" and data.name then
-					if data.module then
-						-- building block, not a standalone shader
-						ShaderLoader.modules[data.name] = data
-					elseif data.modules then
-						-- pre-declared program: compose listed modules
-						local entry = ShaderLoader._compileProgram(data.modules, data)
-						if entry then
-							table.insert(ShaderLoader.shaders, entry)
-						end
-					elseif data.code then
-						-- legacy standalone shader
-						local ok, shader = pcall(love.graphics.newShader, data.code)
-						if ok then
-							table.insert(ShaderLoader.shaders, {
-								name = data.name,
-								applies_to = data.applies_to or "unknown",
-								priority = data.priority or "background",
-								uniforms = data.uniforms or {},
-								shader = shader,
-								luaPath = luaPath,
-							})
-						end
-					end
+	Path.scanDirectory(basePath, function(fullPath, item)
+		local luaPath = Path.lua(fullPath)
+		local success, data = pcall(require, luaPath)
+		if success and type(data) == "table" and data.name then
+			if data.module then
+				-- building block, not a standalone shader
+				ShaderLoader.modules[data.name] = data
+			elseif data.modules then
+				-- pre-declared program: compose listed modules
+				local entry = ShaderLoader._compileProgram(data.modules, data)
+				if entry then
+					table.insert(ShaderLoader.shaders, entry)
+				end
+			elseif data.code then
+				-- legacy standalone shader
+				local ok, shader = pcall(love.graphics.newShader, data.code)
+				if ok then
+					table.insert(ShaderLoader.shaders, {
+						name = data.name,
+						applies_to = data.applies_to or "unknown",
+						priority = data.priority or "background",
+						uniforms = data.uniforms or {},
+						shader = shader,
+						luaPath = luaPath,
+					})
 				end
 			end
 		end
-	end
-
-	scan(basePath)
+	end)
 end
 
 -- Build a composed shader from a list of module names. Cached by joined name.

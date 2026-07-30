@@ -16,13 +16,7 @@ local function rectsOverlap(a, b)
 	return a.x < b.x + b.w and a.x + a.w > b.x and a.y < b.y + b.h and a.y + a.h > b.y
 end
 
-local tilePngPath
-for k, v in pairs(package.loaded) do
-	if v == TileData then
-		tilePngPath = Path.moduleToPath(k) .. ".png"
-		break
-	end
-end
+local tilePngPath = Path.moduleToPath("Content.Assets.Sprites.Tiles.GrassTiles") .. ".png"
 
 local function computeMask(world, x, y)
 	local top = world[y - 1] and world[y - 1][x] and world[y - 1][x].active

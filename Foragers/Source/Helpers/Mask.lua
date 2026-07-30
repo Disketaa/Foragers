@@ -5,18 +5,7 @@ local Canvas = require("Source.Helpers.Canvas")
 local Mask = {}
 
 local silCanvas = nil
-local canvasW, canvasH = 0, 0
-
-local function ensureCanvas(w, h)
-	if silCanvas and canvasW == w and canvasH == h then
-		return
-	end
-	if silCanvas then
-		silCanvas:release()
-	end
-	silCanvas = Canvas.newCanvas(w, h)
-	canvasW, canvasH = w, h
-end
+local ensureCanvas = Canvas.createCanvasManager()
 
 ---@param entries table[] Entries with `.instance` (sprite) — same list as sorted draw
 ---@param viewW number World canvas width in px
@@ -24,7 +13,7 @@ end
 ---@param camX number Integer camera pixel offset X
 ---@param camY number Integer camera pixel offset Y
 function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
-	ensureCanvas(viewW, viewH)
+	silCanvas = ensureCanvas(viewW, viewH)
 
 	Canvas.drawTo(silCanvas, function()
 		love.graphics.setColor(1, 1, 1, 1)

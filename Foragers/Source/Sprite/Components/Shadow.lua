@@ -15,7 +15,7 @@ local layerAlpha = 0.3
 local layerColor = { 0, 0, 0.2 }
 
 local shadowCanvas = nil
-local canvasW, canvasH = 0, 0
+local ensureCanvas = Canvas.createCanvasManager()
 
 -- 1px-corner-rounded shadow from 3 rectangle() calls.
 ---@param x number Integer world X (top-left)
@@ -37,24 +37,13 @@ end
 
 Shadow.drawShape = drawShape
 
-local function ensureCanvas(w, h)
-	if shadowCanvas and canvasW == w and canvasH == h then
-		return
-	end
-	if shadowCanvas then
-		shadowCanvas:release()
-	end
-	shadowCanvas = Canvas.newCanvas(w, h)
-	canvasW, canvasH = w, h
-end
-
 ---@param sprites table[] Entries with `.instance` (sprite) — same list Main sorts
 ---@param viewW number World canvas width (px)
 ---@param viewH number World canvas height (px)
 ---@param camX number Integer camera pixel offset X (matches world translate)
 ---@param camY number Integer camera pixel offset Y
 function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
-	ensureCanvas(viewW, viewH)
+	shadowCanvas = ensureCanvas(viewW, viewH)
 
 	Canvas.drawTo(
 		shadowCanvas,

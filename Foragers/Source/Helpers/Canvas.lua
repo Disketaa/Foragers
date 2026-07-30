@@ -109,6 +109,26 @@ function Canvas.newCanvas(w, h)
 	return c
 end
 
+--- Returns a closure that manages a single cached canvas.
+--- Each call with the same dimensions returns the cached canvas;
+--- different dimensions release the old canvas and create a new one.
+---@return function ensureCanvas(w, h)
+function Canvas.createCanvasManager()
+	local canvas = nil
+	local cw, ch = 0, 0
+	return function(w, h)
+		if canvas and cw == w and ch == h then
+			return canvas
+		end
+		if canvas then
+			canvas:release()
+		end
+		canvas = Canvas.newCanvas(w, h)
+		cw, ch = w, h
+		return canvas
+	end
+end
+
 --- Render onto a temporary canvas with standard setup/teardown.
 --- push("all") -> setCanvas -> origin -> clear -> draw -> setCanvas(prev) -> origin -> [afterRestore] -> pop()
 --- afterRestore runs inside push/pop so origin is temporary (undoes on pop).

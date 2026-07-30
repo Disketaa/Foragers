@@ -73,43 +73,33 @@ end
 function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	local objects = {}
 
-	local function scan(path)
-		local items = love.filesystem.getDirectoryItems(path)
-
-		for _, item in ipairs(items) do
-			local fullPath = path .. "/" .. item
-			local info = love.filesystem.getInfo(fullPath)
-
-			if info and info.type == "directory" then
-				scan(fullPath)
-			elseif item:match("%.lua$") and not item:match("^_") then
-				local luaPath = Path.lua(fullPath)
-				local success, data = pcall(require, luaPath)
-				if success and type(data) == "table" then
-					if data.extends then
-						data = Merge.resolveExtends(data)
-					end
-
-					local pngPath = Path.png(fullPath)
-					local sprite = SpriteLoader.instantiate(data, 0, 0, pngPath)
-
-					if spawnCallback then
-						local x, y = spawnCallback(data)
-						if x then
-							sprite.x = x
-						end
-						if y then
-							sprite.y = y
-						end
-					end
-
-					table.insert(objects, { path = fullPath, data = data, instance = sprite })
+	Path.scanDirectory(assetsPath, function(fullPath, item)
+		if not item:match("^_") then
+			local luaPath = Path.lua(fullPath)
+			local success, data = pcall(require, luaPath)
+			if success and type(data) == "table" then
+				if data.extends then
+					data = Merge.resolveExtends(data)
 				end
+
+				local pngPath = Path.png(fullPath)
+				local sprite = SpriteLoader.instantiate(data, 0, 0, pngPath)
+
+				if spawnCallback then
+					local x, y = spawnCallback(data)
+					if x then
+						sprite.x = x
+					end
+					if y then
+						sprite.y = y
+					end
+				end
+
+				table.insert(objects, { path = fullPath, data = data, instance = sprite })
 			end
 		end
-	end
+	end)
 
-	scan(assetsPath)
 	return objects
 end
 

@@ -141,24 +141,34 @@ function SpriteSheet:setFrame(index)
 	end
 end
 
-function SpriteSheet:draw(x, y)
+function SpriteSheet:_getQuad()
 	if not self.quads then
-		return
+		return nil
 	end
 
 	local quad
 	if self.currentAnim then
 		local anim = self.animations[self.currentAnim]
 		if not anim then
-			return
+			return nil
 		end
 		local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, anim.frames)
 		quad = self.quads[anim.startIdx + frameIndex - 1]
 	elseif self._currentIndex then
 		quad = self.quads[self._currentIndex]
-	elseif self.quads and #self.quads > 0 then
+	elseif #self.quads > 0 then
 		quad = self.quads[1]
 	end
+
+	return quad
+end
+
+function SpriteSheet:draw(x, y)
+	if not self.quads then
+		return
+	end
+
+	local quad = self:_getQuad()
 
 	if not quad then
 		return
@@ -195,19 +205,7 @@ function SpriteSheet:drawCurrentFrame(x, y, rot)
 		return
 	end
 
-	local quad
-	if self.currentAnim then
-		local anim = self.animations[self.currentAnim]
-		if not anim then
-			return
-		end
-		local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, anim.frames)
-		quad = self.quads[anim.startIdx + frameIndex - 1]
-	elseif self._currentIndex then
-		quad = self.quads[self._currentIndex]
-	elseif self.quads and #self.quads > 0 then
-		quad = self.quads[1]
-	end
+	local quad = self:_getQuad()
 
 	if not quad then
 		return

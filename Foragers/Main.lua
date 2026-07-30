@@ -333,7 +333,7 @@ function love.update(dt)
 				if morphData.extends then
 					morphData = Merge.resolveExtends(morphData)
 				end
-				local pngPath = sprite._replaceWith .. ".png"
+				local pngPath = Path.png(sprite._replaceWith)
 				local newSprite = SpriteLoader.instantiate(morphData, sprite.x, sprite.y, pngPath)
 				newSprite.flipX = sprite.flipX
 
