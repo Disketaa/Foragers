@@ -42,12 +42,7 @@ function Follow:attach()
 	if not self.parent then
 		return
 	end
-	for _, comp in ipairs(self.parent.components) do
-		if comp.type == "spritesheet" then
-			self._hasSpritesheet = true
-			return
-		end
-	end
+	self._hasSpritesheet = self.parent:findComponent("spritesheet") and true or false
 end
 
 ---@param target Sprite

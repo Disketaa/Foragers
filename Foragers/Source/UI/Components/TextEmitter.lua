@@ -29,15 +29,8 @@ local function loadFont(fontPath)
 		return nil
 	end
 
-	local spriteFont = nil
-	local spritesheet = nil
-	for _, comp in ipairs(sprite.components) do
-		if comp.type == "spritefont" then
-			spriteFont = comp
-		elseif comp.type == "spritesheet" then
-			spritesheet = comp
-		end
-	end
+	local spriteFont = sprite:findComponent("spritefont")
+	local spritesheet = sprite:findComponent("spritesheet")
 
 	if not spriteFont or not spritesheet then
 		fontCache[fontPath] = false

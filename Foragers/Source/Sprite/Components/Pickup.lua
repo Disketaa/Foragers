@@ -31,19 +31,15 @@ function Pickup:attach()
 			return
 		end
 		self._pending = false
-		for _, comp in ipairs(self.parent.components) do
-			if comp.type == "follow" and comp.followTarget then
-				for _, pcomp in ipairs(comp.followTarget.components) do
-					if pcomp.type == "player_stats" then
-						if self.satiety then
-							pcomp:restoreSatiety(self.satiety)
-						else
-							pcomp:addExperience(self.xp)
-						end
-						break
-					end
+		local follow = self.parent:findComponent("follow")
+		if follow and follow.followTarget then
+			local pstats = follow.followTarget:findComponent("player_stats")
+			if pstats then
+				if self.satiety then
+					pstats:restoreSatiety(self.satiety)
+				else
+					pstats:addExperience(self.xp)
 				end
-				break
 			end
 		end
 	end, 5)

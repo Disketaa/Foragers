@@ -150,14 +150,8 @@ function SpriteFont:draw(x, y)
 		return
 	end
 
-	local spritesheet
-	for _, comp in ipairs(self.parent.components) do
-		if comp.type == "spritesheet" and comp.quads and comp.image then
-			spritesheet = comp
-			break
-		end
-	end
-	if not spritesheet then
+	local spritesheet = self.parent:findComponent("spritesheet")
+	if not spritesheet or not spritesheet.quads or not spritesheet.image then
 		return
 	end
 

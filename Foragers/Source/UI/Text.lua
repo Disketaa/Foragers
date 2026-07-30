@@ -46,13 +46,7 @@ function Text:loadFont()
 	end
 
 	self._sprite = sprite
-
-	for _, comp in ipairs(sprite.components) do
-		if comp.type == "spritefont" then
-			self._fontComp = comp
-			break
-		end
-	end
+	self._fontComp = sprite:findComponent("spritefont")
 
 	if self._fontComp then
 		self._fontComp.text = self._text

@@ -57,26 +57,25 @@ function Counter:attach()
 		if ok and fontData then
 			local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
 			if sprite then
-				for _, comp in ipairs(sprite.components) do
-					if comp.type == "spritesheet" then
-						self._labelImage = comp.image
-						self._labelQuads = comp.quads
-						self._labelFrameW = comp.frameWidth
-						self._labelFrameH = comp.frameHeight
-						self._labelPivotX = comp.pivotX or 0.5
-						self._labelPivotY = comp.pivotY or 0.5
-					elseif comp.type == "spritefont" then
-						self._labelCharIndex = comp._charIndex
-						self._labelCharWidth = comp._charWidth
-						-- label charSpacing overrides font default if set
-						if self._labelCharSpacing == nil then
-							self._labelCharSpacing = comp.charSpacing
-						end
+				local ss = sprite:findComponent("spritesheet")
+				if ss then
+					self._labelImage = ss.image
+					self._labelQuads = ss.quads
+					self._labelFrameW = ss.frameWidth
+					self._labelFrameH = ss.frameHeight
+					self._labelPivotX = ss.pivotX or 0.5
+					self._labelPivotY = ss.pivotY or 0.5
+				end
+				local sf = sprite:findComponent("spritefont")
+				if sf then
+					self._labelCharIndex = sf._charIndex
+					self._labelCharWidth = sf._charWidth
+					if self._labelCharSpacing == nil then
+						self._labelCharSpacing = sf.charSpacing
 					end
 				end
 			end
 		end
-		-- Require both spritesheet and spritefont for label to work
 		if not self._labelImage or not self._labelCharIndex then
 			self._labelFont = nil
 		end
@@ -89,16 +88,15 @@ function Counter:attach()
 		if ok and iconData then
 			local sprite = SpriteLoader.instantiate(iconData, 0, 0, pngPath)
 			if sprite then
-				for _, comp in ipairs(sprite.components) do
-					if comp.type == "spritesheet" then
-						self._iconImage = comp.image
-						self._iconQuads = comp.quads
-						self._iconFrameW = comp.frameWidth
-						self._iconFrameH = comp.frameHeight
-						self._iconPivotX = comp.pivotX or 0.5
-						self._iconPivotY = comp.pivotY or 0.5
-						self._iconColumns = comp.columns or 1
-					end
+				local ss = sprite:findComponent("spritesheet")
+				if ss then
+					self._iconImage = ss.image
+					self._iconQuads = ss.quads
+					self._iconFrameW = ss.frameWidth
+					self._iconFrameH = ss.frameHeight
+					self._iconPivotX = ss.pivotX or 0.5
+					self._iconPivotY = ss.pivotY or 0.5
+					self._iconColumns = ss.columns or 1
 				end
 			end
 		end
@@ -117,28 +115,26 @@ function Counter:setPlayerSprite(sprite)
 	end, 5)
 
 	-- Initial sync: no animation, jump to current value
-	for _, comp in ipairs(sprite.components or {}) do
-		if comp.type == self.sourceType then
-			local value = comp[self.field]
-			if value ~= nil then
-				local maxValue
-				if self.mode == "progress" then
-					maxValue = comp:xpForNextLevel()
-				elseif self.maxField then
-					maxValue = comp[self.maxField]
-				end
-				if maxValue and maxValue > 0 then
-					local p = math.max(0, math.min(1, value / maxValue))
-					self._displayProgress = p
-					self._targetProgress = p
-					self:_setFrame(p)
-				end
-				if self._labelFont then
-					self._labelText = tostring(comp.level or "")
-				end
-				self._lastLevel = comp.level
+	local comp = sprite:findComponent(self.sourceType)
+	if comp then
+		local value = comp[self.field]
+		if value ~= nil then
+			local maxValue
+			if self.mode == "progress" then
+				maxValue = comp:xpForNextLevel()
+			elseif self.maxField then
+				maxValue = comp[self.maxField]
 			end
-			break
+			if maxValue and maxValue > 0 then
+				local p = math.max(0, math.min(1, value / maxValue))
+				self._displayProgress = p
+				self._targetProgress = p
+				self:_setFrame(p)
+			end
+			if self._labelFont then
+				self._labelText = tostring(comp.level or "")
+			end
+			self._lastLevel = comp.level
 		end
 	end
 end
@@ -196,13 +192,7 @@ end
 
 ---@param progress number 0-1
 function Counter:_setFrame(progress)
-	local spritesheet
-	for _, comp in ipairs(self.parent.components or {}) do
-		if comp.type == "spritesheet" then
-			spritesheet = comp
-			break
-		end
-	end
+	local spritesheet = self.parent and self.parent:findComponent("spritesheet")
 	if not spritesheet or not spritesheet.quads then
 		return
 	end

@@ -57,15 +57,7 @@ function Drop:attach()
 				for _ = 1, count do
 					local newSprite = SpriteLoader.instantiate(dropData, self.parent.x, self.parent.y, pngPath)
 					if newSprite then
-						-- Skip drop_pos when follow component is present —
-						-- follow already applies tween x/y offsets
-						local hasFollow = false
-						for _, comp in ipairs(newSprite.components) do
-							if comp.type == "follow" then
-								hasFollow = true
-								break
-							end
-						end
+						local hasFollow = newSprite:findComponent("follow") and true or false
 						if not hasFollow then
 							newSprite._dropBaseX = self.parent.x
 							newSprite._dropBaseY = self.parent.y

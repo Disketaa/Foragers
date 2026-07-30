@@ -71,6 +71,15 @@ function Sprite:addComponent(component)
 	end
 end
 
+--- Find first component of given type.
+function Sprite:findComponent(type)
+	for _, comp in ipairs(self.components or {}) do
+		if comp.type == type then
+			return comp
+		end
+	end
+end
+
 --- Bind parent shader if present. Returns true if shader was set.
 ---@return boolean
 function Sprite:applyShader()

@@ -14,22 +14,14 @@ local function swingCurve(easeFunc)
 end
 
 local function getWeaponData(sprite)
-	for _, comp in ipairs(sprite and sprite.components or {}) do
-		if comp.type == "weapon" then
-			return comp.range, comp.cooldown, comp.damage, comp.swing
-		end
+	local comp = sprite and sprite:findComponent("weapon")
+	if comp then
+		return comp.range, comp.cooldown, comp.damage, comp.swing
 	end
 end
 
 local function getWeaponFollow(ws)
-	if ws then
-		for _, comp in ipairs(ws.components or {}) do
-			if comp.type == "follow" then
-				return comp
-			end
-		end
-	end
-	return nil
+	return ws and ws:findComponent("follow")
 end
 
 local function cleanupTween(ws, key)
