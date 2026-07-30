@@ -9,7 +9,10 @@ extern Image u_silhouetteTexture;
 vec4 Silhouette_color(vec4 color, vec2 screen_coords) {
 	vec4 sil = Texel(u_silhouetteTexture, screen_coords / love_ScreenSize.xy);
 	if (sil.a > u_silhouetteThreshold) {
-		return vec4(1.0, 1.0, 1.0, color.a);
+		float checker = mod(floor(screen_coords.x) + floor(screen_coords.y), 2.0);
+		if (checker > 0.5) {
+			return vec4(0.0, 0.0, 0.0, 0.75 * color.a);
+		}
 	}
 	return color;
 }
