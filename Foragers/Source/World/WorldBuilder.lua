@@ -119,7 +119,11 @@ local function spawnProps(worldData, playerSprite)
 				local skip = false
 				if playerSprite then
 					local tileRect = { x = tile.x, y = tile.y, w = tileSize, h = tileSize }
-					for _, comp in ipairs(playerSprite:getComponents("collision", function(c) return c.getRect end)) do
+					for _, comp in
+						ipairs(playerSprite:getComponents("collision", function(c)
+							return c.getRect
+						end))
+					do
 						if rectsOverlap(tileRect, comp:getRect()) then
 							skip = true
 							break
