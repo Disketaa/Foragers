@@ -5,6 +5,7 @@
 ---@field width number Shadow width in px
 ---@field height number Shadow height in px
 ---@field type "shadow"
+local Canvas = require("Source.Helpers.Canvas")
 local Shadow = {}
 Shadow.__index = Shadow
 
@@ -43,8 +44,7 @@ local function ensureCanvas(w, h)
 	if shadowCanvas then
 		shadowCanvas:release()
 	end
-	shadowCanvas = love.graphics.newCanvas(w, h)
-	shadowCanvas:setFilter("nearest", "nearest")
+	shadowCanvas = Canvas.newCanvas(w, h)
 	canvasW, canvasH = w, h
 end
 
@@ -56,37 +56,26 @@ end
 function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 	ensureCanvas(viewW, viewH)
 
-	local prevCanvas = love.graphics.getCanvas()
-
-	-- setCanvas keeps the active world translate, so reset it and bake camX/camY
-	-- into coordinates manually.
-	love.graphics.push("all")
-	love.graphics.setCanvas(shadowCanvas)
-	love.graphics.origin()
-	love.graphics.clear()
-	love.graphics.setColor(layerColor[1], layerColor[2], layerColor[3], 1)
-
-	for _, entry in ipairs(sprites) do
-		local sprite = entry.instance or entry
-		if sprite and sprite.components then
-			for _, comp in ipairs(sprite.components) do
-				if comp.type == "shadow" and not comp._broken then
-					local cx = math.floor(sprite.x + 0.5) + comp.offsetX + camX
-					local cy = math.floor(sprite.y + 0.5) + comp.offsetY + camY
-					local x = cx - math.floor(comp.width / 2)
-					local y = cy - math.floor(comp.height / 2)
-					drawShape(x, y, comp.width, comp.height)
+	Canvas.drawTo(shadowCanvas, function()
+		love.graphics.setColor(layerColor[1], layerColor[2], layerColor[3], 1)
+		for _, entry in ipairs(sprites) do
+			local sprite = entry.instance or entry
+			if sprite and sprite.components then
+				for _, comp in ipairs(sprite.components) do
+					if comp.type == "shadow" and not comp._broken then
+						local cx = math.floor(sprite.x + 0.5) + comp.offsetX + camX
+						local cy = math.floor(sprite.y + 0.5) + comp.offsetY + camY
+						local x = cx - math.floor(comp.width / 2)
+						local y = cy - math.floor(comp.height / 2)
+						drawShape(x, y, comp.width, comp.height)
+					end
 				end
 			end
 		end
-	end
-
-	love.graphics.setCanvas(prevCanvas)
-	love.graphics.origin()
-
-	love.graphics.setColor(1, 1, 1, layerAlpha)
-	love.graphics.draw(shadowCanvas, 0, 0)
-	love.graphics.pop()
+	end, nil, function()
+		love.graphics.setColor(1, 1, 1, layerAlpha)
+		love.graphics.draw(shadowCanvas, 0, 0)
+	end)
 end
 
 ---@param data table

@@ -1,5 +1,4 @@
 local Events = require("Source.Helpers.Events")
-local Log = require("Source.Helpers.Log")
 local ValueParser = require("Source.Helpers.ValueParser")
 
 local SpriteSheet = {}
@@ -165,63 +164,21 @@ function SpriteSheet:draw(x, y)
 		return
 	end
 
-	-- Sprite is the visual owner: wrap draw with parent shader
-	local hadShader = false
-	if self.parent and self.parent.shader and not self.parent._shaderBroken then
-		local ok, err = xpcall(function()
-			love.graphics.setShader(self.parent.shader)
-			if self.parent._shaderDirty then
-				for k, v in pairs(self.parent.shaderData or {}) do
-					self.parent.shader:send(k, v)
-				end
-				self.parent._shaderDirty = false
-			end
-		end, debug.traceback)
-		if ok then
-			hadShader = true
-		else
-			Log.error("[SpriteSheet] shader: " .. tostring(err))
-			love.graphics.setShader()
-			self.parent._shaderBroken = true
-		end
-	end
-
-	local sx, sy = 1, 1
-	local rot = 0
-	local tweenTbl = self.parent and self.parent.tweens
-	if tweenTbl then
-		if tweenTbl.scale_x then
-			sx = tweenTbl.scale_x:getValue()
-		end
-		if tweenTbl.scale_y then
-			sy = tweenTbl.scale_y:getValue()
-		end
-		if tweenTbl.angle then
-			rot = math.rad(tweenTbl.angle:getValue())
-		end
-	end
-
-	if self.parent and self.parent.flipX then
-		sx = -sx
-	end
-
-	if not tweenTbl or not tweenTbl.angle then
-		if self.parent and self.parent.angle then
-			rot = math.rad(self.parent.angle)
-		end
-	end
-
-	local alpha = (self.parent and self.parent.alpha) or 1
-	if alpha < 1 then
-		love.graphics.setColor(1, 1, 1, alpha)
+	local parent = self.parent
+	local hadShader = parent and parent.applyShader and parent:applyShader() or false
+	local sx, sy, rot, alpha = 1, 1, 0, 1
+	if parent and parent.getDrawContext then
+		sx, sy, rot, alpha = parent:getDrawContext()
 	end
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
+	if alpha < 1 then
+		love.graphics.setColor(1, 1, 1, alpha)
+	end
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), rot, sx, sy, ox, oy)
 	if alpha < 1 then
 		love.graphics.setColor(1, 1, 1, 1)
 	end
-
 	if hadShader then
 		love.graphics.setShader()
 	end

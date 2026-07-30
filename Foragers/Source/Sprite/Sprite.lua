@@ -71,6 +71,54 @@ function Sprite:addComponent(component)
 	end
 end
 
+--- Bind parent shader if present. Returns true if shader was set.
+---@return boolean
+function Sprite:applyShader()
+	if self.shader and not self._shaderBroken then
+		local ok, err = xpcall(function()
+			love.graphics.setShader(self.shader)
+			if self._shaderDirty then
+				for k, v in pairs(self.shaderData or {}) do
+					self.shader:send(k, v)
+				end
+				self._shaderDirty = false
+			end
+		end, debug.traceback)
+		if ok then
+			return true
+		end
+		Log.error("[Sprite] shader: " .. tostring(err))
+		love.graphics.setShader()
+		self._shaderBroken = true
+	end
+	return false
+end
+
+--- Read tween transforms + flipX + alpha into draw parameters.
+---@return number sx, number sy, number rot, number alpha
+function Sprite:getDrawContext()
+	local sx, sy = 1, 1
+	local rot = 0
+	if self.tweens then
+		if self.tweens.scale_x then
+			sx = self.tweens.scale_x:getValue()
+		end
+		if self.tweens.scale_y then
+			sy = self.tweens.scale_y:getValue()
+		end
+		if self.tweens.angle then
+			rot = math.rad(self.tweens.angle:getValue())
+		end
+	end
+	if rot == 0 and self.angle then
+		rot = math.rad(self.angle)
+	end
+	if self.flipX then
+		sx = -sx
+	end
+	return sx, sy, rot, self.alpha or 1
+end
+
 ---@param dt number
 function Sprite:update(dt)
 	for _, component in ipairs(self.components) do
@@ -99,47 +147,8 @@ end
 
 function Sprite:draw()
 	if self.type == "StaticSprite" and self.image then
-		-- StaticSprite: shader wraps only the sprite image draw
-		local hadShader = false
-		if self.shader and not self._shaderBroken then
-			local ok, err = xpcall(function()
-				love.graphics.setShader(self.shader)
-				if self._shaderDirty then
-					for k, v in pairs(self.shaderData or {}) do
-						self.shader:send(k, v)
-					end
-					self._shaderDirty = false
-				end
-			end, debug.traceback)
-			if ok then
-				hadShader = true
-			else
-				Log.error("[Sprite] shader: " .. tostring(err))
-				love.graphics.setShader()
-				self._shaderBroken = true
-			end
-		end
-
-		local sx, sy = 1, 1
-		local rot = 0
-		if self.tweens then
-			if self.tweens.scale_x then
-				sx = self.tweens.scale_x:getValue()
-			end
-			if self.tweens.scale_y then
-				sy = self.tweens.scale_y:getValue()
-			end
-			if self.tweens.angle then
-				rot = math.rad(self.tweens.angle:getValue())
-			end
-		end
-		if rot == 0 and self.angle then
-			rot = math.rad(self.angle)
-		end
-		if self.flipX then
-			sx = -sx
-		end
-		local alpha = self.alpha or 1
+		local hadShader = self:applyShader()
+		local sx, sy, rot, alpha = self:getDrawContext()
 		if alpha < 1 then
 			love.graphics.setColor(1, 1, 1, alpha)
 		end
@@ -149,7 +158,6 @@ function Sprite:draw()
 		if alpha < 1 then
 			love.graphics.setColor(1, 1, 1, 1)
 		end
-
 		if hadShader then
 			love.graphics.setShader()
 		end

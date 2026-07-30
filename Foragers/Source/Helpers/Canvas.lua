@@ -99,4 +99,41 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShade
 	end
 end
 
+--- Create a reusable canvas with nearest-neighbor filtering.
+---@param w number
+---@param h number
+---@return love.Canvas
+function Canvas.newCanvas(w, h)
+	local c = love.graphics.newCanvas(w, h)
+	c:setFilter("nearest", "nearest")
+	return c
+end
+
+--- Render onto a temporary canvas with standard setup/teardown.
+--- push("all") -> setCanvas -> origin -> clear -> draw -> setCanvas(prev) -> origin -> [afterRestore] -> pop()
+--- afterRestore runs inside push/pop so origin is temporary (undoes on pop).
+--- Shadow uses afterRestore to composite the canvas onto the world canvas at camera-space origin.
+---@param canvas love.Canvas
+---@param drawFunc function
+---@param clearColor table|nil {r,g,b,a} or nil for transparent
+---@param afterRestore function|nil Runs after origin on restored canvas, before pop
+function Canvas.drawTo(canvas, drawFunc, clearColor, afterRestore)
+	local prev = love.graphics.getCanvas()
+	love.graphics.push("all")
+	love.graphics.setCanvas(canvas)
+	love.graphics.origin()
+	if clearColor then
+		love.graphics.clear(clearColor[1], clearColor[2], clearColor[3], clearColor[4] or 0)
+	else
+		love.graphics.clear()
+	end
+	drawFunc()
+	love.graphics.setCanvas(prev)
+	love.graphics.origin()
+	if afterRestore then
+		afterRestore()
+	end
+	love.graphics.pop()
+end
+
 return Canvas
