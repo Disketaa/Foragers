@@ -34,7 +34,6 @@ order = [
     "tween",
     "particle_emitter",
     "text_emitter",
-    "proximity_fade",
     "sound",
     "ui",
     "counter",

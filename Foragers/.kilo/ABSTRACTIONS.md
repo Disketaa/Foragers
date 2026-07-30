@@ -167,7 +167,6 @@ entire data tree. These fields are safe to randomize:
 | `shadow` offsetX/Y, width, height | **Yes** | — |
 | `sound` volume, pitch, pitchRandomness | **Yes** | — |
 | `shake` magnitude, duration, decay | **Yes** | — |
-| `proximity_fade` radius, fadeAlpha, smoothness | **Yes** | — |
 | Any numeric field in any component | **Yes** | — |
 
 **Fields that MUST stay fixed (random breaks the system):**

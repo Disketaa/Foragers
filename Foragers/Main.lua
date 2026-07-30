@@ -18,7 +18,6 @@ local AttackSystem = require("Source.Helpers.AttackSystem")
 local Destructible = require("Source.Sprite.Components.Destructible")
 local Collision = require("Source.Sprite.Components.Collision")
 local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
-local ProximityFade = require("Source.Sprite.Components.ProximityFade")
 local Drop = require("Source.Sprite.Components.Drop")
 local TweenComponent = require("Source.Sprite.Components.Tween").Component
 local Shadow = require("Source.Sprite.Components.Shadow")
@@ -136,7 +135,6 @@ function love.load()
 	end
 
 	if playerSprite then
-		ProximityFade.setPlayer(playerSprite)
 		for _, entry in ipairs(toolEntries) do
 			for _, comp in ipairs(entry.instance.components or {}) do
 				if comp.type == "follow" and comp.setFollowTarget then
