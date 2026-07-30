@@ -147,17 +147,18 @@ local function update(dt)
 
 	sprite.flipX = math.abs(tile.seed + 7777) % 2 == 0
 
-	for _, comp in ipairs(sprite.components) do
-		if comp.type == "spritesheet" then
-			local numFrames = comp.columns or 1
-			local frameIndex = math.abs(tile.seed + 5000) % numFrames
-			comp:setFrame(frameIndex)
-		elseif comp.type == "collision" then
-			if comp.mode == "slowdown" then
-				comp:registerAsSlowdown()
-			else
-				comp:registerAsSolid()
-			end
+	local ss = sprite:findComponent("spritesheet")
+	if ss then
+		local numFrames = ss.columns or 1
+		local frameIndex = math.abs(tile.seed + 5000) % numFrames
+		ss:setFrame(frameIndex)
+	end
+	local col = sprite:findComponent("collision")
+	if col then
+		if col.mode == "slowdown" then
+			col:registerAsSlowdown()
+		else
+			col:registerAsSolid()
 		end
 	end
 

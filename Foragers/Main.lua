@@ -182,11 +182,9 @@ function love.load()
 	-- All sprites in Content/Assets/Sprites/UI/ with a "ui" component → screen-fixed layer.
 	local uiEntries = SpriteLoader.loadAll("Content/Assets/Sprites/UI") or {}
 	for _, entry in ipairs(uiEntries) do
-		for _, comp in ipairs(entry.instance.components or {}) do
-			if comp.type == "ui" then
-				table.insert(uiSprites, { sprite = entry.instance, ui = comp })
-				break
-			end
+		local uiComp = entry.instance:findComponent("ui")
+		if uiComp then
+			table.insert(uiSprites, { sprite = entry.instance, ui = uiComp })
 		end
 	end
 	for _, ui in ipairs(uiSprites) do
@@ -339,16 +337,17 @@ function love.update(dt)
 				local newSprite = SpriteLoader.instantiate(morphData, sprite.x, sprite.y, pngPath)
 				newSprite.flipX = sprite.flipX
 
-				for _, comp in ipairs(newSprite.components) do
-					if comp.type == "spritesheet" then
-						local numFrames = comp.columns or 1
-						comp:setFrame(love.math.random(0, numFrames - 1))
-					elseif comp.type == "collision" then
-						if comp.mode == "slowdown" then
-							comp:registerAsSlowdown()
-						else
-							comp:registerAsSolid()
-						end
+				local ss = newSprite:findComponent("spritesheet")
+				if ss then
+					local numFrames = ss.columns or 1
+					ss:setFrame(love.math.random(0, numFrames - 1))
+				end
+				local col = newSprite:findComponent("collision")
+				if col then
+					if col.mode == "slowdown" then
+						col:registerAsSlowdown()
+					else
+						col:registerAsSolid()
 					end
 				end
 
