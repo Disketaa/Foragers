@@ -22,7 +22,8 @@ return {
 		},
 
 		{
-			component = "mask",
+			component = "silhouette",
+			mode = "mask",
 		},
 
 		{
