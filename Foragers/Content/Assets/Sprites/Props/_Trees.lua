@@ -58,15 +58,5 @@ return {
 				prop_broken = { "Content/Assets/Sounds/Events/WoodBreak.ogg" },
 			},
 		},
-
-		{
-			component = "silhouette",
-			mode = "mask",
-		},
-
-		{
-			component = "shader",
-			shaders = { "Silhouette" },
-		},
 	},
 }

@@ -75,8 +75,13 @@ return {
 		},
 
 		{
+			component = "silhouette",
+			mode = "mask",
+		},
+
+		{
 			component = "shader",
-			shaders = { "Brightness" },
+			shaders = { "Brightness", "Silhouette" },
 		},
 	},
 }
