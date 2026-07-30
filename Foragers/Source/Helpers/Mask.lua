@@ -1,6 +1,6 @@
---- Pre-render player sprite as white silhouette onto a canvas.
+--- Pre-render sprites marked with `silhouette` component as white silhouettes.
 --- Trees with "Silhouette" shader module sample this canvas and show white
---- where the player silhouette overlaps their alpha.
+--- where a silhouette overlaps their alpha.
 ---@module Mask
 local Mask = {}
 
@@ -19,12 +19,12 @@ local function ensureCanvas(w, h)
 	canvasW, canvasH = w, h
 end
 
----@param playerSprite Sprite|nil The player sprite to capture (nil = clear only)
+---@param entries table[] Entries with `.instance` (sprite) — same list as sorted draw
 ---@param viewW number World canvas width in px
 ---@param viewH number World canvas height in px
 ---@param camX number Integer camera pixel offset X
 ---@param camY number Integer camera pixel offset Y
-function Mask.renderSilhouette(playerSprite, viewW, viewH, camX, camY)
+function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 	ensureCanvas(viewW, viewH)
 
 	local prevCanvas = love.graphics.getCanvas()
@@ -34,20 +34,32 @@ function Mask.renderSilhouette(playerSprite, viewW, viewH, camX, camY)
 	love.graphics.origin()
 	love.graphics.clear(0, 0, 0, 0)
 
-	if playerSprite then
-		local spritesheet
-		for _, comp in ipairs(playerSprite.components) do
-			if comp.type == "spritesheet" and not comp._broken then
-				spritesheet = comp
-				break
-			end
-		end
+	love.graphics.setColor(1, 1, 1, 1)
 
-		if spritesheet then
-			love.graphics.setColor(1, 1, 1, 1)
-			local px = math.floor(playerSprite.x + 0.5) + camX
-			local py = math.floor(playerSprite.y + 0.5) + camY
-			spritesheet:drawCurrentFrame(px, py)
+	for _, entry in ipairs(entries) do
+		local sprite = entry.instance or entry
+		if sprite and sprite.components then
+			local hasSilhouette = false
+			for _, comp in ipairs(sprite.components) do
+				if comp.type == "silhouette" and comp.mode ~= "mask" and not comp._broken then
+					hasSilhouette = true
+					break
+				end
+			end
+			if hasSilhouette then
+				local spritesheet
+				for _, comp in ipairs(sprite.components) do
+					if comp.type == "spritesheet" and not comp._broken then
+						spritesheet = comp
+						break
+					end
+				end
+				if spritesheet then
+					local px = math.floor(sprite.x + 0.5) + camX
+					local py = math.floor(sprite.y + 0.5) + camY
+					spritesheet:drawCurrentFrame(px, py)
+				end
+			end
 		end
 	end
 

@@ -256,8 +256,8 @@ function love.draw()
 			end
 		end
 
-		-- Pre-render player silhouette for tree reveal shader
-		Mask.renderSilhouette(playerSprite, canvas.width, canvas.height, camPixelX, camPixelY)
+		-- Pre-render silhouettes for tree reveal shader
+		Mask.renderSilhouette(dynamicObjects, canvas.width, canvas.height, camPixelX, camPixelY)
 
 		-- Shadow layer: all shadows drawn opaque onto one layer, composited once
 		-- at low alpha (union, not additive). Drawn AFTER terrain so shadows sit
