@@ -23,6 +23,8 @@ description: Quick reference for all components — purpose, config fields, even
 | **shake** | Screen shake on death | `magnitude`, `duration`, `decay` | PROP_BROKEN (5) | — |
 | **shader** | Composes shader modules (uv-chain → Texel → color-chain); auto-maps any `parent.tweens.<name>` → uniform `u_<name>` | `shaders` (array; each entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides) or `shaderName` (single, legacy) | PROP_HIT (8) | — |
 | **shadow** | Texture-free pixel-perfect shadow (3-rect 1px-rounded shape) | `offsetX`, `offsetY`, `width`, `height` | — (data-only; rendered via `Shadow.renderLayer`) | — |
+| **mask** | Data-only marker on folliage: "I reveal player silhouette where my alpha > 0". Visually inert — the reveal effect comes from the `shader` component with `"Silhouette"` module | — (no config fields) | — | — |
+| **silhouette** | Data-only marker on player + items: "I'm captured to the silhouette canvas for tree reveal". Visually inert — canvas is rendered by `Helpers/Mask.lua:renderSilhouette()` using the `spritesheet` component directly | — (no config fields) | — | — |
 | **particle_emitter** | Particle spawning (burst + continuous + timed). Detaches on parent destroy — existing particles finish in world space | `particle`, `stepInterval`, `interval`, `moving`, `offsetX`, `offsetY`, `inheritFlip`, `spawnOn`, `count`, `angle`, `cone`, `radius`, `layer` | STATE_CHANGED (8), FLIPPED (12), ANIM_FRAME (13) | — |
 
 ## Shader inheritance

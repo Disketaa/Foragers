@@ -227,4 +227,40 @@ function SpriteSheet:draw(x, y)
 	end
 end
 
+--- Draw current frame at position without shader/tween handling.
+---@param x number
+---@param y number
+function SpriteSheet:drawCurrentFrame(x, y)
+	if not self.quads then
+		return
+	end
+
+	local quad
+	if self.currentAnim then
+		local anim = self.animations[self.currentAnim]
+		if not anim then
+			return
+		end
+		local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, anim.frames)
+		quad = self.quads[anim.startIdx + frameIndex - 1]
+	elseif self._currentIndex then
+		quad = self.quads[self._currentIndex]
+	elseif self.quads and #self.quads > 0 then
+		quad = self.quads[1]
+	end
+
+	if not quad then
+		return
+	end
+
+	local sx, sy = 1, 1
+	if self.parent and self.parent.flipX then
+		sx = -sx
+	end
+
+	local ox = self.frameWidth * self.pivotX
+	local oy = self.frameHeight * self.pivotY
+	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
+end
+
 return SpriteSheet

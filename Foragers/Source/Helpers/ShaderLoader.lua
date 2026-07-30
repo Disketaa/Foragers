@@ -119,7 +119,7 @@ function ShaderLoader._compileProgram(names, meta)
 	end
 	local colorCalls = {}
 	for _, name in ipairs(colorChain) do
-		table.insert(colorCalls, string.format("	color = %s_color(color);", name))
+		table.insert(colorCalls, string.format("	color = %s_color(color, screen_coords);", name))
 	end
 
 	local effectHeader = "\nvec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {\n"

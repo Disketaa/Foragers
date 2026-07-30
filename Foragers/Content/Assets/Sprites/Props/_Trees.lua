@@ -22,6 +22,15 @@ return {
 		},
 
 		{
+			component = "mask",
+		},
+
+		{
+			component = "shader",
+			shaders = { "Silhouette" },
+		},
+
+		{
 			component = "destructible",
 			hp = 7,
 			replaceWith = "Content/Assets/Sprites/Props/OakStump",

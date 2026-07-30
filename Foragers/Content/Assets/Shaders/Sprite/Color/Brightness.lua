@@ -4,7 +4,7 @@ return {
 	module = true,
 	uniforms = { u_brightness = 0.5 },
 	code = [[
-vec4 Brightness_color(vec4 color) {
+vec4 Brightness_color(vec4 color, vec2 screen_coords) {
 	if (color.a == 0) {
 		return color;
 	}

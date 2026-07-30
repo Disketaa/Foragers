@@ -42,7 +42,11 @@ return {
 
 		{
 			component = "shader",
-			shaderName = "Brightness",
+			shaders = { "Brightness" },
+		},
+
+		{
+			component = "silhouette",
 		},
 	},
 }

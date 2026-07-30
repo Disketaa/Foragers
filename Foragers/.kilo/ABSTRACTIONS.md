@@ -33,8 +33,10 @@ relevant section before touching that subsystem.
   Removing the per-frame fallback (e.g. the old `elseif self.brightness` path)
   breaks every sprite without an active tween.
 - **Module types:** `type = "uv"` exposes `Name_uv(vec2 uv, vec2 screen_coords)`
-  and returns modified `uv`; `type = "color"` exposes `Name_color(vec4 color)`
-  and returns modified `color`. Both are `module = true`.
+  and returns modified `uv`; `type = "color"` exposes `Name_color(vec4 color, vec2 screen_coords)`
+  and returns modified `color`. Both are `module = true`. The `screen_coords` param
+  matches the `effect()` function — needed by modules that sample a separate canvas
+  (e.g. Silhouette reads `u_silhouetteTexture` at the current pixel's screen position).
 - **Shader component reads `shaders` (array) or legacy `shaderName` (string).**
   Data uses `shaders = { "Brightness", "Skew" }`. Each entry may be a string
   name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader
@@ -43,9 +45,25 @@ relevant section before touching that subsystem.
 - **LÖVE does NOT auto-declare uniforms.** Every uniform must be an `extern` in
   the GLSL source or `shader:send` silently does nothing. `ShaderLoader` injects
   `extern` declarations automatically from each module's `uniforms` table.
+  **Exception: Image-type uniforms** (`extern Image u_*`) cannot be declared from
+  the `uniforms` table (only `float`, `vec2-4`, `bool`, `mat4`). Declare them
+  directly in the module's `code` string, before any function definitions. The
+  `ShaderLoader` concatenates the raw code into file scope, so `extern Image`
+  at the top of the module string resolves correctly.
 - **Compile errors are swallowed by `pcall` in `compose`.** If a composed shader
   shows no effect, the cause is almost always a GLSL compile failure returning
   nil. Temporarily print the `pcall` error (or write the generated source) to see it.
+
+## Silhouette reveal (tree → player silhouette canvas)
+
+- **Tree reads player's silhouette canvas, not the reverse.** The player is
+  pre-rendered as a white silhouette onto a separate canvas (same size as world
+  canvas). Trees with `"Silhouette"` shader module sample `u_silhouetteTexture`
+  at `screen_coords / love_ScreenSize.xy`. Where silhouette alpha > threshold,
+  the tree's fragment is replaced with white. This avoids Y-sort filtering: if
+  player sorts in front of a tree, player draws later and covers the tree entirely.
+  If tree sorts in front, tree draws later and its shader reveals the player
+  silhouette behind it. No `sortY` comparison needed.
 
 ## LÖVE filesystem / paths (PowerShell tooling note)
 

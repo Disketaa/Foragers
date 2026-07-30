@@ -21,6 +21,7 @@ local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 local Drop = require("Source.Sprite.Components.Drop")
 local TweenComponent = require("Source.Sprite.Components.Tween").Component
 local Shadow = require("Source.Sprite.Components.Shadow")
+local Mask = require("Source.Helpers.Mask")
 local Events = require("Source.Helpers.Events")
 local PropSpawner = require("Source.World.PropSpawner")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
@@ -255,6 +256,9 @@ function love.draw()
 			end
 		end
 
+		-- Pre-render player silhouette for tree reveal shader
+		Mask.renderSilhouette(playerSprite, canvas.width, canvas.height, camPixelX, camPixelY)
+
 		-- Shadow layer: all shadows drawn opaque onto one layer, composited once
 		-- at low alpha (union, not additive). Drawn AFTER terrain so shadows sit
 		-- on top of tiles, but BEFORE dynamic sprites.
@@ -265,6 +269,17 @@ function love.draw()
 
 		local sorted = DrawOrder.collect(dynamicObjects)
 		DrawOrder.sort(sorted)
+
+		-- Send silhouette canvas to tree shaders that sample it
+		local silCanvas = Mask.getCanvas()
+		if silCanvas then
+			for _, sprite in ipairs(sorted) do
+				if sprite.shader and sprite.shader:hasUniform("u_silhouetteTexture") then
+					sprite.shader:send("u_silhouetteTexture", silCanvas)
+				end
+			end
+		end
+
 		for _, sprite in ipairs(sorted) do
 			sprite:draw()
 		end

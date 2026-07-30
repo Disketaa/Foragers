@@ -8,7 +8,7 @@ return {
 		u_additive = 0,
 	},
 	code = [[
-vec4 Tint_color(vec4 color) {
+vec4 Tint_color(vec4 color, vec2 screen_coords) {
 	float t = u_tint_mix;
 	if (t == 0 || color.a == 0) {
 		return color;

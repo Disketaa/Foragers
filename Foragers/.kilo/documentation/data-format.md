@@ -76,7 +76,7 @@ return {
 }
 ```
 
-`Merge.resolveExtends()` deep-merges the base file into the child. Child fields override base fields. Components are appended (not merged).
+`Merge.resolveExtends()` deep-merges the base file into the child. Child fields override base fields. Components are matched by `component` type + `mergeKey`, then deep-merged. Two entries with the same key (e.g. two `shader` components without `mergeKey`) are merged into one component. Shader `shaders` arrays concatenate (parent first, dedup by name). Base component order is preserved; new override entries are appended at the end. Use `_remove = true` to delete a base component.
 
 ## Complete example
 

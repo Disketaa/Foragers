@@ -85,5 +85,9 @@ return {
 			component = "shader",
 			shaders = { "Brightness" },
 		},
+
+		{
+			component = "silhouette",
+		},
 	},
 }

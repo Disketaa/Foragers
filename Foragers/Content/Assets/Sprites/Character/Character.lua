@@ -130,5 +130,9 @@ return {
 				{ Tint = { u_tint_color = { 0.8, 0.5, 0.7 }, u_additive = 1 } },
 			},
 		},
+
+		{
+			component = "silhouette",
+		},
 	},
 }
