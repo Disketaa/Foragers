@@ -169,6 +169,8 @@ function SpriteSheet:draw(x, y)
 	local sx, sy, rot, alpha = 1, 1, 0, 1
 	if parent and parent.getDrawContext then
 		sx, sy, rot, alpha = parent:getDrawContext()
+	elseif parent and parent.flipX then
+		sx = -sx
 	end
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY

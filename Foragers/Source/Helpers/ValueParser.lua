@@ -27,29 +27,31 @@ local function parseRangeStr(value)
 	return nil, nil
 end
 
----@param value any
----@return any
-function ValueParser.value(value)
-	if type(value) == "number" then
-		return value
-	end
+local function parseValue(value)
+	local r = { val = value, min = value, max = value }
 	if type(value) == "string" then
 		if string.find(value, "|") then
 			local result = pickChoice(value)
 			if result then
-				return result
+				r = { val = result, min = result, max = result }
+			end
+		else
+			local min, max = parseRangeStr(value)
+			if min and max then
+				r = { val = love.math.random(min, max), min = min, max = max }
+			else
+				local n = tonumber(value)
+				if n then
+					r = { val = n, min = n, max = n }
+				end
 			end
 		end
-		local min, max = parseRangeStr(value)
-		if min and max then
-			return love.math.random(min, max)
-		end
-		local n = tonumber(value)
-		if n then
-			return n
-		end
 	end
-	return value
+	return r
+end
+
+function ValueParser.value(value)
+	return parseValue(value).val
 end
 
 --- Re-rolls if __raw stored, otherwise returns resolved value.
@@ -67,29 +69,9 @@ function ValueParser.call(tbl, field)
 	return tbl[field]
 end
 
----@param value any
----@return number, number
 function ValueParser.range(value)
-	if type(value) == "number" then
-		return value, value
-	end
-	if type(value) == "string" then
-		if string.find(value, "|") then
-			local result = pickChoice(value)
-			if result then
-				return result, result
-			end
-		end
-		local min, max = parseRangeStr(value)
-		if min and max then
-			return min, max
-		end
-		local n = tonumber(value)
-		if n then
-			return n, n
-		end
-	end
-	return value, value
+	local r = parseValue(value)
+	return r.min, r.max
 end
 
 --- Re-rolls range from __raw, otherwise returns resolved range.
