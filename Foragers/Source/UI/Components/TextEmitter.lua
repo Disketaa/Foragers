@@ -1,6 +1,7 @@
 local Path = require("Source.Helpers.Path")
 local ValueParser = require("Source.Helpers.ValueParser")
 local Easing = require("Source.Sprite.Components.Tween").Easing
+local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 
 local activeTexts = {}
 local fontCache = {}
@@ -174,47 +175,12 @@ function TextEmitter.drawAll()
 	for _, t in ipairs(activeTexts) do
 		local ref = t.fontRef
 		if ref then
-			local pr, pg, pb, pa = love.graphics.getColor()
-			love.graphics.setColor(t.color[1], t.color[2], t.color[3], math.max(0, math.min(1, t.alpha)))
-
-			local image = ref.image
-			local frameW = ref.frameW
-			local frameH = ref.frameH
-			local ox = frameW * ref.pivotX
-			local oy = frameH * ref.pivotY
-
-			local cx = t.x
-			local cy = t.y
-
-			local text = t.text
-			for i = 1, #text do
-				local c = text:sub(i, i)
-				if c == " " then
-					cx = cx + frameW + ref.charSpacing
-				else
-					local idx = ref.charIndex[c]
-					if idx then
-						local quad = ref.quads[idx]
-						if quad then
-							love.graphics.draw(
-								image,
-								quad,
-								math.floor(cx + 0.5),
-								math.floor(cy + 0.5),
-								0,
-								t.scale,
-								t.scale,
-								ox,
-								oy
-							)
-						end
-					end
-					local charW = ref.charWidth[c] or frameW
-					cx = cx + charW + ref.charSpacing
-				end
-			end
-
-			love.graphics.setColor(pr, pg, pb, pa)
+			local alpha = math.max(0, math.min(1, t.alpha))
+			SpriteFont.drawText(ref, t.text, t.x, t.y, {
+				color = t.color,
+				alpha = alpha,
+				scale = t.scale,
+			})
 		end
 	end
 

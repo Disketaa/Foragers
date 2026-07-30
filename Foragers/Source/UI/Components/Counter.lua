@@ -1,5 +1,6 @@
 local Events = require("Source.Helpers.Events")
 local Easing = require("Source.Sprite.Components.Tween").Easing
+local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 
 --- Maps source component value to spritesheet frame. Event-driven, opt-in smooth tween.
 --- Optional `label` block renders a text overlay (e.g. level number) via font spritesheet.
@@ -235,71 +236,28 @@ function Counter:draw(x, y)
 		return
 	end
 
-	-- First pass: compute total text width for horizontal alignment
-	local totalW = 0
-	for i = 1, #text do
-		local c = text:sub(i, i)
-		if c == " " then
-			totalW = totalW + self._labelFrameW
-		else
-			totalW = totalW + (self._labelCharWidth[c] or self._labelFrameW)
-		end
-		if i < #text then
-			totalW = totalW + self._labelCharSpacing
-		end
-	end
-
-	local pr, pg, pb, pa = love.graphics.getColor()
-	love.graphics.setColor(self._labelColor[1], self._labelColor[2], self._labelColor[3], self._labelColor[4] or 1)
-
 	local ox = self._labelFrameW * self._labelPivotX
-	local oy = self._labelFrameH * self._labelPivotY
-
-	-- Horizontal: compute left edge from alignment
-	local leftEdge = x + self._labelOffsetX
-	if self._labelHAlign == "center" then
-		leftEdge = leftEdge - totalW / 2
-	elseif self._labelHAlign == "right" then
-		leftEdge = leftEdge - totalW
-	end
-
-	-- Vertical: compute draw Y from alignment
-	local cy = y + self._labelOffsetY
-	if self._labelVAlign == "top" then
-		cy = cy + self._labelFrameH * self._labelPivotY
-	elseif self._labelVAlign == "bottom" then
-		cy = cy - self._labelFrameH * (1 - self._labelPivotY)
-	end
-
-	for i = 1, #text do
-		local c = text:sub(i, i)
-		if c == " " then
-			leftEdge = leftEdge + self._labelFrameW + self._labelCharSpacing
-		else
-			local idx = self._labelCharIndex[c]
-			if idx then
-				local quad = self._labelQuads[idx]
-				if quad then
-					-- Character draw point = leftEdge + pivot offset
-					local cxDraw = leftEdge + ox
-					love.graphics.draw(
-						self._labelImage,
-						quad,
-						math.floor(cxDraw + 0.5),
-						math.floor(cy + 0.5),
-						0,
-						1,
-						1,
-						ox,
-						oy
-					)
-				end
-			end
-			local charW = self._labelCharWidth[c] or self._labelFrameW
-			leftEdge = leftEdge + charW + self._labelCharSpacing
-		end
-	end
-	love.graphics.setColor(pr, pg, pb, pa)
+	SpriteFont.drawText(
+		{
+			image = self._labelImage,
+			quads = self._labelQuads,
+			charIndex = self._labelCharIndex,
+			charWidth = self._labelCharWidth,
+			charSpacing = self._labelCharSpacing,
+			frameW = self._labelFrameW,
+			frameH = self._labelFrameH,
+			pivotX = self._labelPivotX,
+			pivotY = self._labelPivotY,
+		},
+		text,
+		x + self._labelOffsetX + ox,
+		y + self._labelOffsetY,
+		{
+			color = self._labelColor,
+			hAlign = self._labelHAlign,
+			vAlign = self._labelVAlign,
+		}
+	)
 end
 
 return Counter

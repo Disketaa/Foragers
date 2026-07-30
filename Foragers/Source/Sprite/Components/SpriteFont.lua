@@ -64,6 +64,83 @@ function SpriteFont.new(data)
 	return self
 end
 
+--- Shared char-by-char text renderer.
+--- Built from the same pattern in SpriteFont, Counter, and TextEmitter.
+---@param ref table {image, quads, charIndex, charWidth, charSpacing, frameW, frameH, pivotX, pivotY}
+---@param text string
+---@param x number
+---@param y number
+---@param opts table|nil {color=rgba, alpha, scale, hAlign, vAlign}
+function SpriteFont.drawText(ref, text, x, y, opts)
+	opts = opts or {}
+	local image = ref.image
+	local frameW = ref.frameW
+	local frameH = ref.frameH
+	local charSpacing = ref.charSpacing or 0
+	local ox = frameW * (ref.pivotX or 0.5)
+	local oy = frameH * (ref.pivotY or 0.5)
+	local scale = opts.scale or 1
+
+	local totalW
+	if opts.hAlign then
+		totalW = 0
+		for i = 1, #text do
+			local c = text:sub(i, i)
+			totalW = totalW + (c == " " and frameW or (ref.charWidth[c] or frameW))
+			if i < #text then
+				totalW = totalW + charSpacing
+			end
+		end
+	end
+
+	local cx = x
+	local cy = y
+	if opts.hAlign == "center" then
+		cx = cx - totalW / 2
+	elseif opts.hAlign == "right" then
+		cx = cx - totalW
+	end
+	if opts.vAlign == "top" then
+		cy = cy + frameH * (ref.pivotY or 0.5)
+	elseif opts.vAlign == "bottom" then
+		cy = cy - frameH * (1 - (ref.pivotY or 0.5))
+	end
+
+	local pr, pg, pb, pa
+	if opts.color or opts.alpha then
+		pr, pg, pb, pa = love.graphics.getColor()
+		local r, g, b, a = pr, pg, pb, pa
+		if opts.color then
+			r, g, b = opts.color[1], opts.color[2], opts.color[3]
+			a = opts.color[4] or a
+		end
+		if opts.alpha then
+			a = opts.alpha
+		end
+		love.graphics.setColor(r, g, b, a)
+	end
+
+	for i = 1, #text do
+		local c = text:sub(i, i)
+		if c == " " then
+			cx = cx + frameW + charSpacing
+		else
+			local idx = ref.charIndex[c]
+			if idx then
+				local quad = ref.quads[idx]
+				if quad then
+					love.graphics.draw(image, quad, math.floor(cx + 0.5), math.floor(cy + 0.5), 0, scale, scale, ox, oy)
+				end
+			end
+			cx = cx + (ref.charWidth[c] or frameW) + charSpacing
+		end
+	end
+
+	if opts.color or opts.alpha then
+		love.graphics.setColor(pr, pg, pb, pa)
+	end
+end
+
 function SpriteFont:attach() end
 
 function SpriteFont:update(dt) end
@@ -84,39 +161,17 @@ function SpriteFont:draw(x, y)
 		return
 	end
 
-	local image = spritesheet.image
-	local frameW = spritesheet.frameWidth
-	local frameH = spritesheet.frameHeight
-	local pivotX = spritesheet.pivotX or 0
-	local pivotY = spritesheet.pivotY or 0
-	local ox = frameW * pivotX
-	local oy = frameH * pivotY
-
-	local col = self.color
-	local r, g, b, a = love.graphics.getColor()
-	love.graphics.setColor(col[1], col[2], col[3], col[4] or 1)
-
-	local cx = x
-	local cy = y
-
-	for i = 1, #self.text do
-		local c = self.text:sub(i, i)
-		if c == " " then
-			cx = cx + frameW + self.charSpacing
-		else
-			local idx = self._charIndex[c]
-			if idx then
-				local quad = spritesheet.quads[idx]
-				if quad then
-					love.graphics.draw(image, quad, math.floor(cx + 0.5), math.floor(cy + 0.5), 0, 1, 1, ox, oy)
-				end
-			end
-			local charW = self._charWidth[c] or frameW
-			cx = cx + charW + self.charSpacing
-		end
-	end
-
-	love.graphics.setColor(r, g, b, a)
+	SpriteFont.drawText({
+		image = spritesheet.image,
+		quads = spritesheet.quads,
+		charIndex = self._charIndex,
+		charWidth = self._charWidth,
+		charSpacing = self.charSpacing,
+		frameW = spritesheet.frameWidth,
+		frameH = spritesheet.frameHeight,
+		pivotX = spritesheet.pivotX or 0,
+		pivotY = spritesheet.pivotY or 0,
+	}, self.text, x, y, { color = self.color })
 end
 
 return SpriteFont
