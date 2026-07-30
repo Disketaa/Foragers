@@ -54,23 +54,33 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 						break
 					end
 				end
-		if spritesheet then
-			local px = math.floor(sprite.x + 0.5) + camX
-			local py = math.floor(sprite.y + 0.5) + camY
-			spritesheet:drawCurrentFrame(px, py)
-		elseif sprite.image then
-			-- No spritesheet: single-frame sprite (Pickaxe, etc.)
-			-- Match Sprite:draw() StaticSprite path
-			local sx, sy = 1, 1
-			if sprite.flipX then
-				sx = -sx
-			end
-			local ox = (sprite.frameWidth or sprite.image:getWidth()) * (sprite.pivotX or 0)
-			local oy = (sprite.frameHeight or sprite.image:getHeight()) * (sprite.pivotY or 0)
-			local px = math.floor(sprite.x + 0.5) + camX
-			local py = math.floor(sprite.y + 0.5) + camY
-			love.graphics.draw(sprite.image, px, py, 0, sx, sy, ox, oy)
-		end
+				if spritesheet then
+					local px = math.floor(sprite.x + 0.5) + camX
+					local py = math.floor(sprite.y + 0.5) + camY
+					spritesheet:drawCurrentFrame(px, py)
+				elseif sprite.image then
+					-- No spritesheet: single-frame sprite (Pickaxe, etc.)
+					-- Match Sprite:draw() StaticSprite path — tweens, angle, flip
+					local sx, sy = 1, 1
+					local rot = 0
+					local t = sprite.tweens
+					if t then
+						if t.scale_x then sx = t.scale_x:getValue() end
+						if t.scale_y then sy = t.scale_y:getValue() end
+						if t.angle then rot = math.rad(t.angle:getValue()) end
+					end
+					if rot == 0 and sprite.angle then
+						rot = math.rad(sprite.angle)
+					end
+					if sprite.flipX then
+						sx = -sx
+					end
+					local ox = (sprite.frameWidth or sprite.image:getWidth()) * (sprite.pivotX or 0)
+					local oy = (sprite.frameHeight or sprite.image:getHeight()) * (sprite.pivotY or 0)
+					local px = math.floor(sprite.x + 0.5) + camX
+					local py = math.floor(sprite.y + 0.5) + camY
+					love.graphics.draw(sprite.image, px, py, rot, sx, sy, ox, oy)
+				end
 			end
 		end
 	end
