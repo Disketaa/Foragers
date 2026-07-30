@@ -40,8 +40,8 @@ Shadow.drawShape = drawShape
 ---@param sprites table[] Entries with `.instance` (sprite) — same list Main sorts
 ---@param viewW number World canvas width (px)
 ---@param viewH number World canvas height (px)
----@param camX number Integer camera pixel offset X (matches world translate)
----@param camY number Integer camera pixel offset Y
+---@param camX number Camera pixel offset X (float for smooth scrolling)
+---@param camY number Camera pixel offset Y (float for smooth scrolling)
 function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 	shadowCanvas = ensureCanvas(viewW, viewH)
 

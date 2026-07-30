@@ -10,8 +10,8 @@ local ensureCanvas = Canvas.createCanvasManager()
 ---@param entries table[] Entries with `.instance` (sprite) — same list as sorted draw
 ---@param viewW number World canvas width in px
 ---@param viewH number World canvas height in px
----@param camX number Integer camera pixel offset X
----@param camY number Integer camera pixel offset Y
+---@param camX number Camera pixel offset X (float for smooth scrolling)
+---@param camY number Camera pixel offset Y (float for smooth scrolling)
 function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 	silCanvas = ensureCanvas(viewW, viewH)
 

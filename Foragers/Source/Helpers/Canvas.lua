@@ -43,8 +43,8 @@ function Canvas:resize(windowWidth, windowHeight)
 			self:_recreateCanvas()
 		end
 	else
-		local newWidth = math.ceil(windowWidth / self.scale)
-		local newHeight = math.ceil(windowHeight / self.scale)
+		local newWidth = math.ceil(windowWidth / self.scale) + 2 * self.scale
+		local newHeight = math.ceil(windowHeight / self.scale) + 2 * self.scale
 		if self.width ~= newWidth or self.height ~= newHeight then
 			self.width = newWidth
 			self.height = newHeight
@@ -62,6 +62,7 @@ end
 ---@param subX number|nil Sub-pixel offset X (0..1, for smooth canvas movement)
 ---@param subY number|nil Sub-pixel offset Y (0..1, for smooth canvas movement)
 ---@param screenShader Shader|nil Optional shader applied when drawing canvas to screen (post-process)
+--- Canvas is padded by scale pixels on each side to prevent sub-pixel edge gaps with nearest filtering.
 function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShader)
 	-- Floor view offset for pixel-perfect canvas rendering (prevents sub-pixel seams)
 	viewX = math.floor(viewX or 0)
@@ -86,9 +87,8 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShade
 	end
 	love.graphics.setCanvas()
 
-	-- viewX/Y is floored (discrete); subX/subY is the fractional remainder scaled to screen pixels for smooth scroll
-	local finalX = self.offsetX + viewX + subX * self.scale
-	local finalY = self.offsetY + viewY + subY * self.scale
+	local finalX = self.offsetX + viewX + subX * self.scale - self.scale
+	local finalY = self.offsetY + viewY + subY * self.scale - self.scale
 
 	if screenShader then
 		love.graphics.setShader(screenShader)
