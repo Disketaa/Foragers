@@ -26,6 +26,7 @@ local Events = require("Source.Helpers.Events")
 local PropSpawner = require("Source.World.PropSpawner")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
 local UIComponent = require("Source.UI.Components.UI")
+local TimeScale = require("Source.Helpers.TimeScale")
 
 local objects = {}
 local staticObjects = {}
@@ -205,6 +206,7 @@ function love.load()
 				return
 			end
 			local f = data.value / math.max(1, data.maxValue)
+			TimeScale.scale = f >= 0.33 and 1.0 or 0.15 + 0.85 * (f / 0.33)
 			local s = f >= 0.33 and 1 or f / 0.33
 			saturationShader:send("u_saturation", math.max(0, math.min(1, s)))
 		end, 5)
@@ -323,6 +325,7 @@ function love.keypressed(key)
 end
 
 function love.update(dt)
+	local scaledDt = dt * TimeScale.scale
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
 		ParticleEmitter.detachAll(sprite)
@@ -385,7 +388,7 @@ function love.update(dt)
 	end
 	TweenComponent.clearPendingDestroy()
 
-	ShaderLoader.update(dt)
+	ShaderLoader.update(scaledDt)
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
 	local isMouseDown = love.mouse.isDown(1)
@@ -405,25 +408,25 @@ function love.update(dt)
 					control.mouseX, control.mouseY = nil, nil
 				end
 			end
-			entry.instance:update(dt)
+			entry.instance:update(scaledDt)
 		end
 	end
 
 	-- Update camera from scroll_to component
 	if scrollToComp then
-		scrollToComp:update(dt)
+		scrollToComp:update(scaledDt)
 	end
 	updateCamera()
 
-	AttackSystem.update(dt, dynamicObjects)
-	ParticleEmitter.updateBursts(dt)
-	ParticleEmitter.updateDetached(dt)
-	TextEmitter.updateAll(dt)
+	AttackSystem.update(scaledDt, dynamicObjects)
+	ParticleEmitter.updateBursts(scaledDt)
+	ParticleEmitter.updateDetached(scaledDt)
+	TextEmitter.updateAll(scaledDt)
 
 	-- Update UI sprites (for counter animations, etc.)
 	for _, ui in ipairs(uiSprites) do
 		if ui.sprite and ui.sprite.update then
-			ui.sprite:update(dt)
+			ui.sprite:update(scaledDt)
 		end
 	end
 
@@ -436,7 +439,7 @@ function love.update(dt)
 		shakeOffsetY = 0
 	end
 
-	local spawned = PropSpawner.update(dt)
+	local spawned = PropSpawner.update(scaledDt)
 	if spawned then
 		table.insert(objects, { instance = spawned, data = {} })
 		table.insert(dynamicObjects, { instance = spawned, data = {} })
