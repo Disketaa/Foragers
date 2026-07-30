@@ -154,7 +154,7 @@ function Sprite:update(dt)
 end
 
 local function drawComponents(sprite, predicate)
-	for _, component in ipairs(sprite.components) do
+	for _, component in ipairs(sprite.components or {}) do
 		if not component._broken and predicate(component) and component.draw then
 			local ok, err = xpcall(component.draw, debug.traceback, component, sprite.x, sprite.y)
 			if not ok then

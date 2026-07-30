@@ -89,6 +89,8 @@ function Control.new(data)
 		_grounded = nil,
 		_groundedInitialized = false,
 		_slowdown = 1,
+		_prevState = nil,
+		_prevFlipX = nil,
 		type = "control",
 	}, Control)
 	return self
@@ -102,6 +104,8 @@ function Control:attach()
 	self.parent:on(Events.SLOWDOWN_CHANGED, function(multiplier)
 		self._slowdown = multiplier
 	end, 10)
+	self._prevState = self.parent._state
+	self._prevFlipX = self.parent.flipX
 end
 
 function Control:setMousePosition(worldX, worldY)
@@ -190,7 +194,7 @@ function Control:update(dt)
 		self.parent.x = self.parent.x + moveX * effectiveSpeed * dt
 	end
 
-	local oldState = self.parent._state
+	local oldState = self._prevState
 	local newState
 	if self._groundedInitialized and self._grounded == false then
 		newState = len > 0 and "swim" or "float"
@@ -201,6 +205,7 @@ function Control:update(dt)
 	if newState ~= oldState then
 		self.parent:emit(Events.STATE_CHANGED, newState, oldState)
 	end
+	self._prevState = newState
 
 	local newFlip ---@type boolean|nil
 	if mouseActive then
@@ -208,9 +213,10 @@ function Control:update(dt)
 	elseif inputX ~= 0 then
 		newFlip = inputX < 0
 	end
-	if newFlip ~= nil and newFlip ~= self.parent.flipX then
+	if newFlip ~= nil and newFlip ~= self._prevFlipX then
 		self.parent.flipX = newFlip
 		self.parent:emit(Events.FLIPPED, newFlip)
+		self._prevFlipX = newFlip
 	end
 
 	self.parent.animSpeedFactor = speedFactor * self._slowdown

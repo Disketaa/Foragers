@@ -8,9 +8,19 @@ Run weekly or after any refactor. Each check is a TODO — find and fix violatio
 
 ## 1. Component scanning — must use findComponent/getComponents
 
+The auto-formatter splits `for _, comp in ipairs(...) do` across lines when the
+`ipairs(...)` argument is multi-line. Both forms must be checked.
+
+**Compact form:**
 ```
 grep -rn "for _, comp in ipairs(.*components" Source/ Main.lua
 ```
+
+**Formatter-split form** (for _, comp in on its own line):
+```
+grep -rn "for _, comp in$" Source/ Main.lua
+```
+
 Allowed exceptions: `Sprite:update()`/`drawComponents()` (core dispatch), `Merge.lua` (pre-extracted data), `ParticleEmitter.lua` line 75 (`data.components`). Every other hit must use `findComponent`/`getComponents`.
 
 ## 2. Sprite instantiation — must use SpriteLoader.instantiate()
@@ -76,3 +86,25 @@ Mods must register via `ComponentRegistry.register()`, not by directly adding to
 grep -rn "parent\.flipX\|parent\._state" Source/Sprite/Components/ | grep -v "draw()"
 ```
 May only be read inside `draw()` for rendering (AGENTS.md §I field exceptions).
+
+## 11. Coordinate pivot awareness — STRICT
+
+**Rule:** `sprite.x` / `sprite.y` is the sprite's **pivot point** in world space. `pivotX`/`pivotY` (0–1) define where the image origin sits relative to that point. All coordinate computation MUST be pivot-aware.
+
+```
+grep -rn "\.x\s*[=:]\|\.y\s*[=:]\|parent\.x\|parent\.y\|offsetX\|offsetY\|pivotX\|pivotY" Source/Sprite/Components/ Source/Helpers/ Source/UI/ Main.lua
+```
+
+For **every** result, ask: **"Is this controlled/affected by sprite pivot?"**
+
+- `parent.x` / `parent.y` writes → YES, moves the pivot point
+- `parent.x` / `parent.y` reads for positioning → YES, uses the pivot position
+- `offsetX` / `offsetY` → YES, must be offset FROM the pivot, not from the sprite edge
+- `pivotX` / `pivotY` → YES, must be used to compute draw origin (`ox = frameWidth * pivotX`, `oy = frameHeight * pivotY`)
+- `love.graphics.draw` for a sprite → YES, must pass pivot-based origin offsets
+
+**Violations:**
+1. Treating `sprite.x`/`sprite.y` as top-left corner instead of pivot point
+2. `love.graphics.draw` without pivot-based origin (`ox`, `oy`)
+3. Offset computed from sprite edge instead of from pivot
+4. `ox`/`oy` computed without multiplying by `pivotX`/`pivotY`
