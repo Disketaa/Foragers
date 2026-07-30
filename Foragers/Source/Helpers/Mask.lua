@@ -1,7 +1,6 @@
 --- Pre-render sprites marked with `silhouette` component as white silhouettes.
---- Trees with "Silhouette" shader module sample this canvas and show white
---- where a silhouette overlaps their alpha.
----@module Mask
+--- Trees with "Silhouette" shader module sample this canvas and show black
+--- dither where a silhouette overlaps their alpha.
 local Mask = {}
 
 local silCanvas = nil
@@ -71,6 +70,8 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 					local py = math.floor(sprite.y + 0.5) + camY
 					spritesheet:drawCurrentFrame(px, py, rot)
 				elseif sprite.image then
+					local px = math.floor(sprite.x + 0.5) + camX
+					local py = math.floor(sprite.y + 0.5) + camY
 					local sx, sy = 1, 1
 					if t then
 						if t.scale_x then
@@ -85,8 +86,6 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 					end
 					local ox = (sprite.frameWidth or sprite.image:getWidth()) * (sprite.pivotX or 0)
 					local oy = (sprite.frameHeight or sprite.image:getHeight()) * (sprite.pivotY or 0)
-					local px = math.floor(sprite.x + 0.5) + camX
-					local py = math.floor(sprite.y + 0.5) + camY
 					love.graphics.draw(sprite.image, px, py, rot, sx, sy, ox, oy)
 				end
 			end

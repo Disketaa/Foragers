@@ -256,7 +256,6 @@ function love.draw()
 			end
 		end
 
-		-- Pre-render silhouettes for tree reveal shader
 		Mask.renderSilhouette(dynamicObjects, canvas.width, canvas.height, camPixelX, camPixelY)
 
 		-- Shadow layer: all shadows drawn opaque onto one layer, composited once
@@ -270,7 +269,6 @@ function love.draw()
 		local sorted = DrawOrder.collect(dynamicObjects)
 		DrawOrder.sort(sorted)
 
-		-- Send silhouette canvas to tree shaders that sample it
 		local silCanvas = Mask.getCanvas()
 		if silCanvas then
 			for _, sprite in ipairs(sorted) do
