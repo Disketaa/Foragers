@@ -8,6 +8,7 @@ return {
 			offsetX = 1,
 			offsetY = 4,
 		},
+
 		{
 			component = "pickup",
 			satiety = 30,

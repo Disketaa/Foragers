@@ -230,7 +230,8 @@ end
 --- Draw current frame at position without shader/tween handling.
 ---@param x number
 ---@param y number
-function SpriteSheet:drawCurrentFrame(x, y)
+---@param rot number|nil Rotation in radians (0 if nil)
+function SpriteSheet:drawCurrentFrame(x, y, rot)
 	if not self.quads then
 		return
 	end
@@ -260,7 +261,7 @@ function SpriteSheet:drawCurrentFrame(x, y)
 
 	local ox = self.frameWidth * self.pivotX
 	local oy = self.frameHeight * self.pivotY
-	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), 0, sx, sy, ox, oy)
+	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), rot or 0, sx, sy, ox, oy)
 end
 
 return SpriteSheet

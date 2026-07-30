@@ -54,16 +54,24 @@ relevant section before touching that subsystem.
   shows no effect, the cause is almost always a GLSL compile failure returning
   nil. Temporarily print the `pcall` error (or write the generated source) to see it.
 
-## Silhouette reveal (tree → player silhouette canvas)
+## Silhouette reveal (tree → silhouette canvas)
 
-- **Tree reads player's silhouette canvas, not the reverse.** The player is
-  pre-rendered as a white silhouette onto a separate canvas (same size as world
-  canvas). Trees with `"Silhouette"` shader module sample `u_silhouetteTexture`
-  at `screen_coords / love_ScreenSize.xy`. Where silhouette alpha > threshold,
+- **Tree reads silhouette canvas, not the reverse.** Every sprite with
+  `component = "silhouette"` and `mode ~= "mask"` is pre-rendered as a white
+  silhouette onto a separate canvas (same size as world canvas). Trees with
+  `"Silhouette"` shader module sample `u_silhouetteTexture` at
+  `screen_coords / love_ScreenSize.xy`. Where silhouette alpha > threshold,
   the tree's fragment is replaced with white. This avoids Y-sort filtering: if
-  player sorts in front of a tree, player draws later and covers the tree entirely.
-  If tree sorts in front, tree draws later and its shader reveals the player
-  silhouette behind it. No `sortY` comparison needed.
+  a silhouette sprite sorts in front of a tree, it draws later and covers the
+  tree entirely. If tree sorts in front, tree draws later and its shader reveals
+  the silhouette behind it. No `sortY` comparison needed.
+- **Non-spritesheet sprites in silhouette canvas.** `Mask.renderSilhouette()`
+  handles sprites with no `spritesheet` component (e.g. Pickaxe — single-frame
+  auto-detected from filename match). It draws `sprite.image` directly with
+  pivot, flipX, tween scale/angle, and static `sprite.angle`. This mirrors the
+  `Sprite:draw()` StaticSprite path. Without this fallback, such sprites would
+  be invisible in the silhouette — they have `sprite.image` but no spritesheet
+  component to provide `drawCurrentFrame`.
 
 ## LÖVE filesystem / paths (PowerShell tooling note)
 

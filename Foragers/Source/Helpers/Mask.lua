@@ -47,6 +47,18 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 				end
 			end
 			if hasSilhouette then
+				local rot = 0
+				local t = sprite.tweens
+				if t then
+					local angleTween = t.swing_angle or t.angle
+					if angleTween then
+						rot = math.rad(angleTween:getValue())
+					end
+				end
+				if rot == 0 and sprite.angle then
+					rot = math.rad(sprite.angle)
+				end
+
 				local spritesheet
 				for _, comp in ipairs(sprite.components) do
 					if comp.type == "spritesheet" and not comp._broken then
@@ -57,20 +69,16 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 				if spritesheet then
 					local px = math.floor(sprite.x + 0.5) + camX
 					local py = math.floor(sprite.y + 0.5) + camY
-					spritesheet:drawCurrentFrame(px, py)
+					spritesheet:drawCurrentFrame(px, py, rot)
 				elseif sprite.image then
-					-- No spritesheet: single-frame sprite (Pickaxe, etc.)
-					-- Match Sprite:draw() StaticSprite path — tweens, angle, flip
 					local sx, sy = 1, 1
-					local rot = 0
-					local t = sprite.tweens
 					if t then
-						if t.scale_x then sx = t.scale_x:getValue() end
-						if t.scale_y then sy = t.scale_y:getValue() end
-						if t.angle then rot = math.rad(t.angle:getValue()) end
-					end
-					if rot == 0 and sprite.angle then
-						rot = math.rad(sprite.angle)
+						if t.scale_x then
+							sx = t.scale_x:getValue()
+						end
+						if t.scale_y then
+							sy = t.scale_y:getValue()
+						end
 					end
 					if sprite.flipX then
 						sx = -sx

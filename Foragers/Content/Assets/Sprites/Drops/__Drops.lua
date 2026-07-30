@@ -3,7 +3,7 @@ return {
 	frameHeight = 8,
 	pivotX = 0.6,
 	pivotY = 0.5,
-	layer = 3,
+	layer = 0,
 	components = {
 		{
 			component = "spritesheet",
@@ -41,12 +41,12 @@ return {
 		},
 
 		{
-			component = "shader",
-			shaders = { "Brightness" },
+			component = "silhouette",
 		},
 
 		{
-			component = "silhouette",
+			component = "shader",
+			shaders = { "Brightness" },
 		},
 	},
 }

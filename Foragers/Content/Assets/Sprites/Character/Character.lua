@@ -77,6 +77,17 @@ return {
 		},
 
 		{
+			component = "particle_emitter",
+			particle = "Content/Assets/Sprites/Particles/Dust.lua",
+			stepInterval = 2,
+			offsetX = 0,
+			offsetY = 0,
+			inheritFlip = true,
+			layer = "below",
+			spawnOn = { run = true },
+		},
+
+		{
 			component = "text_emitter",
 			event = "pickup",
 			color = { 0.6, 1, 0.6 },
@@ -88,17 +99,6 @@ return {
 			offsetY = -3,
 			destroy = "scale",
 			destroyCurve = "InCubic",
-		},
-
-		{
-			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/Dust.lua",
-			stepInterval = 2,
-			offsetX = 0,
-			offsetY = 0,
-			inheritFlip = true,
-			layer = "below",
-			spawnOn = { run = true },
 		},
 
 		{
@@ -125,14 +125,14 @@ return {
 		},
 
 		{
+			component = "silhouette",
+		},
+
+		{
 			component = "shader",
 			shaders = {
 				{ Tint = { u_tint_color = { 0.8, 0.5, 0.7 }, u_additive = 1 } },
 			},
-		},
-
-		{
-			component = "silhouette",
 		},
 	},
 }

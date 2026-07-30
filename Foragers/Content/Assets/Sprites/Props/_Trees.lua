@@ -22,16 +22,6 @@ return {
 		},
 
 		{
-			component = "silhouette",
-			mode = "mask",
-		},
-
-		{
-			component = "shader",
-			shaders = { "Silhouette" },
-		},
-
-		{
 			component = "destructible",
 			hp = 7,
 			replaceWith = "Content/Assets/Sprites/Props/OakStump",
@@ -67,6 +57,16 @@ return {
 				prop_hit = { "Content/Assets/Sounds/Events/WoodHit.ogg" },
 				prop_broken = { "Content/Assets/Sounds/Events/WoodBreak.ogg" },
 			},
+		},
+
+		{
+			component = "silhouette",
+			mode = "mask",
+		},
+
+		{
+			component = "shader",
+			shaders = { "Silhouette" },
 		},
 	},
 }

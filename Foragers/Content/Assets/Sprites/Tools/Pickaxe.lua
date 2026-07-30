@@ -82,12 +82,12 @@ return {
 		},
 
 		{
-			component = "shader",
-			shaders = { "Brightness" },
+			component = "silhouette",
 		},
 
 		{
-			component = "silhouette",
+			component = "shader",
+			shaders = { "Brightness" },
 		},
 	},
 }
