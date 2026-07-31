@@ -73,6 +73,12 @@ relevant section before touching that subsystem.
   be invisible in the silhouette — they have `sprite.image` but no spritesheet
   component to provide `drawCurrentFrame`.
 
+## In-process restart (Source/Helpers/Reset.lua, Main.lua initGame/resetGame)
+
+- **NEVER re-run `love.load()` to reset the game.** It calls `love.window.setMode()`, which on Windows recreates the native window (visual "window reopens" — blink, focus loss) even though it's the same process. Split into one-time engine setup (`love.load`: window, default filter, shader/saturation assets, `ModLoader.loadAllMods`) and re-runnable `initGame()` (world, sprites, UI, player). `resetGame()` (R key) sets `_needsRestart`, consumed at the top of `love.update`, then calls `Reset.all()` + `initGame()`.
+- **`Reset.all()` wipes every array-valued field in `Source.`/`Mods.` modules.** This is the point: clears module-owned pools (particles, floating text, dead/pending/detached sets, attacker refs). But it also nukes arrays that are NOT runtime pools — e.g. `ShaderLoader.shaders`. If such asset lists are only loaded in `love.load()`, a restart leaves them empty → the asset silently disappears. Fix pattern: re-run the loader inside `initGame()` (`ShaderLoader.loadAll("Content/Assets/Shaders")`), not `love.load()`. Shader recompilation does not recreate the window.
+- **`Reset.all()` skips dict-valued fields** (factories, caches like `ComponentRegistry.factories`, `TextEmitter.fontCache`) and `__`-prefixed metamethod keys (`__index`). Only sequential-integer-keyed arrays are cleared. Do not "fix" it to clear all tables — that wipes registries and crashes sprites.
+
 ## LÖVE filesystem / paths (PowerShell tooling note)
 
 - The `filesystem_*` tools are bound to a different root than the project
