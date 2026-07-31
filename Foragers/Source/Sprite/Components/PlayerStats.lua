@@ -16,6 +16,7 @@ PlayerStats.__index = PlayerStats
 ---@return PlayerStats
 function PlayerStats.new(data)
 	local xpCurve = data.xpCurve or {}
+	local satietyDrain = data.satietyDrain or {}
 	return setmetatable({
 		critChance = data.critChance or 0,
 		critMult = data.critMult or 1.5,
@@ -27,6 +28,12 @@ function PlayerStats.new(data)
 		},
 		satiety = data.satiety or 100,
 		maxSatiety = data.maxSatiety or 100,
+		satietyDrain = {
+			run = satietyDrain.run or 0.5,
+			swim = satietyDrain.swim or 0.75,
+			idle = satietyDrain.idle or 0.1,
+			float = satietyDrain.float or 0.1,
+		},
 		type = "player_stats",
 	}, PlayerStats)
 end
@@ -47,18 +54,13 @@ function PlayerStats:attach()
 
 	self.parent:on(Events.ANIM_FRAME, function(frameIndex)
 		local state = self._currentState
-		if state == "run" and (frameIndex == 2 or frameIndex == 4) then
-			if love.math.random() < 0.5 then
-				self:consumeSatiety(1)
-			end
-		elseif state == "swim" then
-			if love.math.random() < 0.75 then
-				self:consumeSatiety(1)
-			end
-		elseif state == "idle" or state == "float" then
-			if love.math.random() < 0.1 then
-				self:consumeSatiety(1)
-			end
+		local chance = self.satietyDrain[state] or 0
+		local drain = (state == "run" and (frameIndex == 2 or frameIndex == 4))
+			or state == "swim"
+			or state == "idle"
+			or state == "float"
+		if drain and chance > 0 and love.math.random() < chance then
+			self:consumeSatiety(1)
 		end
 	end, 5)
 end

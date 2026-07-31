@@ -31,12 +31,12 @@ return {
 			damage = 1,
 			swing = {
 				angleFrom = 0,
-				angleTo = -90,
-				duration = 0.1,
+				angleTo = -75,
+				duration = 0.15,
 				offsetX = -8,
 				offsetY = -4,
 				curve = "OutSine",
-				smoothness = 0.35,
+				smoothness = 0.5,
 			},
 		},
 
@@ -53,7 +53,7 @@ return {
 				{ target = "y", from = -1, to = 1, duration = 1, curve = "OutSine", loop = true, pingPong = true },
 			},
 			tags = {
-				prop_hit = { { target = "brightness", from = 1, to = 0.5, duration = 0.1, curve = "OutCubic" } },
+				prop_hit = { { target = "brightness", from = 1, to = 0.5, duration = 0.3, curve = "OutCubic" } },
 			},
 		},
 

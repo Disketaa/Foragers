@@ -204,13 +204,15 @@ function Follow:draw(x, y)
 	if self._hasSpritesheet then
 		return
 	end
-	if not self.parent.image then
+	local parent = self.parent
+	if not parent.image then
 		return
 	end
-	local img = self.parent.image
+	local hadShader = parent.applyShader and parent:applyShader() or false
+	local img = parent.image
 	local rot = math.rad(self._currentAngle or 0)
-	if self.parent.tweens and self.parent.tweens.swing_angle then
-		rot = rot + math.rad(self.parent.tweens.swing_angle:getValue())
+	if parent.tweens and parent.tweens.swing_angle then
+		rot = rot + math.rad(parent.tweens.swing_angle:getValue())
 	end
 	love.graphics.draw(
 		img,
@@ -219,9 +221,12 @@ function Follow:draw(x, y)
 		rot,
 		1,
 		1,
-		(self.parent.frameWidth or img:getWidth()) * (self.parent.pivotX or 0.5),
-		(self.parent.frameHeight or img:getHeight()) * (self.parent.pivotY or 1)
+		(parent.frameWidth or img:getWidth()) * (parent.pivotX or 0.5),
+		(parent.frameHeight or img:getHeight()) * (parent.pivotY or 1)
 	)
+	if hadShader then
+		love.graphics.setShader()
+	end
 end
 
 return Follow
