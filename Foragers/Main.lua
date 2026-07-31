@@ -27,6 +27,7 @@ local PropSpawner = require("Source.World.PropSpawner")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
 local UIComponent = require("Source.UI.Components.UI")
 local TimeScale = require("Source.Helpers.TimeScale")
+local Reset = require("Source.Helpers.Reset")
 
 local objects = {}
 local staticObjects = {}
@@ -87,6 +88,11 @@ local function positionUI(ui)
 	ui.sprite.y = py + (ui.sprite.pivotY or 0) * h
 end
 
+--- One-time engine setup. Runs once at startup. Must NOT touch the window
+--- or re-create graphics assets on later restarts (love.window.setMode
+--- recreates the native window), so only the persistent world/sprite state
+--- lives in initGame(), which resetGame() re-runs.
+local initGame
 function love.load()
 	print("Love2D project started")
 	love.graphics.setDefaultFilter("nearest", "nearest")
@@ -97,10 +103,22 @@ function love.load()
 	local bg = World.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))
 
-	ShaderLoader.loadAll("Content/Assets/Shaders")
-
 	saturationShader = love.graphics.newShader(require("Content.Assets.Shaders.Saturation"))
 	saturationShader:send("u_saturation", 1)
+
+	ModLoader.loadAllMods("Mods")
+
+	initGame()
+end
+
+--- Rebuild all game state from scratch (world, sprites, UI, player).
+--- Called at startup and on every restart. No window/graphics recreation.
+function initGame()
+	-- Shaders are assets but live in module arrays (ShaderLoader.shaders),
+	-- which Reset.all() empties on restart. Reload here so composed shaders
+	-- like Caustic survive a reset. Recompiling shaders does not recreate
+	-- the window.
+	ShaderLoader.loadAll("Content/Assets/Shaders")
 
 	local worldData = WorldGen.generate()
 
@@ -170,8 +188,6 @@ function love.load()
 
 	updateCamera()
 
-	ModLoader.loadAllMods("Mods")
-
 	-- Cursor loaded separately: has no "ui" component, follows mouse instead of anchor.
 	local cursorData = require("Content.Assets.Sprites.UI.Cursor")
 	local cursorObj = SpriteLoader.instantiate(cursorData, 0, 0, "Content/Assets/Sprites/UI/Cursor.png")
@@ -220,6 +236,18 @@ function love.resize(w, h)
 	for _, ui in ipairs(uiSprites) do
 		positionUI(ui)
 	end
+end
+
+local _needsRestart = false
+
+--- Reload the whole game state in-process (R / game over).
+--- Re-runs initGame() so the world, sprites, UI and player are rebuilt
+--- from scratch. Reset.all() clears every module-owned pool (particles,
+--- floating text, dead/pending/detached sets, attacker refs, time scale) so
+--- no stale references to old sprites remain. love.load() itself is NOT
+--- re-run: it calls love.window.setMode(), which recreates the native window.
+local function resetGame()
+	_needsRestart = true
 end
 
 local function screenToWorld(screenX, screenY)
@@ -318,13 +346,24 @@ local function removeSpriteFromLists(sprite)
 end
 
 function love.keypressed(key)
-	if key == "f11" then
+	if key == "r" then
+		resetGame()
+	elseif key == "f11" then
 		local fullscreen, fstype = love.window.getFullscreen()
 		love.window.setFullscreen(not fullscreen, fstype)
 	end
 end
 
 function love.update(dt)
+	if _needsRestart then
+		_needsRestart = false
+		Reset.all()
+		uiSprites = {}
+		TimeScale.scale = 1.0
+		initGame()
+		return
+	end
+
 	local scaledDt = dt * TimeScale.scale
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
