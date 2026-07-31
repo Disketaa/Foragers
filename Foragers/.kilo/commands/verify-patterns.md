@@ -115,3 +115,8 @@ For **every** result, ask: **"Is this controlled/affected by sprite pivot?"**
 grep -rn "local function scan" Source/
 ```
 Any hit outside `Path.lua` means a file has its own directory-walking loop instead of using `Path.scanDirectory`. Extract to the shared utility.
+
+## 13. Restart reset — ask "does this value survive a restart?"
+
+Before adding module-level mutable state, ask: **"Is this reset on restart?"** `Reset.all()` only clears exported array fields via `pairs(package.loaded[mod])`; module-level `local` tables are invisible to it and rely on rebuild/self-cleanup. Exported arrays holding assets (e.g. `ShaderLoader.shaders`) must be reloaded in `initGame()`, not only in `love.load()`.
+
