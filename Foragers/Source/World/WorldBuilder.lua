@@ -136,7 +136,10 @@ local function spawnProps(worldData, playerSprite)
 		return props
 	end
 
-	local oldLow, oldHigh = love.math.getRandomSeed()
+	-- Save the full RNG STATE, not the seed: setRandomSeed(oldLow, oldHigh)
+	-- would restart the generator at that seed, so the next WorldGen call gets
+	-- the same first random value and the world repeats across restarts.
+	local savedState = love.math.getRandomState()
 	love.math.setRandomSeed(numProps > 0 and activeTiles[1].seed or 0)
 
 	for i = 1, math.min(numProps, #activeTiles) do
@@ -181,7 +184,7 @@ local function spawnProps(worldData, playerSprite)
 		})
 	end
 
-	love.math.setRandomSeed(oldLow, oldHigh)
+	love.math.setRandomState(savedState)
 
 	return props
 end
