@@ -28,6 +28,8 @@ local TextEmitter = require("Source.UI.Components.TextEmitter")
 local UIComponent = require("Source.UI.Components.UI")
 local TimeScale = require("Source.Helpers.TimeScale")
 local Reset = require("Source.Helpers.Reset")
+local Debug = require("Source.Helpers.Debug")
+local Gizmo = require("Source.Helpers.Gizmo")
 
 local objects = {}
 local staticObjects = {}
@@ -256,6 +258,17 @@ local function screenToWorld(screenX, screenY)
 	return cx - cameraX, cy - cameraY
 end
 
+-- Mirrors Canvas:draw's final world-to-screen placement so gizmo rects land on
+-- the exact pixels the world canvas occupies, but at native resolution.
+-- canvas:draw receives shakeOffsetX/Y as its view offset; camPixelX/Y is the
+-- translate applied once inside the world draw.
+local function worldToScreen(wx, wy)
+	local s = canvas.scale
+	local bx = canvas.offsetX - s + shakeOffsetX + camSubX * s
+	local by = canvas.offsetY - s + shakeOffsetY + camSubY * s
+	return (wx + camPixelX) * s + bx, (wy + camPixelY) * s + by
+end
+
 function love.draw()
 	ShaderLoader.setCamera(camPixelX, camPixelY)
 
@@ -310,6 +323,12 @@ function love.draw()
 
 		love.graphics.pop() -- world layer end
 	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY, saturationShader)
+
+	-- Gizmo overlay: native-resolution debug lines, not scaled by the world canvas.
+	if Debug.isEnabled() then
+		Gizmo.draw(worldToScreen, Debug.settings("collisions"))
+	end
+	Gizmo.clear()
 
 	-- UI + cursor drawn outside canvas: screen-fixed, no camera shake/sub-pixel jitter
 	love.graphics.push()

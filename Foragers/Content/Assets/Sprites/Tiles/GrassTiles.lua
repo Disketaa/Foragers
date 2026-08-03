@@ -1,4 +1,5 @@
 return {
+	object = "tiles",
 	frameWidth = 8,
 	frameHeight = 8,
 	pivotX = 0.5,

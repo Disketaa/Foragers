@@ -1,4 +1,6 @@
 local Events = require("Source.Helpers.Events")
+local Debug = require("Source.Helpers.Debug")
+local Gizmo = require("Source.Helpers.Gizmo")
 
 ---@class Collision
 ---@field parent Sprite|nil
@@ -7,7 +9,7 @@ local Events = require("Source.Helpers.Events")
 ---@field collisionHeight number
 ---@field offsetX number Offset from sprite pivot to collision rect top-left in pixels
 ---@field offsetY number
----@field visible boolean Draw wireframe when true
+---@field showDebugBoxes boolean Draw wireframe when global debug flag is on
 ---@field slowdown number|nil Speed multiplier when inside this zone (0-1)
 ---@field _prevGrounded boolean|nil Previous frame grounded state
 ---@field _prevSlowdown number|nil Previous frame slowdown multiplier
@@ -62,13 +64,21 @@ function Collision.new(data)
 		collisionHeight = data.collisionHeight or 8,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
-		visible = data.visible or false,
+		showDebugBoxes = false,
 		slowdown = data.slowdown,
 		_prevGrounded = nil,
 		_prevSlowdown = nil,
 		drawOnTop = true,
 		type = "collision",
 	}, Collision)
+end
+
+function Collision:attach()
+	local function updateDebug()
+		self.showDebugBoxes = Debug.enabled("collisions") and not Debug.excluded("collisions", self.parent.object)
+	end
+	updateDebug()
+	Debug.onChange(updateDebug)
 end
 
 function Collision:getRect()
@@ -210,13 +220,11 @@ function Collision.removeSpriteColliders(sprite)
 end
 
 function Collision:draw()
-	if not self.visible or not self.parent then
+	if not self.showDebugBoxes or not self.parent then
 		return
 	end
 	local rect = self:getRect()
-	love.graphics.setColor(1, 0, 0, 0.5)
-	love.graphics.rectangle("line", rect.x, rect.y, rect.w, rect.h)
-	love.graphics.setColor(1, 1, 1, 1)
+	Gizmo.rect(rect.x, rect.y, rect.w, rect.h)
 end
 
 return Collision

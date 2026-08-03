@@ -100,6 +100,21 @@ relevant section before touching that subsystem.
 - `_G.SHADER_DEBUG` was used temporarily for console prints / file dumps. It is
   removed from `conf.lua` when done. Do not leave debug prints or
   `love.filesystem.write` of generated shaders in shipped code.
+- **Debug overlays draw in a native-resolution pass, never into the low-res world
+  canvas.** The world canvas (480×270) is upscaled with nearest filter, so any
+  1px debug line drawn inside it becomes a blocky `scale`-px square (the "aliasing"
+  that reads as blurry). `Collision` publishes rects to `Source/Helpers/Gizmo.lua`
+  (world-space buffer) and `Main.lua` draws them after the world canvas with a
+  `worldToScreen` transform that mirrors `Canvas:draw`'s placement math — including
+  using `shakeOffsetX/Y` as the view offset (NOT `camPixelX`, which is applied once
+  inside the world translate). `Gizmo.clear()` runs every frame; its rect buffer is
+  a module `local`, so it survives `Reset.all()` but is drained per frame.
+- **`Content/Data/Debug.lua` is a group-based settings table, not flat booleans.**
+  Each debug overlay is a group (e.g. `collisions = { enabled, exclude, thickness,
+  color }`). The `Debug` helper (`Source/Helpers/Debug.lua`) exposes group accessors
+  (`enabled`, `excluded`, `settings`, `isEnabled`, `onChange`) and never knows which
+  component consumes them — consumers subscribe via `Debug.onChange`, keeping the
+  dependency one-directional.
 
 ## SpriteFont / Text / TextEmitter (Source/Sprite/Components/SpriteFont.lua, Source/UI/Text.lua, Source/UI/Components/TextEmitter.lua)
 

@@ -22,6 +22,7 @@ function SpriteLoader.instantiate(data, x, y, pngPath)
 	sprite.pivotY = data.pivotY
 	sprite.sortOffsetY = data.sortOffsetY or 0
 	sprite.layer = data.layer or 0
+	sprite.object = data.object
 
 	-- Copy angle, re-rolling per instance if raw string exists
 	if data.__raw and data.__raw.angle then

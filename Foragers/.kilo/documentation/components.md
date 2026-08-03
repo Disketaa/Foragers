@@ -10,7 +10,7 @@ description: Quick reference for all components — purpose, config fields, even
 |---|---|---|---|---|
 | **spritesheet** | Quad animation + frame rendering | `columns`, `rows`, `animations`, `tags` | STATE_CHANGED (5) | ANIM_FRAME |
 | **control** | Keyboard/mouse input; sole writer of `_state` and `flipX` | `movementSpeed`, `swimmingSpeed`, `keyboardControl`, `mouseControl` | GROUNDED_CHANGED (10), SLOWDOWN_CHANGED (10) | STATE_CHANGED, FLIPPED |
-| **collision** | AABB collision, terrain/solid registries, grounded detection | `mode`, `collisionWidth`, `collisionHeight`, `offsetX`, `offsetY`, `visible`, `slowdown` | — | GROUNDED_CHANGED, SLOWDOWN_CHANGED, SLOWDOWN_ENTER, SLOWDOWN_EXIT |
+| **collision** | AABB collision, terrain/solid registries, grounded detection. Debug box overlay publishes rects to `Gizmo` gated by the `collisions` group in `Content/Data/Debug.lua` (see *Debug gizmo* below) | `mode`, `collisionWidth`, `collisionHeight`, `offsetX`, `offsetY`, `slowdown` | — | GROUNDED_CHANGED, SLOWDOWN_CHANGED, SLOWDOWN_ENTER, SLOWDOWN_EXIT |
 | **follow** | Follow-target smoothing + deployTo/recall (tools) | `offsetX`, `offsetY`, `smoothness`, `smoothnessX`, `smoothnessY`, `followRadius`, `followDelay`, `leanAngle`, `leanThreshold`, `arrivedThreshold` | — | FOLLOW_ARRIVED |
 | **scroll_to** | Smooth camera follow (centers camera on target via expSmooth) | `smoothness`, `offsetX`, `offsetY`, `chunkSize` | — | — |
 | **spritefont** | Text rendering using parent spritesheet quads | `chars`, `spacing`, `charSpacing`, `color` (set per-instance via Text) | — | — |
@@ -128,6 +128,25 @@ Positioned by `Main.lua` at load and on every `love.resize()` — `UI.calculate(
 | `"detect"` | Detection only, no blocking |
 | `"solid_and_detect"` | Blocks movement + grounded detection (player) |
 | `"slowdown"` | Speed multiplier zone (bushes) |
+
+## Debug gizmo (collision overlay)
+
+The per-sprite `visible` collision flag is removed. Box rendering is now global and data-driven via `Content/Data/Debug.lua`:
+
+```lua
+collisions = {
+    enabled = true,
+    exclude = { "tiles" },
+    thickness = 1,
+    color = { 1, 1, 1, 1 },   -- rgba, alpha = opacity
+}
+```
+
+- `debug` master switch gates all debug output; `collisions.enabled` must also be true.
+- `exclude` lists `sprite.object` ids to skip (each sprite must declare `object` in its data — `SpriteLoader` copies it to `sprite.object`).
+- `thickness` / `color` style the outline + diagonal.
+
+Mechanics: `Collision:attach()` subscribes to `Debug.onChange` and caches `showDebugBoxes = Debug.enabled("collisions") and not Debug.excluded("collisions", self.parent.object)`. `Collision:draw()` publishes `self:getRect()` to `Gizmo` (world-space buffer) instead of drawing directly. `Main.lua` draws the buffered rects in a native-resolution pass after the world canvas — so boxes stay crisp regardless of the low-res world canvas's nearest-filter upscale.
 
 ## spawnOn field (particle_emitter)
 

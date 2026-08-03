@@ -14,7 +14,7 @@ description: Exact format for sprite data files (.lua) in Content/Assets/Sprites
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|---|
-| `object` | string | No | — | String identifier |
+| `object` | string | No | — | String identifier, copied to `sprite.object` at instantiation (used e.g. to exclude sprites from debug collision overlay) |
 | `frameWidth` | number | Yes* | — | Sprite frame width in pixels |
 | `frameHeight` | number | Yes* | — | Sprite frame height in pixels |
 | `pivotX` | number | No | 0 | Normalized X origin (0–1) |
@@ -102,7 +102,6 @@ return {
             mode = "solid",
             collisionWidth = 6,
             collisionHeight = 6,
-            visible = false,
         },
         {
             component = "destructible",

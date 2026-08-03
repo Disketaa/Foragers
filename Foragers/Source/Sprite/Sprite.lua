@@ -18,6 +18,7 @@ local Log = require("Source.Helpers.Log")
 ---@field sortY number Y-sort key, updated each frame as y + sortOffsetY
 ---@field sortOffsetY number Per-sprite vertical offset for Y-sorting (foot position relative to origin)
 ---@field layer integer Draw layer: zKey = layer * 100000 + sortY
+---@field object string|nil Gameplay identifier from data (e.g. "player", "tile")
 local Sprite = {}
 Sprite.__index = Sprite
 
