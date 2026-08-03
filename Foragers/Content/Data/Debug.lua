@@ -1,9 +1,22 @@
 return {
 	debug = true,
 	collisions = {
+		enabled = false,
+		exclude = { "tiles" },
+		priority = 2,
+		color = { 1, 0.25, 0.25, 1 },
+	},
+	boundaries = {
 		enabled = true,
 		exclude = { "tiles" },
-		thickness = 2,
-		color = { 0, 0.5, 0.5, 1 },
+		backgroundColor = { 0.2, 0.6, 1, 0.35 },
+		color = { 0.2, 0.6, 1, 0.4 },
+	},
+	pivots = {
+		enabled = true,
+		exclude = { "tiles" },
+		priority = 3,
+		color = { 1, 0, 0, 0.5 },
+		size = 1,
 	},
 }

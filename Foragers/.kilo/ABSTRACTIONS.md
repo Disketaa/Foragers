@@ -110,11 +110,14 @@ relevant section before touching that subsystem.
   inside the world translate). `Gizmo.clear()` runs every frame; its rect buffer is
   a module `local`, so it survives `Reset.all()` but is drained per frame.
 - **`Content/Data/Debug.lua` is a group-based settings table, not flat booleans.**
-  Each debug overlay is a group (e.g. `collisions = { enabled, exclude, thickness,
-  color }`). The `Debug` helper (`Source/Helpers/Debug.lua`) exposes group accessors
+  Each debug overlay is a group (e.g. `collisions = { enabled, exclude, color,
+  backgroundColor, priority }`). The `Debug` helper (`Source/Helpers/Debug.lua`) exposes group accessors
   (`enabled`, `excluded`, `settings`, `isEnabled`, `onChange`) and never knows which
   component consumes them — consumers subscribe via `Debug.onChange`, keeping the
-  dependency one-directional.
+  dependency one-directional. `Gizmo.rect`/`Gizmo.fillRect`/`Gizmo.point` tag each entry with its
+  group name and `Gizmo.draw` resolves styles per group — fill (`backgroundColor`),
+  outline (`color`) and point markers — ordering groups by ascending `priority` so
+  e.g. `collisions` layer over `boundaries` and `pivots` stay on top.
 
 ## SpriteFont / Text / TextEmitter (Source/Sprite/Components/SpriteFont.lua, Source/UI/Text.lua, Source/UI/Components/TextEmitter.lua)
 

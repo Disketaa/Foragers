@@ -224,7 +224,8 @@ function Collision:draw()
 		return
 	end
 	local rect = self:getRect()
-	Gizmo.rect(rect.x, rect.y, rect.w, rect.h)
+	Gizmo.fillRect("collisions", rect.x, rect.y, rect.w, rect.h)
+	Gizmo.rect("collisions", rect.x, rect.y, rect.w, rect.h)
 end
 
 return Collision

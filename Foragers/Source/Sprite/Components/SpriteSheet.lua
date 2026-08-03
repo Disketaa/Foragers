@@ -95,6 +95,15 @@ function SpriteSheet.new(data)
 end
 
 function SpriteSheet:attach()
+	if self.parent then
+		-- Reflect the true per-frame size and pivot onto the sprite; data may omit
+		-- them (props derive size from imageW / columns and default pivot to 0.5),
+		-- leaving sprite.frameWidth/pivotX nil and misaligning draw vs boundaries.
+		self.parent.frameWidth = self.frameWidth
+		self.parent.frameHeight = self.frameHeight
+		self.parent.pivotX = self.pivotX
+		self.parent.pivotY = self.pivotY
+	end
 	self.parent:on(Events.STATE_CHANGED, function(newState)
 		local animName = self.tags and self.tags[newState] or newState
 		if self.animations[animName] and animName ~= self.currentAnim then

@@ -137,16 +137,53 @@ The per-sprite `visible` collision flag is removed. Box rendering is now global 
 collisions = {
     enabled = true,
     exclude = { "tiles" },
-    thickness = 1,
-    color = { 1, 1, 1, 1 },   -- rgba, alpha = opacity
+    priority = 20,                     -- higher = drawn on top
+    color = { 1, 0.25, 0.25, 1 },      -- rgba, alpha = opacity
 }
 ```
 
 - `debug` master switch gates all debug output; `collisions.enabled` must also be true.
 - `exclude` lists `sprite.object` ids to skip (each sprite must declare `object` in its data — `SpriteLoader` copies it to `sprite.object`).
-- `thickness` / `color` style the outline + diagonal.
+- `color` styles the outline + diagonal; `priority` controls layering across groups (see below).
+- `backgroundColor` (optional) draws a solid fill underneath the outline.
 
-Mechanics: `Collision:attach()` subscribes to `Debug.onChange` and caches `showDebugBoxes = Debug.enabled("collisions") and not Debug.excluded("collisions", self.parent.object)`. `Collision:draw()` publishes `self:getRect()` to `Gizmo` (world-space buffer) instead of drawing directly. `Main.lua` draws the buffered rects in a native-resolution pass after the world canvas — so boxes stay crisp regardless of the low-res world canvas's nearest-filter upscale.
+Mechanics: `Collision:attach()` subscribes to `Debug.onChange` and caches `showDebugBoxes = Debug.enabled("collisions") and not Debug.excluded("collisions", self.parent.object)`. `Collision:draw()` publishes `self:getRect()` to `Gizmo` (world-space buffer, tagged `"collisions"`) instead of drawing directly. `Main.lua` draws the buffered rects in a native-resolution pass after the world canvas — so boxes stay crisp regardless of the low-res world canvas's nearest-filter upscale.
+
+## Debug gizmo (boundary overlay)
+
+`boundaries` group in `Content/Data/Debug.lua` draws each sprite's pivot-aware frame box (`sprite.x - w*pivotX`, `sprite.y - h*pivotY`, size `frameWidth`×`frameHeight`) as a solid fill (`backgroundColor`) under an outline (`color`):
+
+```lua
+boundaries = {
+    enabled = true,
+    exclude = { "tiles" },
+    priority = 10,
+    backgroundColor = { 0.2, 0.6, 1, 0.35 },
+    color = { 0.2, 0.6, 1, 0.4 },
+}
+```
+
+Published by `Main.lua` (iterates all `objects`) into `Gizmo.fillRect` + `Gizmo.rect` (both tagged `"boundaries"`). Exclusion + master gating identical to `collisions`.
+
+## Debug gizmo (pivot overlay)
+
+`pivots` group draws a solid square (`size` px, `color`) centered exactly on each sprite's pivot (`sprite.x`/`sprite.y`):
+
+```lua
+pivots = {
+    enabled = true,
+    exclude = {},
+    priority = 30,
+    color = { 1, 0.8, 0.2, 1 },
+    size = 5,
+}
+```
+
+Published by `Main.lua` into `Gizmo.point`. Exclusion + master gating identical to `collisions`.
+
+## Gizmo layering
+
+`Gizmo.draw` draws each enabled group independently, ordered by ascending `priority` — so `boundaries` (10) render under `collisions` (20), and `pivots` (30) sit on top of everything. Within a group the order is: `backgroundColor` fill, then `color` outline, then `point` markers.
 
 ## spawnOn field (particle_emitter)
 
