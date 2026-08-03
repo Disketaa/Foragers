@@ -116,7 +116,7 @@ relevant section before touching that subsystem.
   component consumes them — consumers subscribe via `Debug.onChange`, keeping the
   dependency one-directional. `Gizmo.rect`/`Gizmo.fillRect`/`Gizmo.point` tag each entry with its
   group name and `Gizmo.draw` resolves styles per group — fill (`backgroundColor`),
-  outline (`color`) and point markers — ordering groups by ascending `priority` so
+  outline (`color` + `decor`) and point markers — ordering groups by ascending `priority` so
   e.g. `collisions` layer over `boundaries` and `pivots` stay on top.
 
 ## SpriteFont / Text / TextEmitter (Source/Sprite/Components/SpriteFont.lua, Source/UI/Text.lua, Source/UI/Components/TextEmitter.lua)

@@ -138,13 +138,15 @@ collisions = {
     enabled = true,
     exclude = { "tiles" },
     priority = 20,                     -- higher = drawn on top
+    decor = "diagonal",                -- "none" | "diagonal" | "cross" | "dashed"
     color = { 1, 0.25, 0.25, 1 },      -- rgba, alpha = opacity
 }
 ```
 
 - `debug` master switch gates all debug output; `collisions.enabled` must also be true.
 - `exclude` lists `sprite.object` ids to skip (each sprite must declare `object` in its data — `SpriteLoader` copies it to `sprite.object`).
-- `color` styles the outline + diagonal; `priority` controls layering across groups (see below).
+- `color` styles the outline + diagonals; `priority` controls layering across groups (see below).
+- `decor` selects the box decoration: `"none"` (plain box outline), `"diagonal"` (outline + one diagonal), `"cross"` (two diagonals forming an X), or `"dashed"` (dashed outline, no diagonals). Default `"diagonal"`. LÖVE has no native dashed primitive, so `"dashed"` draws the outline as dash/gap line segments (dash scaled off line width).
 - `backgroundColor` (optional) draws a solid fill underneath the outline.
 
 Mechanics: `Collision:attach()` subscribes to `Debug.onChange` and caches `showDebugBoxes = Debug.enabled("collisions") and not Debug.excluded("collisions", self.parent.object)`. `Collision:draw()` publishes `self:getRect()` to `Gizmo` (world-space buffer, tagged `"collisions"`) instead of drawing directly. `Main.lua` draws the buffered rects in a native-resolution pass after the world canvas — so boxes stay crisp regardless of the low-res world canvas's nearest-filter upscale.
