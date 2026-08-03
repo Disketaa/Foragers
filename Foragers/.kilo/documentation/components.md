@@ -187,6 +187,36 @@ Published by `Main.lua` into `Gizmo.point`. Exclusion + master gating identical 
 
 `Gizmo.draw` draws each enabled group independently, ordered by ascending `priority` — so `boundaries` (10) render under `collisions` (20), and `pivots` (30) sit on top of everything. Within a group the order is: `backgroundColor` fill, then `color` outline, then `point` markers.
 
+## Debug HUD (top-left text)
+
+`hud` group in `Content/Data/Debug.lua` renders a screen-fixed, top-left readout at native resolution: FPS text, an FPS graph, and the live world object count. Flat boolean flags toggle each item; `size`/`padding` control layout; the `*Color` fields style the text and graph:
+
+```lua
+hud = {
+    enabled = true,
+    size = 8,
+    padding = 4,
+    fps = true,
+    fpsGraph = true,
+    objectCount = true,
+    fpsTarget = 60,
+    backgroundColor = { 0, 0, 0, 0.4 },
+    labelColor = { 0.6, 0.6, 0.6, 1 },
+    color = { 1, 1, 1, 1 },
+    graphColor = { 0, 1, 0, 1 },
+    graphDropColor = { 1, 0, 0, 1 },
+}
+```
+
+- `fps` — current FPS, resampled every 0.5s.
+- `fpsGraph` — inline line graph of recent FPS samples (60-point ring buffer), drawn to the right of the FPS text on the same line. Segments are green (`graphColor`) while at/above `fpsTarget`, red (`graphDropColor`) at the samples that dropped.
+- `objectCount` — `#objects` from `Main.lua`.
+- `labelColor` — dim color for static labels (`FPS:`, `Objects:`); `color` — bright color for the numbers.
+- `backgroundColor` — optional solid fill drawn behind the whole readout, inset by `padding` on every side. Omit to keep it transparent.
+- `size` (base px), `padding`, and graph line width all scale with the window upscale factor via the `scale` argument passed to `Debug.draw`.
+
+Implemented in `Source/Helpers/Debug.lua` (the shared Debug helper, one file): `Debug.update(dt)` samples FPS into a ring buffer; `Debug.draw(objectCount, scale)` renders the readout using LÖVE's default font (recreated when the scaled `size` changes). Gated by `Debug.enabled("hud")`; uses `Debug.settings("hud")` for styling.
+
 ## spawnOn field (particle_emitter)
 
 Two trigger types:

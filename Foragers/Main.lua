@@ -384,6 +384,9 @@ function love.draw()
 		cursorSprite.instance:draw()
 	end
 	love.graphics.pop()
+
+	-- Debug HUD: top-left at native resolution, screen-fixed.
+	Debug.draw(#objects, canvas.scale)
 end
 
 local function removeSpriteFromLists(sprite)
@@ -517,6 +520,7 @@ function love.update(dt)
 	ParticleEmitter.updateBursts(scaledDt)
 	ParticleEmitter.updateDetached(scaledDt)
 	TextEmitter.updateAll(scaledDt)
+	Debug.update(scaledDt)
 
 	-- Update UI sprites (for counter animations, etc.)
 	for _, ui in ipairs(uiSprites) do
