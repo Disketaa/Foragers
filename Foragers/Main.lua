@@ -405,9 +405,6 @@ function love.draw()
 		cursorSprite.instance:draw()
 	end
 	love.graphics.pop()
-
-	-- Debug HUD: top-left at native resolution, screen-fixed.
-	Debug.draw(#objects, canvas.scale)
 end
 
 local function removeSpriteFromLists(sprite)

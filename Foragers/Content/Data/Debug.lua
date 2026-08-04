@@ -3,16 +3,15 @@ return {
 
 	gizmo = {
 		enabled = true,
-
 		collisions = {
-			enabled = true,
-			exclude = { "tiles" },
+			enabled = false,
+			exclude = {},
 			decor = "cross",
 			priority = 2,
 			color = { 0.6, 0.25, 0.25, 1 },
 		},
 		boundaries = {
-			enabled = true,
+			enabled = false,
 			exclude = { "tiles" },
 			decor = "dashed",
 			thickness = 2,
@@ -48,7 +47,6 @@ return {
 			label = "Content/Assets/Fonts/AzeretMonoMedium.ttf",
 			value = "Content/Assets/Fonts/AzeretMonoSemiBold.ttf",
 		},
-
 		fps = true,
 		fpsGraph = {
 			enabled = true,
