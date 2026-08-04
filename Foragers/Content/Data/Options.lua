@@ -1,5 +1,6 @@
 return {
 	fullscreen = true,
+	vsync = true,
 	maxFps = 180,
 	gamepadDeadzone = 0.5,
 	mouseSlowdownRadius = 15,

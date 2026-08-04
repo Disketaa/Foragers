@@ -106,6 +106,7 @@ function love.load()
 	love.window.setMode(canvas.width, canvas.height, {
 		resizable = true,
 		fullscreen = Options.fullscreen,
+		vsync = Options.vsync,
 	})
 	local bg = World.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))

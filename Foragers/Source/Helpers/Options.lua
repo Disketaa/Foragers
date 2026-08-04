@@ -36,6 +36,7 @@ end
 function Options.serialize()
 	local lines = { "# Foragers options" }
 	lines[#lines + 1] = "fullscreen=" .. toText(Options.fullscreen)
+	lines[#lines + 1] = "vsync=" .. toText(Options.vsync)
 	lines[#lines + 1] = "maxFps=" .. toText(Options.maxFps)
 	lines[#lines + 1] = "gamepadDeadzone=" .. toText(Options.gamepadDeadzone)
 	lines[#lines + 1] = "mouseSlowdownRadius=" .. toText(Options.mouseSlowdownRadius)
@@ -54,6 +55,8 @@ end
 local function apply(key, value)
 	if key == "fullscreen" then
 		Options.fullscreen = value == "true"
+	elseif key == "vsync" then
+		Options.vsync = value == "true"
 	elseif key == "maxFps" then
 		Options.maxFps = tonumber(value) or Options.maxFps
 	elseif key == "gamepadDeadzone" then
