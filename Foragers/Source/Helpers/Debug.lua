@@ -4,29 +4,67 @@ local data = require("Content.Data.Debug")
 local Debug = {}
 local emitter = EventEmitter.new()
 
--- FPS history ring buffer for the HUD graph
 local HISTORY_MAX = 60
 local history = {}
 local historyCount = 0
 local historyIndex = 0
 local frameCount = 0
 local lastSample = 0
-local font = nil
-local fontKey = nil
+
+-- Cache key "path@size": the same font file at different sizes is a distinct entry.
+local fontCache = {}
+
+--- Load a font (optional path via love.filesystem), cached by path+size. On
+--- failure (missing/corrupt file) fall back to LÖVE's default font so the HUD
+--- never crashes.
+---@param path string|nil
+---@param size number
+---@return Font
+local function getFont(path, size)
+	local key = (path or "") .. "@" .. size
+	local f = fontCache[key]
+	if f then
+		return f
+	end
+	local ok = false
+	if path then
+		ok, f = pcall(love.graphics.newFont, path, size)
+	end
+	if not ok then
+		f = love.graphics.newFont(size)
+	end
+	fontCache[key] = f
+	return f
+end
 
 local function masterOn()
 	return data.debug == true
 end
 
----@param group string Settings group name (e.g. "collisions")
+--- Walk a dotted path into the data (e.g. "hud.fpsGraph"); nil if absent.
+---@param path string
+---@return table|nil
+local function lookup(path)
+	local t = data
+	for part in (path .. ""):gmatch("[^.]+") do
+		t = t[part]
+		if t == nil then
+			return nil
+		end
+	end
+	return t
+end
+
+---@param group string Settings group name (e.g. "collisions", "hud.fpsGraph")
 ---@return boolean
 function Debug.enabled(group)
 	---@type boolean
-	local enabled = masterOn() and (data[group] or {}).enabled == true
-	return enabled
+	local t = lookup(group)
+	return masterOn() and type(t) == "table" and t.enabled == true
 end
 
---- Group "X" carries an `exclude` list of entity ids to skip.
+--- Group "X" carries an `exclude` list of entity ids to skip. Path is dotted
+--- (e.g. "gizmo.collisions") so nested groups resolve like `Debug.enabled`.
 ---@param group string
 ---@param value string|nil Entity identifier (sprite.object)
 ---@return boolean
@@ -34,7 +72,8 @@ function Debug.excluded(group, value)
 	if value == nil then
 		return false
 	end
-	local list = (data[group] or {}).exclude
+	local t = lookup(group)
+	local list = type(t) == "table" and t.exclude
 	if not list then
 		return false
 	end
@@ -50,7 +89,10 @@ end
 ---@return table Settings table for the group (thickness, color, ...).
 function Debug.settings(group)
 	---@type table
-	local t = data[group] or {}
+	local t = lookup(group)
+	if type(t) ~= "table" then
+		t = {}
+	end
 	return t
 end
 
@@ -72,15 +114,18 @@ function Debug.set(key, value)
 	emitter:emit("flags", key, data[key])
 end
 
---- Sample FPS for the HUD. Gated by the `hud` group.
+--- Sample FPS for the HUD. Gated by the `hud.fps`/`hud.fpsGraph` items.
+--- `updateSpeed` (Hz) controls how often a sample is taken.
 ---@param dt number
 function Debug.update(dt)
-	if not Debug.enabled("hud") then
+	local s = Debug.settings("hud")
+	if not masterOn() or not Debug.enabled("hud") or not (s.fps or Debug.enabled("hud.fpsGraph")) then
 		return
 	end
 	frameCount = frameCount + 1
 	local now = love.timer.getTime()
-	if now - lastSample >= 0.5 then
+	local interval = 1 / (s.updateSpeed or 2)
+	if now - lastSample >= interval then
 		local fps = frameCount / (now - lastSample)
 		frameCount = 0
 		lastSample = now
@@ -92,13 +137,15 @@ function Debug.update(dt)
 	end
 end
 
---- Render one text segment in a single color.
+--- Render one text segment in a single color/font.
 ---@param text string
 ---@param x number
 ---@param y number
 ---@param color table RGBA
-local function renderText(text, x, y, color)
+---@param f Font
+local function renderText(text, x, y, color, f)
 	love.graphics.setColor(color[1], color[2], color[3], color[4])
+	love.graphics.setFont(f)
 	love.graphics.print(text, x, y)
 end
 
@@ -108,75 +155,81 @@ end
 ---@param objectCount number
 ---@param scale number
 function Debug.draw(objectCount, scale)
-	if not Debug.enabled("hud") then
+	scale = scale or 1
+	local s = Debug.settings("hud")
+	local gs = Debug.settings("hud.fpsGraph")
+	local hasFps = s.fps
+	local hasGraph = Debug.enabled("hud.fpsGraph")
+	local hasCount = s.objectCount
+	if not masterOn() or not Debug.enabled("hud") or not (hasFps or hasGraph or hasCount) then
 		return
 	end
 
-	scale = scale or 1
-	local s = Debug.settings("hud")
 	local size = math.max(4, math.floor((s.size or 8) * scale))
-	if fontKey ~= size then
-		fontKey = size
-		font = love.graphics.newFont(size)
-	end
-	love.graphics.setFont(font)
+	local fconf = s.font or {}
+	local labelFont = getFont(fconf.label, size)
+	local valueFont = getFont(fconf.value, size)
 
-	local pad = (s.padding or 4) * scale
+	-- `padding` is a single group offset: the whole readout shifts right/down
+	-- by it. `gap` alone spaces the rows inside the block.
+	local offset = (s.padding or 4) * scale
+	local gap = (s.gap ~= nil and s.gap or offset) * scale
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
 	local valueColor = s.color or { 1, 1, 1, 1 }
-	local lineHeight = size + 2
-	local gh = size * 2
+	local fontHeight = math.max(labelFont:getHeight(), valueFont:getHeight())
+	local rowH = fontHeight
+	-- Graph height clamped to the row so a tall graph never overflows its box.
+	local gh = math.min((gs.height or (size * 2)) * scale, rowH)
+	local graphShown = hasGraph and historyCount > 1
 
-	-- Pre-compute layout so the background rect covers everything.
-	local maxW = 0
-	local lines = 0
-	local fpsLine = false
-	local fpsTextW = 0
+	-- Pre-compute each row's content Y and width so every background box hugs
+	-- its own line instead of one full-width rectangle. The whole block starts
+	-- at `offset` (the group offset), rows separated by `gap`.
+	local fpsY, fpsW = nil, nil
+	local objY, objW = nil, nil
 	local graphX = 0
-
-	if s.fps then
-		fpsLine = true
-		fpsTextW = font:getWidth("FPS: ") + font:getWidth(tostring(math.floor(history[historyIndex] or 0)))
-		local w = fpsTextW + 3 + font:getWidth(" | ") + 6
-		if s.fpsGraph and historyCount > 1 then
-			local spacing = 2 * scale
-			graphX = fpsTextW + 3 + font:getWidth(" | ") + 6
-			w = w + (historyCount - 1) * spacing
+	local y = offset
+	if hasFps then
+		fpsY = y
+		local gapi = (gs.gap or 6) * scale
+		local textW = labelFont:getWidth("FPS ") + valueFont:getWidth(tostring(math.floor(history[historyIndex] or 0)))
+		fpsW = textW + gapi
+		if graphShown then
+			graphX = textW + gapi
+			fpsW = fpsW + (gs.width or 60) * scale
 		end
-		maxW = math.max(maxW, w)
-		lines = lines + 1
+		y = y + rowH + gap
+	end
+	if hasCount then
+		objY = y
+		objW = labelFont:getWidth("Objects ") + valueFont:getWidth(tostring(objectCount))
 	end
 
-	local objectsLine = false
-	if s.objectCount then
-		objectsLine = true
-		maxW = math.max(maxW, font:getWidth("Objects: ") + font:getWidth(tostring(objectCount)))
-		lines = lines + 1
-	end
-
-	-- Background: covers content plus `pad` margin on all sides.
 	if s.backgroundColor then
 		local bg = s.backgroundColor
 		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
-		love.graphics.rectangle("fill", 0, 0, pad * 2 + maxW, pad * 2 + math.max(lines * lineHeight, gh + 2))
+		if fpsY then
+			love.graphics.rectangle("fill", offset, fpsY, fpsW, rowH)
+		end
+		if objY then
+			love.graphics.rectangle("fill", offset, objY, objW, rowH)
+		end
 	end
 
-	local y = pad
-	if fpsLine then
-		local label = "FPS: "
+	if fpsY then
+		local fy = fpsY + (rowH - fontHeight) / 2
+		local label = "FPS "
 		local val = tostring(math.floor(history[historyIndex] or 0))
-		renderText(label, pad, y, labelColor)
-		renderText(val, pad + font:getWidth(label), y, valueColor)
+		renderText(label, offset, fy, labelColor, labelFont)
+		renderText(val, offset + labelFont:getWidth(label), fy, valueColor, valueFont)
 
-		if s.fpsGraph and historyCount > 1 then
-			renderText(" | ", pad + fpsTextW + 3, y, labelColor)
-
-			local target = s.fpsTarget or 60
-			local ok = s.graphColor or { 0, 1, 0, 1 }
-			local bad = s.graphDropColor or { 1, 0, 0, 1 }
-			local gy = y + (lineHeight - gh) / 2
-			local spacing = 2 * scale
-			local gx = pad + graphX
+		if graphShown then
+			local target = gs.fpsTarget or 60
+			local ok = gs.goodColor or { 0, 1, 0, 1 }
+			local bad = gs.badColor or { 1, 0, 0, 1 }
+			local gy = fy + (fontHeight - gh) / 2
+			local spacing = (gs.width or 60) * scale / (historyCount - 1)
+			local gx = offset + graphX
 			-- Walk the ring oldest→newest (history[historyIndex] is the newest).
 			local first = (historyIndex - historyCount) % HISTORY_MAX + 1
 			local function sampleAt(k)
@@ -187,7 +240,7 @@ function Debug.draw(objectCount, scale)
 				return history[idx]
 			end
 			-- Per-segment color: green while stable, red at the samples that dropped.
-			love.graphics.setLineWidth(math.max(1, scale))
+			love.graphics.setLineWidth(math.max(1, (gs.thickness or 1) * scale))
 			for k = 1, historyCount - 1 do
 				local v1, v2 = sampleAt(k - 1), sampleAt(k)
 				local c = (v2 or 0) >= target and ok or bad
@@ -197,13 +250,13 @@ function Debug.draw(objectCount, scale)
 				love.graphics.line(gx + (k - 1) * spacing, gy + gh - h1, gx + k * spacing, gy + gh - h2)
 			end
 		end
-		y = y + lineHeight
 	end
 
-	if objectsLine then
-		local label = "Objects: "
-		renderText(label, pad, y, labelColor)
-		renderText(tostring(objectCount), pad + font:getWidth(label), y, valueColor)
+	if objY then
+		local oy = objY + (rowH - fontHeight) / 2
+		local label = "Objects "
+		renderText(label, offset, oy, labelColor, labelFont)
+		renderText(tostring(objectCount), offset + labelFont:getWidth(label), oy, valueColor, valueFont)
 	end
 end
 

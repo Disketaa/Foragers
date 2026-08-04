@@ -134,26 +134,30 @@ Positioned by `Main.lua` at load and on every `love.resize()` — `UI.calculate(
 The per-sprite `visible` collision flag is removed. Box rendering is now global and data-driven via `Content/Data/Debug.lua`:
 
 ```lua
-collisions = {
-    enabled = true,
-    exclude = { "tiles" },
-    priority = 20,                     -- higher = drawn on top
-    decor = "diagonal",                -- "none" | "diagonal" | "cross" | "dashed"
-    color = { 1, 0.25, 0.25, 1 },      -- rgba, alpha = opacity
+gizmo = {
+    enabled = true,                    -- master switch for all gizmo overlays
+    collisions = {
+        enabled = true,
+        exclude = { "tiles" },
+        priority = 20,                 -- higher = drawn on top
+        decor = "diagonal",            -- "none" | "diagonal" | "cross" | "dashed"
+        color = { 1, 0.25, 0.25, 1 },  -- rgba, alpha = opacity
+    },
+    -- ...boundaries, pivots (below)
 }
 ```
 
-- `debug` master switch gates all debug output; `collisions.enabled` must also be true.
+- `debug` master switch gates all debug output; `gizmo.enabled` must also be true, then the individual group's `enabled`.
 - `exclude` lists `sprite.object` ids to skip (each sprite must declare `object` in its data — `SpriteLoader` copies it to `sprite.object`).
 - `color` styles the outline + diagonals; `priority` controls layering across groups (see below).
 - `decor` selects the box decoration: `"none"` (plain box outline), `"diagonal"` (outline + one diagonal), `"cross"` (two diagonals forming an X), or `"dashed"` (dashed outline, no diagonals). Default `"diagonal"`. LÖVE has no native dashed primitive, so `"dashed"` draws the outline as dash/gap line segments (dash scaled off line width).
 - `backgroundColor` (optional) draws a solid fill underneath the outline.
 
-Mechanics: `Collision:attach()` subscribes to `Debug.onChange` and caches `showDebugBoxes = Debug.enabled("collisions") and not Debug.excluded("collisions", self.parent.object)`. `Collision:draw()` publishes `self:getRect()` to `Gizmo` (world-space buffer, tagged `"collisions"`) instead of drawing directly. `Main.lua` draws the buffered rects in a native-resolution pass after the world canvas — so boxes stay crisp regardless of the low-res world canvas's nearest-filter upscale.
+Mechanics: `Collision:attach()` subscribes to `Debug.onChange` and caches `showDebugBoxes = Debug.enabled("gizmo") and Debug.enabled("gizmo.collisions") and not Debug.excluded("gizmo.collisions", self.parent.object)`. `Collision:draw()` publishes `self:getRect()` to `Gizmo` (world-space buffer, tagged `"collisions"`) instead of drawing directly. `Main.lua` draws the buffered rects in a native-resolution pass after the world canvas — so boxes stay crisp regardless of the low-res world canvas's nearest-filter upscale.
 
 ## Debug gizmo (boundary overlay)
 
-`boundaries` group in `Content/Data/Debug.lua` draws each sprite's pivot-aware frame box (`sprite.x - w*pivotX`, `sprite.y - h*pivotY`, size `frameWidth`×`frameHeight`) as a solid fill (`backgroundColor`) under an outline (`color`):
+`gizmo.boundaries` in `Content/Data/Debug.lua` draws each sprite's pivot-aware frame box (`sprite.x - w*pivotX`, `sprite.y - h*pivotY`, size `frameWidth`×`frameHeight`) as a solid fill (`backgroundColor`) under an outline (`color`):
 
 ```lua
 boundaries = {
@@ -165,11 +169,11 @@ boundaries = {
 }
 ```
 
-Published by `Main.lua` (iterates all `objects`) into `Gizmo.fillRect` + `Gizmo.rect` (both tagged `"boundaries"`). Exclusion + master gating identical to `collisions`.
+Published by `Main.lua` (iterates all `objects`) into `Gizmo.fillRect` + `Gizmo.rect` (both tagged `"boundaries"`). Exclusion + master gating identical to `collisions` (queried as `gizmo.boundaries`).
 
 ## Debug gizmo (pivot overlay)
 
-`pivots` group draws a solid square (`size` px, `color`) centered exactly on each sprite's pivot (`sprite.x`/`sprite.y`):
+`gizmo.pivots` draws a solid square (`size` px, `color`) centered exactly on each sprite's pivot (`sprite.x`/`sprite.y`):
 
 ```lua
 pivots = {
@@ -181,7 +185,7 @@ pivots = {
 }
 ```
 
-Published by `Main.lua` into `Gizmo.point`. Exclusion + master gating identical to `collisions`.
+Published by `Main.lua` into `Gizmo.point`. Exclusion + master gating identical to `collisions` (queried as `gizmo.pivots`).
 
 ## Gizmo layering
 
@@ -189,33 +193,49 @@ Published by `Main.lua` into `Gizmo.point`. Exclusion + master gating identical 
 
 ## Debug HUD (top-left text)
 
-`hud` group in `Content/Data/Debug.lua` renders a screen-fixed, top-left readout at native resolution: FPS text, an FPS graph, and the live world object count. Flat boolean flags toggle each item; `size`/`padding` control layout; the `*Color` fields style the text and graph:
+`hud` group in `Content/Data/Debug.lua` renders a screen-fixed, top-left readout at native resolution: FPS text, an FPS graph, and the live world object count. Like the other overlay groups, each toggleable item is its own sub-group with an `enabled` flag; global styling (`size`, `padding`, colors) sits at the `hud` level:
 
 ```lua
 hud = {
     enabled = true,
-    size = 8,
-    padding = 4,
-    fps = true,
-    fpsGraph = true,
-    objectCount = true,
-    fpsTarget = 60,
-    backgroundColor = { 0, 0, 0, 0.4 },
-    labelColor = { 0.6, 0.6, 0.6, 1 },
+    size = 4,
+    padding = 2,
+    gap = 0,
+    updateSpeed = 2,
+    backgroundColor = { 0, 0, 0, 0.3 },
+    labelColor = { 0.65, 0.65, 0.9, 1 },
     color = { 1, 1, 1, 1 },
-    graphColor = { 0, 1, 0, 1 },
-    graphDropColor = { 1, 0, 0, 1 },
+    font = {
+        label = "Content/Assets/Fonts/InterBlack.ttf",
+        value = "Content/Assets/Fonts/InterRegular.ttf",
+    },
+
+    fps = true,
+    fpsGraph = {
+        enabled = true,
+        fpsTarget = 180,
+        gap = 8,
+        width = 25,
+        height = 4,
+        thickness = 0.5,
+        goodColor = { 0, 1, 0, 1 },
+        badColor = { 1, 0, 0, 1 },
+    },
+    objectCount = true,
 }
 ```
 
-- `fps` — current FPS, resampled every 0.5s.
-- `fpsGraph` — inline line graph of recent FPS samples (60-point ring buffer), drawn to the right of the FPS text on the same line. Segments are green (`graphColor`) while at/above `fpsTarget`, red (`graphDropColor`) at the samples that dropped.
-- `objectCount` — `#objects` from `Main.lua`.
+- `enabled` — global switch for the whole HUD (default true), independent of the `debug` master switch; both must be on to render.
+- `fps` — simple boolean flag, current FPS. Samples are taken `updateSpeed` times per second (Hz).
+- `fpsGraph` — inline line graph of recent FPS samples (60-point ring buffer), drawn to the right of the FPS text on the same line, `gap` px after it. Segments are green (`goodColor`) while at/above `fpsTarget`, red (`badColor`) at the samples that dropped. `width`/`height` set the graph box size (clamped to the row) and `thickness` the line weight, all in base px.
+- `objectCount` — simple boolean flag, `#objects` from `Main.lua`.
+- `padding` — group offset: shifts the whole readout right/down as one block (the boxes hug their content tightly); `gap` — spacing between rows (defaults to `padding`). Set `gap` to 0 for the tightest spacing between rows.
 - `labelColor` — dim color for static labels (`FPS:`, `Objects:`); `color` — bright color for the numbers.
-- `backgroundColor` — optional solid fill drawn behind the whole readout, inset by `padding` on every side. Omit to keep it transparent.
-- `size` (base px), `padding`, and graph line width all scale with the window upscale factor via the `scale` argument passed to `Debug.draw`.
+- `font` — optional TTF paths loaded via `love.filesystem`; `label` (bold) and `value` (regular) can differ. Missing/failed loads fall back to LÖVE's default font, cached by path+size.
+- `backgroundColor` — optional solid fill drawn behind the readout. Omit to keep it transparent.
+- `size` (base px), `padding`, and the graph `width`/`height`/`thickness` all scale with the window upscale factor via the `scale` argument passed to `Debug.draw`.
 
-Implemented in `Source/Helpers/Debug.lua` (the shared Debug helper, one file): `Debug.update(dt)` samples FPS into a ring buffer; `Debug.draw(objectCount, scale)` renders the readout using LÖVE's default font (recreated when the scaled `size` changes). Gated by `Debug.enabled("hud")`; uses `Debug.settings("hud")` for styling.
+Implemented in `Source/Helpers/Debug.lua` (the shared Debug helper, one file): `Debug.update(dt)` samples FPS into a ring buffer; `Debug.draw(objectCount, scale)` renders the readout using LÖVE's default font (recreated when the scaled `size` changes). `Debug.enabled`/`Debug.settings` resolve dotted group paths, so the graph sub-group is queried as `"hud.fpsGraph"`.
 
 ## spawnOn field (particle_emitter)
 

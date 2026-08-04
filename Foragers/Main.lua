@@ -326,13 +326,13 @@ function love.draw()
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
 	-- its outline. Rects + fills are tagged by group so Gizmo can style each.
-	if Debug.enabled("boundaries") then
+	if Debug.enabled("gizmo") and Debug.enabled("gizmo.boundaries") then
 		for _, entry in ipairs(objects) do
 			local s = entry.instance
 			if s then
 				local w = s.frameWidth or (s.image and s.image:getWidth() or 0)
 				local h = s.frameHeight or (s.image and s.image:getHeight() or 0)
-				if w > 0 and h > 0 and not Debug.excluded("boundaries", s.object) then
+				if w > 0 and h > 0 and not Debug.excluded("gizmo.boundaries", s.object) then
 					Gizmo.fillRect("boundaries", s.x - w * (s.pivotX or 0), s.y - h * (s.pivotY or 0), w, h)
 					Gizmo.rect("boundaries", s.x - w * (s.pivotX or 0), s.y - h * (s.pivotY or 0), w, h)
 				end
@@ -341,27 +341,23 @@ function love.draw()
 	end
 
 	-- Pivot overlay: solid square centered on each sprite's pivot (sprite.x/y).
-	if Debug.enabled("pivots") then
-		local psize = Debug.settings("pivots").size or 5
+	if Debug.enabled("gizmo") and Debug.enabled("gizmo.pivots") then
+		local psize = Debug.settings("gizmo.pivots").size or 5
 		for _, entry in ipairs(objects) do
 			local s = entry.instance
-			if s and not Debug.excluded("pivots", s.object) then
+			if s and not Debug.excluded("gizmo.pivots", s.object) then
 				Gizmo.point("pivots", s.x, s.y, psize)
 			end
 		end
 	end
 
 	-- Gizmo overlay: native-resolution debug shapes, not scaled by the world canvas.
-	if Debug.isEnabled() then
+	if Debug.enabled("gizmo") then
 		local groups = {}
-		if Debug.enabled("collisions") then
-			groups.collisions = Debug.settings("collisions")
-		end
-		if Debug.enabled("boundaries") then
-			groups.boundaries = Debug.settings("boundaries")
-		end
-		if Debug.enabled("pivots") then
-			groups.pivots = Debug.settings("pivots")
+		for _, name in ipairs({ "collisions", "boundaries", "pivots" }) do
+			if Debug.enabled("gizmo." .. name) then
+				groups[name] = Debug.settings("gizmo." .. name)
+			end
 		end
 		Gizmo.draw(worldToScreen, groups)
 	end
