@@ -1,8 +1,8 @@
 return {
 	frameWidth = 19,
 	frameHeight = 20,
-	pivotX = 0.5,
-	pivotY = 0.5,
+	pivotX = "center",
+	pivotY = "center",
 	layer = 0,
 	components = {
 		{

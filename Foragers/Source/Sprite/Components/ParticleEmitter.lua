@@ -1,6 +1,7 @@
 local Events = require("Source.Helpers.Events")
 local Path = require("Source.Helpers.Path")
 local ValueParser = require("Source.Helpers.ValueParser")
+local Pivot = require("Source.Helpers.Pivot")
 
 local eventNames = {}
 for _, name in pairs(Events) do
@@ -138,8 +139,8 @@ function ParticleEmitter:_createParticle(px, py, angle)
 		particle.image = image
 		particle.frameWidth = data.frameWidth or 16
 		particle.frameHeight = data.frameHeight or 16
-		particle.pivotX = data.pivotX or 0.5
-		particle.pivotY = data.pivotY or 0.5
+		particle.pivotX = data.pivotX or "center"
+		particle.pivotY = data.pivotY or "center"
 		particle.flipX = self._cachedFlipX
 		particle._duration = data.lifetime or 0.5
 	end
@@ -196,8 +197,8 @@ local function drawParticle(p)
 		p.anim:draw(p.x, p.y)
 	else
 		local sx = p.flipX and -1 or 1
-		local ox = p.frameWidth * p.pivotX
-		local oy = p.frameHeight * p.pivotY
+		local ox = Pivot.px(p.pivotX, p.frameWidth, "center")
+		local oy = Pivot.px(p.pivotY, p.frameHeight, "center")
 		love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), math.rad(p.angle or 0), sx, 1, ox, oy)
 	end
 end
@@ -370,8 +371,8 @@ function ParticleEmitter:draw()
 			p.anim:draw(p.x, p.y)
 		else
 			local sx = p.flipX and -1 or 1
-			local ox = p.frameWidth * p.pivotX
-			local oy = p.frameHeight * p.pivotY
+			local ox = Pivot.px(p.pivotX, p.frameWidth, "center")
+			local oy = Pivot.px(p.pivotY, p.frameHeight, "center")
 			love.graphics.draw(
 				p.image,
 				math.floor(p.x + 0.5),

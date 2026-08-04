@@ -1,5 +1,6 @@
 local Events = require("Source.Helpers.Events")
 local ValueParser = require("Source.Helpers.ValueParser")
+local Pivot = require("Source.Helpers.Pivot")
 
 local SpriteSheet = {}
 SpriteSheet.__index = SpriteSheet
@@ -19,8 +20,8 @@ function SpriteSheet.new(data)
 		type = "spritesheet",
 		frameWidth = data.frameWidth or 8,
 		frameHeight = data.frameHeight or 8,
-		pivotX = data.pivotX or 0.5,
-		pivotY = data.pivotY or 0.5,
+		pivotX = data.pivotX or "center",
+		pivotY = data.pivotY or "center",
 	}, SpriteSheet)
 
 	local imageW, imageH = image:getWidth(), image:getHeight()
@@ -191,8 +192,8 @@ function SpriteSheet:draw(x, y)
 	elseif parent and parent.flipX then
 		sx = -sx
 	end
-	local ox = self.frameWidth * self.pivotX
-	local oy = self.frameHeight * self.pivotY
+	local ox = Pivot.px(self.pivotX, self.frameWidth, 0)
+	local oy = Pivot.px(self.pivotY, self.frameHeight, 0)
 	if alpha < 1 then
 		love.graphics.setColor(1, 1, 1, alpha)
 	end
@@ -225,8 +226,8 @@ function SpriteSheet:drawCurrentFrame(x, y, rot)
 		sx = -sx
 	end
 
-	local ox = self.frameWidth * self.pivotX
-	local oy = self.frameHeight * self.pivotY
+	local ox = Pivot.px(self.pivotX, self.frameWidth, 0)
+	local oy = Pivot.px(self.pivotY, self.frameHeight, 0)
 	love.graphics.draw(self.image, quad, math.floor(x + 0.5), math.floor(y + 0.5), rot or 0, sx, sy, ox, oy)
 end
 

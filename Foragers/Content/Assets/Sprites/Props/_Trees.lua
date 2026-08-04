@@ -2,8 +2,8 @@ return {
 	extends = "Content.Assets.Sprites.Props.__Props",
 	frameWidth = 24,
 	frameHeight = 32,
-	pivotX = 0.5,
-	pivotY = 0.95,
+	pivotX = "center",
+	pivotY = 30,
 	sortOffsetY = 3,
 	components = {
 		{

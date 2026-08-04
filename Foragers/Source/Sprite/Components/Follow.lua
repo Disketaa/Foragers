@@ -1,5 +1,6 @@
 local Events = require("Source.Helpers.Events")
 local Math = require("Source.Helpers.Math")
+local Pivot = require("Source.Helpers.Pivot")
 
 ---@class Follow
 ---@field parent Sprite|nil
@@ -221,8 +222,8 @@ function Follow:draw(x, y)
 		rot,
 		1,
 		1,
-		(parent.frameWidth or img:getWidth()) * (parent.pivotX or 0.5),
-		(parent.frameHeight or img:getHeight()) * (parent.pivotY or 1)
+		Pivot.px(parent.pivotX, parent.frameWidth or img:getWidth(), "center"),
+		Pivot.px(parent.pivotY, parent.frameHeight or img:getHeight(), "bottom")
 	)
 	if hadShader then
 		love.graphics.setShader()

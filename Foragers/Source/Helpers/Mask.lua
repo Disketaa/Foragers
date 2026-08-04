@@ -2,6 +2,7 @@
 --- Trees with "Silhouette" shader module sample this canvas and show black
 --- dither where a silhouette overlaps their alpha.
 local Canvas = require("Source.Helpers.Canvas")
+local Pivot = require("Source.Helpers.Pivot")
 local Mask = {}
 
 local silCanvas = nil
@@ -59,8 +60,10 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 						if sprite.flipX then
 							sx = -sx
 						end
-						local ox = (sprite.frameWidth or sprite.image:getWidth()) * (sprite.pivotX or 0)
-						local oy = (sprite.frameHeight or sprite.image:getHeight()) * (sprite.pivotY or 0)
+						local w = sprite.frameWidth or sprite.image:getWidth()
+						local h = sprite.frameHeight or sprite.image:getHeight()
+						local ox = Pivot.px(sprite.pivotX, w, 0)
+						local oy = Pivot.px(sprite.pivotY, h, 0)
 						love.graphics.draw(sprite.image, px, py, rot, sx, sy, ox, oy)
 					end
 				end

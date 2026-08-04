@@ -1,5 +1,5 @@
 return {
-	pivotY = 0.75,
+	pivotY = 6,
 	sortOffsetY = 2,
 	layer = 0,
 	components = {

@@ -1,13 +1,14 @@
 local EventEmitter = require("Source.Helpers.EventEmitter")
 local Log = require("Source.Helpers.Log")
+local Pivot = require("Source.Helpers.Pivot")
 
 ---@class Sprite
 ---@field x number World X position
 ---@field y number World Y position
 ---@field frameWidth number|nil Sprite width in pixels for static sprites
 ---@field frameHeight number|nil Sprite height in pixels for static sprites
----@field pivotX number|nil Normalized X origin (0-1)
----@field pivotY number|nil Normalized Y origin (0-1)
+---@field pivotX number|string|nil Pixel or keyword ("left"|"center"|"right") X origin
+---@field pivotY number|string|nil Pixel or keyword ("top"|"center"|"bottom") Y origin
 ---@field image love.Image|nil Image for StaticSprite mode
 ---@field type string|nil "StaticSprite" for auto-generated sprites
 ---@field components table<object> Component instances
@@ -173,8 +174,10 @@ function Sprite:draw()
 		if alpha < 1 then
 			love.graphics.setColor(1, 1, 1, alpha)
 		end
-		local ox = (self.frameWidth or self.image:getWidth()) * (self.pivotX or 0)
-		local oy = (self.frameHeight or self.image:getHeight()) * (self.pivotY or 0)
+		local w = self.frameWidth or self.image:getWidth()
+		local h = self.frameHeight or self.image:getHeight()
+		local ox = Pivot.px(self.pivotX, w, 0)
+		local oy = Pivot.px(self.pivotY, h, 0)
 		love.graphics.draw(self.image, math.floor(self.x + 0.5), math.floor(self.y + 0.5), rot, sx, sy, ox, oy)
 		if alpha < 1 then
 			love.graphics.setColor(1, 1, 1, 1)

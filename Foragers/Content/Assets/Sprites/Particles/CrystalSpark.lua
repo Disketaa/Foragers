@@ -1,8 +1,8 @@
 return {
 	frameWidth = 8,
 	frameHeight = 8,
-	pivotX = 0.5,
-	pivotY = 0.5,
+	pivotX = "center",
+	pivotY = "center",
 	angle = "0|45",
 	components = {
 		{

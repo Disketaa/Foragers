@@ -2,8 +2,8 @@ return {
 	object = "player",
 	frameWidth = 16,
 	frameHeight = 16,
-	pivotX = 0.5,
-	pivotY = 0.75,
+	pivotX = "center",
+	pivotY = 12,
 	sortOffsetY = 0,
 	layer = 0,
 	components = {

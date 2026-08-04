@@ -45,8 +45,8 @@ local function loadFont(fontPath)
 		charSpacing = spriteFont.charSpacing,
 		frameW = spritesheet.frameWidth,
 		frameH = spritesheet.frameHeight,
-		pivotX = spritesheet.pivotX or 0.5,
-		pivotY = spritesheet.pivotY or 0.5,
+		pivotX = spritesheet.pivotX or "center",
+		pivotY = spritesheet.pivotY or "center",
 	}
 	fontCache[fontPath] = ref
 	return ref

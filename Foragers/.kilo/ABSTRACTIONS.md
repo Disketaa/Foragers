@@ -215,7 +215,7 @@ entire data tree. These fields are safe to randomize:
 
 | Field | Works? | Constraint |
 |---|---|---|
-| Top-level: `frameWidth`, `frameHeight`, `pivotX`, `pivotY`, `layer`, `sortOffsetY` | **Yes** | frameWidth/Height must match PNG columns/rows at runtime |
+| Top-level: `frameWidth`, `frameHeight`, `pivotX`, `pivotY`, `layer`, `sortOffsetY` | **Yes** | frameWidth/Height must match PNG columns/rows at runtime. `pivotX`/`pivotY` are pixel offsets or keywords (`"left"`/`"center"`/`"right"`, `"top"`/`"center"`/`"bottom"`) — keywords have no `..`/`|`, so they pass through `ValueParser` unresolved. Resolved to pixels by `Source/Helpers/Pivot.lua` (`Pivot.px`) at every draw site |
 | `spritesheet` speed | **Yes** | — |
 | `follow` smoothness, smoothnessX/Y, followDelay | **Yes** | — |
 | `scroll_to` smoothness | **Yes** | — |

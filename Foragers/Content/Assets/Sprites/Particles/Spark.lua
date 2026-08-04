@@ -1,8 +1,8 @@
 return {
 	frameWidth = 8,
 	frameHeight = 8,
-	pivotX = 0,
-	pivotY = 0.5,
+	pivotX = "left",
+	pivotY = "center",
 	components = {
 		{
 			component = "spritesheet",

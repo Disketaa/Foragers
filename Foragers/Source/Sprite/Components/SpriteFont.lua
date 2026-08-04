@@ -1,6 +1,8 @@
 local SpriteFont = {}
 SpriteFont.__index = SpriteFont
 
+local Pivot = require("Source.Helpers.Pivot")
+
 -- LuaJIT (Lua 5.1) has no utf8 module; string ops are byte-based. The font
 -- `chars` string contains multi-byte UTF-8 (Cyrillic), so we must iterate by
 -- visual character, not byte, when building the char->cell index.
@@ -77,8 +79,8 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 	local frameW = ref.frameW
 	local frameH = ref.frameH
 	local charSpacing = ref.charSpacing or 0
-	local ox = frameW * (ref.pivotX or 0.5)
-	local oy = frameH * (ref.pivotY or 0.5)
+	local ox = Pivot.px(ref.pivotX, frameW, "center")
+	local oy = Pivot.px(ref.pivotY, frameH, "center")
 	local scale = opts.scale or 1
 
 	local totalW
@@ -101,9 +103,9 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 		cx = cx - totalW
 	end
 	if opts.vAlign == "top" then
-		cy = cy + frameH * (ref.pivotY or 0.5)
+		cy = cy + oy
 	elseif opts.vAlign == "bottom" then
-		cy = cy - frameH * (1 - (ref.pivotY or 0.5))
+		cy = cy - (frameH - oy)
 	end
 
 	local pr, pg, pb, pa
@@ -163,8 +165,8 @@ function SpriteFont:draw(x, y)
 		charSpacing = self.charSpacing,
 		frameW = spritesheet.frameWidth,
 		frameH = spritesheet.frameHeight,
-		pivotX = spritesheet.pivotX or 0,
-		pivotY = spritesheet.pivotY or 0,
+		pivotX = spritesheet.pivotX or "center",
+		pivotY = spritesheet.pivotY or "center",
 	}, self.text, x, y, { color = self.color })
 end
 

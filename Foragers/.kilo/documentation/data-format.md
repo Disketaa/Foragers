@@ -17,8 +17,8 @@ description: Exact format for sprite data files (.lua) in Content/Assets/Sprites
 | `object` | string | No | — | String identifier, copied to `sprite.object` at instantiation (used e.g. to exclude sprites from debug collision overlay) |
 | `frameWidth` | number | Yes* | — | Sprite frame width in pixels |
 | `frameHeight` | number | Yes* | — | Sprite frame height in pixels |
-| `pivotX` | number | No | 0 | Normalized X origin (0–1) |
-| `pivotY` | number | No | 0 | Normalized Y origin (0–1) |
+| `pivotX` | number/string | No | `"center"` | X origin. Pixel number from top-left (e.g. `8` on a 16px frame = center) or keyword `"left"` / `"center"` / `"right"` |
+| `pivotY` | number/string | No | `"center"` | Y origin. Pixel number from top-left or keyword `"top"` / `"center"` / `"bottom"` |
 | `angle` | number/string | No | — | Visual rotation in degrees. Accepts `"min..max"` range for per-instance random (e.g. `"0..360"`). Resolved to a number at instantiation |
 | `sortOffsetY` | number | No | 0 | Y-sort draw offset in pixels |
 | `layer` | number | No | 0 | Draw layer (higher = drawn later) |

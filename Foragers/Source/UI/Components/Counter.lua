@@ -1,6 +1,7 @@
 local Events = require("Source.Helpers.Events")
 local Easing = require("Source.Sprite.Components.Tween").Easing
 local SpriteFont = require("Source.Sprite.Components.SpriteFont")
+local Pivot = require("Source.Helpers.Pivot")
 
 --- Maps source component value to spritesheet frame. Event-driven, opt-in smooth tween.
 --- Optional `label` block renders a text overlay (e.g. level number) via font spritesheet.
@@ -63,8 +64,8 @@ function Counter:attach()
 					self._labelQuads = ss.quads
 					self._labelFrameW = ss.frameWidth
 					self._labelFrameH = ss.frameHeight
-					self._labelPivotX = ss.pivotX or 0.5
-					self._labelPivotY = ss.pivotY or 0.5
+					self._labelPivotX = ss.pivotX or "center"
+					self._labelPivotY = ss.pivotY or "center"
 				end
 				local sf = sprite:findComponent("spritefont")
 				if sf then
@@ -94,8 +95,8 @@ function Counter:attach()
 					self._iconQuads = ss.quads
 					self._iconFrameW = ss.frameWidth
 					self._iconFrameH = ss.frameHeight
-					self._iconPivotX = ss.pivotX or 0.5
-					self._iconPivotY = ss.pivotY or 0.5
+					self._iconPivotX = ss.pivotX or "center"
+					self._iconPivotY = ss.pivotY or "center"
 					self._iconColumns = ss.columns or 1
 				end
 			end
@@ -210,8 +211,8 @@ function Counter:draw(x, y)
 	if self._iconImage and self._iconQuads then
 		local quad = self._iconQuads[self._iconCurrentIndex]
 		if quad then
-			local ox = self._iconFrameW * self._iconPivotX
-			local oy = self._iconFrameH * self._iconPivotY
+			local ox = Pivot.px(self._iconPivotX, self._iconFrameW, "center")
+			local oy = Pivot.px(self._iconPivotY, self._iconFrameH, "center")
 			local ix = x + self._iconOffsetX
 			local iy = y + self._iconOffsetY
 			love.graphics.draw(self._iconImage, quad, math.floor(ix + 0.5), math.floor(iy + 0.5), 0, 1, 1, ox, oy)
@@ -226,7 +227,7 @@ function Counter:draw(x, y)
 		return
 	end
 
-	local ox = self._labelFrameW * self._labelPivotX
+	local ox = Pivot.px(self._labelPivotX, self._labelFrameW, "center")
 	SpriteFont.drawText(
 		{
 			image = self._labelImage,

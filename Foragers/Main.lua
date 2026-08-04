@@ -30,6 +30,7 @@ local TimeScale = require("Source.Helpers.TimeScale")
 local Reset = require("Source.Helpers.Reset")
 local Debug = require("Source.Helpers.Debug")
 local Gizmo = require("Source.Helpers.Gizmo")
+local Pivot = require("Source.Helpers.Pivot")
 
 local objects = {}
 local staticObjects = {}
@@ -86,8 +87,8 @@ local function positionUI(ui)
 	local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
 	local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
 	local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
-	ui.sprite.x = px + (ui.sprite.pivotX or 0) * w
-	ui.sprite.y = py + (ui.sprite.pivotY or 0) * h
+	ui.sprite.x = px + Pivot.px(ui.sprite.pivotX, w, 0)
+	ui.sprite.y = py + Pivot.px(ui.sprite.pivotY, h, 0)
 end
 
 --- One-time engine setup. Runs once at startup. Must NOT touch the window
@@ -333,8 +334,10 @@ function love.draw()
 				local w = s.frameWidth or (s.image and s.image:getWidth() or 0)
 				local h = s.frameHeight or (s.image and s.image:getHeight() or 0)
 				if w > 0 and h > 0 and not Debug.excluded("gizmo.boundaries", s.object) then
-					Gizmo.fillRect("boundaries", s.x - w * (s.pivotX or 0), s.y - h * (s.pivotY or 0), w, h)
-					Gizmo.rect("boundaries", s.x - w * (s.pivotX or 0), s.y - h * (s.pivotY or 0), w, h)
+					local ox = Pivot.px(s.pivotX, w, 0)
+					local oy = Pivot.px(s.pivotY, h, 0)
+					Gizmo.fillRect("boundaries", s.x - ox, s.y - oy, w, h)
+					Gizmo.rect("boundaries", s.x - ox, s.y - oy, w, h)
 				end
 			end
 		end

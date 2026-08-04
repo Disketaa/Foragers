@@ -1,8 +1,8 @@
 return {
 	frameWidth = 10,
 	frameHeight = 10,
-	pivotX = 0.5,
-	pivotY = 1,
+	pivotX = "center",
+	pivotY = "bottom",
 	sortOffsetY = 8,
 	layer = 0,
 	components = {
