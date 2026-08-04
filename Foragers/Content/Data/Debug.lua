@@ -11,7 +11,7 @@ return {
 			color = { 0.6, 0.25, 0.25, 1 },
 		},
 		boundaries = {
-			enabled = false,
+			enabled = true,
 			exclude = { "tiles" },
 			decor = "dashed",
 			thickness = 2,
@@ -19,14 +19,14 @@ return {
 			color = { 0.2, 0.6, 1, 0.7 },
 		},
 		pivots = {
-			enabled = true,
+			enabled = false,
 			exclude = { "tiles" },
 			priority = 3,
 			color = { 0.7, 0, 0, 1 },
 			size = 1,
 		},
 		tileMesh = {
-			enabled = true,
+			enabled = false,
 			decor = "diagonal",
 			thickness = 1,
 			color = { 1, 1, 0, 0.8 },
@@ -66,7 +66,7 @@ return {
 		},
 
 		profiler = {
-			enabled = true,
+			enabled = false,
 			updateSpeed = 10,
 			nameMaxChars = 18,
 			digits = 1,
