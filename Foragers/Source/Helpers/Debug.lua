@@ -1,5 +1,6 @@
 local EventEmitter = require("Source.Helpers.EventEmitter")
 local data = require("Content.Data.Debug")
+local Options = require("Content.Data.Options")
 
 local Sprite = require("Source.Sprite.Sprite")
 
@@ -148,6 +149,14 @@ function Profiler.enabled()
 	return collecting
 end
 
+--- Runtime switch for the auto-profiler. Toggling this enables/disables
+--- collection without re-wrapping methods: the `timed` wrappers check
+--- `collecting` every call and pass through when off, so existing hooks stay.
+---@param enabled boolean
+function Profiler.setEnabled(enabled)
+	collecting = enabled == true
+end
+
 function Profiler.entries()
 	return snapshot
 end
@@ -227,6 +236,9 @@ end
 ---@return boolean
 function Debug.enabled(group)
 	local t = lookup(group)
+	if type(t) == "boolean" then
+		return masterOn() and t
+	end
 	local enabled = masterOn() and type(t) == "table" and t.enabled == true
 	return enabled == true
 end
@@ -281,12 +293,43 @@ function Debug.set(key, value)
 	emitter:emit("flags", key, data[key])
 end
 
+--- Flip a nested group's `enabled` flag at runtime and notify subscribers.
+--- Unlike `Debug.set` (top-level keys only), this walks a dotted path so the
+--- `gizmo`, `hud` and `hud.profiler` groups toggle independently. Subscribers
+--- re-read the flag on the `flags` emit. The profiler special-cases its
+--- internal `collecting` switch, which the data flag alone cannot reach.
+---@param path string Dotted group path, e.g. "gizmo" or "hud.profiler".
+---@return boolean New enabled state.
+function Debug.toggle(path)
+	local t = data
+	for part in (path .. ""):gmatch("[^.]+") do
+		t = t[part]
+		if t == nil then
+			return false
+		end
+	end
+	if type(t) ~= "table" then
+		return false
+	end
+	local newVal = not (t.enabled == true)
+	t.enabled = newVal
+	if path == "hud.profiler" then
+		Profiler.setEnabled(newVal)
+	end
+	emitter:emit("flags", path, newVal)
+	return newVal
+end
+
 --- Sample FPS for the HUD. Gated by the `hud.fps`/`hud.fpsGraph` items.
 --- `updateSpeed` (Hz) controls how often a sample is taken.
 ---@param dt number
 function Debug.update(dt)
 	-- Auto-profiler flushes its own buckets each frame, independent of the HUD.
-	Profiler.update(dt)
+	-- It still obeys the master debug switch: master off freezes the snapshot
+	-- (and drawProfiler refuses to draw), so F1 kills the profiler too.
+	if masterOn() then
+		Profiler.update(dt)
+	end
 
 	local s = Debug.settings("hud")
 	if not masterOn() or not Debug.enabled("hud") or not (s.fps or Debug.enabled("hud.fpsGraph")) then
@@ -324,7 +367,7 @@ end
 --- rendering as the top-left HUD. `profiler` group adds only `enabled`/`limit`.
 ---@param scale number
 local function drawProfiler(scale)
-	if not Profiler.enabled() then
+	if not masterOn() or not Profiler.enabled() then
 		return
 	end
 	local entries = Profiler.entries()
@@ -472,7 +515,9 @@ function Debug.draw(objectCount, scale)
 	local hasFps = s.fps
 	local hasGraph = Debug.enabled("hud.fpsGraph")
 	local hasCount = s.objectCount
-	if not masterOn() or not Debug.enabled("hud") or not (hasFps or hasGraph or hasCount) then
+	local toggles = type(s.toggles) == "table" and s.toggles or {}
+	local hasToggles = #toggles > 0
+	if not masterOn() or not Debug.enabled("hud") or not (hasFps or hasGraph or hasCount or hasToggles) then
 		return
 	end
 
@@ -485,86 +530,126 @@ function Debug.draw(objectCount, scale)
 	local gap = (s.gap ~= nil and s.gap or offset) * scale
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
 	local valueColor = s.color or { 1, 1, 1, 1 }
+	local goodColor = s.goodColor or { 0, 1, 0, 1 }
+	local badColor = s.badColor or { 1, 0, 0, 1 }
 	-- Graph height clamped to the row so a tall graph never overflows its box.
 	local gh = math.min((gs.height or (size * 2)) * scale, fontHeight)
 	local graphShown = hasGraph and historyCount > 1
 
-	-- Pre-compute each row's content Y and width so every background box hugs
-	-- its own line instead of one full-width rectangle. The whole block starts
-	-- at `offset` (the group offset), rows separated by `gap`.
-	local fpsY, fpsW = nil, nil
-	local objY, objW = nil, nil
+	-- Layout every row (FPS, object count, separator, toggles) up front so the
+	-- background boxes and text share one pass. Each row hugs its own content.
+	local rows = {}
 	local graphX = 0
 	local y = offset
 	if hasFps then
-		fpsY = y
 		local gapi = (gs.gap or 6) * scale
 		local textW = labelFont:getWidth("FPS ") + valueFont:getWidth(tostring(math.floor(history[historyIndex] or 0)))
-		fpsW = textW + gapi
+		local w = textW + gapi
 		if graphShown then
 			graphX = textW + gapi
-			fpsW = fpsW + (gs.width or 60) * scale
+			w = w + (gs.width or 60) * scale
 		end
+		table.insert(rows, { y = y, w = w, kind = "fps" })
 		y = y + fontHeight + gap
 	end
 	if hasCount then
-		objY = y
-		objW = labelFont:getWidth("Objects ") + valueFont:getWidth(tostring(objectCount))
+		local w = labelFont:getWidth("Objects ") + valueFont:getWidth(tostring(objectCount))
+		table.insert(rows, { y = y, w = w, kind = "count" })
+		y = y + fontHeight + gap
+	end
+	if hasToggles then
+		-- One empty separator row between the readout and the toggle statuses.
+		y = y + fontHeight + gap
+		for _, t in ipairs(toggles) do
+			local on = Debug.enabled(t.path)
+			-- Key prefix read from Options.lua keybinds so the readout mirrors
+			-- the bindings without duplicating the mapping.
+			local keyText = ""
+			if t.key then
+				local kb = Options.keybinds[t.key]
+				local k = kb and kb.keyboard and kb.keyboard[1]
+				if k then
+					keyText = string.upper(k)
+				end
+			end
+			local dimText = (keyText ~= "" and " | " or "") .. (t.label or t.path) .. " "
+			local status = on and "Enabled" or "Disabled"
+			local statusColor = on and goodColor or badColor
+			local w = labelFont:getWidth(keyText) + labelFont:getWidth(dimText) + valueFont:getWidth(status)
+			local row = {
+				y = y,
+				w = w,
+				kind = "toggle",
+				keyText = keyText,
+				dimText = dimText,
+				status = status,
+				statusColor = statusColor,
+			}
+			table.insert(rows, row)
+			y = y + fontHeight + gap
+		end
 	end
 
 	if s.backgroundColor then
 		local bg = s.backgroundColor
 		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
-		if fpsY then
-			love.graphics.rectangle("fill", offset, fpsY, fpsW, fontHeight)
-		end
-		if objY then
-			love.graphics.rectangle("fill", offset, objY, objW, fontHeight)
+		for _, r in ipairs(rows) do
+			love.graphics.rectangle("fill", offset, r.y, r.w, fontHeight)
 		end
 	end
 
-	if fpsY then
-		local fy = fpsY
-		local label = "FPS "
-		local val = tostring(math.floor(history[historyIndex] or 0))
-		renderText(label, offset, fy, labelColor, labelFont)
-		renderText(val, offset + labelFont:getWidth(label), fy, valueColor, valueFont)
+	for _, r in ipairs(rows) do
+		if r.kind == "fps" then
+			local label = "FPS "
+			local val = tostring(math.floor(history[historyIndex] or 0))
+			renderText(label, offset, r.y, labelColor, labelFont)
+			renderText(val, offset + labelFont:getWidth(label), r.y, valueColor, valueFont)
 
-		if graphShown then
-			local target = gs.fpsTarget or 60
-			local ok = gs.goodColor or { 0, 1, 0, 1 }
-			local bad = gs.badColor or { 1, 0, 0, 1 }
-			local gy = fy + (fontHeight - gh) / 2
-			local spacing = (gs.width or 60) * scale / (historyCount - 1)
-			local gx = offset + graphX
-			-- Walk the ring oldest→newest (history[historyIndex] is the newest).
-			local first = (historyIndex - historyCount) % HISTORY_MAX + 1
-			local function sampleAt(k)
-				local idx = first + k
-				if idx > HISTORY_MAX then
-					idx = idx - HISTORY_MAX
+			if graphShown then
+				local target = gs.fpsTarget or 60
+				local gy = r.y + (fontHeight - gh) / 2
+				local spacing = (gs.width or 60) * scale / (historyCount - 1)
+				local gx = offset + graphX
+				-- Walk the ring oldest→newest (history[historyIndex] is the newest).
+				local first = (historyIndex - historyCount) % HISTORY_MAX + 1
+				local function sampleAt(k)
+					local idx = first + k
+					if idx > HISTORY_MAX then
+						idx = idx - HISTORY_MAX
+					end
+					return history[idx]
 				end
-				return history[idx]
+				-- Per-segment color: green while stable, red at the samples that dropped.
+				love.graphics.setLineWidth(math.max(1, (gs.thickness or 1) * scale))
+				for k = 1, historyCount - 1 do
+					local v1, v2 = sampleAt(k - 1), sampleAt(k)
+					local c = (v2 or 0) >= target and goodColor or badColor
+					love.graphics.setColor(c[1], c[2], c[3], c[4])
+					local h1 = math.min(gh, (v1 / target) * gh)
+					local h2 = math.min(gh, (v2 / target) * gh)
+					love.graphics.line(gx + (k - 1) * spacing, gy + gh - h1, gx + k * spacing, gy + gh - h2)
+				end
 			end
-			-- Per-segment color: green while stable, red at the samples that dropped.
-			love.graphics.setLineWidth(math.max(1, (gs.thickness or 1) * scale))
-			for k = 1, historyCount - 1 do
-				local v1, v2 = sampleAt(k - 1), sampleAt(k)
-				local c = (v2 or 0) >= target and ok or bad
-				love.graphics.setColor(c[1], c[2], c[3], c[4])
-				local h1 = math.min(gh, (v1 / target) * gh)
-				local h2 = math.min(gh, (v2 / target) * gh)
-				love.graphics.line(gx + (k - 1) * spacing, gy + gh - h1, gx + k * spacing, gy + gh - h2)
+		elseif r.kind == "count" then
+			local label = "Objects "
+			renderText(label, offset, r.y, labelColor, labelFont)
+			renderText(tostring(objectCount), offset + labelFont:getWidth(label), r.y, valueColor, valueFont)
+		elseif r.kind == "toggle" then
+			local x = offset
+			if r.keyText ~= "" then
+				renderText(r.keyText, x, r.y, valueColor, labelFont)
+				x = x + labelFont:getWidth(r.keyText)
 			end
+			renderText(r.dimText, x, r.y, labelColor, labelFont)
+			x = x + labelFont:getWidth(r.dimText)
+			renderText(r.status, x, r.y, r.statusColor, valueFont)
 		end
 	end
 
-	if objY then
-		local oy = objY
-		local label = "Objects "
-		renderText(label, offset, oy, labelColor, labelFont)
-		renderText(tostring(objectCount), offset + labelFont:getWidth(label), oy, valueColor, valueFont)
-	end
+	-- Restore neutral color. setColor persists across frames, so leaving it
+	-- green/red here tints next frame's world canvas (terrainBatch draws with
+	-- whatever color is current).
+	love.graphics.setColor(1, 1, 1, 1)
 end
 
 -- Time Debug's own per-frame work so its cost shows up in the profiler. Safe

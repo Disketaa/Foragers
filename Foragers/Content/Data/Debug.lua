@@ -43,6 +43,8 @@ return {
 		backgroundColor = { 0, 0, 0, 0.2 },
 		labelColor = { 0.8, 0.8, 1, 1 },
 		color = { 1, 1, 1, 1 },
+		goodColor = { 0, 1, 0, 1 },
+		badColor = { 1, 0, 0, 1 },
 		font = {
 			label = "Content/Assets/Fonts/AzeretMonoMedium.ttf",
 			value = "Content/Assets/Fonts/AzeretMonoSemiBold.ttf",
@@ -55,10 +57,13 @@ return {
 			width = 25,
 			height = 4,
 			thickness = 0.5,
-			goodColor = { 0, 1, 0, 1 },
-			badColor = { 1, 0, 0, 1 },
 		},
 		objectCount = true,
+		toggles = {
+			{ label = "Debug", path = "debug", key = "toggleDebug" },
+			{ label = "Gizmo", path = "gizmo", key = "toggleGizmo" },
+			{ label = "Profiler", path = "hud.profiler", key = "toggleProfiler" },
+		},
 		profiler = {
 			enabled = true,
 			updateSpeed = 10,

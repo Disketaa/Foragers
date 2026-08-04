@@ -275,6 +275,10 @@ end
 function love.draw()
 	ShaderLoader.setCamera(camPixelX, camPixelY)
 
+	-- The world render must not inherit the color the HUD/Debug left on the
+	-- previous frame (setColor persists). Reset to neutral before the canvases.
+	love.graphics.setColor(1, 1, 1, 1)
+
 	-- Background canvas: same movement as world (sticky to camera, no parallax)
 	-- Shader compensates for missing translate via camera_x/y uniform
 	bgCanvas:draw(function()
@@ -422,12 +426,30 @@ local function removeSpriteFromLists(sprite)
 	end
 end
 
+local function bindingPressed(binding, key)
+	local kb = binding and binding.keyboard
+	if kb then
+		for _, k in ipairs(kb) do
+			if k == key then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 function love.keypressed(key)
-	if key == "r" then
+	if bindingPressed(Options.keybinds.restart, key) then
 		resetGame()
-	elseif key == "f11" then
+	elseif bindingPressed(Options.keybinds.toggleFullscreen, key) then
 		local fullscreen, fstype = love.window.getFullscreen()
 		love.window.setFullscreen(not fullscreen, fstype)
+	elseif bindingPressed(Options.keybinds.toggleDebug, key) then
+		Debug.set("debug", not Debug.isEnabled())
+	elseif bindingPressed(Options.keybinds.toggleGizmo, key) then
+		Debug.toggle("gizmo")
+	elseif bindingPressed(Options.keybinds.toggleProfiler, key) then
+		Debug.toggle("hud.profiler")
 	end
 end
 
@@ -507,7 +529,8 @@ function love.update(dt)
 	ShaderLoader.update(scaledDt)
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
-	local isMouseDown = love.mouse.isDown(1)
+	local moveMouse = (Options.keybinds.moveMouse and Options.keybinds.moveMouse.mouse) or { 1 }
+	local isMouseDown = love.mouse.isDown(unpack(moveMouse))
 
 	-- Save pre-move positions for collision resolution + process control + update.
 	-- Only dynamic sprites need per-frame update; static terrain is baked (solid

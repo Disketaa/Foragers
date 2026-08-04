@@ -201,49 +201,55 @@ hud = {
     size = 4,
     padding = 2,
     gap = 0,
-    updateSpeed = 2,
-    backgroundColor = { 0, 0, 0, 0.3 },
-    labelColor = { 0.65, 0.65, 0.9, 1 },
+    updateSpeed = 30,
+    backgroundColor = { 0, 0, 0, 0.2 },
+    labelColor = { 0.8, 0.8, 1, 1 },
     color = { 1, 1, 1, 1 },
+    goodColor = { 0, 1, 0, 1 },
+    badColor = { 1, 0, 0, 1 },
     font = {
-        label = "Content/Assets/Fonts/InterBlack.ttf",
-        value = "Content/Assets/Fonts/InterRegular.ttf",
+        label = "Content/Assets/Fonts/AzeretMonoMedium.ttf",
+        value = "Content/Assets/Fonts/AzeretMonoSemiBold.ttf",
     },
 
     fps = true,
     fpsGraph = {
         enabled = true,
-        fpsTarget = 180,
-        gap = 8,
+        fpsTarget = 160,
+        gap = 2,
         width = 25,
         height = 4,
         thickness = 0.5,
-        goodColor = { 0, 1, 0, 1 },
-        badColor = { 1, 0, 0, 1 },
     },
     objectCount = true,
+    toggles = {
+        { label = "Debug", path = "debug", key = "toggleDebug" },
+        { label = "Gizmo", path = "gizmo", key = "toggleGizmo" },
+        { label = "Profiler", path = "hud.profiler", key = "toggleProfiler" },
+    },
 
     profiler = {
         enabled = true,
         updateSpeed = 10,
         nameMaxChars = 18,
-        digits = 2,
+        digits = 1,
         valueMaxChars = 8,
         limit = 20,
     },
 }
 ```
 
-- `enabled` — global switch for the whole HUD (default true), independent of the `debug` master switch; both must be on to render.
+- `enabled` — global switch for the whole HUD (default true). The `debug` master switch (F1) gates the HUD; it renders only while master debug is on. There is no independent runtime HUD toggle anymore.
 - `fps` — simple boolean flag, current FPS. Samples are taken `updateSpeed` times per second (Hz).
-- `fpsGraph` — inline line graph of recent FPS samples (60-point ring buffer), drawn to the right of the FPS text on the same line, `gap` px after it. Segments are green (`goodColor`) while at/above `fpsTarget`, red (`badColor`) at the samples that dropped. `width`/`height` set the graph box size (clamped to the row) and `thickness` the line weight, all in base px.
+- `fpsGraph` — inline line graph of recent FPS samples (60-point ring buffer), drawn to the right of the FPS text on the same line, `gap` px after it. Segments are green (`goodColor`) while at/above `fpsTarget`, red (`badColor`) at the samples that dropped. `goodColor`/`badColor` live at the `hud` level and are shared with the `toggles` readout. `width`/`height` set the graph box size (clamped to the row) and `thickness` the line weight, all in base px.
 - `objectCount` — simple boolean flag, `#objects` from `Main.lua`.
+- `toggles` — readout of the F-key debug toggles (the `Content/Data/Options.lua` keybinds), drawn below a one-row separator after the readout. Each entry shows `KEY | Label` in `labelColor` with `Enabled`/`Disabled` in `goodColor`/`badColor`. `key` names the `Options.keybinds` entry whose first keyboard key becomes the uppercase prefix; `path` is the `Debug.enabled` group to query (`"debug"` is the top-level master boolean). The `HUD` toggle was removed — the master switch now owns HUD visibility.
 - `padding` — group offset: shifts the whole readout right/down as one block (the boxes hug their content tightly); `gap` — spacing between rows (defaults to `padding`). Set `gap` to 0 for the tightest spacing between rows.
-- `labelColor` — dim color for static labels (`FPS:`, `Objects:`); `color` — bright color for the numbers.
+- `labelColor` — dim color for static labels (`FPS:`, `Objects:`, the `| Label` toggle prefix); `color` — bright color for the numbers and the `KEY |` toggle prefix.
 - `font` — optional TTF paths loaded via `love.filesystem`; `label` (bold) and `value` (regular) can differ. Missing/failed loads fall back to LÖVE's default font, cached by path+size.
 - `backgroundColor` — optional solid fill drawn behind the readout. Omit to keep it transparent.
 - `size` (base px), `padding`, and the graph `width`/`height`/`thickness` all scale with the window upscale factor via the `scale` argument passed to `Debug.draw`.
-- `profiler` — auto-instrumenting CPU profiler drawn as a bottom-left table (`Scope`/`Time`/`%`) in the same styling. It needs no imports: it patches `Sprite:addComponent` to time every component's `update`/`draw`, and wraps any module exposing a known per-frame method name (`update`, `updateAll`, `updateBursts`, `updateDetached`, `drawAll`, ...) via a `package.loaded` sweep plus a `require` wrapper, so new system files are timed automatically. `updateSpeed` (Hz) controls the flush cadence; `limit` caps rows (sorted by cost); `nameMaxChars` truncates scope names; `digits` sets time decimal precision and `valueMaxChars` caps the time column width (which is fixed so a digit-boundary change never shifts the `%` column). Scope keys are per component type (`ComponentType.update`).
+- `profiler` — auto-instrumenting CPU profiler drawn as a bottom-left table (`Scope`/`Time`/`%`) in the same styling. It needs no imports: it patches `Sprite:addComponent` to time every component's `update`/`draw`, and wraps any module exposing a known per-frame method name (`update`, `updateAll`, `updateBursts`, `updateDetached`, `drawAll`, ...) via a `package.loaded` sweep plus a `require` wrapper, so new system files are timed automatically. `updateSpeed` (Hz) controls the flush cadence; `limit` caps rows (sorted by cost); `nameMaxChars` truncates scope names; `digits` sets time decimal precision and `valueMaxChars` caps the time column width (which is fixed so a digit-boundary change never shifts the `%` column). Scope keys are per component type (`ComponentType.update`). The profiler obeys the `debug` master switch: master off freezes its snapshot and hides the table.
 
 Implemented in `Source/Helpers/Debug.lua` (the shared Debug helper, one file): `Debug.update(dt)` samples FPS into a ring buffer and flushes profiler buckets; `Debug.draw(objectCount, scale)` renders the readout using LÖVE's default font (recreated when the scaled `size` changes). `Debug.enabled`/`Debug.settings` resolve dotted group paths, so the graph sub-group is queried as `"hud.fpsGraph"` and the profiler as `"hud.profiler"`.
 
