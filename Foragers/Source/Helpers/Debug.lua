@@ -543,13 +543,18 @@ function Debug.draw(objectCount, scale)
 	local y = offset
 	if hasFps then
 		local gapi = (gs.gap or 6) * scale
-		local textW = labelFont:getWidth("FPS ") + valueFont:getWidth(tostring(math.floor(history[historyIndex] or 0)))
+		-- Reserve a fixed value width (maxFps digits) so the graph doesn't shift
+		-- when the live reading goes 2→3 digits. Value text right-aligns into it.
+		local digits = #tostring(math.floor(Options.maxFps or 999))
+		local labelW = labelFont:getWidth("FPS ")
+		local fixedValW = valueFont:getWidth(string.rep("9", digits))
+		local textW = labelW + fixedValW
 		local w = textW + gapi
 		if graphShown then
 			graphX = textW + gapi
 			w = w + (gs.width or 60) * scale
 		end
-		table.insert(rows, { y = y, w = w, kind = "fps" })
+		table.insert(rows, { y = y, w = w, kind = "fps", fixedValW = fixedValW, labelW = labelW })
 		y = y + fontHeight + gap
 	end
 	if hasCount then
@@ -603,7 +608,7 @@ function Debug.draw(objectCount, scale)
 			local label = "FPS "
 			local val = tostring(math.floor(history[historyIndex] or 0))
 			renderText(label, offset, r.y, labelColor, labelFont)
-			renderText(val, offset + labelFont:getWidth(label), r.y, valueColor, valueFont)
+			renderText(val, offset + r.labelW + (r.fixedValW - valueFont:getWidth(val)), r.y, valueColor, valueFont)
 
 			if graphShown then
 				local target = Options.maxFps or 60

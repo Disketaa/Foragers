@@ -2,7 +2,7 @@ return {
 	debug = true,
 
 	gizmo = {
-		enabled = true,
+		enabled = false,
 		collisions = {
 			enabled = false,
 			exclude = {},
@@ -64,6 +64,7 @@ return {
 			{ label = "Gizmo", path = "gizmo", key = "toggleGizmo" },
 			{ label = "Profiler", path = "hud.profiler", key = "toggleProfiler" },
 		},
+
 		profiler = {
 			enabled = true,
 			updateSpeed = 10,
