@@ -52,7 +52,6 @@ return {
 		fps = true,
 		fpsGraph = {
 			enabled = true,
-			fpsTarget = 160,
 			gap = 2,
 			width = 25,
 			height = 4,

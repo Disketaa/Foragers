@@ -55,6 +55,7 @@ local terrainBatch = nil
 local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
+local lastFrameTime = 0
 
 local function updateCamera()
 	if scrollToComp then
@@ -229,7 +230,9 @@ function initGame()
 			local f = data.value / math.max(1, data.maxValue)
 			TimeScale.scale = f >= 0.33 and 1.0 or 0.15 + 0.85 * (f / 0.33)
 			local s = f >= 0.33 and 1 or f / 0.33
-			saturationShader:send("u_saturation", math.max(0, math.min(1, s)))
+			if saturationShader then
+				saturationShader:send("u_saturation", math.max(0, math.min(1, s)))
+			end
 		end, 5)
 	end
 end
@@ -585,5 +588,17 @@ function love.update(dt)
 	if spawned then
 		table.insert(objects, { instance = spawned, data = {} })
 		table.insert(dynamicObjects, { instance = spawned, data = {} })
+	end
+
+	-- Manual FPS cap (love.timer.setFPS unavailable here): sleep the remainder
+	-- of the target frame budget so CPU isn't pegged at uncapped rates.
+	local maxFps = Options.maxFps
+	if maxFps and maxFps > 0 then
+		local budget = 1 / maxFps
+		local elapsed = love.timer.getTime() - lastFrameTime
+		if elapsed < budget then
+			love.timer.sleep(budget - elapsed)
+		end
+		lastFrameTime = love.timer.getTime()
 	end
 end

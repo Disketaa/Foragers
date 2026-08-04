@@ -606,7 +606,7 @@ function Debug.draw(objectCount, scale)
 			renderText(val, offset + labelFont:getWidth(label), r.y, valueColor, valueFont)
 
 			if graphShown then
-				local target = gs.fpsTarget or 60
+				local target = Options.maxFps or 60
 				local gy = r.y + (fontHeight - gh) / 2
 				local spacing = (gs.width or 60) * scale / (historyCount - 1)
 				local gx = offset + graphX

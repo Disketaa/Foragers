@@ -1,5 +1,6 @@
 return {
 	fullscreen = true,
+	maxFps = 180,
 	gamepadDeadzone = 0.5,
 	mouseSlowdownRadius = 15,
 	keybinds = {
