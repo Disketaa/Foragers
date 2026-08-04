@@ -62,7 +62,6 @@ return {
 			digits = 1,
 			valueMaxChars = 8,
 			limit = 20,
-			groupBy = "type",
 		},
 	},
 }

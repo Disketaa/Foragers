@@ -55,27 +55,15 @@ local function instrumentMethod(module, method, label)
 end
 
 local origAddComponent = Sprite.addComponent
-local groupBy = profConf and profConf.groupBy or "type"
-
-local function scopeKey(sprite, compType, phase)
-	if groupBy == "object.type" then
-		return (sprite.object or "?") .. "." .. (compType or "?") .. "." .. phase
-	elseif groupBy == "object" then
-		return (sprite.object or compType or "?") .. "." .. phase
-	end
-	return (compType or "?") .. "." .. phase
-end
 
 function Sprite:addComponent(component)
 	if collecting and component and not component.__profiled then
 		component.__profiled = true
 		if type(component.update) == "function" then
-			local label = scopeKey(self, component.type, "update")
-			component.update = timed(component.update, label)
+			component.update = timed(component.update, (component.type or "?") .. ".update")
 		end
 		if type(component.draw) == "function" then
-			local label = scopeKey(self, component.type, "draw")
-			component.draw = timed(component.draw, label)
+			component.draw = timed(component.draw, (component.type or "?") .. ".draw")
 		end
 	end
 	return origAddComponent(self, component)
@@ -115,8 +103,9 @@ local function instrumentModule(modname, module)
 	end
 end
 
--- Don't wrap Debug itself (its update/draw drive the profiler).
-instrumentedMods["Source.Helpers.Debug"] = true
+-- Debug isn't in package.loaded during the sweep (its own file is mid-load), and
+-- timing Debug.update/draw would otherwise recurse through Profiler.update. It's
+-- wrapped explicitly after definition below instead.
 
 for modname, module in pairs(package.loaded) do
 	instrumentModule(modname, module)
@@ -205,6 +194,19 @@ end
 
 local function masterOn()
 	return data.debug == true
+end
+
+--- Resolve the `hud` group's fonts at a given scale. Shared by the top-left
+--- HUD and the bottom-left profiler so both render with the same metrics.
+---@param s table `hud` settings
+---@param scale number
+---@return Font, Font, number labelFont, valueFont, fontHeight
+local function hudFonts(s, scale)
+	local size = math.max(4, math.floor((s.size or 8) * scale))
+	local fconf = s.font or {}
+	local labelFont = getFont(fconf.label, size)
+	local valueFont = getFont(fconf.value, size)
+	return labelFont, valueFont, math.max(labelFont:getHeight(), valueFont:getHeight())
 end
 
 --- Walk a dotted path into the data (e.g. "hud.fpsGraph"); nil if absent.
@@ -336,11 +338,7 @@ local function drawProfiler(scale)
 	local limit = math.max(1, math.floor(p.limit or 14))
 
 	local size = math.max(4, math.floor((s.size or 8) * scale))
-	local fconf = s.font or {}
-	local labelFont = getFont(fconf.label, size)
-	local valueFont = getFont(fconf.value, size)
-	local fontHeight = math.max(labelFont:getHeight(), valueFont:getHeight())
-	local rowH = fontHeight
+	local labelFont, valueFont, fontHeight = hudFonts(s, scale)
 	local offset = (p.padding ~= nil and p.padding or s.padding or 4) * scale
 	local rowGap = (p.gap ~= nil and p.gap or s.gap ~= nil and s.gap or offset) * scale
 	local colGap = math.max(2, size) * scale
@@ -404,7 +402,7 @@ local function drawProfiler(scale)
 	local msCol = valueFont:getWidth(string.rep("9", timeChars))
 
 	local rowW = nameCol + colGap + msCol + colGap + pctCol
-	local topY = love.graphics.getHeight() - offset - (rowH + #rows * (rowH + rowGap))
+	local topY = love.graphics.getHeight() - offset - (fontHeight + #rows * (fontHeight + rowGap))
 
 	local x1 = offset
 	local x2 = offset + nameCol + colGap
@@ -416,10 +414,9 @@ local function drawProfiler(scale)
 	local function drawRow(segs)
 		if bg then
 			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
-			love.graphics.rectangle("fill", offset, y, rowW, rowH)
+			love.graphics.rectangle("fill", offset, y, rowW, fontHeight)
 		end
 		local xs = { x1, x2, x3 }
-		local cy = y + (rowH - fontHeight) / 2
 		for i = 1, 3 do
 			local segs3 = segs[i]
 			local w = 0
@@ -431,11 +428,11 @@ local function drawProfiler(scale)
 				x = x3 + pctCol - w
 			end
 			for _, seg in ipairs(segs3) do
-				renderText(seg[1], x, cy, seg[2], seg[3])
+				renderText(seg[1], x, y, seg[2], seg[3])
 				x = x + seg[3]:getWidth(seg[1])
 			end
 		end
-		y = y + rowH + rowGap
+		y = y + fontHeight + rowGap
 	end
 
 	local labelSeg = { "Scope", labelColor, labelFont }
@@ -480,9 +477,7 @@ function Debug.draw(objectCount, scale)
 	end
 
 	local size = math.max(4, math.floor((s.size or 8) * scale))
-	local fconf = s.font or {}
-	local labelFont = getFont(fconf.label, size)
-	local valueFont = getFont(fconf.value, size)
+	local labelFont, valueFont, fontHeight = hudFonts(s, scale)
 
 	-- `padding` is a single group offset: the whole readout shifts right/down
 	-- by it. `gap` alone spaces the rows inside the block.
@@ -490,10 +485,8 @@ function Debug.draw(objectCount, scale)
 	local gap = (s.gap ~= nil and s.gap or offset) * scale
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
 	local valueColor = s.color or { 1, 1, 1, 1 }
-	local fontHeight = math.max(labelFont:getHeight(), valueFont:getHeight())
-	local rowH = fontHeight
 	-- Graph height clamped to the row so a tall graph never overflows its box.
-	local gh = math.min((gs.height or (size * 2)) * scale, rowH)
+	local gh = math.min((gs.height or (size * 2)) * scale, fontHeight)
 	local graphShown = hasGraph and historyCount > 1
 
 	-- Pre-compute each row's content Y and width so every background box hugs
@@ -512,7 +505,7 @@ function Debug.draw(objectCount, scale)
 			graphX = textW + gapi
 			fpsW = fpsW + (gs.width or 60) * scale
 		end
-		y = y + rowH + gap
+		y = y + fontHeight + gap
 	end
 	if hasCount then
 		objY = y
@@ -523,15 +516,15 @@ function Debug.draw(objectCount, scale)
 		local bg = s.backgroundColor
 		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
 		if fpsY then
-			love.graphics.rectangle("fill", offset, fpsY, fpsW, rowH)
+			love.graphics.rectangle("fill", offset, fpsY, fpsW, fontHeight)
 		end
 		if objY then
-			love.graphics.rectangle("fill", offset, objY, objW, rowH)
+			love.graphics.rectangle("fill", offset, objY, objW, fontHeight)
 		end
 	end
 
 	if fpsY then
-		local fy = fpsY + (rowH - fontHeight) / 2
+		local fy = fpsY
 		local label = "FPS "
 		local val = tostring(math.floor(history[historyIndex] or 0))
 		renderText(label, offset, fy, labelColor, labelFont)
@@ -567,11 +560,18 @@ function Debug.draw(objectCount, scale)
 	end
 
 	if objY then
-		local oy = objY + (rowH - fontHeight) / 2
+		local oy = objY
 		local label = "Objects "
 		renderText(label, offset, oy, labelColor, labelFont)
 		renderText(tostring(objectCount), offset + labelFont:getWidth(label), oy, valueColor, valueFont)
 	end
+end
+
+-- Time Debug's own per-frame work so its cost shows up in the profiler. Safe
+-- here: Debug is fully defined and `timed` only records, never re-enters Debug.
+if collecting then
+	instrumentMethod(Debug, "update", "Debug.update")
+	instrumentMethod(Debug, "draw", "Debug.draw")
 end
 
 return Debug
