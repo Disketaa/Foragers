@@ -607,6 +607,9 @@ function Debug.draw(objectCount, scale)
 
 			if graphShown then
 				local target = Options.maxFps or 60
+				-- Red only on real peaks: allow drops within `tolerance` fps of the
+				-- target (reading jitter) before marking a segment as bad.
+				local threshold = target - (gs.tolerance or 0)
 				local gy = r.y + (fontHeight - gh) / 2
 				local spacing = (gs.width or 60) * scale / (historyCount - 1)
 				local gx = offset + graphX
@@ -623,7 +626,7 @@ function Debug.draw(objectCount, scale)
 				love.graphics.setLineWidth(math.max(1, (gs.thickness or 1) * scale))
 				for k = 1, historyCount - 1 do
 					local v1, v2 = sampleAt(k - 1), sampleAt(k)
-					local c = (v2 or 0) >= target and goodColor or badColor
+					local c = (v2 or 0) >= threshold and goodColor or badColor
 					love.graphics.setColor(c[1], c[2], c[3], c[4])
 					local h1 = math.min(gh, (v1 / target) * gh)
 					local h2 = math.min(gh, (v2 / target) * gh)
