@@ -45,7 +45,7 @@ return {
 		fps = true,
 		fpsGraph = {
 			enabled = true,
-			fpsTarget = 180,
+			fpsTarget = 160,
 			gap = 2,
 			width = 25,
 			height = 4,
@@ -54,5 +54,15 @@ return {
 			badColor = { 1, 0, 0, 1 },
 		},
 		objectCount = true,
+
+		profiler = {
+			enabled = true,
+			updateSpeed = 10,
+			nameMaxChars = 18,
+			digits = 1,
+			valueMaxChars = 8,
+			limit = 20,
+			groupBy = "type",
+		},
 	},
 }

@@ -118,6 +118,16 @@ relevant section before touching that subsystem.
   group name and `Gizmo.draw` resolves styles per group — fill (`backgroundColor`),
   outline (`color` + `decor`) and point markers — ordering groups by ascending `priority` so
   e.g. `collisions` layer over `boundaries` and `pivots` stay on top.
+- **The auto-profiler self-wires by global patch, so nothing else imports it.**
+  `Source/Helpers/Debug.lua` patches `Sprite:addComponent` to time each component's
+  `update`/`draw`, and replaces `_G.require` so any module exposing a known per-frame
+  method name (`update`, `updateAll`, `updateBursts`, `updateDetached`, `drawAll`, ...)
+  is auto-wrapped on load (plus a sweep of `package.loaded` for modules already loaded
+  before Debug). Two consequences: the `require` wrapper must always delegate to the
+  original `require` (never `require` itself, or it recurses), and a new per-frame
+  system only gets timed if it calls its method through the module table — a module
+  holding its update as a bare `local` is invisible. Only a method called as
+  `Module.method(...)` is measured.
 
 ## SpriteFont / Text / TextEmitter (Source/Sprite/Components/SpriteFont.lua, Source/UI/Text.lua, Source/UI/Components/TextEmitter.lua)
 

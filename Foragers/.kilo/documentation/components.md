@@ -222,6 +222,16 @@ hud = {
         badColor = { 1, 0, 0, 1 },
     },
     objectCount = true,
+
+    profiler = {
+        enabled = true,
+        updateSpeed = 10,
+        nameMaxChars = 18,
+        digits = 2,
+        valueMaxChars = 8,
+        limit = 20,
+        groupBy = "type",
+    },
 }
 ```
 
@@ -234,8 +244,9 @@ hud = {
 - `font` — optional TTF paths loaded via `love.filesystem`; `label` (bold) and `value` (regular) can differ. Missing/failed loads fall back to LÖVE's default font, cached by path+size.
 - `backgroundColor` — optional solid fill drawn behind the readout. Omit to keep it transparent.
 - `size` (base px), `padding`, and the graph `width`/`height`/`thickness` all scale with the window upscale factor via the `scale` argument passed to `Debug.draw`.
+- `profiler` — auto-instrumenting CPU profiler drawn as a bottom-left table (`Scope`/`Time`/`%`) in the same styling. It needs no imports: it patches `Sprite:addComponent` to time every component's `update`/`draw`, and wraps any module exposing a known per-frame method name (`update`, `updateAll`, `updateBursts`, `updateDetached`, `drawAll`, ...) via a `package.loaded` sweep plus a `require` wrapper, so new system files are timed automatically. `groupBy` sets the scope key granularity (`type` → `ComponentType.update`; `object` → per-sprite; `object.type`). `updateSpeed` (Hz) controls the flush cadence; `limit` caps rows (sorted by cost); `nameMaxChars` truncates scope names; `digits` sets time decimal precision and `valueMaxChars` caps the time column width (which is fixed so a digit-boundary change never shifts the `%` column).
 
-Implemented in `Source/Helpers/Debug.lua` (the shared Debug helper, one file): `Debug.update(dt)` samples FPS into a ring buffer; `Debug.draw(objectCount, scale)` renders the readout using LÖVE's default font (recreated when the scaled `size` changes). `Debug.enabled`/`Debug.settings` resolve dotted group paths, so the graph sub-group is queried as `"hud.fpsGraph"`.
+Implemented in `Source/Helpers/Debug.lua` (the shared Debug helper, one file): `Debug.update(dt)` samples FPS into a ring buffer and flushes profiler buckets; `Debug.draw(objectCount, scale)` renders the readout using LÖVE's default font (recreated when the scaled `size` changes). `Debug.enabled`/`Debug.settings` resolve dotted group paths, so the graph sub-group is queried as `"hud.fpsGraph"` and the profiler as `"hud.profiler"`.
 
 ## spawnOn field (particle_emitter)
 
