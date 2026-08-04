@@ -215,7 +215,7 @@ hud = {
     fps = true,
     fpsGraph = {
         enabled = true,
-        fpsTarget = 160,
+        tolerance = 5,
         gap = 2,
         width = 25,
         height = 4,
@@ -241,7 +241,7 @@ hud = {
 
 - `enabled` — global switch for the whole HUD (default true). The `debug` master switch (F1) gates the HUD; it renders only while master debug is on. There is no independent runtime HUD toggle anymore.
 - `fps` — simple boolean flag, current FPS. Samples are taken `updateSpeed` times per second (Hz).
-- `fpsGraph` — inline line graph of recent FPS samples (60-point ring buffer), drawn to the right of the FPS text on the same line, `gap` px after it. Segments are green (`goodColor`) while at/above `fpsTarget`, red (`badColor`) at the samples that dropped. `goodColor`/`badColor` live at the `hud` level and are shared with the `toggles` readout. `width`/`height` set the graph box size (clamped to the row) and `thickness` the line weight, all in base px.
+- `fpsGraph` — inline line graph of recent FPS samples (60-point ring buffer), drawn to the right of the FPS text on the same line, `gap` px after it. The reference line is `Options.maxFps` (the frame cap). Segments are green (`goodColor`) while at/above `maxFps - tolerance`, red (`badColor`) at the samples that dropped below that threshold — `tolerance` (default 0) absorbs reading jitter so a 1–2 fps dip doesn't color a segment bad. `goodColor`/`badColor` live at the `hud` level and are shared with the `toggles` readout. `width`/`height` set the graph box size (clamped to the row) and `thickness` the line weight, all in base px. The FPS value text is right-aligned into a fixed width (from `maxFps` digit count) so the graph never shifts when the reading goes 2→3 digits.
 - `objectCount` — simple boolean flag, `#objects` from `Main.lua`.
 - `toggles` — readout of the F-key debug toggles (the `Content/Data/Options.lua` keybinds), drawn below a one-row separator after the readout. Each entry shows `KEY | Label` in `labelColor` with `Enabled`/`Disabled` in `goodColor`/`badColor`. `key` names the `Options.keybinds` entry whose first keyboard key becomes the uppercase prefix; `path` is the `Debug.enabled` group to query (`"debug"` is the top-level master boolean). The `HUD` toggle was removed — the master switch now owns HUD visibility.
 - `padding` — group offset: shifts the whole readout right/down as one block (the boxes hug their content tightly); `gap` — spacing between rows (defaults to `padding`). Set `gap` to 0 for the tightest spacing between rows.

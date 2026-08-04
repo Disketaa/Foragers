@@ -1,6 +1,6 @@
 local EventEmitter = require("Source.Helpers.EventEmitter")
 local data = require("Content.Data.Debug")
-local Options = require("Content.Data.Options")
+local Options = require("Source.Helpers.Options")
 
 local Sprite = require("Source.Sprite.Sprite")
 
@@ -201,10 +201,6 @@ local function getFont(path, size)
 	return f
 end
 
-local function masterOn()
-	return data.debug == true
-end
-
 --- Resolve the `hud` group's fonts at a given scale. Shared by the top-left
 --- HUD and the bottom-left profiler so both render with the same metrics.
 ---@param s table `hud` settings
@@ -237,10 +233,9 @@ end
 function Debug.enabled(group)
 	local t = lookup(group)
 	if type(t) == "boolean" then
-		return masterOn() and t
+		return t
 	end
-	local enabled = masterOn() and type(t) == "table" and t.enabled == true
-	return enabled == true
+	return type(t) == "table" and t.enabled == true
 end
 
 --- Group "X" carries an `exclude` list of entity ids to skip. Path is dotted
@@ -275,8 +270,9 @@ function Debug.settings(group)
 	return t
 end
 
+---@return boolean Whether the top-level `debug` master switch is on.
 function Debug.isEnabled()
-	return masterOn()
+	return data.debug == true
 end
 
 --- Subscribe to runtime flag changes. Callback receives (key, value).
@@ -291,6 +287,7 @@ end
 function Debug.set(key, value)
 	data[key] = value == true
 	emitter:emit("flags", key, data[key])
+	Options.save()
 end
 
 --- Flip a nested group's `enabled` flag at runtime and notify subscribers.
@@ -317,7 +314,47 @@ function Debug.toggle(path)
 		Profiler.setEnabled(newVal)
 	end
 	emitter:emit("flags", path, newVal)
+	Options.save()
 	return newVal
+end
+
+--- Runtime-toggleable flag paths (the ones Debug.set/Debug.toggle mutate and
+--- that Options persists). Top-level `debug` is the master switch; the rest are
+--- nested group `enabled` flags.
+local TOGGLE_PATHS = { "debug", "gizmo", "hud", "hud.profiler" }
+
+---@return table path → boolean current value for each runtime-toggleable flag.
+function Debug.serializeFlags()
+	local out = {}
+	for _, path in ipairs(TOGGLE_PATHS) do
+		out[path] = Debug.enabled(path)
+	end
+	return out
+end
+
+--- Apply persisted flag values (from Options.txt) onto the data table.
+---@param flags table path → boolean.
+function Debug.applyFlags(flags)
+	for path, val in pairs(flags or {}) do
+		if path == "debug" then
+			data.debug = val == true
+		else
+			local t = data
+			for part in (path .. ""):gmatch("[^.]+") do
+				t = t[part]
+				if t == nil then
+					t = nil
+					break
+				end
+			end
+			if type(t) == "table" then
+				t.enabled = val == true
+			end
+			if path == "hud.profiler" then
+				Profiler.setEnabled(val == true)
+			end
+		end
+	end
 end
 
 --- Sample FPS for the HUD. Gated by the `hud.fps`/`hud.fpsGraph` items.
@@ -325,14 +362,12 @@ end
 ---@param dt number
 function Debug.update(dt)
 	-- Auto-profiler flushes its own buckets each frame, independent of the HUD.
-	-- It still obeys the master debug switch: master off freezes the snapshot
-	-- (and drawProfiler refuses to draw), so F1 kills the profiler too.
-	if masterOn() then
+	if Profiler.enabled() then
 		Profiler.update(dt)
 	end
 
 	local s = Debug.settings("hud")
-	if not masterOn() or not Debug.enabled("hud") or not (s.fps or Debug.enabled("hud.fpsGraph")) then
+	if not Debug.enabled("hud") or not (s.fps or Debug.enabled("hud.fpsGraph")) then
 		return
 	end
 	frameCount = frameCount + 1
@@ -367,7 +402,7 @@ end
 --- rendering as the top-left HUD. `profiler` group adds only `enabled`/`limit`.
 ---@param scale number
 local function drawProfiler(scale)
-	if not masterOn() or not Profiler.enabled() then
+	if not Profiler.enabled() then
 		return
 	end
 	local entries = Profiler.entries()
@@ -517,7 +552,7 @@ function Debug.draw(objectCount, scale)
 	local hasCount = s.objectCount
 	local toggles = type(s.toggles) == "table" and s.toggles or {}
 	local hasToggles = #toggles > 0
-	if not masterOn() or not Debug.enabled("hud") or not (hasFps or hasGraph or hasCount or hasToggles) then
+	if not Debug.enabled("hud") or not (hasFps or hasGraph or hasCount or hasToggles) then
 		return
 	end
 
@@ -666,5 +701,9 @@ if collecting then
 	instrumentMethod(Debug, "update", "Debug.update")
 	instrumentMethod(Debug, "draw", "Debug.draw")
 end
+
+-- Re-apply persisted toggles from Options.txt. Options loads before Debug, so
+-- its collected overrides are ready by the time this module finishes loading.
+Debug.applyFlags(Options._debug)
 
 return Debug

@@ -1,5 +1,6 @@
 local World = require("Content.Data.World")
-local Options = require("Content.Data.Options")
+local Options = require("Source.Helpers.Options")
+local Log = require("Source.Helpers.Log")
 
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 	require("lldebugger").start()
@@ -99,7 +100,8 @@ end
 --- lives in initGame(), which resetGame() re-runs.
 local initGame
 function love.load()
-	print("Love2D project started")
+	Log.init()
+	print("Foragers launches")
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	love.window.setMode(canvas.width, canvas.height, {
 		resizable = true,
@@ -446,9 +448,11 @@ function love.keypressed(key)
 		resetGame()
 	elseif bindingPressed(Options.keybinds.toggleFullscreen, key) then
 		local fullscreen, fstype = love.window.getFullscreen()
-		love.window.setFullscreen(not fullscreen, fstype)
+		Options.fullscreen = not fullscreen
+		love.window.setFullscreen(Options.fullscreen, fstype)
+		Options.save()
 	elseif bindingPressed(Options.keybinds.toggleDebug, key) then
-		Debug.set("debug", not Debug.isEnabled())
+		Debug.toggle("hud")
 	elseif bindingPressed(Options.keybinds.toggleGizmo, key) then
 		Debug.toggle("gizmo")
 	elseif bindingPressed(Options.keybinds.toggleProfiler, key) then

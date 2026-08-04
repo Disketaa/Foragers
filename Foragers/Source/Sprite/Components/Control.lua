@@ -1,5 +1,5 @@
 local Events = require("Source.Helpers.Events")
-local Options = require("Content.Data.Options")
+local Options = require("Source.Helpers.Options")
 
 ---@class Control
 ---@field parent Sprite|nil Parent sprite reference

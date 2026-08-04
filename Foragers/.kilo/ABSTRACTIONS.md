@@ -239,3 +239,10 @@ entire data tree. These fields are safe to randomize:
 | `shaders` (array of strings) | Shader names — pass through |
 | `font` (module path) | Must resolve to a valid require — pass through |
 | `sprite` (particle/drop asset path) | Must resolve to a valid require — pass through |
+
+## Log / save directory (Source/Helpers/Log.lua, conf.lua)
+
+- **`Log.lua` patches global `print` at require time.** Every module's `print()` routes through the log sink automatically — no caller opts in. `originalPrint` must be captured before the patch, or `print` recurses infinitely. Because the patch runs at `require`, any module loaded before `Log` (before the patch) calling `print` still uses the real one.
+- **Never use `os.execute` to create a directory for file logging.** On Windows with `t.console = false` it spawns a console and a malformed command (e.g. the unix `mkdir -p "..." 2>/dev/null` branch when `os.getenv("OS")` isn't detected) can block waiting on a `Terminate batch job` prompt — the game freezes black for ~10s then continues. Use `love.filesystem` instead: it targets the save directory and creates it as needed, no shell involved.
+- **`love.filesystem.write`/`append`/`createDirectory` always operate on the SAVE directory**, never the project source dir. To relocate the log (or any save data) out of the default `LOVE/`, set `t.identity = "Foragers"` in `conf.lua` → save dir becomes `%APPDATA%/Foragers/`. Writing into the project tree would require the shell approach above — avoided.
+- **`Log.init()` must run once at startup** (first thing in `love.load`) before any `print`, or the file is never opened and `Log.write` falls back to stdout-only.
