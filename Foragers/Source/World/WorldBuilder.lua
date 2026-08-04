@@ -4,6 +4,7 @@ local TilePalette = require("Source.World.TilePalette")
 local Collision = require("Source.Sprite.Components.Collision")
 local Merge = require("Source.Helpers.Merge")
 local Path = require("Source.Helpers.Path")
+local Pivot = require("Source.Helpers.Pivot")
 local WorldConfig = require("Content.Data.World") or {}
 
 local private = {}
@@ -26,10 +27,45 @@ local function computeMask(world, x, y)
 	return (top and 1 or 0) + (right and 2 or 0) + (bottom and 4 or 0) + (left and 8 or 0)
 end
 
+--- Collapse each row's contiguous active tiles into one wide AABB. The union of
+--- side-by-side solid tiles is itself a rectangle, so one merged rect collides
+--- identically to the individual tiles. Grounded scans stay O(#runs) not O(#tiles).
+local function mergeTerrainRects(worldData)
+	local rects = {}
+	local width, height = private.width, private.height
+	local tileSize = private.tileSize
+	for y = 0, height - 1 do
+		local row = worldData[y]
+		local x = 0
+		while x < width do
+			local tile = row[x]
+			if tile and tile.active then
+				local startX = x
+				while x < width and row[x] and row[x].active do
+					x = x + 1
+				end
+				rects[#rects + 1] = {
+					-- Tiles are pivot-centered: sprite.x sits on the grid point and
+					-- the old per-tile rect spanned ±tileSize/2 around it. Center each
+					-- merged run the same way so the union matches the original AABBs.
+					x = startX * tileSize - tileSize / 2,
+					y = y * tileSize - tileSize / 2,
+					w = (x - startX) * tileSize,
+					h = tileSize,
+				}
+			else
+				x = x + 1
+			end
+		end
+	end
+	return rects
+end
+
 local function buildTerrain(worldData, spawnCallback)
 	local sprites = {}
+	local batch = nil
 
-	Collision.resetTerrain()
+	Collision.setTerrain(mergeTerrainRects(worldData))
 
 	for y = 0, private.height - 1 do
 		for x = 0, private.width - 1 do
@@ -52,10 +88,17 @@ local function buildTerrain(worldData, spawnCallback)
 				local ss = sprite:findComponent("spritesheet")
 				if ss then
 					ss:setFrame(tileIndex)
-				end
-				local col = sprite:findComponent("collision")
-				if col then
-					col:registerAsTerrain()
+					-- All terrain shares one image: batch every tile into a single
+					-- draw call so draw cost is O(1) regardless of world size.
+					local quad = ss:_getQuad()
+					if quad then
+						if not batch then
+							batch = love.graphics.newSpriteBatch(ss.image, private.width * private.height)
+						end
+						local ox = Pivot.px(ss.pivotX, ss.frameWidth, 0)
+						local oy = Pivot.px(ss.pivotY, ss.frameHeight, 0)
+						batch:add(quad, sprite.x, sprite.y, 0, 1, 1, ox, oy)
+					end
 				end
 
 				table.insert(sprites, {
@@ -66,7 +109,7 @@ local function buildTerrain(worldData, spawnCallback)
 			end
 		end
 	end
-	return sprites
+	return sprites, batch
 end
 
 local function spawnProps(worldData, playerSprite)
@@ -223,10 +266,10 @@ local function buildBorder()
 end
 
 local function build(worldData, spawnCallback, playerSprite)
-	local terrain = buildTerrain(worldData, spawnCallback)
+	local terrain, terrainBatch = buildTerrain(worldData, spawnCallback)
 	local props = spawnProps(worldData, playerSprite) or {}
 	buildBorder()
-	return { terrain = terrain, props = props }
+	return { terrain = terrain, props = props, terrainBatch = terrainBatch }
 end
 
 return {

@@ -30,8 +30,10 @@ local slowdownColliders = {}
 local _slowdownCurr = {}
 local _slowdownPrev = {}
 
-function Collision.resetTerrain()
-	terrainColliders = {}
+-- Baked static terrain colliders: row-merged AABBs, set once at world generation
+---@param rects table<{x:number, y:number, w:number, h:number}>
+function Collision.setTerrain(rects)
+	terrainColliders = rects
 end
 
 function Collision.getTerrainColliders()
@@ -185,11 +187,6 @@ end
 
 function Collision.addSolid(rect)
 	table.insert(solidColliders, rect)
-end
-
--- For static tiles only; baked once at world generation
-function Collision:registerAsTerrain()
-	table.insert(terrainColliders, self:getRect())
 end
 
 -- For static obstacles (props); baked once at world generation
