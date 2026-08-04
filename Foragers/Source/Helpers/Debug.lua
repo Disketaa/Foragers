@@ -1,6 +1,7 @@
 local EventEmitter = require("Source.Helpers.EventEmitter")
 local data = require("Content.Data.Debug")
 local Options = require("Source.Helpers.Options")
+local Snapshot = require("Source.Helpers.Snapshot")
 
 local Sprite = require("Source.Sprite.Sprite")
 
@@ -367,21 +368,24 @@ function Debug.update(dt)
 	end
 
 	local s = Debug.settings("hud")
-	if not Debug.enabled("hud") or not (s.fps or Debug.enabled("hud.fpsGraph")) then
-		return
-	end
-	frameCount = frameCount + 1
+	local wantFps = Debug.enabled("hud") and (s.fps or Debug.enabled("hud.fpsGraph"))
 	local now = love.timer.getTime()
 	local interval = 1 / (s.updateSpeed or 2)
+	frameCount = frameCount + 1
 	if now - lastSample >= interval then
 		local fps = frameCount / (now - lastSample)
 		frameCount = 0
 		lastSample = now
-		historyIndex = historyIndex % HISTORY_MAX + 1
-		history[historyIndex] = fps
-		if historyCount < HISTORY_MAX then
-			historyCount = historyCount + 1
+		if wantFps then
+			historyIndex = historyIndex % HISTORY_MAX + 1
+			history[historyIndex] = fps
+			if historyCount < HISTORY_MAX then
+				historyCount = historyCount + 1
+			end
 		end
+		-- Sample the snapshot even when the HUD readout is off, so drops are
+		-- captured as long as the profiler is collecting.
+		Snapshot.update(Profiler.enabled(), fps, Profiler.entries(), Profiler.totalMs())
 	end
 end
 
@@ -432,15 +436,18 @@ local function drawProfiler(scale)
 	local nameMax = math.max(3, math.floor(p.nameMaxChars or 18))
 	local digits = math.max(0, math.floor(p.digits or 4))
 	for _, e in ipairs(rows) do
-		if #e.name > nameMax then
-			e.name = string.sub(e.name, 1, nameMax - 1) .. "..."
+		-- Truncate into a local display name; never mutate the shared entry
+		-- name so the snapshot trace reads the full scope names.
+		local disp = e.name
+		if #disp > nameMax then
+			disp = string.sub(disp, 1, nameMax - 1) .. "..."
 		end
-		local dot = e.name:find("%.")
+		local dot = disp:find("%.")
 		if dot then
-			e.module = string.sub(e.name, 1, dot - 1)
-			e.method = string.sub(e.name, dot)
+			e.module = string.sub(disp, 1, dot - 1)
+			e.method = string.sub(disp, dot)
 		else
-			e.module = e.name
+			e.module = disp
 			e.method = nil
 		end
 	end
@@ -472,7 +479,7 @@ local function drawProfiler(scale)
 	local nameCol = 0
 	local pctCol = 0
 	for _, e in ipairs(rows) do
-		nameCol = math.max(nameCol, labelFont:getWidth(e.name))
+		nameCol = math.max(nameCol, labelFont:getWidth(e.module .. (e.method or "")))
 		pctCol = math.max(pctCol, valueFont:getWidth(fmtPct(e.ms) .. "%"))
 	end
 	nameCol = math.max(nameCol, labelFont:getWidth("Scope"))
