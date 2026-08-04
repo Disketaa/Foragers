@@ -16,15 +16,5 @@ return {
 			columns = 4,
 			rows = 6,
 		},
-
-		{
-			component = "collision",
-			mode = "solid",
-			collisionWidth = 8,
-			collisionHeight = 8,
-			offsetX = 0,
-			offsetY = 0,
-			visible = false,
-		},
 	},
 }

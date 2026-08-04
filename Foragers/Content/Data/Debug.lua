@@ -26,6 +26,13 @@ return {
 			color = { 0.7, 0, 0, 1 },
 			size = 1,
 		},
+		tileMesh = {
+			enabled = true,
+			decor = "diagonal",
+			thickness = 1,
+			color = { 1, 1, 0, 0.8 },
+			backgroundColor = { 1, 1, 0, 0.2 },
+		},
 	},
 
 	hud = {
@@ -54,7 +61,6 @@ return {
 			badColor = { 1, 0, 0, 1 },
 		},
 		objectCount = true,
-
 		profiler = {
 			enabled = true,
 			updateSpeed = 10,

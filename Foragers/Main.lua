@@ -51,6 +51,7 @@ local shakeOffsetX = 0
 local shakeOffsetY = 0
 local uiSprites = {}
 local saturationShader = nil
+local terrainBatch = nil
 local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
@@ -140,6 +141,7 @@ function initGame()
 	end, playerSprite)
 	local tileEntries = result.terrain
 	local propEntries = result.props or {}
+	terrainBatch = result.terrainBatch
 	local toolEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
 		return 0, 0
 	end) or {}
@@ -284,11 +286,11 @@ function love.draw()
 		love.graphics.push()
 		love.graphics.translate(camPixelX, camPixelY)
 
-		-- Static terrain (pre-ordered by generation — no sorting needed)
-		for _, entry in ipairs(staticObjects) do
-			if entry.instance and entry.instance.draw then
-				entry.instance:draw()
-			end
+		-- Static terrain (pre-ordered by generation — no sorting needed).
+		-- Drawn as one SpriteBatch call; the per-tile sprites stay in
+		-- staticObjects only for collision and gizmo overlays.
+		if terrainBatch then
+			love.graphics.draw(terrainBatch)
 		end
 
 		Mask.renderSilhouette(dynamicObjects, canvas.width, canvas.height, camPixelX, camPixelY)
@@ -354,10 +356,20 @@ function love.draw()
 		end
 	end
 
+	-- Tile mesh overlay: merged terrain colliders (row-run AABBs from
+	-- WorldBuilder) so you can verify the collision mesh covers exactly the
+	-- active tiles with no gaps or over-reach.
+	if Debug.enabled("gizmo") and Debug.enabled("gizmo.tileMesh") then
+		for _, r in ipairs(Collision.getTerrainColliders()) do
+			Gizmo.fillRect("tileMesh", r.x, r.y, r.w, r.h)
+			Gizmo.rect("tileMesh", r.x, r.y, r.w, r.h)
+		end
+	end
+
 	-- Gizmo overlay: native-resolution debug shapes, not scaled by the world canvas.
 	if Debug.enabled("gizmo") then
 		local groups = {}
-		for _, name in ipairs({ "collisions", "boundaries", "pivots" }) do
+		for _, name in ipairs({ "collisions", "boundaries", "pivots", "tileMesh" }) do
 			if Debug.enabled("gizmo." .. name) then
 				groups[name] = Debug.settings("gizmo." .. name)
 			end
@@ -374,6 +386,16 @@ function love.draw()
 	for _, ui in ipairs(uiSprites) do
 		ui.sprite:draw()
 	end
+	love.graphics.pop()
+
+	-- Debug HUD: top-left at native resolution, screen-fixed.
+	Debug.draw(#objects, canvas.scale)
+
+	-- Cursor drawn last so it sits above the debug HUD, screen-fixed.
+	love.graphics.push()
+	love.graphics.origin()
+	love.graphics.translate(canvas.offsetX, canvas.offsetY)
+	love.graphics.scale(canvas.scale, canvas.scale)
 	if cursorSprite and cursorSprite.instance then
 		local mx, my = love.mouse.getPosition()
 		local cx = (mx - canvas.offsetX) / canvas.scale
