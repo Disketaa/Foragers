@@ -1,7 +1,7 @@
 return {
 	pivotY = 6,
-	sortOffsetY = 2,
 	layer = 0,
+	sortOffsetY = 2,
 	components = {
 		{
 			component = "spritesheet",

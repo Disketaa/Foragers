@@ -44,6 +44,9 @@ def load_plugin(name: str, plugins_dir: Path):
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     script_dir = Path(__file__).resolve().parent
     config_path = script_dir / "Settings.toml"
 
@@ -114,6 +117,8 @@ def main():
         original = path.read_text(encoding="utf-8")
         updated = original
         for opt_name, module, opt_config in enabled_plugins:
+            if hasattr(module, "set_path"):
+                module.set_path(path)
             updated = module.apply(updated, config)
 
         if updated != original:
@@ -123,7 +128,12 @@ def main():
         else:
             print(f"No changes: {path}")
 
-    print(f"\nDone. {changed} file(s) updated out of {len(all_files)} total.")
+    print(f"\n\u2705 Done. {changed} file(s) updated out of {len(all_files)} total.")
+    sys.stdout.flush()
+
+    for opt_name, module, opt_config in enabled_plugins:
+        if hasattr(module, "finalize"):
+            module.finalize(script_dir)
 
 
 if __name__ == "__main__":

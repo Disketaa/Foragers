@@ -4,8 +4,8 @@ return {
 	frameHeight = 16,
 	pivotX = "center",
 	pivotY = 12,
-	sortOffsetY = 0,
 	layer = 0,
+	sortOffsetY = 0,
 	components = {
 		{
 			component = "player_stats",

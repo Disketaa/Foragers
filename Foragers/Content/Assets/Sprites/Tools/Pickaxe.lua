@@ -3,8 +3,8 @@ return {
 	frameHeight = 10,
 	pivotX = "center",
 	pivotY = "bottom",
-	sortOffsetY = 8,
 	layer = 0,
+	sortOffsetY = 8,
 	components = {
 		{
 			component = "shadow",
