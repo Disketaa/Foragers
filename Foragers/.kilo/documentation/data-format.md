@@ -14,7 +14,7 @@ description: Exact format for sprite data files (.lua) in Content/Assets/Sprites
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|---|
-| `object` | string | No | — | String identifier, copied to `sprite.object` at instantiation (used e.g. to exclude sprites from debug collision overlay) |
+| `object` | string | No | — | String identifier, copied to `sprite.object` at instantiation (used e.g. to exclude sprites from debug collision overlay). `"vegetable"` tags a prop as a vegetable — `Source/World/PropPicker.lua` splits props into veg/non-veg by this value and applies the world's vegetable cap + PRD to it |
 | `frameWidth` | number | Yes* | — | Sprite frame width in pixels |
 | `frameHeight` | number | Yes* | — | Sprite frame height in pixels |
 | `pivotX` | number/string | No | `"center"` | X origin. Pixel number from top-left (e.g. `8` on a 16px frame = center) or keyword `"left"` / `"center"` / `"right"` |

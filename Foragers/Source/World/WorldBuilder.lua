@@ -2,9 +2,9 @@ local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
 local Collision = require("Source.Sprite.Components.Collision")
-local Merge = require("Source.Helpers.Merge")
 local Path = require("Source.Helpers.Path")
 local Pivot = require("Source.Helpers.Pivot")
+local PropPicker = require("Source.World.PropPicker")
 local WorldConfig = require("Content.Data.World") or {}
 
 local private = {}
@@ -133,36 +133,9 @@ local function buildPropPlan(worldData, playerSprite)
 	Collision.resetSolids()
 	Collision.resetSlowdown()
 
-	local propConfigs = private.props or {}
-	local coverage = private.propCoverage or 0.3
+	local props = private.props or {}
+	local coverage = props.coverage or 0.3
 	local tileSize = private.tileSize or 8
-
-	local loadedProps = {}
-	for _, cfg in ipairs(propConfigs) do
-		local ok, propData = pcall(require, cfg.data)
-		if ok and type(propData) == "table" then
-			if propData.extends then
-				propData = Merge.resolveExtends(propData)
-			end
-			local propName = cfg.data:match("([^%.]+)$"):lower()
-			local pngPath = Path.moduleToPath(cfg.data) .. ".png"
-			table.insert(loadedProps, {
-				name = propName,
-				weight = cfg.weight or 1,
-				data = propData,
-				pngPath = pngPath,
-			})
-		end
-	end
-
-	if #loadedProps == 0 then
-		return {}
-	end
-
-	local totalWeight = 0
-	for _, p in ipairs(loadedProps) do
-		totalWeight = totalWeight + p.weight
-	end
 
 	local activeTiles = {}
 	for y = 0, private.height - 1 do
@@ -190,6 +163,9 @@ local function buildPropPlan(worldData, playerSprite)
 		end
 	end
 
+	-- Recompute the cap now that the real active-tile count is known.
+	PropPicker.init(private, #activeTiles)
+
 	local numProps = math.floor(#activeTiles * coverage)
 	if numProps == 0 then
 		return {}
@@ -207,15 +183,9 @@ local function buildPropPlan(worldData, playerSprite)
 		activeTiles[i], activeTiles[j] = activeTiles[j], activeTiles[i]
 		local tile = activeTiles[i]
 
-		local pick = love.math.random(1, totalWeight)
-		local cumulative = 0
-		local chosen = loadedProps[1]
-		for _, p in ipairs(loadedProps) do
-			cumulative = cumulative + p.weight
-			if pick <= cumulative then
-				chosen = p
-				break
-			end
+		local chosen = PropPicker.pick(numProps - i + 1)
+		if not chosen then
+			break
 		end
 
 		plan[#plan + 1] = {

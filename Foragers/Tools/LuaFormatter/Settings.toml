@@ -1,6 +1,6 @@
 [targets]
 # Directories to process (relative to project root). Use "*" for everything.
-folders = ["Content/Assets/Sprites", "Content/Assets/UI"]
+folders = ["Content/Assets/Sprites", "Content/Assets/UI", "Content/Data"]
 exclude_folders = []
 exclude_files = []
 
@@ -26,8 +26,11 @@ enabled = true
 [Modules.AddBlankLines]
 enabled = true
 
+[Modules.StringifyItems]
+enabled = true
+
 [param_order]
-order = "extends, object, frameWidth, frameHeight, pivotX, pivotY, angle, layer, sortOffsetY"
+order = "width, height, tileSize, backgroundColor, borderTileOffset, noise, props, extends, object, frameWidth, frameHeight, pivotX, pivotY, angle, layer, sortOffsetY"
 
 [component_param_order]
 collision = "mode, collisionWidth, collisionHeight, offsetX, offsetY"

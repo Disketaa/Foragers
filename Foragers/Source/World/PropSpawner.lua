@@ -1,13 +1,10 @@
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Collision = require("Source.Sprite.Components.Collision")
 local Events = require("Source.Helpers.Events")
-local Merge = require("Source.Helpers.Merge")
-local Path = require("Source.Helpers.Path")
+local PropPicker = require("Source.World.PropPicker")
 
 local _tileSize
 local _activeTiles = {}
-local _loadedProps = {}
-local _totalWeight = 0
 local _timer
 local _interval
 local _playerSprite = nil
@@ -58,39 +55,14 @@ end
 local function init(worldData, worldConfig, opts)
 	opts = opts or {}
 	_tileSize = worldConfig.tileSize or 8
-	_interval = worldConfig.propSpawnInterval or 3
+	_interval = (worldConfig.props or {}).spawnInterval or 3
 	_timer = _interval
 	_playerSprite = opts.playerSprite
 
 	local width = worldConfig.width or 20
 	local height = worldConfig.height or 20
-	local propConfigs = worldConfig.props or {}
 
 	_activeTiles = {}
-
-	_loadedProps = {}
-	_totalWeight = 0
-	for _, cfg in ipairs(propConfigs) do
-		local ok, propData = pcall(require, cfg.data)
-		if ok and type(propData) == "table" then
-			if propData.extends then
-				propData = Merge.resolveExtends(propData)
-			end
-			local propName = cfg.data:match("([^%.]+)$"):lower()
-			local pngPath = Path.moduleToPath(cfg.data) .. ".png"
-			table.insert(_loadedProps, {
-				name = propName,
-				weight = cfg.weight or 1,
-				data = propData,
-				pngPath = pngPath,
-			})
-			_totalWeight = _totalWeight + (cfg.weight or 1)
-		end
-	end
-
-	if _totalWeight == 0 then
-		return
-	end
 
 	for y = 0, height - 1 do
 		for x = 0, width - 1 do
@@ -110,7 +82,7 @@ end
 ---@param dt number
 ---@return table|nil  spawned sprite instance, or nil if nothing spawned
 local function update(dt)
-	if _totalWeight == 0 or #_activeTiles == 0 then
+	if #_activeTiles == 0 then
 		return nil
 	end
 
@@ -127,15 +99,11 @@ local function update(dt)
 
 	local tile = available[love.math.random(1, #available)]
 
-	local pick = love.math.random(1, _totalWeight)
-	local cumulative = 0
-	local chosen = _loadedProps[1]
-	for _, p in ipairs(_loadedProps) do
-		cumulative = cumulative + p.weight
-		if pick <= cumulative then
-			chosen = p
-			break
-		end
+	-- Prop type decided by the shared PRD picker (vegetable cap + Dota-2-style
+	-- accumulated chance), same state as the initial plan.
+	local chosen = PropPicker.pick(nil)
+	if not chosen then
+		return nil
 	end
 
 	local sprite = SpriteLoader.instantiate(chosen.data, tile.x, tile.y, chosen.pngPath)

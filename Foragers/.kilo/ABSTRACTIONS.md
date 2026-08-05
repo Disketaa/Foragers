@@ -163,6 +163,15 @@ relevant section before touching that subsystem.
   tile × every collider (~17M checks at 80×80). Fixed by building an
   occupied-tile set in one O(colliders) pass then filtering active tiles in
   O(activeTiles). Don't re-add a nested collider scan.
+- **Vegetable cap + PRD live in ONE shared picker, not per spawn path.**
+  `Source/World/PropPicker.lua` holds the veg-cap quota and the Dota-2-style
+  pseudo-random streak. Both the initial `WorldBuilder.buildPropPlan` and the
+  runtime `PropSpawner.update` call `PropPicker.pick(...)` so they share one
+  counter — if each path kept its own, the world could exceed the cap or fail
+  to hit it. `PropPicker.init` must run once, before `buildPropPlan`, with the
+  real active-tile count (`props.vegetables.density × activeTiles`); it resets
+  the counter, so never call it again mid-game. Vegetables are identified by
+  `object == "vegetable"` (set on `_Vegetables.lua`, inherited by Turnip/Carrot).
 - **Per-call component scans allocate.** `Sprite:getComponents` builds a fresh
   table and an inline predicate is a per-call closure. In per-frame hot loops
   (update loop, shadow pass) use `Sprite:getComponentsInto(type, predicate, out)`

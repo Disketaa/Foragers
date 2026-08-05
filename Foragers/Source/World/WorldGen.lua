@@ -14,7 +14,8 @@ function private.generate()
 	local centerY = private.height / 2
 	local radius = math.min(centerX, centerY) - 0.5
 
-	local effectiveSeed = private.seed
+	local noise = private.noise or {}
+	local effectiveSeed = noise.seed or -1
 	if effectiveSeed < 0 then
 		effectiveSeed = love.math.random(1, 999999)
 	end
@@ -28,13 +29,13 @@ function private.generate()
 			local normalizedDist = dist / radius
 
 			-- 3D simplex noise: seed as z-dimension for deterministic variation per seed
-			local island = love.math.noise(x * private.scale, y * private.scale, effectiveSeed)
-			local detail = love.math.noise(x * private.scale * 2 + 5, y * private.scale * 2 + 5, effectiveSeed + 1000)
-			local noiseVal = island + detail * private.detail
+			local island = love.math.noise(x * noise.scale, y * noise.scale, effectiveSeed)
+			local detail = love.math.noise(x * noise.scale * 2 + 5, y * noise.scale * 2 + 5, effectiveSeed + 1000)
+			local noiseVal = island + detail * noise.detail
 
 			local rawNoise = noiseVal * 0.5 + 0.5
 			local inCircle = normalizedDist < 1
-			local active = rawNoise > private.density and inCircle
+			local active = rawNoise > noise.density and inCircle
 
 			world[y][x] = {
 				x = x * tileSize,
