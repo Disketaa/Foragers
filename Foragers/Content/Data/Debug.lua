@@ -73,11 +73,11 @@ return {
 			valueMaxChars = 8,
 			limit = 20,
 		},
+	},
 
-		snapshot = {
-			topScopes = 10,
-			rollupFps = 15,
-			fpsTarget = 60,
-		},
+	snapshot = {
+		topScopes = 10,
+		rollupFps = 15,
+		fpsTarget = 60,
 	},
 }

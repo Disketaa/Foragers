@@ -129,6 +129,46 @@ relevant section before touching that subsystem.
   holding its update as a bare `local` is invisible. Only a method called as
   `Module.method(...)` is measured.
 
+## Large-world performance / GC / streaming
+
+- **The auto-profiler's wrapper must not allocate.** `timed()` originally did
+  `local results = { xpcall(fn, debug.traceback, ...) }` — a fresh table per
+  wrapped call. With the profiler ON over ~2700 props × ~10 components that's
+  ~27k tables/frame (~2MB/frame) → GC sawtooth + hitches. The profiler's own
+  measurement corrupted the measurement. Use the `reportTimed` pattern: forward
+  varargs on the stack, no table constructor, `error((...), 2)` rethrows the
+  xpcall traceback. Never pack xpcall results in a per-frame wrapper.
+- **Culling feeds all draw passes.** `Main.cullVisible()` builds a `visible` list
+  (one AABB test per sprite vs the camera view + `CULL_MARGIN`) and passes it to
+  `Mask.renderSilhouette`, `Shadow.renderLayer`, `DrawOrder.collect`. Off-screen
+  props are never submitted. Don't iterate `dynamicObjects` directly in a draw pass.
+- **GC pacing bounds the sawtooth, not the live heap.** LuaJIT has no
+  `"incremental"` mode — use `collectgarbage("setpause")`/`("setstepmul")` + a
+  per-frame `collectgarbage("step", KB)`. This stops single-frame stalls, but the
+  live heap is the real scaling wall: each prop is ~15-17KB of Lua state, so a
+  world that keeps thousands of persistent props alive is GC-bound regardless of
+  pacing. Reduce total live props (cap/streaming), not just GC tuning.
+- **Image/Quad/Sound caches are forever-lived, keyed by path.** `SpriteSheet`
+  `imageCache`/`quadCache` and `Sound.audioCache` share assets across instances
+  (otherwise every prop re-decoded a texture/ogg per spawn — ~5ms/prop). Safe
+  only because: no runtime mod content, nothing mutates an Image/Quad/Source
+  (play `clone()`s the base), frame changes index the shared quad array (never
+  `quad:setViewport`). Runtime mods/hot-reload would need an invalidation path.
+- **Streaming world spawn.** `WorldBuilder.build` returns cheap plans
+  (`terrainPlan`/`propPlan`, RNG only) and `Main.love.update` drains them within a
+  wall-clock budget, nearest-player-first. `PropSpawner.update` must be gated
+  until the plan is fully drained, or it can reserve a not-yet-solid plan tile →
+  overlap. Never run a long synchronous per-entity loop in `WorldBuilder.build`.
+- **PropSpawner occupancy was O(n²).** `getAvailableTiles` scanned every active
+  tile × every collider (~17M checks at 80×80). Fixed by building an
+  occupied-tile set in one O(colliders) pass then filtering active tiles in
+  O(activeTiles). Don't re-add a nested collider scan.
+- **Per-call component scans allocate.** `Sprite:getComponents` builds a fresh
+  table and an inline predicate is a per-call closure. In per-frame hot loops
+  (update loop, shadow pass) use `Sprite:getComponentsInto(type, predicate, out)`
+  with a module-local scratch buffer + hoisted static predicate; iterate the
+  buffer immediately, never hold it across another call.
+
 ## SpriteFont / Text / TextEmitter (Source/Sprite/Components/SpriteFont.lua, Source/UI/Text.lua, Source/UI/Components/TextEmitter.lua)
 
 - **`utf8Next` MUST index glyphs by VISUAL char, not byte.** The `chars` table

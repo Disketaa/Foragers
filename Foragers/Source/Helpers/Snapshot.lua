@@ -29,7 +29,7 @@ local drawMs = 0
 --- Config, modding-safe: falls back to defaults when the `hud.snapshot` group
 --- (or any field) is absent.
 local function conf()
-	local s = debugData.hud and debugData.hud.snapshot
+	local s = debugData.snapshot
 	local fg = debugData.hud and debugData.hud.fpsGraph and debugData.hud.fpsGraph.fpsTarget
 	return {
 		topScopes = s and s.topScopes or 10,
@@ -50,6 +50,10 @@ local function fmtMb(kb)
 		return string.format("%.0fKB", kb)
 	end
 	return string.format("%.2fMB", kb / 1024)
+end
+
+local function fmtHead(fps)
+	return "[" .. os.date("%H:%M:%S") .. "] FPS " .. string.format("%.0f", fps)
 end
 
 --- Ambient diagnostics for the current frame. Cheap: one getStats + one GC
@@ -159,10 +163,7 @@ function Snapshot.update(profilerOn, fps, entries, totalMs)
 		local now = love.timer.getTime()
 		if now - lastRollup >= 1 / c.rollupFps then
 			lastRollup = now
-			local line = "["
-				.. os.date("%H:%M:%S")
-				.. "] FPS "
-				.. string.format("%.0f", fps)
+			local line = fmtHead(fps)
 				.. " (avg "
 				.. string.format("%.0f", love.timer.getFPS())
 				.. ")"
@@ -177,12 +178,13 @@ function Snapshot.update(profilerOn, fps, entries, totalMs)
 		end
 		if not dip.min or fps < dip.min then
 			dip.min = fps
+			-- Capture ambient once at the dip's lowest point, not every sample.
+			dip.ambient = ambient(fps, totalMs)
 		end
 		-- Refresh the trace every in-dip sample, not only when the minimum
 		-- moves, so a dip that starts with an empty profiler snapshot (e.g.
 		-- the startup frame) still records real scopes from later samples.
 		dip.total = totalMs
-		dip.ambient = ambient(fps, totalMs)
 		dip.scopes = {}
 		for _, e in ipairs(entries) do
 			if #dip.scopes >= c.topScopes then
@@ -191,12 +193,7 @@ function Snapshot.update(profilerOn, fps, entries, totalMs)
 			table.insert(dip.scopes, e)
 		end
 	elseif dip then
-		local head = "["
-			.. os.date("%H:%M:%S")
-			.. "] FPS "
-			.. string.format("%.0f", dip.min)
-			.. "  total "
-			.. fmtMs(dip.total or 0)
+		local head = fmtHead(dip.min) .. "  total " .. fmtMs(dip.total or 0)
 		if dip.from then
 			head = head .. "  (from " .. string.format("%.0f", dip.from) .. ")"
 		end
