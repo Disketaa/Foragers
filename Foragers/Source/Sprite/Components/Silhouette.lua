@@ -11,6 +11,7 @@ function Silhouette.new(data)
 	return setmetatable({
 		type = "silhouette",
 		mode = data.mode or "silhouette",
+		color = data.color or { 0, 0, 0, 0.75 },
 	}, Silhouette)
 end
 

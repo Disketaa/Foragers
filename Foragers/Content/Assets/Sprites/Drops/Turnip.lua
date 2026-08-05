@@ -10,6 +10,11 @@ return {
 		},
 
 		{
+			component = "silhouette",
+			color = { 0.83, 0.5, 0.73, 0.75 },
+		},
+
+		{
 			component = "pickup",
 			satiety = 30,
 		},

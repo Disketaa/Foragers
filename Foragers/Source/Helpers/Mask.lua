@@ -17,15 +17,15 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 	silCanvas = ensureCanvas(viewW, viewH)
 
 	Canvas.drawTo(silCanvas, function()
-		love.graphics.setColor(1, 1, 1, 1)
-
 		for _, entry in ipairs(entries) do
 			local sprite = entry.instance or entry
 			if sprite and sprite.components then
-				local hasSilhouette = sprite:findComponent("silhouette", function(c)
+				local silComp = sprite:findComponent("silhouette", function(c)
 					return c.mode ~= "mask" and not c._broken
 				end)
-				if hasSilhouette then
+				if silComp then
+					local color = silComp.color or { 0, 0, 0, 0.75 }
+					love.graphics.setColor(color[1], color[2], color[3], color[4] or 0.75)
 					local rot = 0
 					local t = sprite.tweens
 					if t then

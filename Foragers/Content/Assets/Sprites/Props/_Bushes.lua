@@ -44,5 +44,10 @@ return {
 				prop_broken = { "Content/Assets/Sounds/Events/BushBreak.ogg" },
 			},
 		},
+
+		{
+			component = "shader",
+			shaders = { "Brightness", "Silhouette" },
+		},
 	},
 }

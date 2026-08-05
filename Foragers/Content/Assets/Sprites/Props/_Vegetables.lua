@@ -38,5 +38,10 @@ return {
 				prop_broken = { "Content/Assets/Sounds/Events/VegetableBreak.ogg" },
 			},
 		},
+
+		{
+			component = "silhouette",
+			mode = "silhouette",
+		},
 	},
 }

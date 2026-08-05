@@ -80,6 +80,7 @@ return {
 
 		{
 			component = "silhouette",
+			color = { 0.36, 0.44, 0.55, 0.75 },
 		},
 
 		{
