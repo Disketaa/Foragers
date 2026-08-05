@@ -61,7 +61,6 @@ local playerSprite = nil
 local shakeOffsetX = 0
 local shakeOffsetY = 0
 local uiSprites = {}
-local saturationShader = nil
 local terrainBatch = nil
 local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
@@ -160,10 +159,6 @@ function initGame()
 		ShaderLoader.loadAll("Content/Assets/Shaders")
 	end)
 	ShaderLoader.reset()
-
-	-- Resolved after loadAll (shader objects are rebuilt on restart).
-	local satEntry = ShaderLoader.loadByName("Saturation")
-	saturationShader = satEntry and satEntry.shader or nil
 
 	local worldData = timeIt("WorldGen.generate", function()
 		return WorldGen.generate()
@@ -274,9 +269,7 @@ function initGame()
 			local f = data.value / math.max(1, data.maxValue)
 			TimeScale.scale = f >= 0.33 and 1.0 or 0.15 + 0.85 * (f / 0.33)
 			local s = f >= 0.33 and 1 or f / 0.33
-			if saturationShader then
-				saturationShader:send("u_saturation", math.max(0, math.min(1, s)))
-			end
+			ShaderLoader.sendUniform("u_saturation", math.max(0, math.min(1, s)))
 		end, 5)
 	end
 
@@ -367,7 +360,7 @@ function love.draw()
 	-- Shader compensates for missing translate via camera_x/y uniform
 	bgCanvas:draw(function()
 		ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
-	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY, saturationShader)
+	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY, ShaderLoader.getPostProcess())
 
 	-- Main world canvas
 	canvas:draw(function()
@@ -415,7 +408,7 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY, saturationShader)
+	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY, ShaderLoader.getPostProcess())
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
 	-- its outline. Rects + fills are tagged by group so Gizmo can style each.

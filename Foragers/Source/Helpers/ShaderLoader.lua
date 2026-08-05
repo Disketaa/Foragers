@@ -161,6 +161,28 @@ function ShaderLoader.update(dt)
 	ShaderLoader.time = ShaderLoader.time + dt
 end
 
+--- Shader applied to the whole bg canvas at blit time (post-process, not a
+--- drawBackground rect). Keyed by the `postprocess` priority marker, so
+--- callers never name a specific shader.
+function ShaderLoader.getPostProcess()
+	for _, s in ipairs(ShaderLoader.shaders or {}) do
+		if s.priority == "postprocess" then
+			return s.shader
+		end
+	end
+	return nil
+end
+
+--- Send a uniform to every shader that declares it, so dynamic values
+--- (saturation from player state) need no shader name at the call site.
+function ShaderLoader.sendUniform(name, value)
+	for _, s in ipairs(ShaderLoader.shaders or {}) do
+		if s.uniforms[name] ~= nil then
+			s.shader:send(name, value)
+		end
+	end
+end
+
 function ShaderLoader.setCamera(x, y)
 	ShaderLoader.cameraX = x
 	ShaderLoader.cameraY = y
