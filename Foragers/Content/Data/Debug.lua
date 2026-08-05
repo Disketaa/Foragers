@@ -1,5 +1,6 @@
 return {
 	debug = true,
+	snapshot = { topScopes = 10, rollupFps = 15, fpsTarget = 60 },
 	gizmo = {
 		enabled = false,
 		collisions = {
@@ -47,39 +48,15 @@ return {
 		color = { 1, 1, 1, 1 },
 		goodColor = { 0, 1, 0, 1 },
 		badColor = { 1, 0, 0, 1 },
-		font = {
-			label = "Content/Assets/Fonts/AzeretMonoMedium.ttf",
-			value = "Content/Assets/Fonts/AzeretMonoSemiBold.ttf",
-		},
+		font = { label = "Content/Assets/Fonts/AzeretMonoMedium.ttf", value = "Content/Assets/Fonts/AzeretMonoSemiBold.ttf" },
 		fps = true,
-		fpsGraph = {
-			enabled = true,
-			tolerance = 10,
-			gap = 2,
-			width = 25,
-			height = 4,
-			thickness = 0.5,
-		},
+		fpsGraph = { enabled = true, tolerance = 10, gap = 2, width = 25, height = 4, thickness = 0.5 },
 		objectCount = true,
 		toggles = {
 			{ label = "Debug", path = "debug", key = "toggleDebug" },
 			{ label = "Gizmo", path = "gizmo", key = "toggleGizmo" },
 			{ label = "Profiler", path = "hud.profiler", key = "toggleProfiler" },
 		},
-
-		profiler = {
-			enabled = false,
-			updateSpeed = 10,
-			nameMaxChars = 18,
-			digits = 1,
-			valueMaxChars = 8,
-			limit = 20,
-		},
-	},
-
-	snapshot = {
-		topScopes = 10,
-		rollupFps = 15,
-		fpsTarget = 60,
+		profiler = { enabled = false, updateSpeed = 10, nameMaxChars = 18, digits = 1, valueMaxChars = 8, limit = 20 },
 	},
 }

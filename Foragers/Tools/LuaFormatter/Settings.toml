@@ -23,6 +23,9 @@ enabled = true
 [Modules.TweenSort]
 enabled = true
 
+[Modules.StringifyLeaves]
+enabled = true
+
 [Modules.AddBlankLines]
 enabled = true
 
