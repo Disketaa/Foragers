@@ -144,6 +144,19 @@ function ShaderLoader.loadByName(name)
 	return nil
 end
 
+--- Restore every loaded shader to its data-file defaults. Reset.all() clears
+--- array module fields only, so time (number) and externally-driven uniforms
+--- (e.g. u_saturation) survive a restart — this restores both per entry.
+--- Any shader declaring `uniforms` resets automatically.
+function ShaderLoader.reset()
+	ShaderLoader.time = 0
+	for _, s in ipairs(ShaderLoader.shaders or {}) do
+		for name, value in pairs(s.uniforms) do
+			s.shader:send(name, value)
+		end
+	end
+end
+
 function ShaderLoader.update(dt)
 	ShaderLoader.time = ShaderLoader.time + dt
 end

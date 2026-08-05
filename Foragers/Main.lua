@@ -135,9 +135,6 @@ function love.load()
 	local bg = World.backgroundColor or { 0.5, 0.8, 1.0 }
 	love.graphics.setBackgroundColor(unpack(bg))
 
-	saturationShader = love.graphics.newShader(require("Content.Assets.Shaders.Saturation"))
-	saturationShader:send("u_saturation", 1)
-
 	ModLoader.loadAllMods("Mods")
 
 	initGame()
@@ -162,6 +159,11 @@ function initGame()
 	timeIt("ShaderLoader.loadAll", function()
 		ShaderLoader.loadAll("Content/Assets/Shaders")
 	end)
+	ShaderLoader.reset()
+
+	-- Resolved after loadAll (shader objects are rebuilt on restart).
+	local satEntry = ShaderLoader.loadByName("Saturation")
+	saturationShader = satEntry and satEntry.shader or nil
 
 	local worldData = timeIt("WorldGen.generate", function()
 		return WorldGen.generate()
