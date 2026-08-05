@@ -34,6 +34,8 @@ function PlayerStats.new(data)
 			idle = satietyDrain.idle or 0.1,
 			float = satietyDrain.float or 0.1,
 		},
+		movementSpeed = data.movementSpeed or 50,
+		swimmingSpeed = data.swimmingSpeed or 30,
 		type = "player_stats",
 	}, PlayerStats)
 end

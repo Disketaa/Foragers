@@ -97,6 +97,13 @@ function Control.new(data)
 end
 
 function Control:attach()
+	-- Speeds live on player_stats as the source of truth; fall back to
+	-- Control's own data (backward compat) if stats are absent.
+	local pstats = self.parent:findComponent("player_stats")
+	if pstats then
+		self.speed = pstats.movementSpeed or self.speed
+		self.swimmingSpeed = pstats.swimmingSpeed or self.swimmingSpeed
+	end
 	self.parent:on(Events.GROUNDED_CHANGED, function(isGrounded)
 		self._grounded = isGrounded
 		self._groundedInitialized = true

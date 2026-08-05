@@ -17,6 +17,8 @@ return {
 			satiety = 100,
 			maxSatiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
+			movementSpeed = 50,
+			swimmingSpeed = 30,
 		},
 
 		{
@@ -42,8 +44,6 @@ return {
 
 		{
 			component = "control",
-			movementSpeed = 50,
-			swimmingSpeed = 30,
 		},
 
 		{
