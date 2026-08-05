@@ -61,7 +61,15 @@ function Sound.new(data)
 end
 
 function Sound:attach()
+	-- Skip the first GROUNDED_CHANGED: it's the spawn's initial state, not a
+	-- transition, so it shouldn't play water_in/water_out. Control still receives
+	-- it to learn whether the player started grounded (swim vs land).
+	local groundedSeen = false
 	self.parent:on(Events.GROUNDED_CHANGED, function(isGrounded)
+		if not groundedSeen then
+			groundedSeen = true
+			return
+		end
 		self:_play(isGrounded and "water_out" or "water_in")
 	end, 15)
 
