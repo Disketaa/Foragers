@@ -39,8 +39,8 @@ return {
 		{
 			component = "counter",
 			mode = "progress",
-			sourceType = "player_stats",
 			field = "experience",
+			sourceType = "player_stats",
 			curve = "OutCubic",
 			smoothness = 0.3,
 			label = {

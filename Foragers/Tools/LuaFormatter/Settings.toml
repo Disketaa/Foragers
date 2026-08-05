@@ -31,13 +31,13 @@ order = "extends, object, frameWidth, frameHeight, pivotX, pivotY, angle, layer,
 
 [component_param_order]
 collision = "mode, collisionWidth, collisionHeight, offsetX, offsetY"
-counter = "mode, sourceType, field, maxField, icon, label, curve, smoothness"
+counter = "mode, field, sourceType, icon, label, maxField, curve, smoothness"
 destructible = "hp, replaceWith"
 drop = "drops"
-follow = "followRadius, followDelay, offsetX, offsetY, rotate, leanAngle, leanThreshold, accelerate, smoothnessX, smoothnessY, smoothness"
-particle_emitter = "particle, spawnOn, count, interval, stepInterval, offsetX, offsetY, angle, inheritFlip, layer, moving"
+follow = "offsetX, offsetY, followRadius, followDelay, accelerate, smoothness, smoothnessX, smoothnessY, rotate, leanAngle, leanThreshold"
+particle_emitter = "particle, offsetX, offsetY, angle, layer, inheritFlip, count, interval, stepInterval, spawnOn, moving"
 pickup = "xp, satiety"
-player_stats = "level, experience, xpCurve, maxSatiety, satiety, satietyDrain, movementSpeed, swimmingSpeed, critChance, critMult"
+player_stats = "level, experience, maxSatiety, satiety, satietyDrain, xpCurve, movementSpeed, swimmingSpeed, critChance, critMult"
 scroll_to = "chunkSize, smoothness"
 shader = "shaders"
 shadow = "width, height, offsetX, offsetY"

@@ -41,9 +41,9 @@ return {
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/SmallExplosion.lua",
-			spawnOn = { prop_broken = true },
 			offsetY = -2,
 			layer = "above",
+			spawnOn = { prop_broken = true },
 		},
 
 		{

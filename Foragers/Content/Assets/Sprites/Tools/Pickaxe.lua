@@ -18,10 +18,10 @@ return {
 			component = "follow",
 			offsetX = 6,
 			offsetY = -3,
-			leanAngle = 45,
-			leanThreshold = 0.1,
 			smoothnessX = 0.5,
 			smoothnessY = 0.2,
+			leanAngle = 45,
+			leanThreshold = 0.1,
 		},
 
 		{
@@ -57,25 +57,25 @@ return {
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Spark",
-			spawnOn = { prop_hit = true },
-			count = "3..5",
 			angle = "0..360",
 			layer = "below",
+			count = "3..5",
+			spawnOn = { prop_hit = true },
 		},
 
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Swing",
-			spawnOn = { swing = true },
-			inheritFlip = true,
 			layer = "below",
+			inheritFlip = true,
+			spawnOn = { swing = true },
 		},
 
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Crosshair",
-			spawnOn = { target_selected = true },
 			layer = "below",
+			spawnOn = { target_selected = true },
 		},
 
 		{

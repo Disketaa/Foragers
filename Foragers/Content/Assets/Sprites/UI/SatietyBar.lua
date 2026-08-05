@@ -32,8 +32,8 @@ return {
 		{
 			component = "counter",
 			mode = "fraction",
-			sourceType = "player_stats",
 			field = "satiety",
+			sourceType = "player_stats",
 			maxField = "maxSatiety",
 			curve = "OutCubic",
 			smoothness = 0.3,

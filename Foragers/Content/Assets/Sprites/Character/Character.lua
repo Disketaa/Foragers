@@ -11,10 +11,10 @@ return {
 			component = "player_stats",
 			level = 1,
 			experience = 0,
-			xpCurve = { base = 10, growth = 1.35 },
 			maxSatiety = 100,
 			satiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
+			xpCurve = { base = 10, growth = 1.35 },
 			movementSpeed = 50,
 			swimmingSpeed = 30,
 			critChance = 0,
@@ -79,12 +79,12 @@ return {
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Dust.lua",
-			spawnOn = { run = true },
-			stepInterval = 2,
 			offsetX = 0,
 			offsetY = 0,
-			inheritFlip = true,
 			layer = "below",
+			inheritFlip = true,
+			stepInterval = 2,
+			spawnOn = { run = true },
 		},
 
 		{
