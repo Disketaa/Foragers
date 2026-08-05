@@ -1,34 +1,6 @@
 import re
 
-
-def matching_brace(text: str, open_idx: int) -> int:
-    depth = 0
-    for i in range(open_idx, len(text)):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            depth -= 1
-            if depth == 0:
-                return i
-    raise ValueError("Unbalanced braces")
-
-
-def split_top_level(inner: str) -> list[str]:
-    parts, depth, cur = [], 0, ""
-    for ch in inner:
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-        if ch == "," and depth == 0:
-            if cur.strip():
-                parts.append(cur.strip())
-            cur = ""
-        else:
-            cur += ch
-    if cur.strip():
-        parts.append(cur.strip())
-    return parts
+from _lua import matching_brace, split_top_level
 
 
 def _target(part: str):

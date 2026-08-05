@@ -53,7 +53,6 @@ return {
 			collisionHeight = 2,
 			offsetX = 0,
 			offsetY = -2,
-			visible = true,
 		},
 
 		{

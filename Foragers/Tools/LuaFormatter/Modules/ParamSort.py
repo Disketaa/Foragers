@@ -2,6 +2,8 @@ import re
 import sys
 from pathlib import Path
 
+from _lua import matching_brace, split_top_level
+
 _found = []
 _current_path = None
 
@@ -20,36 +22,6 @@ def finalize(base_dir) -> None:
     print("\n\u26a0\ufe0f [Error] Unknown params not in [param_order]:", file=sys.stderr)
     for key, names in sorted(by_param.items()):
         print(f"  {key}: {', '.join(sorted(names))}", file=sys.stderr)
-
-
-def matching_brace(text: str, open_idx: int) -> int:
-    depth = 0
-    for i in range(open_idx, len(text)):
-        if text[i] == "{":
-            depth += 1
-        elif text[i] == "}":
-            depth -= 1
-            if depth == 0:
-                return i
-    raise ValueError("Unbalanced braces")
-
-
-def split_top_level(inner: str) -> list[str]:
-    parts, depth, cur = [], 0, ""
-    for ch in inner:
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-        if ch == "," and depth == 0:
-            if cur.strip():
-                parts.append(cur.strip())
-            cur = ""
-        else:
-            cur += ch
-    if cur.strip():
-        parts.append(cur.strip())
-    return parts
 
 
 def apply(text: str, config: dict) -> str:

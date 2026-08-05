@@ -56,6 +56,8 @@ def load_plugin(name: str, plugins_dir: Path):
     plugin_path = plugins_dir / f"{name}.py"
     if not plugin_path.is_file():
         return None
+    if str(plugins_dir) not in sys.path:
+        sys.path.insert(0, str(plugins_dir))
     spec = importlib.util.spec_from_file_location(name, plugin_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

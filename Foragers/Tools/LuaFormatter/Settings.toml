@@ -30,7 +30,7 @@ enabled = true
 order = "extends, object, frameWidth, frameHeight, pivotX, pivotY, angle, layer, sortOffsetY"
 
 [component_param_order]
-collision = "mode, collisionWidth, collisionHeight, offsetX, offsetY, visible"
+collision = "mode, collisionWidth, collisionHeight, offsetX, offsetY"
 counter = "mode, sourceType, field, maxField, icon, label, curve, smoothness"
 destructible = "hp, replaceWith"
 drop = "drops"
