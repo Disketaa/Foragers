@@ -10,6 +10,7 @@ return {
 			[10] = { 10, 16, 17, 17, 18, 18, 19, 19, 19, 19, 20, 21, 22, 23 },
 		},
 	},
+
 	components = {
 		{
 			component = "spritesheet",

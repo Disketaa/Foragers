@@ -1,6 +1,5 @@
 return {
 	debug = true,
-
 	gizmo = {
 		enabled = false,
 		collisions = {
@@ -10,6 +9,7 @@ return {
 			priority = 2,
 			color = { 0.6, 0.25, 0.25, 1 },
 		},
+
 		boundaries = {
 			enabled = true,
 			exclude = { "tiles" },
@@ -18,6 +18,7 @@ return {
 			backgroundColor = { 0.2, 0.6, 1, 0.35 },
 			color = { 0.2, 0.6, 1, 0.7 },
 		},
+
 		pivots = {
 			enabled = false,
 			exclude = { "tiles" },
@@ -25,6 +26,7 @@ return {
 			color = { 0.7, 0, 0, 1 },
 			size = 1,
 		},
+
 		tileMesh = {
 			enabled = false,
 			decor = "diagonal",

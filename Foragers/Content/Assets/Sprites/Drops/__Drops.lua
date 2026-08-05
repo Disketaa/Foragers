@@ -31,6 +31,7 @@ return {
 				{ target = "scale_y", from = 2, to = 1, duration = "0.75..1.25", curve = "OutBack" },
 				{ target = "brightness", from = 1, to = 0.5, duration = 0.66, curve = "InOutCubic" },
 			},
+
 			tags = {
 				arrived = {
 					destroyOnComplete = true,

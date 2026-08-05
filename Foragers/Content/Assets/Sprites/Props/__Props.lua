@@ -30,6 +30,7 @@ return {
 					{ target = "scale_y", from = 0, to = 1, duration = 0.4, curve = "OutBack" },
 					{ target = "angle", from = "-45|45", to = 0, duration = 0.5, curve = "OutBack" },
 				},
+
 				prop_hit = {
 					{ target = "scale_x", from = 0.5, to = 1, duration = 0.9, curve = "OutBack" },
 					{ target = "scale_y", from = 1.5, to = 1, duration = 0.4, curve = "OutBack" },

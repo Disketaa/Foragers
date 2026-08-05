@@ -12,6 +12,7 @@ return {
 				axes = { { "lefty", -1 }, { "righty", -1 } },
 			},
 		},
+
 		down = {
 			keyboard = { "s", "down" },
 			gamepad = {
@@ -19,6 +20,7 @@ return {
 				axes = { { "lefty", 1 }, { "righty", 1 } },
 			},
 		},
+
 		left = {
 			keyboard = { "a", "left" },
 			gamepad = {
@@ -26,6 +28,7 @@ return {
 				axes = { { "leftx", -1 }, { "rightx", -1 } },
 			},
 		},
+
 		right = {
 			keyboard = { "d", "right" },
 			gamepad = {
@@ -33,21 +36,27 @@ return {
 				axes = { { "leftx", 1 }, { "rightx", 1 } },
 			},
 		},
+
 		moveMouse = {
 			mouse = { 1 },
 		},
+
 		restart = {
 			keyboard = { "r" },
 		},
+
 		toggleDebug = {
 			keyboard = { "f1" },
 		},
+
 		toggleGizmo = {
 			keyboard = { "f2" },
 		},
+
 		toggleProfiler = {
 			keyboard = { "f3" },
 		},
+
 		toggleFullscreen = {
 			keyboard = { "f11" },
 		},

@@ -10,6 +10,7 @@ return {
 		detail = 0.3,
 		density = 0.8,
 	},
+
 	props = {
 		coverage = 0.25,
 		spawnInterval = 3,
@@ -17,6 +18,7 @@ return {
 			density = 0.025,
 			pseudoRandomChance = 0.01,
 		},
+
 		items = {
 			{ data = "Content.Assets.Sprites.Props.OakTree", weight = 2 },
 			{ data = "Content.Assets.Sprites.Props.BirchTree", weight = 2 },

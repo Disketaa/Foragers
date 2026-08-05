@@ -1,3 +1,14 @@
+import re
+
+
+def _is_block_opener(line: str) -> bool:
+    """True if the line opens a multi-line block: a bare `{` or a `key = {`."""
+    s = line.strip()
+    if s == "{":
+        return True
+    return bool(re.match(r"^\w+\s*=\s*\{$", s))
+
+
 def apply(text: str, config: dict) -> str:
     lines = text.split("\n")
     result = []
@@ -12,7 +23,7 @@ def apply(text: str, config: dict) -> str:
         nxt = lines[i + 1]
         if (
             line.strip() == "},"
-            and nxt.strip() == "{"
+            and _is_block_opener(nxt)
             and indent_of(line) == indent_of(nxt)
         ):
             result.append("")

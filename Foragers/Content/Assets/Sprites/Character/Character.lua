@@ -68,6 +68,7 @@ return {
 					{ target = "scale_x", from = 0.75, to = 1, duration = 0.3, curve = "OutBack" },
 					{ target = "scale_y", from = 1.25, to = 1, duration = 0.3, curve = "OutBack" },
 				},
+
 				splash = {
 					{ target = "scale_x", from = 1.25, to = 1, duration = 0.75, curve = "OutBack" },
 					{ target = "scale_y", from = 0.75, to = 1, duration = 0.5, curve = "OutBack" },
@@ -114,6 +115,7 @@ return {
 					"Content/Assets/Sounds/Steps/Grass3.ogg",
 					"Content/Assets/Sounds/Steps/Grass4.ogg",
 				},
+
 				swim = {
 					"Content/Assets/Sounds/Steps/Water1.ogg",
 					"Content/Assets/Sounds/Steps/Water2.ogg",

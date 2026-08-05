@@ -30,7 +30,7 @@ enabled = true
 enabled = true
 
 [param_order]
-order = "width, height, tileSize, backgroundColor, borderTileOffset, noise, props, extends, object, frameWidth, frameHeight, pivotX, pivotY, angle, layer, sortOffsetY"
+order = "width, height, tileSize, backgroundColor, borderTileOffset, noise, props, debug, extends, object, frameWidth, frameHeight, pivotX, pivotY, angle, layer, sortOffsetY"
 
 [component_param_order]
 collision = "mode, collisionWidth, collisionHeight, offsetX, offsetY"
