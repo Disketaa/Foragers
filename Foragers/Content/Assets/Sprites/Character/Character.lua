@@ -9,16 +9,16 @@ return {
 	components = {
 		{
 			component = "player_stats",
-			critChance = 0,
-			critMult = 1.5,
 			level = 1,
 			experience = 0,
 			xpCurve = { base = 10, growth = 1.35 },
-			satiety = 100,
 			maxSatiety = 100,
+			satiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
 			movementSpeed = 50,
 			swimmingSpeed = 30,
+			critChance = 0,
+			critMult = 1.5,
 		},
 
 		{
@@ -53,13 +53,13 @@ return {
 			collisionHeight = 2,
 			offsetX = 0,
 			offsetY = -2,
-			visible = false,
+			visible = true,
 		},
 
 		{
 			component = "scroll_to",
-			smoothness = 10,
 			chunkSize = 64,
+			smoothness = 10,
 		},
 
 		{
@@ -80,24 +80,24 @@ return {
 		{
 			component = "particle_emitter",
 			particle = "Content/Assets/Sprites/Particles/Dust.lua",
+			spawnOn = { run = true },
 			stepInterval = 2,
 			offsetX = 0,
 			offsetY = 0,
 			inheritFlip = true,
 			layer = "below",
-			spawnOn = { run = true },
 		},
 
 		{
 			component = "text_emitter",
 			event = "pickup",
 			color = { 0.6, 1, 0.6 },
+			offsetX = -5,
+			offsetY = -3,
 			moveX = "-15|15",
 			moveY = -30,
 			gravity = 130,
 			duration = 0.7,
-			offsetX = -5,
-			offsetY = -3,
 			destroy = "scale",
 			destroyCurve = "InCubic",
 		},

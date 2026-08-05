@@ -15,6 +15,25 @@ def load_config(config_path: Path) -> dict:
     return tomllib.loads(raw)
 
 
+def _split_order(value):
+    if isinstance(value, str):
+        return [x.strip() for x in value.split(",") if x.strip()]
+    return value
+
+
+def normalize_orders(config: dict) -> dict:
+    """Accept order fields as comma-separated strings or lists."""
+    for section in ("param_order", "component_order", "tween_order"):
+        sub = config.get(section)
+        if isinstance(sub, dict):
+            sub["order"] = _split_order(sub.get("order"))
+    cpo = config.get("component_param_order")
+    if isinstance(cpo, dict):
+        for key, value in cpo.items():
+            cpo[key] = _split_order(value)
+    return config
+
+
 def find_lua_files(
     root: Path,
     exclude_folders: list[str],
@@ -55,6 +74,7 @@ def main():
         sys.exit(1)
 
     config = load_config(config_path)
+    config = normalize_orders(config)
 
     # --- Resolve target folders ---
     targets = config.get("targets", {})

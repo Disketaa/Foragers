@@ -17,42 +17,42 @@ collapse_integer_floats = true
 [Modules.ParamSort]
 enabled = true
 
+[Modules.ComponentParamSort]
+enabled = true
+
+[Modules.TweenSort]
+enabled = true
+
 [Modules.AddBlankLines]
 enabled = true
 
 [param_order]
-order = [
-    "extends",
-    "object",
-    "frameWidth",
-    "frameHeight",
-    "pivotX",
-    "pivotY",
-    "angle",
-    "layer",
-    "sortOffsetY",
-]
+order = "extends, object, frameWidth, frameHeight, pivotX, pivotY, angle, layer, sortOffsetY"
+
+[component_param_order]
+collision = "mode, collisionWidth, collisionHeight, offsetX, offsetY, visible"
+counter = "mode, sourceType, field, maxField, icon, label, curve, smoothness"
+destructible = "hp, replaceWith"
+drop = "drops"
+follow = "followRadius, followDelay, offsetX, offsetY, rotate, leanAngle, leanThreshold, accelerate, smoothnessX, smoothnessY, smoothness"
+particle_emitter = "particle, spawnOn, count, interval, stepInterval, offsetX, offsetY, angle, inheritFlip, layer, moving"
+pickup = "xp, satiety"
+player_stats = "level, experience, xpCurve, maxSatiety, satiety, satietyDrain, movementSpeed, swimmingSpeed, critChance, critMult"
+scroll_to = "chunkSize, smoothness"
+shader = "shaders"
+shadow = "width, height, offsetX, offsetY"
+shake = "magnitude, duration, decay"
+silhouette = "mode"
+sound = "volume, pitch, pitchRandomness, stepInterval, tags"
+spritefont = "chars, charSpacing, spacing"
+spritesheet = "columns, rows, animations"
+text_emitter = "event, font, color, offsetX, offsetY, moveX, moveY, gravity, duration, destroy, destroyCurve"
+tween = "tweens, tags"
+ui = "horizontal, vertical, offsetX, offsetY"
+weapon = "damage, cooldown, range, swing"
 
 [component_order]
-order = [
-    "player_stats",
-    "spritesheet",
-    "spritefont",
-    "shadow",
-    "control",
-    "collision",
-    "scroll_to",
-    "follow",
-    "destructible",
-    "drop",
-    "weapon",
-    "shake",
-    "tween",
-    "particle_emitter",
-    "text_emitter",
-    "sound",
-    "ui",
-    "counter",
-    "silhouette",
-    "shader",
-]
+order = "player_stats, spritesheet, spritefont, shadow, control, collision, scroll_to, follow, destructible, drop, weapon, shake, tween, particle_emitter, text_emitter, sound, ui, counter, silhouette, shader"
+
+[tween_order]
+order = "x, y, scale_x, scale_y, angle, brightness, tint_mix"

@@ -39,10 +39,10 @@ return {
 		{
 			component = "counter",
 			mode = "progress",
-			field = "experience",
 			sourceType = "player_stats",
-			smoothness = 0.3,
+			field = "experience",
 			curve = "OutCubic",
+			smoothness = 0.3,
 			label = {
 				font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
 				charSpacing = -4,

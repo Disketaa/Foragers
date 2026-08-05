@@ -32,11 +32,11 @@ return {
 		{
 			component = "counter",
 			mode = "fraction",
+			sourceType = "player_stats",
 			field = "satiety",
 			maxField = "maxSatiety",
-			sourceType = "player_stats",
-			smoothness = 0.3,
 			curve = "OutCubic",
+			smoothness = 0.3,
 			icon = {
 				sprite = "Content.Assets.Sprites.UI.Icons.Satiety",
 			},
