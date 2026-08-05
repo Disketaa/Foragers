@@ -93,6 +93,28 @@ function Sprite:getComponents(type, predicate)
 	return result
 end
 
+--- Fill a caller-provided buffer with matching components. Non-allocating
+--- alternative to getComponents for per-frame hot paths (no fresh result table,
+--- no per-call predicate if the caller hoists it). The caller must iterate the
+--- buffer immediately and must not hold the reference across another call.
+---@param type string
+---@param predicate function|nil
+---@param out table Scratch buffer to fill.
+---@return table out
+function Sprite:getComponentsInto(type, predicate, out)
+	local n = 0
+	for _, comp in ipairs(self.components or {}) do
+		if comp.type == type and (not predicate or predicate(comp)) then
+			n = n + 1
+			out[n] = comp
+		end
+	end
+	for i = n + 1, #out do
+		out[i] = nil
+	end
+	return out
+end
+
 --- Bind parent shader if present. Returns true if shader was set.
 ---@return boolean
 function Sprite:applyShader()

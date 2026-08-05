@@ -12,43 +12,40 @@ local _timer
 local _interval
 local _playerSprite = nil
 
-local function pointInRect(px, py, rect)
-	return px >= rect.x and px < rect.x + rect.w and py >= rect.y and py < rect.y + rect.h
-end
-
-local function isTileOccupied(tilePixelX, tilePixelY)
-	local tileRect = {
-		x = tilePixelX,
-		y = tilePixelY,
-		w = _tileSize,
-		h = _tileSize,
-	}
-
-	local solids = Collision.getSolidColliders()
-	for _, r in ipairs(solids) do
-		if r.sprite and pointInRect(r.sprite.x, r.sprite.y, tileRect) then
-			return true
-		end
-	end
-
-	local slowdowns = Collision.getSlowdownColliders()
-	for _, r in ipairs(slowdowns) do
-		if r.sprite and pointInRect(r.sprite.x, r.sprite.y, tileRect) then
-			return true
-		end
-	end
-
-	if _playerSprite and pointInRect(_playerSprite.x, _playerSprite.y, tileRect) then
-		return true
-	end
-
-	return false
-end
-
+--- Available (unoccupied) active tiles. Builds an occupied-tile set in one
+--- O(colliders) pass, then filters active tiles against it (O(activeTiles)).
+--- Replaces the old per-tile O(colliders) scan, which was O(activeTiles ×
+--- colliders) — ~17M checks per spawn at 80×80, stalling every spawn interval.
 local function getAvailableTiles()
+	local occupied = {}
+	local ts = _tileSize
+	for _, r in ipairs(Collision.getSolidColliders()) do
+		if r.sprite then
+			local ty = math.floor(r.sprite.y / ts)
+			local row = occupied[ty] or {}
+			occupied[ty] = row
+			row[math.floor(r.sprite.x / ts)] = true
+		end
+	end
+	for _, r in ipairs(Collision.getSlowdownColliders()) do
+		if r.sprite then
+			local ty = math.floor(r.sprite.y / ts)
+			local row = occupied[ty] or {}
+			occupied[ty] = row
+			row[math.floor(r.sprite.x / ts)] = true
+		end
+	end
+	if _playerSprite then
+		local ty = math.floor(_playerSprite.y / ts)
+		local row = occupied[ty] or {}
+		occupied[ty] = row
+		row[math.floor(_playerSprite.x / ts)] = true
+	end
+
 	local available = {}
 	for _, tile in ipairs(_activeTiles) do
-		if not isTileOccupied(tile.x, tile.y) then
+		local row = occupied[math.floor(tile.y / ts)]
+		if not (row and row[math.floor(tile.x / ts)]) then
 			table.insert(available, tile)
 		end
 	end

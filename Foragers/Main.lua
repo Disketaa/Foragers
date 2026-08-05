@@ -30,12 +30,22 @@ local UIComponent = require("Source.UI.Components.UI")
 local TimeScale = require("Source.Helpers.TimeScale")
 local Reset = require("Source.Helpers.Reset")
 local Debug = require("Source.Helpers.Debug")
+local Snapshot = require("Source.Helpers.Snapshot")
 local Gizmo = require("Source.Helpers.Gizmo")
 local Pivot = require("Source.Helpers.Pivot")
 
 local objects = {}
 local staticObjects = {}
 local dynamicObjects = {}
+-- Per-frame on-screen subset of dynamicObjects, computed once and shared by the
+-- silhouette, shadow and main passes. Single AABB test per sprite, no sort
+-- change. Props fully outside the view are skipped in all passes.
+local visible = {}
+local CULL_MARGIN = 32
+local collisionScan = {}
+local function isNonSolidCollision(c)
+	return c.mode ~= "solid"
+end
 local canvas = Canvas.new(480, 270, "outer")
 local bgCanvas = Canvas.new(480, 270, "outer")
 local cursorSprite = nil
@@ -57,6 +67,9 @@ local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
 local lastFrameTime = 0
+-- GC pacing: LuaJIT has no "incremental" mode, so spread collection via a per-
+-- frame manual step; GC_STEP is the KB budget per frame. Tune up until spikes vanish.
+local GC_STEP = 2
 
 local function updateCamera()
 	if scrollToComp then
@@ -102,6 +115,10 @@ local initGame
 function love.load()
 	Log.init()
 	print("Foragers launches")
+	-- GC pacing: trigger sooner (default pause 200) and work harder per KB
+	-- (default stepmul 200) so collection is spread instead of one big stall.
+	collectgarbage("setpause", 100)
+	collectgarbage("setstepmul", 300)
 	love.graphics.setDefaultFilter("nearest", "nearest")
 	love.window.setMode(canvas.width, canvas.height, {
 		resizable = true,
@@ -278,7 +295,42 @@ local function worldToScreen(wx, wy)
 	return (wx + camPixelX) * s + bx, (wy + camPixelY) * s + by
 end
 
+--- Fill `visible` with the entries whose frame box intersects the camera view,
+--- expanded by CULL_MARGIN to avoid boundary flicker. Same box math as the
+--- gizmo boundaries overlay. Runs once per frame; all draw passes reuse it.
+local function cullVisible()
+	-- View rect in world space (world→screen adds camPixelX/Y, canvas clips to view).
+	local vx = -camPixelX - CULL_MARGIN
+	local vy = -camPixelY - CULL_MARGIN
+	local vw = canvas.width + CULL_MARGIN * 2
+	local vh = canvas.height + CULL_MARGIN * 2
+	local n = 0
+	for i = 1, #dynamicObjects do
+		local s = dynamicObjects[i].instance
+		if s then
+			local w = s.frameWidth or (s.image and s.image:getWidth() or 0) or 0
+			local h = s.frameHeight or (s.image and s.image:getHeight() or 0) or 0
+			if w > 0 and h > 0 then
+				local bx = s.x - Pivot.px(s.pivotX, w, 0)
+				local by = s.y - Pivot.px(s.pivotY, h, 0)
+				if bx + w >= vx and bx <= vx + vw and by + h >= vy and by <= vy + vh then
+					n = n + 1
+					visible[n] = dynamicObjects[i]
+				end
+			else
+				-- No frame box known: keep it (player, cursor-like, etc.).
+				n = n + 1
+				visible[n] = dynamicObjects[i]
+			end
+		end
+	end
+	for i = n + 1, #visible do
+		visible[i] = nil
+	end
+end
+
 function love.draw()
+	Snapshot.markDrawStart()
 	ShaderLoader.setCamera(camPixelX, camPixelY)
 
 	-- The world render must not inherit the color the HUD/Debug left on the
@@ -303,17 +355,19 @@ function love.draw()
 			love.graphics.draw(terrainBatch)
 		end
 
-		Mask.renderSilhouette(dynamicObjects, canvas.width, canvas.height, camPixelX, camPixelY)
+		cullVisible()
+
+		Mask.renderSilhouette(visible, canvas.width, canvas.height, camPixelX, camPixelY)
 
 		-- Shadow layer: all shadows drawn opaque onto one layer, composited once
 		-- at low alpha (union, not additive). Drawn AFTER terrain so shadows sit
 		-- on top of tiles, but BEFORE dynamic sprites.
-		Shadow.renderLayer(dynamicObjects, canvas.width, canvas.height, camPixelX, camPixelY)
+		Shadow.renderLayer(visible, canvas.width, canvas.height, camPixelX, camPixelY)
 
 		ParticleEmitter.drawBurstsBehind()
 		ParticleEmitter.drawDetachedBehind()
 
-		local sorted = DrawOrder.collect(dynamicObjects)
+		local sorted = DrawOrder.collect(visible)
 		DrawOrder.sort(sorted)
 
 		local silCanvas = Mask.getCanvas()
@@ -472,6 +526,10 @@ function love.update(dt)
 	end
 
 	local scaledDt = dt * TimeScale.scale
+	-- Manual GC step: spread collection across frames so a full trace never
+	-- lands in one stall.
+	collectgarbage("step", GC_STEP)
+	Snapshot.markUpdateStart()
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
 		ParticleEmitter.detachAll(sprite)
@@ -545,7 +603,8 @@ function love.update(dt)
 	-- collision, no animation), so skipping it drops thousands of wasted xpcalls.
 	for _, entry in ipairs(dynamicObjects) do
 		if entry.instance and entry.instance.update then
-			for _, comp in ipairs(entry.instance:getComponents("collision", function(c) return c.mode ~= "solid" end)) do
+			local comps = entry.instance:getComponentsInto("collision", isNonSolidCollision, collisionScan)
+			for _, comp in ipairs(comps) do
 				comp._prevX = entry.instance.x
 				comp._prevY = entry.instance.y
 			end

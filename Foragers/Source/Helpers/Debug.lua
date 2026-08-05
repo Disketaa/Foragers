@@ -33,18 +33,23 @@ function Profiler.record(label, ms)
 	end
 end
 
+-- Defined once at load (not a per-call closure) so the wrapper allocates nothing;
+-- on failure `...` is the xpcall traceback, rethrown so Section IX's log keeps it.
+local function reportTimed(label, t0, ok, ...)
+	Profiler.record(label, clock() - t0)
+	if not ok then
+		error((...), 2)
+	end
+	return ...
+end
+
 local function timed(fn, label)
 	return function(...)
 		if not collecting then
 			return fn(...)
 		end
 		local t0 = clock()
-		local results = { xpcall(fn, debug.traceback, ...) }
-		Profiler.record(label, clock() - t0)
-		if not results[1] then
-			error(results[2], 2)
-		end
-		return unpack(results, 2)
+		return reportTimed(label, t0, xpcall(fn, debug.traceback, ...))
 	end
 end
 
@@ -366,6 +371,8 @@ function Debug.update(dt)
 	if Profiler.enabled() then
 		Profiler.update(dt)
 	end
+	-- Debug.update is the last call in love.update, so this marks its end.
+	Snapshot.setUpdateEnd()
 
 	local s = Debug.settings("hud")
 	local wantFps = Debug.enabled("hud") and (s.fps or Debug.enabled("hud.fpsGraph"))
@@ -549,6 +556,10 @@ end
 ---@param scale number
 function Debug.draw(objectCount, scale)
 	scale = scale or 1
+	-- Sample render stats here so the snapshot reports draw calls from the
+	-- real draw pass (getStats resets each frame, so update() sees zeros).
+	Snapshot.captureDraw()
+	Snapshot.setDrawEnd()
 	-- Auto-profiler draws its own table first, independent of the HUD.
 	drawProfiler(scale)
 

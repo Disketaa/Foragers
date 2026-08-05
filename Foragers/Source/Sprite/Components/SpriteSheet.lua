@@ -5,14 +5,28 @@ local Pivot = require("Source.Helpers.Pivot")
 local SpriteSheet = {}
 SpriteSheet.__index = SpriteSheet
 
+-- Share one Image + quad array per prop type instead of re-decoding a texture
+-- per spawn. Cache lives forever: ModLoader registers content only at startup,
+-- nothing mutates an Image, and frame changes index the shared quad array (never
+-- mutate a quad viewport). Module locals, so Reset.all() doesn't clear them.
+-- ASSUMPTION: if a prop type's PNG can ever change between resets (runtime mods,
+-- hot-reload, reskins), add an invalidation path or this serves stale textures.
+local imageCache = {}
+local quadCache = {}
+
 function SpriteSheet.new(data)
 	if not data or not data.spriteSheet then
 		return setmetatable({}, SpriteSheet)
 	end
 
-	local ok, image = pcall(love.graphics.newImage, data.spriteSheet)
-	if not ok or not image then
-		return setmetatable({}, SpriteSheet)
+	local image = imageCache[data.spriteSheet]
+	if not image then
+		local ok
+		ok, image = pcall(love.graphics.newImage, data.spriteSheet)
+		if not ok or not image then
+			return setmetatable({}, SpriteSheet)
+		end
+		imageCache[data.spriteSheet] = image
 	end
 
 	local self = setmetatable({
@@ -59,18 +73,23 @@ function SpriteSheet.new(data)
 	self.columns = columns
 	self.rows = rows
 
-	self.quads = {}
-	for row = 0, rows - 1 do
-		for col = 0, columns - 1 do
-			self.quads[#self.quads + 1] = love.graphics.newQuad(
-				col * self.frameWidth,
-				row * self.frameHeight,
-				self.frameWidth,
-				self.frameHeight,
-				imageW,
-				imageH
-			)
+	local quadKey = data.spriteSheet .. "#" .. self.frameWidth .. "x" .. self.frameHeight
+	self.quads = quadCache[quadKey]
+	if not self.quads then
+		self.quads = {}
+		for row = 0, rows - 1 do
+			for col = 0, columns - 1 do
+				self.quads[#self.quads + 1] = love.graphics.newQuad(
+					col * self.frameWidth,
+					row * self.frameHeight,
+					self.frameWidth,
+					self.frameHeight,
+					imageW,
+					imageH
+				)
+			end
 		end
+		quadCache[quadKey] = self.quads
 	end
 
 	if data.animations then

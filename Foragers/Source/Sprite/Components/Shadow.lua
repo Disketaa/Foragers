@@ -37,6 +37,25 @@ end
 
 Shadow.drawShape = drawShape
 
+-- Batch shadow rects into one draw call. Count is bounded by on-screen props
+-- (culled), so 20000 slots are ample for any world size.
+local whiteImage = nil
+local shadowBatch = nil
+local function ensureBatch()
+	if shadowBatch then
+		return
+	end
+	local id = love.image.newImageData(1, 1)
+	id:setPixel(0, 0, 255, 255, 255, 255)
+	whiteImage = love.graphics.newImage(id)
+	shadowBatch = love.graphics.newSpriteBatch(whiteImage, 20000, "dynamic")
+end
+
+local shadowScan = {}
+local function hasShadow(c)
+	return not c._broken
+end
+
 ---@param sprites table[] Entries with `.instance` (sprite) — same list Main sorts
 ---@param viewW number World canvas width (px)
 ---@param viewH number World canvas height (px)
@@ -49,22 +68,32 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 		shadowCanvas,
 		function()
 			love.graphics.setColor(layerColor[1], layerColor[2], layerColor[3], 1)
+			ensureBatch()
+			shadowBatch:clear()
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
 				if sprite and sprite.components then
-					for _, comp in
-						ipairs(sprite:getComponents("shadow", function(c)
-							return not c._broken
-						end))
-					do
+					local comps = sprite:getComponentsInto("shadow", hasShadow, shadowScan)
+					for _, comp in ipairs(comps) do
 						local cx = math.floor(sprite.x + 0.5) + comp.offsetX + camX
 						local cy = math.floor(sprite.y + 0.5) + comp.offsetY + camY
 						local x = cx - math.floor(comp.width / 2)
 						local y = cy - math.floor(comp.height / 2)
-						drawShape(x, y, comp.width, comp.height)
+						local w = comp.width
+						local h = comp.height
+						if w > 0 and h > 0 then
+							if w <= 2 or h <= 2 then
+								shadowBatch:add(x, y, 0, w, h)
+							else
+								shadowBatch:add(x + 1, y, 0, w - 2, 1)
+								shadowBatch:add(x, y + 1, 0, w, h - 2)
+								shadowBatch:add(x + 1, y + h - 1, 0, w - 2, 1)
+							end
+						end
 					end
 				end
 			end
+			love.graphics.draw(shadowBatch)
 		end,
 		nil,
 		function()
