@@ -70,6 +70,13 @@ local lastFrameTime = 0
 -- GC pacing: LuaJIT has no "incremental" mode, so spread collection via a per-
 -- frame manual step; GC_STEP is the KB budget per frame. Tune up until spikes vanish.
 local GC_STEP = 2
+-- Initial terrain + props stream in over frames (not one blocking load), within
+-- a ~2ms wall-clock budget per frame so large worlds never stall the frame loop.
+local PROP_SPAWN_TIME_BUDGET = 0.002
+local terrainPlan = {}
+local terrainIndex = 1
+local propSpawnPlan = {}
+local propSpawnIndex = 1
 
 local function updateCamera()
 	if scrollToComp then
@@ -136,18 +143,33 @@ function love.load()
 	initGame()
 end
 
+-- Time a one-shot load step and log to Logs/Latest.txt (via print).
+local function timeIt(label, fn)
+	local t0 = love.timer.getTime()
+	local result = fn()
+	print(string.format("[Load] %-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000))
+	return result
+end
+
 --- Rebuild all game state from scratch (world, sprites, UI, player).
 --- Called at startup and on every restart. No window/graphics recreation.
 function initGame()
+	local tLoad = love.timer.getTime()
 	-- Shaders are assets but live in module arrays (ShaderLoader.shaders),
 	-- which Reset.all() empties on restart. Reload here so composed shaders
 	-- like Caustic survive a reset. Recompiling shaders does not recreate
 	-- the window.
-	ShaderLoader.loadAll("Content/Assets/Shaders")
+	timeIt("ShaderLoader.loadAll", function()
+		ShaderLoader.loadAll("Content/Assets/Shaders")
+	end)
 
-	local worldData = WorldGen.generate()
+	local worldData = timeIt("WorldGen.generate", function()
+		return WorldGen.generate()
+	end)
 
-	local charEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
+	local charEntries = timeIt("SpriteLoader Character", function()
+		return SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
+	end)
 
 	playerSprite = nil
 	for _, entry in ipairs(charEntries) do
@@ -157,28 +179,28 @@ function initGame()
 		end
 	end
 
-	local result = WorldBuilder.build(worldData, function(data)
-		return data.x, data.y
-	end, playerSprite)
-	local tileEntries = result.terrain
-	local propEntries = result.props or {}
-	terrainBatch = result.terrainBatch
-	local toolEntries = SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
-		return 0, 0
-	end) or {}
+	local result = timeIt("WorldBuilder.build", function()
+		return WorldBuilder.build(worldData, function(data)
+			return data.x, data.y
+		end, playerSprite)
+	end)
+	terrainBatch = nil
+	terrainPlan = result.terrainPlan or {}
+	terrainIndex = 1
+	propSpawnPlan = result.propPlan or {}
+	propSpawnIndex = 1
+	local toolEntries = timeIt("SpriteLoader Tools", function()
+		return SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
+			return 0, 0
+		end) or {}
+	end)
 
 	dynamicObjects = {}
 	for _, entry in ipairs(charEntries) do
 		table.insert(dynamicObjects, entry)
 	end
-	for _, entry in ipairs(propEntries) do
-		table.insert(dynamicObjects, entry)
-	end
 
 	staticObjects = {}
-	for _, entry in ipairs(tileEntries) do
-		table.insert(staticObjects, entry)
-	end
 
 	objects = {}
 	for _, entry in ipairs(staticObjects) do
@@ -255,6 +277,8 @@ function initGame()
 			end
 		end, 5)
 	end
+
+	print(string.format("[Load] total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000))
 end
 
 function love.resize(w, h)
@@ -648,10 +672,42 @@ function love.update(dt)
 		shakeOffsetY = 0
 	end
 
-	local spawned = PropSpawner.update(scaledDt)
-	if spawned then
-		table.insert(objects, { instance = spawned, data = {} })
-		table.insert(dynamicObjects, { instance = spawned, data = {} })
+	-- Stream the initial terrain plan in over frames (nearest-first, so ground
+	-- appears around the player immediately), then the prop plan. Each bounded by
+	-- a wall-clock budget so a large world never stalls a single frame's load.
+	local streamBudget = love.timer.getTime() + PROP_SPAWN_TIME_BUDGET
+	while terrainIndex <= #terrainPlan and love.timer.getTime() < streamBudget do
+		local spec = terrainPlan[terrainIndex]
+		terrainIndex = terrainIndex + 1
+		local sprite = WorldBuilder.instantiateTerrainTile(spec)
+		if sprite then
+			local entry = { path = spec.path, data = spec.data, instance = sprite }
+			table.insert(staticObjects, entry)
+			table.insert(objects, entry)
+		end
+	end
+	terrainBatch = WorldBuilder.getTerrainBatch()
+
+	if propSpawnIndex <= #propSpawnPlan then
+		local budgetEnd = love.timer.getTime() + PROP_SPAWN_TIME_BUDGET
+		while propSpawnIndex <= #propSpawnPlan and love.timer.getTime() < budgetEnd do
+			local sprite = WorldBuilder.instantiateProp(propSpawnPlan[propSpawnIndex])
+			propSpawnIndex = propSpawnIndex + 1
+			if sprite then
+				table.insert(objects, { instance = sprite, data = {} })
+				table.insert(dynamicObjects, { instance = sprite, data = {} })
+			end
+		end
+	end
+
+	-- Runtime spawning starts only once the initial plan is fully streamed, so it
+	-- can't reserve a plan tile that isn't solid yet (overlap on large worlds).
+	if propSpawnIndex > #propSpawnPlan then
+		local spawned = PropSpawner.update(scaledDt)
+		if spawned then
+			table.insert(objects, { instance = spawned, data = {} })
+			table.insert(dynamicObjects, { instance = spawned, data = {} })
+		end
 	end
 
 	-- Manual FPS cap (love.timer.setFPS unavailable here): sleep the remainder

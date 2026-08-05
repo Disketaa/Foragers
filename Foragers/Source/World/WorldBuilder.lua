@@ -19,6 +19,10 @@ end
 
 local tilePngPath = Path.moduleToPath("Content.Assets.Sprites.Tiles.GrassTiles") .. ".png"
 
+-- SpriteBatch built incrementally as terrain tiles stream in (see
+-- instantiateTerrainTile). Drawn via getTerrainBatch().
+local terrainBatch = nil
+
 local function computeMask(world, x, y)
 	local top = world[y - 1] and world[y - 1][x] and world[y - 1][x].active
 	local right = world[y][x + 1] and world[y][x + 1].active
@@ -61,65 +65,77 @@ local function mergeTerrainRects(worldData)
 	return rects
 end
 
-local function buildTerrain(worldData, spawnCallback)
-	local sprites = {}
-	local batch = nil
-
+--- Build the terrain plan: which active tiles and their frame, computed once
+--- (mask + palette only, no sprite creation). Collision is set synchronously so
+--- the player has ground immediately; tile sprites/batch are streamed over
+--- frames by the caller, nearest-player-first.
+local function buildTerrainPlan(worldData, spawnCallback, playerSprite)
+	terrainBatch = nil
 	Collision.setTerrain(mergeTerrainRects(worldData))
-
+	local adj = TileData.adjacency or {}
+	local plan = {}
 	for y = 0, private.height - 1 do
 		for x = 0, private.width - 1 do
 			local tile = worldData[y][x]
 			if tile.active then
-				local sprite = SpriteLoader.instantiate(TileData, tile.x, tile.y, tilePngPath)
-
 				local sx, sy = spawnCallback(tile)
-				if sx then
-					sprite.x = sx
-				end
-				if sy then
-					sprite.y = sy
-				end
-
-				local adj = TileData.adjacency or {}
 				local tileIndex = TilePalette.resolve(computeMask(worldData, x, y), adj.tileMap)
 				tileIndex = TilePalette.resolveVariant(tileIndex, adj.variants, tile.seed)
-
-				local ss = sprite:findComponent("spritesheet")
-				if ss then
-					ss:setFrame(tileIndex)
-					-- All terrain shares one image: batch every tile into a single
-					-- draw call so draw cost is O(1) regardless of world size.
-					local quad = ss:_getQuad()
-					if quad then
-						if not batch then
-							batch = love.graphics.newSpriteBatch(ss.image, private.width * private.height)
-						end
-						local ox = Pivot.px(ss.pivotX, ss.frameWidth, 0)
-						local oy = Pivot.px(ss.pivotY, ss.frameHeight, 0)
-						batch:add(quad, sprite.x, sprite.y, 0, 1, 1, ox, oy)
-					end
-				end
-
-				table.insert(sprites, {
-					path = "World/" .. x .. "_" .. y,
+				plan[#plan + 1] = {
 					data = tile,
-					instance = sprite,
-				})
+					path = "World/" .. x .. "_" .. y,
+					x = sx or tile.x,
+					y = sy or tile.y,
+					tileIndex = tileIndex,
+				}
 			end
 		end
 	end
-	return sprites, batch
+
+	if playerSprite then
+		local px, py = playerSprite.x, playerSprite.y
+		table.sort(plan, function(a, b)
+			local dax, day = a.x - px, a.y - py
+			local dbx, dby = b.x - px, b.y - py
+			return dax * dax + day * day < dbx * dbx + dby * dby
+		end)
+	end
+
+	return plan
 end
 
-local function spawnProps(worldData, playerSprite)
-	local props = {}
+--- Instantiate + wire one terrain tile from a plan entry: set its frame and add
+--- it to the shared terrain SpriteBatch. Returns the sprite.
+---@param spec table { data, path, x, y, tileIndex }
+---@return table|nil
+local function instantiateTerrainTile(spec)
+	local sprite = SpriteLoader.instantiate(TileData, spec.x, spec.y, tilePngPath)
+	local ss = sprite and sprite:findComponent("spritesheet")
+	if ss then
+		ss:setFrame(spec.tileIndex)
+		local quad = ss:_getQuad()
+		if quad then
+			if not terrainBatch then
+				terrainBatch = love.graphics.newSpriteBatch(ss.image, private.width * private.height)
+			end
+			local ox = Pivot.px(ss.pivotX, ss.frameWidth, 0)
+			local oy = Pivot.px(ss.pivotY, ss.frameHeight, 0)
+			terrainBatch:add(quad, sprite.x, sprite.y, 0, 1, 1, ox, oy)
+		end
+	end
+	return sprite
+end
+
+--- Build the initial prop plan: which tiles get which prop type, computed once
+--- (RNG + shuffle only, no sprite/audio/image work). Actual instantiation is
+--- streamed over frames by the caller so large worlds don't block load.
+local function buildPropPlan(worldData, playerSprite)
+	Collision.resetSolids()
+	Collision.resetSlowdown()
+
 	local propConfigs = private.props or {}
 	local coverage = private.propCoverage or 0.3
 	local tileSize = private.tileSize or 8
-
-	Collision.resetSolids()
-	Collision.resetSlowdown()
 
 	local loadedProps = {}
 	for _, cfg in ipairs(propConfigs) do
@@ -140,7 +156,7 @@ local function spawnProps(worldData, playerSprite)
 	end
 
 	if #loadedProps == 0 then
-		return props
+		return {}
 	end
 
 	local totalWeight = 0
@@ -176,7 +192,7 @@ local function spawnProps(worldData, playerSprite)
 
 	local numProps = math.floor(#activeTiles * coverage)
 	if numProps == 0 then
-		return props
+		return {}
 	end
 
 	-- Save the full RNG STATE, not the seed: setRandomSeed(oldLow, oldHigh)
@@ -185,6 +201,7 @@ local function spawnProps(worldData, playerSprite)
 	local savedState = love.math.getRandomState()
 	love.math.setRandomSeed(numProps > 0 and activeTiles[1].seed or 0)
 
+	local plan = {}
 	for i = 1, math.min(numProps, #activeTiles) do
 		local j = love.math.random(i, #activeTiles)
 		activeTiles[i], activeTiles[j] = activeTiles[j], activeTiles[i]
@@ -201,35 +218,55 @@ local function spawnProps(worldData, playerSprite)
 			end
 		end
 
-		local sprite = SpriteLoader.instantiate(chosen.data, tile.x, tile.y, chosen.pngPath)
-
-		sprite.flipX = math.abs(tile.seed + 7777) % 2 == 0
-
-		local ss = sprite:findComponent("spritesheet")
-		if ss then
-			local numFrames = ss.columns or 1
-			local frameIndex = math.abs(tile.seed + 5000) % numFrames
-			ss:setFrame(frameIndex)
-		end
-		local col = sprite:findComponent("collision")
-		if col then
-			if col.mode == "slowdown" then
-				col:registerAsSlowdown()
-			else
-				col:registerAsSolid()
-			end
-		end
-
-		table.insert(props, {
-			path = chosen.name .. "_" .. tile.x .. "_" .. tile.y,
-			data = tile,
-			instance = sprite,
-		})
+		plan[#plan + 1] = {
+			data = chosen.data,
+			pngPath = chosen.pngPath,
+			x = tile.x,
+			y = tile.y,
+			seed = tile.seed,
+		}
 	end
 
 	love.math.setRandomState(savedState)
 
-	return props
+	-- Spawn nearest the player first so the visible area fills immediately while
+	-- off-screen props stream in over later frames.
+	if playerSprite then
+		local px, py = playerSprite.x, playerSprite.y
+		table.sort(plan, function(a, b)
+			local dax, day = a.x - px, a.y - py
+			local dbx, dby = b.x - px, b.y - py
+			return dax * dax + day * day < dbx * dbx + dby * dby
+		end)
+	end
+
+	return plan
+end
+
+--- Instantiate + wire one prop from a plan entry (flip, frame, collision).
+---@param spec table { data, pngPath, x, y, seed }
+---@return table|nil The sprite, or nil if instantiation failed.
+local function instantiateProp(spec)
+	local sprite = SpriteLoader.instantiate(spec.data, spec.x, spec.y, spec.pngPath)
+	if not sprite then
+		return nil
+	end
+
+	sprite.flipX = math.abs(spec.seed + 7777) % 2 == 0
+	local ss = sprite:findComponent("spritesheet")
+	if ss then
+		local numFrames = ss.columns or 1
+		ss:setFrame(math.abs(spec.seed + 5000) % numFrames)
+	end
+	local col = sprite:findComponent("collision")
+	if col then
+		if col.mode == "slowdown" then
+			col:registerAsSlowdown()
+		else
+			col:registerAsSolid()
+		end
+	end
+	return sprite
 end
 
 local function buildBorder()
@@ -266,12 +303,21 @@ local function buildBorder()
 end
 
 local function build(worldData, spawnCallback, playerSprite)
-	local terrain, terrainBatch = buildTerrain(worldData, spawnCallback)
-	local props = spawnProps(worldData, playerSprite) or {}
+	local t0 = love.timer.getTime()
+	local terrainPlan = buildTerrainPlan(worldData, spawnCallback, playerSprite)
+	print(string.format("[Load]   buildTerrain: %d tiles in %.1fms", #terrainPlan, (love.timer.getTime() - t0) * 1000))
+	local t1 = love.timer.getTime()
+	local propPlan = buildPropPlan(worldData, playerSprite)
+	print(string.format("[Load]   propPlan: %d props in %.1fms", #propPlan, (love.timer.getTime() - t1) * 1000))
 	buildBorder()
-	return { terrain = terrain, props = props, terrainBatch = terrainBatch }
+	return { terrainPlan = terrainPlan, propPlan = propPlan }
 end
 
 return {
 	build = build,
+	instantiateProp = instantiateProp,
+	instantiateTerrainTile = instantiateTerrainTile,
+	getTerrainBatch = function()
+		return terrainBatch
+	end,
 }

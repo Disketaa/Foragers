@@ -7,7 +7,7 @@ local ValueParser = require("Source.Helpers.ValueParser")
 local SpriteLoader = {}
 
 --- Turn a data table into a live Sprite. Handles field copy, component creation,
---- and PNG loading. Used by both loadAll() and WorldBuilder.spawnProps().
+--- and PNG loading. Used by loadAll(), WorldBuilder.instantiateProp() and Drop.
 ---@param data table
 ---@param x number
 ---@param y number

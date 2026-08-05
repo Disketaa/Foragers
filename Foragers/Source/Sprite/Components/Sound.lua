@@ -11,6 +11,11 @@ local Log = require("Source.Helpers.Log")
 local Sound = {}
 Sound.__index = Sound
 
+-- Cache loaded sources by path. Hundreds of props share the same sound files, so
+-- without this every instantiate re-decodes the .ogg (~5ms/prop during the
+-- initial spawn). Cloning from a shared base at play is cheap, so reuse is safe.
+local audioCache = {}
+
 ---@param data table
 ---@return Sound
 function Sound.new(data)
@@ -31,10 +36,21 @@ function Sound.new(data)
 			baseSources = {},
 		}
 		for _, soundPath in ipairs(sounds) do
-			local ok, baseSource = pcall(love.audio.newSource, soundPath, "static")
-			if not ok then
-				Log.error("Failed to load sound: " .. tostring(soundPath))
+			local cached = audioCache[soundPath]
+			local baseSource
+			if cached ~= nil then
+				baseSource = cached
 			else
+				local ok, src = pcall(love.audio.newSource, soundPath, "static")
+				if ok then
+					baseSource = src
+					audioCache[soundPath] = src
+				else
+					audioCache[soundPath] = false
+					Log.error("Failed to load sound: " .. tostring(soundPath))
+				end
+			end
+			if baseSource then
 				table.insert(soundSet.baseSources, baseSource)
 			end
 		end
