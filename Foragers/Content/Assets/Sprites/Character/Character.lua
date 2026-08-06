@@ -110,7 +110,7 @@ return {
 			object = "Content/Assets/Sprites/Particles/HungerEmoteBubble.lua",
 			event = "low_satiety",
 			offsetX = 0,
-			offsetY = -8,
+			offsetY = -7,
 			duration = 1,
 		},
 
