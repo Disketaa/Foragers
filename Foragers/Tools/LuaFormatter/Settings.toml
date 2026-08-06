@@ -1,9 +1,7 @@
-# === targets ===
 targets.folders = ["*"]
 targets.exclude_folders = []
 targets.exclude_files = ["lldebugger.lua"]
 
-# === modules ===
 Modules.Stringify.enabled = true
 Modules.Sort.enabled = true
 Modules.Sort.include_folders = ["Content/"]
@@ -11,27 +9,24 @@ Modules.NormalizeNumbers.enabled = true
 Modules.NormalizeNumbers.collapse_integer_floats = true
 Modules.AddBlankLines.enabled = true
 
-# === param groups ===
-# A param lands in the FIRST group (by `order`) whose any tag shares a word
-# (camelCase-aware: offsetX -> offset,x). Within a group, tag order wins.
+# A param lands in the group whose tag shares the most words with its key
+# (camelCase-aware: offsetX -> offset,x); ties go to the earlier group.
 # Unknown keys stay last in file order. Tune tags here.
 param_groups.order = "identity size frame pivot coords motion stats appearance timing content ui sound options"
 param_groups.identity.tags = "mode extends object debug snapshot name id type module priority appliesTo event field sourceType icon label"
 param_groups.size.tags = "width height tileSize chunkSize"
-param_groups.frame.tags = "frameWidth frameHeight columns rows animations chars charSpacing spacing"
+param_groups.frame.tags = "frameWidth frameHeight columns rows animations chars charSpacing spacing font"
 param_groups.pivot.tags = "pivotX pivotY"
 param_groups.coords.tags = "offsetX offsetY x y"
-param_groups.motion.tags = "moveX moveY movementSpeed swimmingSpeed followRadius followDelay accelerate smoothness smoothnessX smoothnessY rotate leanAngle leanThreshold"
-param_groups.stats.tags = "level experience xp xpCurve satiety satietyDrain maxSatiety hp damage range cooldown critChance critMult swing drops"
-param_groups.appearance.tags = "color backgroundColor borderTileOffset tint brightness noise shaders shader uniforms silhouette magnitude decay curve gravity replaceWith"
-param_groups.timing.tags = "duration interval stepInterval count spawnOn moving destroy destroyCurve"
-param_groups.content.tags = "props tags tweens particle inheritFlip angle font"
+param_groups.motion.tags = "moveX moveY moving movementSpeed swimmingSpeed followRadius followDelay accelerate gravity smoothness smoothnessX smoothnessY rotate angle leanAngle leanThreshold"
+param_groups.stats.tags = "level experience xp xpCurve satiety maxSatiety satietyDrain hp damage range cooldown critChance critMult swing drops"
+param_groups.appearance.tags = "color backgroundColor borderTileOffset tint brightness noise shaders shader uniforms silhouette magnitude decay curve replaceWith"
+param_groups.timing.tags = "duration interval stepInterval count spawnOn destroy destroyCurve"
+param_groups.content.tags = "props tags tweens particle inheritFlip"
 param_groups.ui.tags = "horizontal vertical layer sortOffsetY"
 param_groups.sound.tags = "volume pitch pitchRandomness"
 param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius"
 
-# === component type order ===
 component_order.order = "player_stats spritesheet spritefont shadow control collision scroll_to follow destructible drop weapon shake tween particle_emitter text_emitter sound ui counter silhouette shader"
 
-# === tween target order ===
 tween_order.order = "x y scale_x scale_y angle brightness tint_mix"

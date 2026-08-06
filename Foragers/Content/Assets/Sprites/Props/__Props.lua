@@ -50,16 +50,16 @@ return {
 		{
 			component = "text_emitter",
 			event = "prop_hit",
+			font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
 			offsetX = 0,
 			offsetY = "-6..-8",
 			moveX = "-10|10",
 			moveY = -50,
-			color = { 1, 0.91, 0.89 },
 			gravity = 200,
+			color = { 1, 0.91, 0.89 },
 			duration = 0.8,
 			destroy = "scale",
 			destroyCurve = "InCubic",
-			font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
 		},
 
 		{

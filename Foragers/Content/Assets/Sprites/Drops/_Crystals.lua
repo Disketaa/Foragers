@@ -3,8 +3,8 @@ return {
 	components = {
 		{
 			component = "particle_emitter",
-			interval = 0.1,
 			moving = true,
+			interval = 0.1,
 			particle = "Content/Assets/Sprites/Particles/CrystalSpark",
 			layer = "below",
 		},
