@@ -210,14 +210,18 @@ function initGame()
 
 	if playerSprite then
 		for _, entry in ipairs(toolEntries) do
-			local follow = entry.instance:findComponent("follow", function(c) return c.setFollowTarget end)
+			local follow = entry.instance:findComponent("follow", function(c)
+				return c.setFollowTarget
+			end)
 			if follow then
 				follow:setFollowTarget(playerSprite)
 			end
 			table.insert(dynamicObjects, entry)
 			table.insert(objects, entry)
 		end
-		local scrollComp = playerSprite:findComponent("scroll_to", function(c) return c.setFollowTarget end)
+		local scrollComp = playerSprite:findComponent("scroll_to", function(c)
+			return c.setFollowTarget
+		end)
 		if scrollComp then
 			scrollToComp = scrollComp
 			scrollComp:setFollowTarget(playerSprite)
@@ -257,7 +261,9 @@ function initGame()
 	-- Wire counter components to player sprite (event-driven, no polling)
 	if playerSprite then
 		for _, ui in ipairs(uiSprites) do
-			local counter = ui.sprite:findComponent("counter", function(c) return c.setPlayerSprite end)
+			local counter = ui.sprite:findComponent("counter", function(c)
+				return c.setPlayerSprite
+			end)
 			if counter then
 				counter:setPlayerSprite(playerSprite)
 			end
@@ -267,10 +273,14 @@ function initGame()
 			if data.field ~= "satiety" then
 				return
 			end
+			local stats = playerSprite:findComponent("player_stats")
+			local low = (stats and stats.lowSatietyPercent or 33) / 100
 			local f = data.value / math.max(1, data.maxValue)
-			TimeScale.scale = f >= 0.33 and 1.0 or 0.15 + 0.85 * (f / 0.33)
-			local s = f >= 0.33 and 1 or f / 0.33
-			ShaderLoader.sendUniform("u_saturation", math.max(0, math.min(1, s)))
+			TimeScale.scale = f >= low and 1.0 or 0.15 + 0.85 * (f / low)
+			local s = f >= low and 1 or f / low
+			ShaderLoader.sendUniform("u_saturation", math.max(0.33, math.min(1, s)))
+			local zMax = stats and stats.lowSatietyZoom or 2
+			Zoom.target = f >= low and 1 or (zMax - (zMax - 1) * (f / low))
 		end, 5)
 	end
 
@@ -388,10 +398,20 @@ function love.draw()
 
 	-- Background canvas: same movement as world (sticky to camera, no parallax)
 	-- Shader compensates for missing translate via camera_x/y uniform
-	bgCanvas:draw(function()
-		ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
-	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
-		ShaderLoader.getPostProcess(), zoom, zpx, zpy)
+	bgCanvas:draw(
+		function()
+			ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
+		end,
+		World.backgroundColor,
+		shakeOffsetX,
+		shakeOffsetY,
+		camSubX,
+		camSubY,
+		ShaderLoader.getPostProcess(),
+		zoom,
+		zpx,
+		zpy
+	)
 
 	-- Main world canvas
 	canvas:draw(function()
@@ -619,7 +639,9 @@ function love.update(dt)
 
 	for _, sprite in ipairs(Drop.getPending()) do
 		if playerSprite then
-			local follow = sprite:findComponent("follow", function(c) return c.setFollowTarget end)
+			local follow = sprite:findComponent("follow", function(c)
+				return c.setFollowTarget
+			end)
 			if follow then
 				follow:setFollowTarget(playerSprite)
 			end
@@ -631,9 +653,13 @@ function love.update(dt)
 	local destroyedTweens = TweenComponent.getPendingDestroy()
 	for _, sprite in ipairs(destroyedTweens) do
 		ParticleEmitter.detachAll(sprite)
-		local follow = sprite:findComponent("follow", function(c) return c.followTarget end)
+		local follow = sprite:findComponent("follow", function(c)
+			return c.followTarget
+		end)
 		if follow then
-			local pickup = sprite:findComponent("pickup", function(c) return c.satiety end)
+			local pickup = sprite:findComponent("pickup", function(c)
+				return c.satiety
+			end)
 			local text = pickup and ("+" .. tostring(pickup.satiety)) or ""
 			follow.followTarget:emit(Events.PICKUP, text)
 		end

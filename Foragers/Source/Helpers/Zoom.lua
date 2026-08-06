@@ -10,7 +10,7 @@ Zoom.current = 1
 Zoom.target = 1
 Zoom.max = 8
 -- Seconds to reach target (matches camera smoothing scale).
-Zoom.smoothness = 0.1
+Zoom.smoothness = 0.5
 
 ---@param dt number
 function Zoom.update(dt)

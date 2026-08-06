@@ -7,6 +7,8 @@
 ---@field xpCurve {base:number, growth:number} XP-per-level formula
 ---@field satiety number Current satiety
 ---@field maxSatiety number Maximum satiety
+---@field lowSatietyPercent number Percent of maxSatiety below which low-satiety effects start
+---@field lowSatietyZoom number Output zoom when satiety reaches 0 (1 at the threshold)
 ---@field type string
 local Events = require("Source.Helpers.Events")
 local PlayerStats = {}
@@ -28,6 +30,8 @@ function PlayerStats.new(data)
 		},
 		satiety = data.satiety or 100,
 		maxSatiety = data.maxSatiety or 100,
+		lowSatietyPercent = data.lowSatietyPercent or 33,
+		lowSatietyZoom = data.lowSatietyZoom or 2,
 		satietyDrain = {
 			run = satietyDrain.run or 0.5,
 			swim = satietyDrain.swim or 0.75,

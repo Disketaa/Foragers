@@ -48,10 +48,7 @@ return {
 		color = { 1, 1, 1, 1 },
 		goodColor = { 0, 1, 0, 1 },
 		badColor = { 1, 0, 0, 1 },
-		font = {
-			label = "Content/Assets/Fonts/AzeretMonoMedium.ttf",
-			value = "Content/Assets/Fonts/AzeretMonoSemiBold.ttf",
-		},
+		font = { label = "Content/Assets/Fonts/AzeretMonoMedium.ttf", value = "Content/Assets/Fonts/AzeretMonoSemiBold.ttf" },
 		fps = true,
 		fpsGraph = { enabled = true, tolerance = 10, gap = 2, width = 25, height = 4, thickness = 0.5 },
 		objectCount = true,

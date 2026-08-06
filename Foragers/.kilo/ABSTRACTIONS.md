@@ -93,9 +93,10 @@ relevant section before touching that subsystem.
   `worldToScreen` and both canvas blits must share the same pivot and the same
   unzoomed blit origin (`canvasBlitOrigin`), or mouse/gizmo/pivot disagree with the
   render.
-- `Zoom` is currently static (manual control removed); `current`/`target`/`update(dt)`
-  ease with the same `Math.expSmooth` the camera offset uses, so a future
-  programmatic zoom animates consistently.
+- `Zoom` is driven by the player's satiety (set in `Main.lua`'s `VALUE_CHANGED`
+  handler, 1x at f=0.33 → 2x at f=0); `current`/`target`/`update(dt)` ease with the
+  same `Math.expSmooth` the camera offset uses, so the satiety zoom animates
+  consistently.
 
 ## In-process restart (Source/Helpers/Reset.lua, Main.lua initGame/resetGame)
 

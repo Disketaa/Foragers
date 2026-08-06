@@ -19,6 +19,8 @@ return {
 			swimmingSpeed = 30,
 			critChance = 0,
 			critMult = 1.5,
+			lowSatietyPercent = 33,
+			lowSatietyZoom = 2,
 		},
 
 		{
