@@ -33,6 +33,7 @@ local Debug = require("Source.Helpers.Debug")
 local Snapshot = require("Source.Helpers.Snapshot")
 local Gizmo = require("Source.Helpers.Gizmo")
 local Pivot = require("Source.Helpers.Pivot")
+local Zoom = require("Source.Helpers.Zoom")
 
 local objects = {}
 local staticObjects = {}
@@ -297,21 +298,47 @@ local function resetGame()
 	_needsRestart = true
 end
 
-local function screenToWorld(screenX, screenY)
-	local cx = (screenX - canvas.offsetX) / canvas.scale
-	local cy = (screenY - canvas.offsetY) / canvas.scale
-	return cx - cameraX, cy - cameraY
+-- Unzoomed canvas blit origin (finalX/finalY in Canvas:draw). Shared by the zoom
+-- coordinate transforms so mouse, gizmos and the pivot all agree with the render.
+local function canvasBlitOrigin()
+	local s = canvas.scale
+	return canvas.offsetX - s + shakeOffsetX + camSubX * s, canvas.offsetY - s + shakeOffsetY + camSubY * s
 end
 
--- Mirrors Canvas:draw's final world-to-screen placement so gizmo rects land on
--- the exact pixels the world canvas occupies, but at native resolution.
--- canvas:draw receives shakeOffsetX/Y as its view offset; camPixelX/Y is the
--- translate applied once inside the world draw.
+-- Zoom pivot: the player's on-screen position (unzoomed), so output zoom magnifies
+-- around the player rather than the fixed window center. Falls back to window center
+-- when there is no player.
+local function computeZoomPivot()
+	if playerSprite then
+		local s = canvas.scale
+		local bx, by = canvasBlitOrigin()
+		return bx + (playerSprite.x + camPixelX) * s, by + (playerSprite.y + camPixelY) * s
+	end
+	return love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.5
+end
+
+-- Inverse of the render chain. Output zoom scales the canvas blit about the pivot:
+-- screen = pivot + (finalX + (p + camPixel)*scale - pivot) * zoom.
+local function screenToWorld(screenX, screenY)
+	local z = Zoom.current
+	local px, py = computeZoomPivot()
+	local bx, by = canvasBlitOrigin()
+	local pcx = ((screenX - px) / z + px - bx) / canvas.scale
+	local pcy = ((screenY - py) / z + py - by) / canvas.scale
+	return pcx - camPixelX, pcy - camPixelY
+end
+
+-- Forward of the render chain: screen = pivot + (finalX + (wx + camPixel)*scale - pivot)*zoom.
+-- Mirrors Canvas:draw's placement so gizmo rects land on the exact pixels the
+-- world canvas occupies, at native resolution.
 local function worldToScreen(wx, wy)
 	local s = canvas.scale
-	local bx = canvas.offsetX - s + shakeOffsetX + camSubX * s
-	local by = canvas.offsetY - s + shakeOffsetY + camSubY * s
-	return (wx + camPixelX) * s + bx, (wy + camPixelY) * s + by
+	local z = Zoom.current
+	local px, py = computeZoomPivot()
+	local bx, by = canvasBlitOrigin()
+	local cx = bx + (wx + camPixelX) * s
+	local cy = by + (wy + camPixelY) * s
+	return (cx - px) * z + px, (cy - py) * z + py
 end
 
 --- Fill `visible` with the entries whose frame box intersects the camera view,
@@ -319,6 +346,7 @@ end
 --- gizmo boundaries overlay. Runs once per frame; all draw passes reuse it.
 local function cullVisible()
 	-- View rect in world space (world→screen adds camPixelX/Y, canvas clips to view).
+	-- Zoom happens at the canvas blit, so the world view never changes — no cull change needed.
 	local vx = -camPixelX - CULL_MARGIN
 	local vy = -camPixelY - CULL_MARGIN
 	local vw = canvas.width + CULL_MARGIN * 2
@@ -351,6 +379,8 @@ end
 function love.draw()
 	Snapshot.markDrawStart()
 	ShaderLoader.setCamera(camPixelX, camPixelY)
+	local zoom = Zoom.current
+	local zpx, zpy = computeZoomPivot()
 
 	-- The world render must not inherit the color the HUD/Debug left on the
 	-- previous frame (setColor persists). Reset to neutral before the canvases.
@@ -360,7 +390,8 @@ function love.draw()
 	-- Shader compensates for missing translate via camera_x/y uniform
 	bgCanvas:draw(function()
 		ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
-	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY, ShaderLoader.getPostProcess())
+	end, World.backgroundColor, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
+		ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
 	-- Main world canvas
 	canvas:draw(function()
@@ -408,7 +439,7 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY, ShaderLoader.getPostProcess())
+	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY, ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
 	-- its outline. Rects + fills are tagged by group so Gizmo can style each.
@@ -612,6 +643,7 @@ function love.update(dt)
 	TweenComponent.clearPendingDestroy()
 
 	ShaderLoader.update(scaledDt)
+	Zoom.update(scaledDt)
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
 	local moveMouse = (Options.keybinds.moveMouse and Options.keybinds.moveMouse.mouse) or { 1 }

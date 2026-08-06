@@ -62,13 +62,20 @@ end
 ---@param subX number|nil Sub-pixel offset X (0..1, for smooth canvas movement)
 ---@param subY number|nil Sub-pixel offset Y (0..1, for smooth canvas movement)
 ---@param screenShader Shader|nil Optional shader applied when drawing canvas to screen (post-process)
+---@param zoom number|nil Output zoom (1 = none). Scales the whole canvas blit about the
+--- pivot point — magnifies the rendered picture without changing what was drawn.
+---@param pivotX number|nil Screen-space X to zoom about (default: window center)
+---@param pivotY number|nil Screen-space Y to zoom about (default: window center)
 --- Canvas is padded by scale pixels on each side to prevent sub-pixel edge gaps with nearest filtering.
-function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShader)
+function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShader, zoom, pivotX, pivotY)
 	-- Floor view offset for pixel-perfect canvas rendering (prevents sub-pixel seams)
 	viewX = math.floor(viewX or 0)
 	viewY = math.floor(viewY or 0)
 	subX = subX or 0
 	subY = subY or 0
+	zoom = zoom or 1
+	pivotX = pivotX or love.graphics.getWidth() * 0.5
+	pivotY = pivotY or love.graphics.getHeight() * 0.5
 
 	if self.mode == "inner" then
 		local r, g, b =
@@ -90,6 +97,12 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShade
 	local finalX = self.offsetX + viewX + subX * self.scale - self.scale
 	local finalY = self.offsetY + viewY + subY * self.scale - self.scale
 
+	love.graphics.push()
+	if zoom ~= 1 then
+		love.graphics.translate(pivotX, pivotY)
+		love.graphics.scale(zoom, zoom)
+		love.graphics.translate(-pivotX, -pivotY)
+	end
 	if screenShader then
 		love.graphics.setShader(screenShader)
 	end
@@ -97,6 +110,7 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShade
 	if screenShader then
 		love.graphics.setShader()
 	end
+	love.graphics.pop()
 end
 
 --- Create a reusable canvas with nearest-neighbor filtering.

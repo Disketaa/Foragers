@@ -73,6 +73,30 @@ relevant section before touching that subsystem.
   be invisible in the silhouette — they have `sprite.image` but no spritesheet
   component to provide `drawCurrentFrame`.
 
+## Camera zoom (Source/Helpers/Zoom.lua, Canvas.lua, Main.lua)
+
+- **Zoom-in-only ⇒ scale the canvas blit (output), never the world draw.**
+  The canvas is rendered at fixed resolution once; zoom magnifies the finished
+  picture at blit time (`Canvas:draw(..., zoom, pivotX, pivotY)` scales about a
+  pivot). This keeps silhouettes/shadows/caustics correct for free — they are
+  already baked into the canvas — and leaves culling untouched (the world view
+  never changes). A content-space zoom (`love.graphics.scale` inside the world
+  draw) was tried first and broke all three: `Mask`/`Shadow` bake into separate
+  canvases that re-origin internally, so their content desynced from the zoomed
+  world, and the cull box had to shrink by `1/zoom` where any sign slip culled
+  visible props.
+- **If you ever do scale inside the world draw, the camera offset goes OUTSIDE the
+  zoom.** Correct: `(world - center)*zoom + center + camPixel`. Wrong (scales the
+  camera, drifts): `(world + camPixel - center)*zoom + center`.
+- **Zoom pivot = the player's unzoomed on-screen position** (`computeZoomPivot`),
+  so the camera magnifies around the player, not the window center. `screenToWorld`,
+  `worldToScreen` and both canvas blits must share the same pivot and the same
+  unzoomed blit origin (`canvasBlitOrigin`), or mouse/gizmo/pivot disagree with the
+  render.
+- `Zoom` is currently static (manual control removed); `current`/`target`/`update(dt)`
+  ease with the same `Math.expSmooth` the camera offset uses, so a future
+  programmatic zoom animates consistently.
+
 ## In-process restart (Source/Helpers/Reset.lua, Main.lua initGame/resetGame)
 
 - **NEVER re-run `love.load()` to reset the game.** It calls `love.window.setMode()`, which on Windows recreates the native window (visual "window reopens" — blink, focus loss) even though it's the same process. Split into one-time engine setup (`love.load`: window, default filter, shader/saturation assets, `ModLoader.loadAllMods`) and re-runnable `initGame()` (world, sprites, UI, player). `resetGame()` (R key) sets `_needsRestart`, consumed at the top of `love.update`, then calls `Reset.all()` + `initGame()`.
@@ -107,7 +131,8 @@ relevant section before touching that subsystem.
   (world-space buffer) and `Main.lua` draws them after the world canvas with a
   `worldToScreen` transform that mirrors `Canvas:draw`'s placement math — including
   using `shakeOffsetX/Y` as the view offset (NOT `camPixelX`, which is applied once
-  inside the world translate). `Gizmo.clear()` runs every frame; its rect buffer is
+  inside the world translate) and, when zoomed, the output-zoom pivot; the unzoomed
+  blit origin is shared via `Main.canvasBlitOrigin()`. `Gizmo.clear()` runs every frame; its rect buffer is
   a module `local`, so it survives `Reset.all()` but is drained per frame.
 - **`Content/Data/Debug.lua` is a group-based settings table, not flat booleans.**
   Each debug overlay is a group (e.g. `collisions = { enabled, exclude, color,
