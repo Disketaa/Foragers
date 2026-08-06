@@ -17,7 +17,8 @@ function Pivot.px(value, size, default)
 		elseif v == "right" or v == "bottom" then
 			return size
 		elseif v == "center" then
-			return size / 2
+			-- Half-pixel origin on odd sizes smears under nearest-neighbor upscale.
+			return math.floor(size / 2)
 		end
 	end
 	if default ~= nil then
