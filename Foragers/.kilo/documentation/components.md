@@ -49,7 +49,7 @@ type sway out of phase.
 | **destructible** | HP, takeDamage, dead-sprite tracking | `hp`, `replaceWith` | — | PROP_BROKEN |
 | **drop** | Spawn drops on PROP_BROKEN | `drops` (array of `{sprite, amount}`) | PROP_BROKEN (3) | — |
 | **weapon** | Weapon data container (range, cooldown, damage, swing) | `range`, `cooldown`, `damage`, `swing` | — | — |
-| **player_stats** | Player stats container (crit, level, xp, satiety). Low-satiety effects (slow time, desaturate, zoom-in) are driven off `lowSatietyPercent`/`lowSatietyZoom` in `Main.lua`'s VALUE_CHANGED handler | `critChance`, `critMult`, `level`, `experience`, `xpCurve`, `satiety`, `maxSatiety`, `lowSatietyPercent`, `lowSatietyZoom` | — | VALUE_CHANGED |
+| **player_stats** | Player stats container (crit, level, xp, satiety). Low-satiety effects (slow time, desaturate, zoom-in) are driven off `lowSatietyPercent`/`lowSatietyZoom` in `Main.lua`'s VALUE_CHANGED handler. Emits `LOW_SATIETY` once per descending warning threshold (`lowSatietyWarnings` default 3; thresholds at `lowSatietyPercent * (count-i+1)/count`, e.g. 0.33/0.22/0.11; reset when restored above the low threshold) | `critChance`, `critMult`, `level`, `experience`, `xpCurve`, `satiety`, `maxSatiety`, `lowSatietyPercent`, `lowSatietyZoom`, `lowSatietyWarnings` | — | VALUE_CHANGED, LOW_SATIETY |
 | **pickup** | Grants XP to player on collection | `xp` (number) | FOLLOW_ARRIVED (5) | — |
 | **sound** | Sound triggered by events | `volume`, `pitch`, `pitchRandomness`, `stepInterval`, `tags` | GROUNDED_CHANGED (15), STATE_CHANGED (15), ANIM_FRAME (15), SLOWDOWN_ENTER (15), PROP_HIT (15), PROP_BROKEN (15), TWEEN_COMPLETED (15), PROP_SPAWNED (15), COUNTER_WRAP (15) | — |
 

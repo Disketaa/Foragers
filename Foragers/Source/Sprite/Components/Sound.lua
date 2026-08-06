@@ -115,6 +115,10 @@ function Sound:attach()
 	self.parent:on(Events.COUNTER_WRAP, function()
 		self:_play("level_up")
 	end, 15)
+
+	self.parent:on(Events.LOW_SATIETY, function()
+		self:_play("hunger")
+	end, 15)
 end
 
 function Sound:_play(state)

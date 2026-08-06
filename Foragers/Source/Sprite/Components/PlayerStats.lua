@@ -32,6 +32,8 @@ function PlayerStats.new(data)
 		maxSatiety = data.maxSatiety or 100,
 		lowSatietyPercent = data.lowSatietyPercent or 33,
 		lowSatietyZoom = data.lowSatietyZoom or 2,
+		lowSatietyWarnings = data.lowSatietyWarnings or 3,
+		_warned = 0,
 		satietyDrain = {
 			run = satietyDrain.run or 0.5,
 			swim = satietyDrain.swim or 0.75,
@@ -110,11 +112,40 @@ function PlayerStats:consumeSatiety(amount)
 			level = self.level,
 		})
 	end
+	self:_checkHungerWarnings()
+end
+
+--- Emit LOW_SATIETY once per descending warning threshold crossed.
+--- Threshold i (1..count) sits at low * (count - i + 1) / count, so with
+--- lowSatietyPercent=33 and lowSatietyWarnings=3 the warns fire at 0.33,
+--- 0.22, 0.11. Nothing fires at 0 — the player dies there. Restoring above
+--- the low threshold resets the count so a later starvation re-warns.
+function PlayerStats:_checkHungerWarnings()
+	local count = self.lowSatietyWarnings or 3
+	local low = (self.lowSatietyPercent or 33) / 100
+	if count <= 0 or low <= 0 then
+		return
+	end
+	local f = self.satiety / math.max(1, self.maxSatiety)
+	if f >= low then
+		return
+	end
+	local desired = math.floor((count + 1) - f * count / low)
+	desired = math.max(0, math.min(count, desired))
+	while self._warned < desired do
+		self._warned = self._warned + 1
+		if self.parent then
+			self.parent:emit(Events.LOW_SATIETY)
+		end
+	end
 end
 
 ---@param amount number
 function PlayerStats:restoreSatiety(amount)
 	self.satiety = math.min(self.maxSatiety, self.satiety + amount)
+	if self.satiety >= (self.lowSatietyPercent or 33) / 100 * self.maxSatiety then
+		self._warned = 0
+	end
 	if self.parent then
 		self.parent:emit(Events.VALUE_CHANGED, {
 			sourceType = "player_stats",

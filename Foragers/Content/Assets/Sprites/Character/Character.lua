@@ -17,6 +17,7 @@ return {
 			satiety = 100,
 			lowSatietyPercent = 33,
 			lowSatietyZoom = 2,
+			lowSatietyWarnings = 3,
 			maxSatiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
 			critChance = 0,
@@ -125,6 +126,11 @@ return {
 				},
 				water_in = { "Content/Assets/Sounds/Events/WaterIn.ogg" },
 				water_out = { "Content/Assets/Sounds/Events/WaterOut.ogg" },
+				hunger = {
+					"Content/Assets/Sounds/Events/Hunger1.ogg",
+					"Content/Assets/Sounds/Events/Hunger2.ogg",
+					"Content/Assets/Sounds/Events/Hunger3.ogg",
+				},
 			},
 		},
 
