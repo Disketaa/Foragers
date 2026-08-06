@@ -4,41 +4,19 @@ folders = ["*"]
 exclude_folders = []
 exclude_files = ["lldebugger.lua"]
 
-# Data-reordering modules only apply to Content data; they must never touch
-# Source/Main/conf runtime code.
-[Modules.ComponentSort]
+# Sort only applies to Content data; it must never reorder Source/Main/conf runtime code.
+[Modules.Stringify]
+enabled = true
+
+[Modules.Sort]
 enabled = true
 include_folders = ["Content/"]
-
-[Modules.StringifyTags]
-enabled = true
 
 [Modules.NormalizeNumbers]
 enabled = true
 collapse_integer_floats = true
 
-[Modules.ParamSort]
-enabled = true
-include_folders = ["Content/"]
-
-[Modules.ComponentParamSort]
-enabled = true
-include_folders = ["Content/"]
-
-[Modules.TweenSort]
-enabled = true
-include_folders = ["Content/"]
-
-[Modules.StringifyLeaves]
-enabled = true
-
 [Modules.AddBlankLines]
-enabled = true
-
-[Modules.StringifyItems]
-enabled = true
-
-[Modules.StringifyFunctions]
 enabled = true
 
 [param_order]
