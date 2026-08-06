@@ -41,6 +41,7 @@ local UI = require("Source.UI.Components.UI")
 local PlayerStats = require("Source.Sprite.Components.PlayerStats")
 local Pickup = require("Source.Sprite.Components.Pickup")
 local Silhouette = require("Source.Sprite.Components.Silhouette")
+local Emote = require("Source.Sprite.Components.Emote")
 
 local registry = {
 	collision = Collision,
@@ -64,6 +65,7 @@ local registry = {
 	player_stats = PlayerStats,
 	pickup = Pickup,
 	silhouette = Silhouette,
+	emote = Emote,
 }
 for name, module in pairs(registry) do
 	ComponentRegistry.register(name, function(data) return module.new(data) end)

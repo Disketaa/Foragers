@@ -16,6 +16,7 @@ local Events = {
 	VALUE_CHANGED = "value_changed",
 	COUNTER_TICK = "counter_tick",
 	COUNTER_WRAP = "counter_wrap",
+	LOW_SATIETY = "low_satiety",
 	TARGET_SELECTED = "target_selected",
 }
 return Events

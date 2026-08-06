@@ -14,7 +14,7 @@ return {
 			level = 1,
 			experience = 0,
 			xpCurve = { base = 10, growth = 1.35 },
-			satiety = 100,
+			satiety = 34,
 			lowSatietyPercent = 33,
 			lowSatietyZoom = 2,
 			lowSatietyWarnings = 3,
@@ -103,6 +103,15 @@ return {
 			duration = 0.7,
 			destroy = "scale",
 			destroyCurve = "InCubic",
+		},
+
+		{
+			component = "emote",
+			object = "Content/Assets/Sprites/Particles/HungerEmoteBubble.lua",
+			event = "low_satiety",
+			offsetX = 0,
+			offsetY = -8,
+			duration = 1,
 		},
 
 		{
