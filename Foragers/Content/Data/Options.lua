@@ -1,9 +1,9 @@
 return {
+	mouseSlowdownRadius = 15,
+	maxFps = 180,
 	fullscreen = true,
 	vsync = true,
-	maxFps = 180,
 	gamepadDeadzone = 0.5,
-	mouseSlowdownRadius = 15,
 	keybinds = {
 		up = {
 			keyboard = { "w", "up" },

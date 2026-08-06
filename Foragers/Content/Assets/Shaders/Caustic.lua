@@ -1,7 +1,7 @@
 return {
 	name = "Caustic",
-	applies_to = "screen",
 	priority = "background",
+	applies_to = "screen",
 	uniforms = {
 		caustic_color = { 0.1, 0.8, 0.95 },
 		speed = 0.2,

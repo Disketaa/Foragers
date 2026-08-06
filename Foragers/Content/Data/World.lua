@@ -2,8 +2,8 @@ return {
 	width = 20,
 	height = 20,
 	tileSize = 8,
-	backgroundColor = { 0.25, 0.74, 0.9 },
 	borderTileOffset = 8,
+	backgroundColor = { 0.25, 0.74, 0.9 },
 	noise = { seed = -1, scale = 0.15, detail = 0.3, density = 0.8 },
 	props = {
 		coverage = 0.5,

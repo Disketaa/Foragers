@@ -23,20 +23,20 @@ return {
 
 		{
 			component = "ui",
-			horizontal = "center",
-			vertical = "top",
 			offsetX = -19,
 			offsetY = 6,
+			horizontal = "center",
+			vertical = "top",
 		},
 
 		{
 			component = "counter",
 			mode = "fraction",
+			sourceType = "player_stats",
 			field = "satiety",
 			maxField = "maxSatiety",
-			sourceType = "player_stats",
-			curve = "OutCubic",
 			smoothness = 0.3,
+			curve = "OutCubic",
 			icon = {
 				sprite = "Content.Assets.Sprites.UI.Icons.Satiety",
 			},

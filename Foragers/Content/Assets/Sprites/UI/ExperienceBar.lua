@@ -30,19 +30,19 @@ return {
 
 		{
 			component = "ui",
-			horizontal = "center",
-			vertical = "top",
 			offsetX = 0,
 			offsetY = 4,
+			horizontal = "center",
+			vertical = "top",
 		},
 
 		{
 			component = "counter",
 			mode = "progress",
-			field = "experience",
 			sourceType = "player_stats",
-			curve = "OutCubic",
+			field = "experience",
 			smoothness = 0.3,
+			curve = "OutCubic",
 			label = {
 				font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
 				charSpacing = -4,

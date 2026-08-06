@@ -4,23 +4,23 @@ return {
 	frameHeight = 16,
 	pivotX = "center",
 	pivotY = 12,
-	layer = 0,
 	sortOffsetY = 0,
+	layer = 0,
 	components = {
 		{
 			component = "player_stats",
+			movementSpeed = 50,
+			swimmingSpeed = 30,
 			level = 1,
 			experience = 0,
 			xpCurve = { base = 10, growth = 1.35 },
 			maxSatiety = 100,
 			satiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
-			movementSpeed = 50,
-			swimmingSpeed = 30,
-			critChance = 0,
-			critMult = 1.5,
 			lowSatietyPercent = 33,
 			lowSatietyZoom = 2,
+			critChance = 0,
+			critMult = 1.5,
 		},
 
 		{
@@ -81,35 +81,35 @@ return {
 
 		{
 			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/Dust.lua",
 			offsetX = 0,
 			offsetY = 0,
-			layer = "below",
-			inheritFlip = true,
 			stepInterval = 2,
 			spawnOn = { run = true },
+			particle = "Content/Assets/Sprites/Particles/Dust.lua",
+			inheritFlip = true,
+			layer = "below",
 		},
 
 		{
 			component = "text_emitter",
 			event = "pickup",
-			color = { 0.6, 1, 0.6 },
 			offsetX = -5,
-			offsetY = -3,
 			moveX = "-15|15",
+			offsetY = -3,
 			moveY = -30,
+			destroyCurve = "InCubic",
+			color = { 0.6, 1, 0.6 },
 			gravity = 130,
 			duration = 0.7,
 			destroy = "scale",
-			destroyCurve = "InCubic",
 		},
 
 		{
 			component = "sound",
+			stepInterval = 2,
 			volume = 0.5,
 			pitch = 1,
 			pitchRandomness = 0.15,
-			stepInterval = 2,
 			tags = {
 				run = {
 					"Content/Assets/Sounds/Steps/Grass1.ogg",

@@ -12,10 +12,10 @@ return {
 
 		{
 			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/Leaves",
-			layer = "below",
 			interval = 0.2,
 			moving = true,
+			particle = "Content/Assets/Sprites/Particles/Leaves",
+			layer = "below",
 		},
 
 		{

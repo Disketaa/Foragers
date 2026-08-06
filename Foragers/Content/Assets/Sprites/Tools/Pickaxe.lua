@@ -3,8 +3,8 @@ return {
 	frameHeight = 10,
 	pivotX = "center",
 	pivotY = "bottom",
-	layer = 0,
 	sortOffsetY = 8,
+	layer = 0,
 	components = {
 		{
 			component = "shadow",
@@ -17,8 +17,8 @@ return {
 		{
 			component = "follow",
 			offsetX = 6,
-			offsetY = -3,
 			smoothnessX = 0.5,
+			offsetY = -3,
 			smoothnessY = 0.2,
 			leanAngle = 45,
 			leanThreshold = 0.1,
@@ -27,8 +27,8 @@ return {
 		{
 			component = "weapon",
 			damage = 1,
-			cooldown = 0.5,
 			range = 20,
+			cooldown = 0.5,
 			swing = {
 				angleFrom = 0,
 				angleTo = -75,
@@ -43,8 +43,8 @@ return {
 		{
 			component = "shake",
 			magnitude = 1,
-			duration = 0.2,
 			decay = true,
+			duration = 0.2,
 		},
 
 		{
@@ -56,26 +56,26 @@ return {
 
 		{
 			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/Spark",
 			angle = "0..360",
-			layer = "below",
 			count = "3..5",
 			spawnOn = { prop_hit = true },
-		},
-
-		{
-			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/Swing",
+			particle = "Content/Assets/Sprites/Particles/Spark",
 			layer = "below",
-			inheritFlip = true,
-			spawnOn = { swing = true },
 		},
 
 		{
 			component = "particle_emitter",
+			spawnOn = { swing = true },
+			particle = "Content/Assets/Sprites/Particles/Swing",
+			inheritFlip = true,
+			layer = "below",
+		},
+
+		{
+			component = "particle_emitter",
+			spawnOn = { target_selected = true },
 			particle = "Content/Assets/Sprites/Particles/Crosshair",
 			layer = "below",
-			spawnOn = { target_selected = true },
 		},
 
 		{

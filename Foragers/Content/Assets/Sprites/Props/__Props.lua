@@ -1,7 +1,7 @@
 return {
 	pivotY = 6,
-	layer = 0,
 	sortOffsetY = 2,
+	layer = 0,
 	components = {
 		{
 			component = "spritesheet",
@@ -41,25 +41,25 @@ return {
 
 		{
 			component = "particle_emitter",
-			particle = "Content/Assets/Sprites/Particles/SmallExplosion.lua",
 			offsetY = -2,
-			layer = "above",
 			spawnOn = { prop_broken = true },
+			particle = "Content/Assets/Sprites/Particles/SmallExplosion.lua",
+			layer = "above",
 		},
 
 		{
 			component = "text_emitter",
 			event = "prop_hit",
-			font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
-			color = { 1, 0.91, 0.89 },
 			offsetX = 0,
-			offsetY = "-6..-8",
 			moveX = "-10|10",
+			offsetY = "-6..-8",
 			moveY = -50,
+			destroyCurve = "InCubic",
+			color = { 1, 0.91, 0.89 },
 			gravity = 200,
 			duration = 0.8,
 			destroy = "scale",
-			destroyCurve = "InCubic",
+			font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
 		},
 
 		{

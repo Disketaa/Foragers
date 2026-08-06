@@ -16,21 +16,17 @@ def load_config(config_path: Path) -> dict:
 
 
 def _split_order(value):
+    # whitespace-separated; commas tolerated as legacy separators
     if isinstance(value, str):
-        return [x.strip() for x in value.split(",") if x.strip()]
+        return value.replace(",", " ").split()
     return value
 
 
 def normalize_orders(config: dict) -> dict:
-    """Accept order fields as comma-separated strings or lists."""
-    for section in ("param_order", "component_order", "tween_order"):
+    for section in ("component_order", "tween_order"):
         sub = config.get(section)
         if isinstance(sub, dict):
             sub["order"] = _split_order(sub.get("order"))
-    cpo = config.get("component_param_order")
-    if isinstance(cpo, dict):
-        for key, value in cpo.items():
-            cpo[key] = _split_order(value)
     return config
 
 
