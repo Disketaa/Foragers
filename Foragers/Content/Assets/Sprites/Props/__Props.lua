@@ -1,7 +1,7 @@
 return {
 	pivotY = 6,
-	sortOffsetY = 2,
 	layer = 0,
+	sortOffsetY = 2,
 	components = {
 		{
 			component = "spritesheet",
@@ -51,14 +51,14 @@ return {
 			component = "text_emitter",
 			event = "prop_hit",
 			offsetX = 0,
-			moveX = "-10|10",
 			offsetY = "-6..-8",
+			moveX = "-10|10",
 			moveY = -50,
-			destroyCurve = "InCubic",
 			color = { 1, 0.91, 0.89 },
 			gravity = 200,
 			duration = 0.8,
 			destroy = "scale",
+			destroyCurve = "InCubic",
 			font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
 		},
 

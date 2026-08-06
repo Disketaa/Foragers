@@ -49,13 +49,19 @@ def _parse_groups(config: dict):
 
 
 def _group_rank(key: str, groups) -> tuple:
-    """(group_index, tag_index) of the first group/tag sharing a word with the key; no match -> last."""
+    """(group_index, tag_index) of the most specific match — the tag sharing the most words wins;
+    ties break to the earlier group. This beats "first match" so shared words (max, radius, x)
+    can't pull a key into the wrong group. No shared word -> last."""
     kw = frozenset(_words(key))
+    best = None  # (shared_count, -group_index, -tag_index); negated so ties pick the earlier group
     for gi, (_, tags) in enumerate(groups):
         for ti, twords in enumerate(tags):
-            if kw & twords:
-                return (gi, ti)
-    return (len(groups), 10 ** 9)
+            shared = len(kw & twords)
+            if shared and (best is None or (shared, -gi, -ti) > best):
+                best = (shared, -gi, -ti)
+    if best is None:
+        return (len(groups), 10 ** 9)
+    return (-best[1], -best[2])
 
 
 def _order_index(order: list) -> dict:

@@ -3,8 +3,8 @@ return {
 	frameHeight = 10,
 	pivotX = "center",
 	pivotY = "bottom",
-	sortOffsetY = 8,
 	layer = 0,
+	sortOffsetY = 8,
 	components = {
 		{
 			component = "shadow",
@@ -17,8 +17,8 @@ return {
 		{
 			component = "follow",
 			offsetX = 6,
-			smoothnessX = 0.5,
 			offsetY = -3,
+			smoothnessX = 0.5,
 			smoothnessY = 0.2,
 			leanAngle = 45,
 			leanThreshold = 0.1,

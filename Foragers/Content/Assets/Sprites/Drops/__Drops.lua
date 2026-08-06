@@ -3,8 +3,8 @@ return {
 	frameHeight = 8,
 	pivotX = "center",
 	pivotY = "center",
-	sortOffsetY = 4,
 	layer = 0,
+	sortOffsetY = 4,
 	components = {
 		{
 			component = "spritesheet",

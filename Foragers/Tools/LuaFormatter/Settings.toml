@@ -15,19 +15,20 @@ Modules.AddBlankLines.enabled = true
 # A param lands in the FIRST group (by `order`) whose any tag shares a word
 # (camelCase-aware: offsetX -> offset,x). Within a group, tag order wins.
 # Unknown keys stay last in file order. Tune tags here.
-param_groups.order = "identity size frame pivot coords motion stats appearance timing content ui sound"
-param_groups.identity.tags = "mode extends object debug name id type event field sourceType icon label priority"
+param_groups.order = "identity size frame pivot coords motion stats appearance timing content ui sound options"
+param_groups.identity.tags = "mode extends object debug snapshot name id type module priority appliesTo event field sourceType icon label"
 param_groups.size.tags = "width height tileSize chunkSize"
 param_groups.frame.tags = "frameWidth frameHeight columns rows animations chars charSpacing spacing"
 param_groups.pivot.tags = "pivotX pivotY"
 param_groups.coords.tags = "offsetX offsetY x y"
 param_groups.motion.tags = "moveX moveY movementSpeed swimmingSpeed followRadius followDelay accelerate smoothness smoothnessX smoothnessY rotate leanAngle leanThreshold"
 param_groups.stats.tags = "level experience xp xpCurve satiety satietyDrain maxSatiety hp damage range cooldown critChance critMult swing drops"
-param_groups.appearance.tags = "color backgroundColor borderTileOffset tint brightness noise shaders shader silhouette magnitude decay curve gravity replaceWith"
+param_groups.appearance.tags = "color backgroundColor borderTileOffset tint brightness noise shaders shader uniforms silhouette magnitude decay curve gravity replaceWith"
 param_groups.timing.tags = "duration interval stepInterval count spawnOn moving destroy destroyCurve"
 param_groups.content.tags = "props tags tweens particle inheritFlip angle font"
 param_groups.ui.tags = "horizontal vertical layer sortOffsetY"
 param_groups.sound.tags = "volume pitch pitchRandomness"
+param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius"
 
 # === component type order ===
 component_order.order = "player_stats spritesheet spritefont shadow control collision scroll_to follow destructible drop weapon shake tween particle_emitter text_emitter sound ui counter silhouette shader"
