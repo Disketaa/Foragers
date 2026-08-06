@@ -2,14 +2,7 @@ return {
 	name = "Skew",
 	type = "uv",
 	module = true,
-	uniforms = {
-		u_time = 0,
-		u_speed = 1,
-		u_amount = 0.1,
-		u_seed = 0,
-		u_gradient = 1,
-		u_curve = 2,
-	},
+	uniforms = { u_time = 0, u_speed = 1, u_amount = 0.1, u_seed = 0, u_gradient = 1, u_curve = 2 },
 	code = [[
 vec2 Skew_uv(vec2 uv, vec2 screen_coords) {
 	float wave = sin(u_time * u_speed + u_seed);

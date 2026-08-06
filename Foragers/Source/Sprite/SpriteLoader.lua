@@ -53,9 +53,7 @@ function SpriteLoader.instantiate(data, x, y, pngPath)
 	if pngPath then
 		local pngInfo = love.filesystem.getInfo(pngPath)
 		if pngInfo then
-			local ok, image = pcall(function()
-				return love.graphics.newImage(pngPath)
-			end)
+			local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
 			if ok then
 				sprite.image = image
 				if not next(data.components or {}) then

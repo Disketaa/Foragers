@@ -11,9 +11,7 @@ function EventEmitter:on(event, callback, priority)
 		self._listeners[event] = {}
 	end
 	table.insert(self._listeners[event], { callback = callback, priority = priority })
-	table.sort(self._listeners[event], function(a, b)
-		return a.priority < b.priority
-	end)
+	table.sort(self._listeners[event], function(a, b) return a.priority < b.priority end)
 	return callback
 end
 

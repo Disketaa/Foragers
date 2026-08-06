@@ -144,9 +144,7 @@ function Profiler.update(dt)
 		table.insert(snapshot, entry)
 		snapshotTotal = snapshotTotal + ms
 	end
-	table.sort(snapshot, function(a, b)
-		return a.ms > b.ms
-	end)
+	table.sort(snapshot, function(a, b) return a.ms > b.ms end)
 	frameCost = {}
 	frameCalls = {}
 end

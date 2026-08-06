@@ -1,11 +1,14 @@
 [targets]
 # Directories to process (relative to project root). Use "*" for everything.
-folders = ["Content/Assets/Sprites", "Content/Assets/UI", "Content/Data"]
+folders = ["*"]
 exclude_folders = []
-exclude_files = []
+exclude_files = ["lldebugger.lua"]
 
+# Data-reordering modules only apply to Content data; they must never touch
+# Source/Main/conf runtime code.
 [Modules.ComponentSort]
 enabled = true
+include_folders = ["Content/"]
 
 [Modules.StringifyTags]
 enabled = true
@@ -16,12 +19,15 @@ collapse_integer_floats = true
 
 [Modules.ParamSort]
 enabled = true
+include_folders = ["Content/"]
 
 [Modules.ComponentParamSort]
 enabled = true
+include_folders = ["Content/"]
 
 [Modules.TweenSort]
 enabled = true
+include_folders = ["Content/"]
 
 [Modules.StringifyLeaves]
 enabled = true
@@ -30,6 +36,9 @@ enabled = true
 enabled = true
 
 [Modules.StringifyItems]
+enabled = true
+
+[Modules.StringifyFunctions]
 enabled = true
 
 [param_order]

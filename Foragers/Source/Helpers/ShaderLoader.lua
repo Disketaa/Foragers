@@ -53,9 +53,7 @@ function ShaderLoader.compose(names)
 		end
 	end
 
-	local ok, entry = pcall(function()
-		return ShaderLoader._compileProgram(names, {})
-	end)
+	local ok, entry = pcall(function() return ShaderLoader._compileProgram(names, {}) end)
 	if ok and entry then
 		table.insert(ShaderLoader.shaders, entry)
 		return entry

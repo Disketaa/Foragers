@@ -99,9 +99,7 @@ function Gizmo.draw(w2s, groups)
 		seen[name] = true
 		order[#order + 1] = name
 	end
-	table.sort(order, function(a, b)
-		return (groups[a].priority or 0) < (groups[b].priority or 0)
-	end)
+	table.sort(order, function(a, b) return (groups[a].priority or 0) < (groups[b].priority or 0) end)
 
 	-- Bucket entries per group once, so each buffer is scanned a single time
 	-- and each group's style is set once rather than per entry.

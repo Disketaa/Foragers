@@ -1,9 +1,7 @@
 return {
 	name = "Saturation",
 	priority = "postprocess",
-	uniforms = {
-		u_saturation = 1,
-	},
+	uniforms = { u_saturation = 1 },
 	code = [[
 extern float u_saturation;
 

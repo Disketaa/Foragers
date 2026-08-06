@@ -146,9 +146,7 @@ local function buildPropPlan(worldData, playerSprite)
 				if playerSprite then
 					local tileRect = { x = tile.x, y = tile.y, w = tileSize, h = tileSize }
 					for _, comp in
-						ipairs(playerSprite:getComponents("collision", function(c)
-							return c.getRect
-						end))
+						ipairs(playerSprite:getComponents("collision", function(c) return c.getRect end))
 					do
 						if rectsOverlap(tileRect, comp:getRect()) then
 							skip = true
@@ -287,7 +285,5 @@ return {
 	build = build,
 	instantiateProp = instantiateProp,
 	instantiateTerrainTile = instantiateTerrainTile,
-	getTerrainBatch = function()
-		return terrainBatch
-	end,
+	getTerrainBatch = function() return terrainBatch end,
 }

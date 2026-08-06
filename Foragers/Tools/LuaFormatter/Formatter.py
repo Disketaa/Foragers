@@ -135,13 +135,29 @@ def main():
 
     # --- Process files ---
     changed = 0
+    failed_files = 0
     for path in all_files:
-        original = path.read_text(encoding="utf-8")
+        try:
+            original = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            print(f"Skip (unreadable): {path} ({e})", file=sys.stderr)
+            continue
         updated = original
-        for opt_name, module, opt_config in enabled_plugins:
-            if hasattr(module, "set_path"):
-                module.set_path(path)
-            updated = module.apply(updated, config)
+        try:
+            for opt_name, module, opt_config in enabled_plugins:
+                include_folders = opt_config.get("include_folders") if isinstance(opt_config, dict) else None
+                if include_folders:
+                    rel = path.relative_to(project_root).as_posix()
+                    if not any(rel.startswith(folder) for folder in include_folders):
+                        continue
+                if hasattr(module, "set_path"):
+                    module.set_path(path)
+                updated = module.apply(updated, config)
+        except Exception as e:
+            # Never let one file's failure abort the whole run.
+            failed_files += 1
+            print(f"Skip (failed): {path} ({opt_name}: {e})", file=sys.stderr)
+            continue
 
         if updated != original:
             path.write_text(updated, encoding="utf-8")

@@ -20,9 +20,7 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 		for _, entry in ipairs(entries) do
 			local sprite = entry.instance or entry
 			if sprite and sprite.components then
-				local silComp = sprite:findComponent("silhouette", function(c)
-					return c.mode ~= "mask" and not c._broken
-				end)
+				local silComp = sprite:findComponent("silhouette", function(c) return c.mode ~= "mask" and not c._broken end)
 				if silComp then
 					local color = silComp.color or { 0, 0, 0, 0.75 }
 					love.graphics.setColor(color[1], color[2], color[3], color[4] or 0.75)
@@ -38,9 +36,7 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 						rot = math.rad(sprite.angle)
 					end
 
-					local spritesheet = sprite:findComponent("spritesheet", function(c)
-						return not c._broken
-					end)
+					local spritesheet = sprite:findComponent("spritesheet", function(c) return not c._broken end)
 					if spritesheet then
 						local px = math.floor(sprite.x + 0.5) + camX
 						local py = math.floor(sprite.y + 0.5) + camY

@@ -132,7 +132,7 @@ function love.load()
 		fullscreen = Options.fullscreen,
 		vsync = Options.vsync,
 	})
-	local bg = World.backgroundColor or { 0.5, 0.8, 1.0 }
+	local bg = World.backgroundColor or { 0.5, 0.8, 1 }
 	love.graphics.setBackgroundColor(unpack(bg))
 
 	ModLoader.loadAllMods("Mods")
@@ -161,13 +161,9 @@ function initGame()
 	end)
 	ShaderLoader.reset()
 
-	local worldData = timeIt("WorldGen.generate", function()
-		return WorldGen.generate()
-	end)
+	local worldData = timeIt("WorldGen.generate", function() return WorldGen.generate() end)
 
-	local charEntries = timeIt("SpriteLoader Character", function()
-		return SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {}
-	end)
+	local charEntries = timeIt("SpriteLoader Character", function() return SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {} end)
 
 	playerSprite = nil
 	for _, entry in ipairs(charEntries) do
@@ -178,9 +174,7 @@ function initGame()
 	end
 
 	local result = timeIt("WorldBuilder.build", function()
-		return WorldBuilder.build(worldData, function(data)
-			return data.x, data.y
-		end, playerSprite)
+		return WorldBuilder.build(worldData, function(data) return data.x, data.y end, playerSprite)
 	end)
 	terrainBatch = nil
 	terrainPlan = result.terrainPlan or {}
@@ -188,9 +182,7 @@ function initGame()
 	propSpawnPlan = result.propPlan or {}
 	propSpawnIndex = 1
 	local toolEntries = timeIt("SpriteLoader Tools", function()
-		return SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function()
-			return 0, 0
-		end) or {}
+		return SpriteLoader.loadAll("Content/Assets/Sprites/Tools", function() return 0, 0 end) or {}
 	end)
 
 	dynamicObjects = {}
@@ -210,18 +202,14 @@ function initGame()
 
 	if playerSprite then
 		for _, entry in ipairs(toolEntries) do
-			local follow = entry.instance:findComponent("follow", function(c)
-				return c.setFollowTarget
-			end)
+			local follow = entry.instance:findComponent("follow", function(c) return c.setFollowTarget end)
 			if follow then
 				follow:setFollowTarget(playerSprite)
 			end
 			table.insert(dynamicObjects, entry)
 			table.insert(objects, entry)
 		end
-		local scrollComp = playerSprite:findComponent("scroll_to", function(c)
-			return c.setFollowTarget
-		end)
+		local scrollComp = playerSprite:findComponent("scroll_to", function(c) return c.setFollowTarget end)
 		if scrollComp then
 			scrollToComp = scrollComp
 			scrollComp:setFollowTarget(playerSprite)
@@ -261,9 +249,7 @@ function initGame()
 	-- Wire counter components to player sprite (event-driven, no polling)
 	if playerSprite then
 		for _, ui in ipairs(uiSprites) do
-			local counter = ui.sprite:findComponent("counter", function(c)
-				return c.setPlayerSprite
-			end)
+			local counter = ui.sprite:findComponent("counter", function(c) return c.setPlayerSprite end)
 			if counter then
 				counter:setPlayerSprite(playerSprite)
 			end
@@ -276,7 +262,7 @@ function initGame()
 			local stats = playerSprite:findComponent("player_stats")
 			local low = (stats and stats.lowSatietyPercent or 33) / 100
 			local f = data.value / math.max(1, data.maxValue)
-			TimeScale.scale = f >= low and 1.0 or 0.15 + 0.85 * (f / low)
+			TimeScale.scale = f >= low and 1 or 0.15 + 0.85 * (f / low)
 			local s = f >= low and 1 or f / low
 			ShaderLoader.sendUniform("u_saturation", math.max(0.33, math.min(1, s)))
 			local zMax = stats and stats.lowSatietyZoom or 2
@@ -590,7 +576,7 @@ function love.update(dt)
 		_needsRestart = false
 		Reset.all()
 		uiSprites = {}
-		TimeScale.scale = 1.0
+		TimeScale.scale = 1
 		Zoom.reset()
 		initGame()
 		return
@@ -640,9 +626,7 @@ function love.update(dt)
 
 	for _, sprite in ipairs(Drop.getPending()) do
 		if playerSprite then
-			local follow = sprite:findComponent("follow", function(c)
-				return c.setFollowTarget
-			end)
+			local follow = sprite:findComponent("follow", function(c) return c.setFollowTarget end)
 			if follow then
 				follow:setFollowTarget(playerSprite)
 			end
@@ -654,13 +638,9 @@ function love.update(dt)
 	local destroyedTweens = TweenComponent.getPendingDestroy()
 	for _, sprite in ipairs(destroyedTweens) do
 		ParticleEmitter.detachAll(sprite)
-		local follow = sprite:findComponent("follow", function(c)
-			return c.followTarget
-		end)
+		local follow = sprite:findComponent("follow", function(c) return c.followTarget end)
 		if follow then
-			local pickup = sprite:findComponent("pickup", function(c)
-				return c.satiety
-			end)
+			local pickup = sprite:findComponent("pickup", function(c) return c.satiety end)
 			local text = pickup and ("+" .. tostring(pickup.satiety)) or ""
 			follow.followTarget:emit(Events.PICKUP, text)
 		end

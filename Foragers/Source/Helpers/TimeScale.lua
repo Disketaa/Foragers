@@ -1,4 +1,4 @@
 local TimeScale = {}
-TimeScale.scale = 1.0
+TimeScale.scale = 1
 
 return TimeScale

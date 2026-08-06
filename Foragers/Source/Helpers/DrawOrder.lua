@@ -23,9 +23,7 @@ end
 
 ---@param list table Sprite[] buffer from collect()
 function DrawOrder.sort(list)
-	table.sort(list, function(a, b)
-		return a.zKey < b.zKey
-	end)
+	table.sort(list, function(a, b) return a.zKey < b.zKey end)
 end
 
 return DrawOrder

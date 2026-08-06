@@ -93,9 +93,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 			compData.spriteSheet = Path.png(self.particle)
 		end
 
-		local ok, sp = pcall(function()
-			return require("Source.Helpers.ComponentRegistry").create("spritesheet", compData)
-		end)
+		local ok, sp = pcall(function() return require("Source.Helpers.ComponentRegistry").create("spritesheet", compData) end)
 		if not ok or not sp then
 			return
 		end
@@ -129,9 +127,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 			return
 		end
 
-		local ok, image = pcall(function()
-			return love.graphics.newImage(pngPath)
-		end)
+		local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
 		if not ok then
 			return
 		end
@@ -230,9 +226,7 @@ end
 --- in world space until all particles expire, then self-clean.
 function ParticleEmitter.detachAll(sprite)
 	for _, comp in
-		ipairs(sprite:getComponents("particle_emitter", function(c)
-			return not c._broken
-		end))
+		ipairs(sprite:getComponents("particle_emitter", function(c) return not c._broken end))
 	do
 		comp._detached = true
 		comp._emitting = false

@@ -66,9 +66,7 @@ local registry = {
 	silhouette = Silhouette,
 }
 for name, module in pairs(registry) do
-	ComponentRegistry.register(name, function(data)
-		return module.new(data)
-	end)
+	ComponentRegistry.register(name, function(data) return module.new(data) end)
 end
 
 return ComponentRegistry
