@@ -4,7 +4,6 @@ from pathlib import Path
 
 
 def load_config(config_path: Path) -> dict:
-    """Load formatter configuration from TOML file."""
     try:
         import tomllib
     except ImportError:
@@ -16,7 +15,6 @@ def load_config(config_path: Path) -> dict:
 
 
 def _split_order(value):
-    # whitespace-separated; commas tolerated as legacy separators
     if isinstance(value, str):
         return value.replace(",", " ").split()
     return value
@@ -35,7 +33,6 @@ def find_lua_files(
     exclude_folders: list[str],
     exclude_files: list[str],
 ) -> list[Path]:
-    """Find all .lua files under root, respecting exclusions."""
     exclude_set = set(exclude_files)
     files = []
     for path in sorted(root.rglob("*.lua")):
@@ -48,7 +45,6 @@ def find_lua_files(
 
 
 def load_plugin(name: str, plugins_dir: Path):
-    """Dynamically load an optimization plugin by name."""
     plugin_path = plugins_dir / f"{name}.py"
     if not plugin_path.is_file():
         return None
@@ -74,7 +70,6 @@ def main():
     config = load_config(config_path)
     config = normalize_orders(config)
 
-    # --- Resolve target folders ---
     targets = config.get("targets", {})
     folders = targets.get("folders", [])
     exclude_folders = targets.get("exclude_folders", [])
@@ -100,7 +95,6 @@ def main():
         print("Error: No valid target folders found", file=sys.stderr)
         sys.exit(1)
 
-    # --- Collect files ---
     all_files = []
     for folder in resolved_folders:
         all_files.extend(find_lua_files(folder, exclude_folders, exclude_files))
@@ -109,7 +103,6 @@ def main():
         print("No .lua files found in target folders")
         sys.exit(0)
 
-    # --- Load enabled Modules ---
     modules_config = config.get("Modules", {})
     plugins_dir = script_dir / "Modules"
 
@@ -129,7 +122,6 @@ def main():
     if not enabled_plugins:
         print("Warning: No Modules enabled", file=sys.stderr)
 
-    # --- Process files ---
     changed = 0
     failed_files = 0
     for path in all_files:
@@ -159,8 +151,7 @@ def main():
             path.write_text(updated, encoding="utf-8")
             print(f"Updated: {path}")
             changed += 1
-        else:
-            print(f"No changes: {path}")
+        # unchanged files are silently skipped — printing them only spams the console
 
     print(f"\n\u2705 Done. {changed} file(s) updated out of {len(all_files)} total.")
     sys.stdout.flush()

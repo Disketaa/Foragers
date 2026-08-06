@@ -4,7 +4,6 @@ import re
 
 
 def collapse(s: str) -> str:
-    """Flatten any run of whitespace to one space, for single-lining entries."""
     return re.sub(r"\s+", " ", s.strip())
 
 

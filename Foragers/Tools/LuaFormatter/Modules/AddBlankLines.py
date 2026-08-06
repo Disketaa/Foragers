@@ -2,7 +2,6 @@ import re
 
 
 def _is_block_opener(line: str) -> bool:
-    """True if the line opens a multi-line block: a bare `{` or a `key = {`."""
     s = line.strip()
     if s == "{":
         return True

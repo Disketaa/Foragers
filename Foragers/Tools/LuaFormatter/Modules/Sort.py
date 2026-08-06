@@ -6,7 +6,6 @@ from _lua import matching_brace, split_top_level, table_block
 
 
 def _key_of(entry: str):
-    """Sort key of a single-line `key = value` entry; multiline blocks are unsortable."""
     if "\n" in entry:
         return None
     m = re.match(r"(\w+)\s*=", entry)
@@ -14,7 +13,6 @@ def _key_of(entry: str):
 
 
 def _words(s: str) -> list:
-    """Split a camelCase/snake identifier into lowercase words: offsetX -> [offset, x]."""
     words, cur = [], []
     for ch in s:
         if ch.isalnum():
@@ -31,7 +29,7 @@ def _words(s: str) -> list:
 
 
 def _parse_groups(config: dict):
-    """Build [(group_name, [frozenset(tag_words), ...])] from [param_groups], in declared order."""
+    """[(group_name, [frozenset(tag_words), ...])] in declared group order."""
     g = config.get("param_groups") or {}
     order = g.get("order")
     if isinstance(order, str):
@@ -69,7 +67,6 @@ def _order_index(order: list) -> dict:
 
 
 def _sort_params(text: str, groups) -> str:
-    """Sort `return {...}` params by group/tag; unknown keys and multiline blocks keep file order at the end."""
     if not groups:
         return text
     m = re.search(r"^([ \t]*)return\s*\{$", text, re.M)
@@ -98,7 +95,6 @@ def _sort_params(text: str, groups) -> str:
 
 
 def _sort_components(text: str, order: list) -> str:
-    """Sort `components = {...}` entries by declared component type order."""
     if not order:
         return text
     m = re.search(r"^([ \t]*)components\s*=\s*\{$", text, re.M)
@@ -125,7 +121,6 @@ def _sort_components(text: str, order: list) -> str:
 
 
 def _sort_component_params(text: str, groups) -> str:
-    """Sort each component entry's params by the same group scheme; `component` always first."""
     if not groups:
         return text
     m = re.search(r"^([ \t]*)components\s*=\s*\{$", text, re.M)
@@ -172,7 +167,6 @@ def _tween_target(part: str):
 
 
 def _sort_tween_array(text: str, open_idx: int, close_idx: int, oi: dict) -> str:
-    """Sort an array block's items by tween target; non-target flags stay first."""
     inner = text[open_idx + 1: close_idx]
     items = split_top_level(inner)
     if len(items) < 2:
@@ -196,7 +190,6 @@ def _sort_tween_array(text: str, open_idx: int, close_idx: int, oi: dict) -> str
 
 
 def _sort_tween_tags(block: str, tags_open: int, tags_close: int, oi: dict) -> str:
-    """Sort each `tags.<name> = {...}` array inside the tags block."""
     sub = block[tags_open + 1: tags_close]
     arrs = []
     for am in re.finditer(r"\b(\w+)\s*=\s*\{", sub):
@@ -209,7 +202,6 @@ def _sort_tween_tags(block: str, tags_open: int, tags_close: int, oi: dict) -> s
 
 
 def _sort_tweens(text: str, order: list) -> str:
-    """Sort items in a tween component's `tweens = {...}` and each `tags.<name> = {...}`."""
     if not order:
         return text
     oi = _order_index(order)

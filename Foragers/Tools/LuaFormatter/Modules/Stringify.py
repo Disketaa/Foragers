@@ -9,12 +9,10 @@ _ANY_TABLE = re.compile(r"^(\w+\s*=\s*)?\{")
 
 
 def _is_table_child(entry: str) -> bool:
-    """True if the entry's value is a table literal (bare `{` or `key = {`)."""
     return bool(_ANY_TABLE.match(entry.strip()))
 
 
 def _collapse_leaves(text: str) -> str:
-    """Single-line each scalar `key = {...}` child of a `return {...}` block."""
     m = re.search(r"^([ \t]*)return\s*\{$", text, re.M)
     if not m:
         return text
@@ -26,7 +24,6 @@ def _collapse_leaves(text: str) -> str:
 
 
 def _process_block(inner: str, indent: str) -> tuple:
-    """Format each entry (without its own line prefix). Returns (entries, has_table_child)."""
     out, has_table = [], False
     for e in split_top_level(inner):
         if not e.strip():
@@ -38,7 +35,6 @@ def _process_block(inner: str, indent: str) -> tuple:
 
 
 def _process_entry(entry: str, indent: str) -> str:
-    """Collapse `key = {...}` to one line iff every child is a scalar (no nested table)."""
     m = _NAMED_TABLE.match(entry)
     if not m or "\n" not in entry:
         return entry
@@ -54,7 +50,6 @@ def _process_entry(entry: str, indent: str) -> str:
 
 
 def _collapse_tags(text: str) -> str:
-    """Single-line each `name = {...}` value in a `tags = {...}` block."""
     pattern = re.compile(r"^[ \t]*tags\s*=\s*\{$", re.M)
     out, pos = [], 0
     for m in pattern.finditer(text):
@@ -107,7 +102,6 @@ def _item_weight(entry: str):
 
 
 def _collapse_items(text: str) -> str:
-    """Single-line each `items = {...}` child, then sort by weight (no-weight keeps order)."""
     pattern = re.compile(r"^([ \t]*)items\s*=\s*\{$", re.M)
     out, pos = [], 0
     for m in pattern.finditer(text):
@@ -136,7 +130,6 @@ def _stringify_item(entry: str) -> str:
 
 
 def _collapse_functions(text: str) -> str:
-    """Collapse a multiline anonymous function whose whole body is `return <expr>`."""
     pattern = re.compile(
         r"(\bfunction\s*\([^()\n]*\))\s*\n([ \t]*)return\s+([^\n]+?)\s*\n[ \t]*end"
     )
