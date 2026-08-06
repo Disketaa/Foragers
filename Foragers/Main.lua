@@ -591,6 +591,7 @@ function love.update(dt)
 		Reset.all()
 		uiSprites = {}
 		TimeScale.scale = 1.0
+		Zoom.reset()
 		initGame()
 		return
 	end

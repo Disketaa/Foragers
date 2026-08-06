@@ -24,4 +24,11 @@ function Zoom.update(dt)
 	end
 end
 
+--- Back to the default 1x view. Called on restart — scalar fields are skipped by
+--- Reset.all(), so this module resets itself explicitly.
+function Zoom.reset()
+	Zoom.current = 1
+	Zoom.target = 1
+end
+
 return Zoom
