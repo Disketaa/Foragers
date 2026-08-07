@@ -198,8 +198,14 @@ function Counter:_setFrame(progress)
 		return
 	end
 	local numFrames = self.frames or spritesheet.columns or 1
-	-- frame 1 = 0%, frame N = 100%
-	spritesheet._currentIndex = math.floor(math.max(0, math.min(1, progress)) * (numFrames - 1)) + 1
+	-- Frame 1 = exactly 0; any positive value shows at least one segment so a
+	-- low-but-alive value doesn't read as empty.
+	local p = math.max(0, math.min(1, progress))
+	local index = math.floor(p * (numFrames - 1)) + 1
+	if p > 0 and numFrames > 1 then
+		index = math.max(2, index)
+	end
+	spritesheet._currentIndex = index
 
 	if self._iconQuads then
 		local iconNumFrames = self._iconColumns or 1
