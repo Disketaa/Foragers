@@ -93,7 +93,6 @@ return {
 
 		{
 			component = "particle_emitter",
-			count = 1,
 			spawnOn = { death = true },
 			particle = "Content/Assets/Sprites/Particles/CharacterDeath.lua",
 		},

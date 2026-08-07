@@ -7,15 +7,15 @@ return {
 		{
 			component = "spritesheet",
 			animations = {
-				{ row = 1, frames = 8, speed = 12, loop = false },
+				{ row = 1, frames = 8, speed = 8, loop = false },
 			},
 		},
 
 		{
 			component = "shake",
-			magnitude = 3,
+			magnitude = 2,
 			decay = true,
-			duration = 0.4,
+			duration = 0.2,
 		},
 	},
 }
