@@ -18,6 +18,7 @@ return {
 			lowSatietyPercent = 33,
 			lowSatietyZoom = 2,
 			lowSatietyWarnings = 3,
+			lowSatietyMaskRadius = 24,
 			maxSatiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
 			critChance = 0,

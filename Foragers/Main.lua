@@ -34,6 +34,7 @@ local Snapshot = require("Source.Helpers.Snapshot")
 local Gizmo = require("Source.Helpers.Gizmo")
 local Pivot = require("Source.Helpers.Pivot")
 local Zoom = require("Source.Helpers.Zoom")
+local Math = require("Source.Helpers.Math")
 
 local objects = {}
 local staticObjects = {}
@@ -61,9 +62,12 @@ local weaponSprite = nil
 local playerSprite = nil
 local shakeOffsetX = 0
 local shakeOffsetY = 0
--- Canvas px, matches CircleMask's canvas-space math.
+-- Canvas px, matches CircleMask's canvas-space math. Eased between satiety
+-- changes; snapped at the off/on boundary so entry/exit never sweeps through
+-- small (mostly-black) radii.
 local circleMaskRadius = 0
-local CIRCLE_MASK_STEP = 8
+local circleMaskTarget = 0
+local CIRCLE_MASK_SMOOTHNESS = 0.3
 local uiSprites = {}
 local terrainBatch = nil
 local tileSize = World.tileSize
@@ -164,6 +168,7 @@ function initGame()
 	end)
 	ShaderLoader.reset()
 	circleMaskRadius = 0
+	circleMaskTarget = 0
 
 	local worldData = timeIt("WorldGen.generate", function() return WorldGen.generate() end)
 
@@ -271,6 +276,14 @@ function initGame()
 			ShaderLoader.sendUniform("u_saturation", math.max(0.33, math.min(1, s)))
 			local zMax = stats and stats.lowSatietyZoom or 2
 			Zoom.target = f >= low and 1 or (zMax - (zMax - 1) * (f / low))
+			local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2
+			local minR = (stats and stats.lowSatietyMaskRadius) or 24
+			local k = f >= low and 0 or (f / low)
+			local target = k == 0 and 0 or (minR + (maxR - minR) * (k * k))
+			if target == 0 or circleMaskRadius == 0 then
+				circleMaskRadius = target
+			end
+			circleMaskTarget = target
 		end, 5)
 	end
 
@@ -580,16 +593,6 @@ function love.keypressed(key)
 	end
 end
 
-function love.wheelmoved(_dx, dy)
-	if dy == 0 then
-		return
-	end
-	local w, h = canvas.width, canvas.height
-	local maxR = math.sqrt(w * w + h * h) / 2
-	circleMaskRadius = math.max(0, math.min(maxR, circleMaskRadius + dy * CIRCLE_MASK_STEP))
-	ShaderLoader.sendUniform("u_circleRadius", circleMaskRadius)
-end
-
 function love.update(dt)
 	if _needsRestart then
 		_needsRestart = false
@@ -670,6 +673,15 @@ function love.update(dt)
 
 	ShaderLoader.update(scaledDt)
 	Zoom.update(scaledDt)
+
+	if circleMaskRadius ~= circleMaskTarget then
+		local ease = Math.expSmooth(scaledDt, CIRCLE_MASK_SMOOTHNESS)
+		circleMaskRadius = circleMaskRadius + (circleMaskTarget - circleMaskRadius) * ease
+		if math.abs(circleMaskRadius - circleMaskTarget) < 0.01 then
+			circleMaskRadius = circleMaskTarget
+		end
+	end
+	ShaderLoader.sendUniform("u_circleRadius", circleMaskRadius)
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
 	local moveMouse = (Options.keybinds.moveMouse and Options.keybinds.moveMouse.mouse) or { 1 }

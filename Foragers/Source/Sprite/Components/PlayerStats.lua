@@ -9,6 +9,7 @@
 ---@field maxSatiety number Maximum satiety
 ---@field lowSatietyPercent number Percent of maxSatiety below which low-satiety effects start
 ---@field lowSatietyZoom number Output zoom when satiety reaches 0 (1 at the threshold)
+---@field lowSatietyMaskRadius number Circle mask radius (canvas px) at zero satiety; full circle at the low threshold
 ---@field type string
 local Events = require("Source.Helpers.Events")
 local PlayerStats = {}
@@ -33,6 +34,7 @@ function PlayerStats.new(data)
 		lowSatietyPercent = data.lowSatietyPercent or 33,
 		lowSatietyZoom = data.lowSatietyZoom or 2,
 		lowSatietyWarnings = data.lowSatietyWarnings or 3,
+		lowSatietyMaskRadius = data.lowSatietyMaskRadius or 24,
 		_warned = 0,
 		satietyDrain = {
 			run = satietyDrain.run or 0.5,
