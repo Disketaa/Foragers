@@ -278,8 +278,8 @@ function initGame()
 			Zoom.target = f >= low and 1 or (zMax - (zMax - 1) * (f / low))
 			local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2
 			local minR = (stats and stats.lowSatietyMaskRadius) or 24
-			local k = f >= low and 0 or (f / low)
-			local target = k == 0 and 0 or (minR + (maxR - minR) * (k * k))
+			local k = f / low
+			local target = f >= low and 0 or (minR + (maxR - minR) * (k * k))
 			if target == 0 or circleMaskRadius == 0 then
 				circleMaskRadius = target
 			end
