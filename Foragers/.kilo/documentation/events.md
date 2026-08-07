@@ -19,6 +19,7 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `SLOWDOWN_EXIT` | `"slowdown_exit"` | Collision | Sound(15) |
 | `VALUE_CHANGED` | `"value_changed"` | PlayerStats | Counter(5), Main.lua(5) |
 | `LOW_SATIETY` | `"low_satiety"` | PlayerStats | Emote(5), Sound(15) |
+| `DEATH` | `"death"` | PlayerStats (satiety 0) | Main.lua(5), ParticleEmitter(spawnOn, 5) |
 | `PROP_HIT` | `"prop_hit"` | AttackSystem | Shader(8), TextEmitter(5), Tween(10), Sound(15) |
 | `PROP_HIT` payload | — | AttackSystem emits `PROP_HIT` with the damage number as the first arg (`emit(PROP_HIT, damage)`). `text_emitter` uses this payload as the display text when its `text` field is nil. | — |
 | `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), Shake(5), Sound(15) |

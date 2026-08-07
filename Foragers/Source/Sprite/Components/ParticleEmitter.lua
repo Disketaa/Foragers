@@ -141,6 +141,19 @@ function ParticleEmitter:_createParticle(px, py, angle)
 		particle._duration = data.lifetime or 0.5
 	end
 
+	-- A shake component on the particle data shakes the particle in place
+	-- (e.g. the death burst), driven off the trigger, no event wiring.
+	for _, comp in ipairs(data.components or {}) do
+		if comp.component == "shake" then
+			local shake = require("Source.Helpers.ComponentRegistry").create("shake", comp)
+			if shake then
+				shake:trigger()
+				particle.shake = shake
+			end
+			break
+		end
+	end
+
 	return particle
 end
 
@@ -181,6 +194,9 @@ function ParticleEmitter.updateBursts(dt)
 		if p.anim then
 			p.anim:update(dt)
 		end
+		if p.shake then
+			p.shake:update(dt)
+		end
 		p._age = p._age + dt
 		if p._age >= p._duration then
 			table.remove(burstParticles, i)
@@ -189,13 +205,24 @@ function ParticleEmitter.updateBursts(dt)
 end
 
 local function drawParticle(p)
+	local ox = p.shake and p.shake.offsetX or 0
+	local oy = p.shake and p.shake.offsetY or 0
 	if p.anim then
-		p.anim:draw(p.x, p.y)
+		p.anim:draw(p.x + ox, p.y + oy)
 	else
 		local sx = p.flipX and -1 or 1
-		local ox = Pivot.px(p.pivotX, p.frameWidth, "center")
-		local oy = Pivot.px(p.pivotY, p.frameHeight, "center")
-		love.graphics.draw(p.image, math.floor(p.x + 0.5), math.floor(p.y + 0.5), math.rad(p.angle or 0), sx, 1, ox, oy)
+		local px = Pivot.px(p.pivotX, p.frameWidth, "center")
+		local py = Pivot.px(p.pivotY, p.frameHeight, "center")
+		love.graphics.draw(
+			p.image,
+			math.floor(p.x + ox + 0.5),
+			math.floor(p.y + oy + 0.5),
+			math.rad(p.angle or 0),
+			sx,
+			1,
+			px,
+			py
+		)
 	end
 end
 

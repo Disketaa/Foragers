@@ -18,9 +18,15 @@ end
 
 function ShakeComponent:attach()
 	self.parent:on(Events.PROP_BROKEN, function()
-		self.timer = 0
-		self.active = true
+		self:trigger()
 	end, 5)
+end
+
+--- Start (or restart) the shake from zero. Public so anything can trigger it,
+--- e.g. the death overlay's shake runs off an explicit spawn, not an event.
+function ShakeComponent:trigger()
+	self.timer = 0
+	self.active = true
 end
 
 function ShakeComponent:update(dt)

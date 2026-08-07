@@ -60,6 +60,11 @@ local camSubY = 0
 local scrollToComp = nil
 local weaponSprite = nil
 local playerSprite = nil
+-- Player's player_stats component — the single dead toggle for the death render.
+local playerStats = nil
+-- Death side effects run after the update loop (they mutate the object lists the
+-- loop iterates); the DEATH event only flags it and applies safe, immediate ones.
+local pendingDeath = false
 local shakeOffsetX = 0
 local shakeOffsetY = 0
 -- Canvas px, matches CircleMask's canvas-space math. Eased between satiety
@@ -161,6 +166,28 @@ local function timeIt(label, fn)
 	return result
 end
 
+--- Drop a sprite from the world: active lists + collision registry. The object
+--- stays referenced by callers (camera/counters/attacker read it), so removal is
+--- not destruction — it just stops updates/draws/collision.
+local function destroySprite(sprite)
+	if not sprite then
+		return
+	end
+	for i = #objects, 1, -1 do
+		if objects[i].instance == sprite then
+			table.remove(objects, i)
+			break
+		end
+	end
+	for i = #dynamicObjects, 1, -1 do
+		if dynamicObjects[i].instance == sprite then
+			table.remove(dynamicObjects, i)
+			break
+		end
+	end
+	Collision.removeSpriteColliders(sprite)
+end
+
 --- Rebuild all game state from scratch (world, sprites, UI, player).
 --- Called at startup and on every restart. No window/graphics recreation.
 function initGame()
@@ -193,6 +220,7 @@ function initGame()
 			break
 		end
 	end
+	playerStats = playerSprite and playerSprite:findComponent("player_stats") or nil
 
 	local result = timeIt("WorldBuilder.build", function()
 		return WorldBuilder.build(worldData, function(data) return data.x, data.y end, playerSprite)
@@ -280,7 +308,7 @@ function initGame()
 			if data.field ~= "satiety" then
 				return
 			end
-			local stats = playerSprite:findComponent("player_stats")
+			local stats = playerStats
 			local low = (stats and stats.lowSatietyPercent or 33) / 100
 			local f = data.value / math.max(1, data.maxValue)
 			TimeScale.scale = f >= low and 1 or 0.15 + 0.85 * (f / low)
@@ -296,6 +324,14 @@ function initGame()
 				circleMaskRadius = target
 			end
 			circleMaskTarget = target
+		end, 5)
+
+		playerSprite:on(Events.DEATH, function()
+			-- Normal time so the death particle animation plays at full speed.
+			-- Sprite removal is deferred to after the update loop — mutating
+			-- objects mid-iteration crashes.
+			TimeScale.scale = 1
+			pendingDeath = true
 		end, 5)
 	end
 
@@ -406,6 +442,7 @@ function love.draw()
 	ShaderLoader.setCamera(camPixelX, camPixelY)
 	local zoom = Zoom.current
 	local zpx, zpy = computeZoomPivot()
+	local isDead = playerStats and playerStats.dead
 
 	-- CircleMask maps window px back to canvas px; needs the blit transform
 	-- (scale x zoom about the pivot), which changes every frame.
@@ -433,8 +470,16 @@ function love.draw()
 		zpy
 	)
 
-	-- Main world canvas
+	-- Main world canvas. At death the mask is dropped so the death particle —
+	-- drawn over the black-cleared canvas — isn't blacked by the post-process.
 	canvas:draw(function()
+		if isDead then
+			love.graphics.push()
+			love.graphics.translate(camPixelX, camPixelY)
+			ParticleEmitter.drawBursts()
+			love.graphics.pop()
+			return
+		end
 		love.graphics.push()
 		love.graphics.translate(camPixelX, camPixelY)
 
@@ -479,7 +524,8 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY, ShaderLoader.getPostProcess(), zoom, zpx, zpy)
+	end, isDead and { 0, 0, 0, 1 } or nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
+	isDead and nil or ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
 	-- its outline. Rects + fills are tagged by group so Gizmo can style each.
@@ -537,20 +583,24 @@ function love.draw()
 	love.graphics.origin()
 	love.graphics.translate(canvas.offsetX, canvas.offsetY)
 	love.graphics.scale(canvas.scale, canvas.scale)
-	for _, ui in ipairs(uiSprites) do
-		ui.sprite:draw()
+	if not isDead then
+		for _, ui in ipairs(uiSprites) do
+			ui.sprite:draw()
+		end
 	end
 	love.graphics.pop()
 
 	-- Debug HUD: top-left at native resolution, screen-fixed.
-	Debug.draw(#objects, canvas.scale)
+	if not isDead then
+		Debug.draw(#objects, canvas.scale)
+	end
 
 	-- Cursor drawn last so it sits above the debug HUD, screen-fixed.
 	love.graphics.push()
 	love.graphics.origin()
 	love.graphics.translate(canvas.offsetX, canvas.offsetY)
 	love.graphics.scale(canvas.scale, canvas.scale)
-	if cursorSprite and cursorSprite.instance then
+	if not isDead and cursorSprite and cursorSprite.instance then
 		local mx, my = love.mouse.getPosition()
 		local cx = (mx - canvas.offsetX) / canvas.scale
 		local cy = (my - canvas.offsetY) / canvas.scale
@@ -559,21 +609,6 @@ function love.draw()
 		cursorSprite.instance:draw()
 	end
 	love.graphics.pop()
-end
-
-local function removeSpriteFromLists(sprite)
-	for i = #objects, 1, -1 do
-		if objects[i].instance == sprite then
-			table.remove(objects, i)
-			break
-		end
-	end
-	for i = #dynamicObjects, 1, -1 do
-		if dynamicObjects[i].instance == sprite then
-			table.remove(dynamicObjects, i)
-			break
-		end
-	end
 end
 
 local function bindingPressed(binding, key)
@@ -653,8 +688,7 @@ function love.update(dt)
 				table.insert(dynamicObjects, { instance = newSprite, data = morphData })
 			end
 		end
-		Collision.removeSpriteColliders(sprite)
-		removeSpriteFromLists(sprite)
+		destroySprite(sprite)
 	end
 	Destructible.clearDead()
 
@@ -678,8 +712,7 @@ function love.update(dt)
 			local text = pickup and ("+" .. tostring(pickup.satiety)) or ""
 			follow.followTarget:emit(Events.PICKUP, text)
 		end
-		Collision.removeSpriteColliders(sprite)
-		removeSpriteFromLists(sprite)
+		destroySprite(sprite)
 	end
 	TweenComponent.clearPendingDestroy()
 
@@ -726,6 +759,13 @@ function love.update(dt)
 			end
 			entry.instance:update(scaledDt)
 		end
+	end
+
+	if pendingDeath then
+		pendingDeath = false
+		destroySprite(playerSprite)
+		destroySprite(weaponSprite)
+		AttackSystem.clearAttacker()
 	end
 
 	-- Update camera from scroll_to component

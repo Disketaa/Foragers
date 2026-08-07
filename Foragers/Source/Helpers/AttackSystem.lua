@@ -42,6 +42,12 @@ function AttackSystem.registerAttacker(sprite, weaponSprite)
 	}
 end
 
+--- Drop the registered attacker (e.g. player death) so no further swings or
+--- damage resolve. Idempotent.
+function AttackSystem.clearAttacker()
+	attacker = nil
+end
+
 function AttackSystem.update(dt, allObjects)
 	if not attacker or not attacker.sprite then
 		return

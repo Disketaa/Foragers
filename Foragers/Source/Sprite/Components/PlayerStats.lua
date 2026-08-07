@@ -10,6 +10,7 @@
 ---@field lowSatietyPercent number Percent of maxSatiety below which low-satiety effects start
 ---@field lowSatietyZoom number Output zoom when satiety reaches 0 (1 at the threshold)
 ---@field lowSatietyMaskRadius number Circle mask radius (canvas px) at zero satiety; full circle at the low threshold
+---@field dead boolean Whether the player has died (satiety 0); blocks further consumption/restoration
 ---@field type string
 local Events = require("Source.Helpers.Events")
 local PlayerStats = {}
@@ -35,6 +36,7 @@ function PlayerStats.new(data)
 		lowSatietyZoom = data.lowSatietyZoom or 2,
 		lowSatietyWarnings = data.lowSatietyWarnings or 3,
 		lowSatietyMaskRadius = data.lowSatietyMaskRadius or 24,
+		dead = false,
 		_warned = 0,
 		satietyDrain = {
 			run = satietyDrain.run or 0.5,
@@ -83,6 +85,9 @@ end
 ---@param amount number
 ---@return boolean leveledUp
 function PlayerStats:addExperience(amount)
+	if self.dead then
+		return false
+	end
 	self.experience = self.experience + amount
 	local leveledUp = false
 	while self.experience >= self:xpForNextLevel() do
@@ -104,6 +109,9 @@ end
 
 ---@param amount number
 function PlayerStats:consumeSatiety(amount)
+	if self.dead then
+		return
+	end
 	self.satiety = math.max(0, self.satiety - amount)
 	if self.parent then
 		self.parent:emit(Events.VALUE_CHANGED, {
@@ -115,6 +123,12 @@ function PlayerStats:consumeSatiety(amount)
 		})
 	end
 	self:_checkHungerWarnings()
+	if self.satiety <= 0 then
+		self.dead = true
+		if self.parent then
+			self.parent:emit(Events.DEATH)
+		end
+	end
 end
 
 --- Emit LOW_SATIETY once per descending warning threshold crossed.
@@ -144,6 +158,9 @@ end
 
 ---@param amount number
 function PlayerStats:restoreSatiety(amount)
+	if self.dead then
+		return
+	end
 	self.satiety = math.min(self.maxSatiety, self.satiety + amount)
 	if self.satiety >= (self.lowSatietyPercent or 33) / 100 * self.maxSatiety then
 		self._warned = 0

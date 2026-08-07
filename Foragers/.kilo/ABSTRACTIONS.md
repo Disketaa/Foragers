@@ -146,7 +146,6 @@ relevant section before touching that subsystem.
   `Background/` (standalone non-module screen shaders). Usage is a data
   declaration — `postprocess = true` + `order` for screen effects, `applies_to`
   for background, the sprite `shaders` array for composition — never a folder.
-
 ## Debug flags
 
 - `_G.SHADER_DEBUG` was used temporarily for console prints / file dumps. It is
@@ -292,6 +291,8 @@ relevant section before touching that subsystem.
 - **Components that outlive their parent belong in a global pool, not kept alive via invisible corpse sprites.** `ParticleEmitter.detachAll(sprite)` is called from `Main.lua` before dead-sprite cleanup. It sets `parent = nil`, stops spawning, and moves the component to `detachedEmitters`. Global `updateDetached(dt)`/`drawDetached()`/`drawDetachedBehind()` loop until `#_particles == 0` then self-clean.
 - **`_burst` and `_spawn` must guard `self.parent` before accessing parent fields.** Event listeners subscribed before detach could theoretically fire after parent=nil — guard defensively even if no caller emits on dead sprites.
 - **Particle aging loop runs unconditionally (attached and detached).** The `_detached` early-return goes between aging and spawning — aging must always run so particles expire and cleanup triggers.
+- **A particle over a full-screen post-process mask can't live in the masked world canvas.** The CircleMask blackout would cover it. For the death particle, Main clears the world canvas black at death, drops the mask (`screenShader = nil` on `Canvas:draw`), and draws the burst particle in that canvas — no `u_blackout` uniform, no extra layer. The particle must be drawn with the same `translate(camPixelX, camPixelY)` as the normal world path or it lands off-canvas. A `shake` component in particle data shakes the particle in place (ParticleEmitter creates/updates/applies it per particle).
+- **Never mutate `objects`/`dynamicObjects` mid-iteration.** Removing the player/tool inside the DEATH event handler (which fires during the `love.update` sprite loop) crashed the frame. Defer: the event only flags `pendingDeath`; Main runs the removal and `AttackSystem.clearAttacker()` after the loop. `clearAttacker()` is needed because the destroyed attacker's sprite object stays referenced.
 
 ## Pain points from migration (Math.parseRandomValue → ValueParser)
 
