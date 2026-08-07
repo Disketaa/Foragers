@@ -73,12 +73,23 @@ local shakeOffsetY = 0
 local circleMaskRadius = 0
 local circleMaskTarget = 0
 local CIRCLE_MASK_SMOOTHNESS = 1
--- Restores normal zoom smoothness once the start-reveal timer ends.
-local introTimer = 0
+-- Restores normal zoom smoothness after a temporary ease (start reveal / death).
+local zoomRestoreTimer = 0
 local START_ZOOM = 1.25
 local INTRO_DURATION = 1
--- Zoom's normal easing rate; restored after the intro overrides it.
+local DEATH_ZOOM_DURATION = 0.6
+-- Zoom's normal easing rate; restored after a temporary ease overrides it.
 local ZOOM_SMOOTHNESS = Zoom.smoothness
+
+--- Ease zoom to `target` over `duration` seconds with a temporarily faster
+--- smoothness, restoring the normal rate when the timer expires. Shared by the
+--- start reveal and the death unzoom. Smoothness = duration/3 because expSmooth
+--- settles in ~3x its rate, so the ease completes within `duration`.
+local function easeZoom(target, duration)
+	Zoom.target = target
+	Zoom.smoothness = math.max(0.01, duration / 3)
+	zoomRestoreTimer = duration
+end
 local uiSprites = {}
 local terrainBatch = nil
 local tileSize = World.tileSize
@@ -202,11 +213,8 @@ function initGame()
 	ShaderLoader.reset()
 	ShaderLoader.setPostProcessEnabled(true)
 	-- Start zoomed in for a brief reveal; eases to 1x.
-	introTimer = INTRO_DURATION
 	Zoom.current = START_ZOOM
-	Zoom.target = 1
-	-- expSmooth settles in ~3x its rate; /3 so zoom completes within the intro.
-	Zoom.smoothness = INTRO_DURATION / 3
+	easeZoom(1, INTRO_DURATION)
 	circleMaskRadius = 0
 	circleMaskTarget = 0
 
@@ -334,6 +342,8 @@ function initGame()
 			-- mid-iteration crashes.
 			ShaderLoader.setPostProcessEnabled(false)
 			TimeScale.scale = 1
+			easeZoom(1, DEATH_ZOOM_DURATION)
+			love.audio.stop()
 			pendingDeath = true
 		end, 5)
 	end
@@ -722,10 +732,10 @@ function love.update(dt)
 	ShaderLoader.update(scaledDt)
 	Zoom.update(scaledDt)
 
-	if introTimer > 0 then
-		introTimer = introTimer - dt
-		if introTimer <= 0 then
-			introTimer = 0
+	if zoomRestoreTimer > 0 then
+		zoomRestoreTimer = zoomRestoreTimer - dt
+		if zoomRestoreTimer <= 0 then
+			zoomRestoreTimer = 0
 			Zoom.smoothness = ZOOM_SMOOTHNESS
 		end
 	end
