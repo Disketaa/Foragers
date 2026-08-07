@@ -61,6 +61,9 @@ local weaponSprite = nil
 local playerSprite = nil
 local shakeOffsetX = 0
 local shakeOffsetY = 0
+-- Canvas px, matches CircleMask's canvas-space math.
+local circleMaskRadius = 0
+local CIRCLE_MASK_STEP = 8
 local uiSprites = {}
 local terrainBatch = nil
 local tileSize = World.tileSize
@@ -160,6 +163,7 @@ function initGame()
 		ShaderLoader.loadAll("Content/Assets/Shaders")
 	end)
 	ShaderLoader.reset()
+	circleMaskRadius = 0
 
 	local worldData = timeIt("WorldGen.generate", function() return WorldGen.generate() end)
 
@@ -378,6 +382,11 @@ function love.draw()
 	local zoom = Zoom.current
 	local zpx, zpy = computeZoomPivot()
 
+	-- CircleMask maps window px back to canvas px; needs the blit transform
+	-- (scale x zoom about the pivot), which changes every frame.
+	local bx, by = canvasBlitOrigin()
+	ShaderLoader.setScreenTransform(canvas.scale * zoom, zpx + (bx - zpx) * zoom, zpy + (by - zpy) * zoom)
+
 	-- The world render must not inherit the color the HUD/Debug left on the
 	-- previous frame (setColor persists). Reset to neutral before the canvases.
 	love.graphics.setColor(1, 1, 1, 1)
@@ -569,6 +578,16 @@ function love.keypressed(key)
 	elseif bindingPressed(Options.keybinds.toggleProfiler, key) then
 		Debug.toggle("hud.profiler")
 	end
+end
+
+function love.wheelmoved(_dx, dy)
+	if dy == 0 then
+		return
+	end
+	local w, h = canvas.width, canvas.height
+	local maxR = math.sqrt(w * w + h * h) / 2
+	circleMaskRadius = math.max(0, math.min(maxR, circleMaskRadius + dy * CIRCLE_MASK_STEP))
+	ShaderLoader.sendUniform("u_circleRadius", circleMaskRadius)
 end
 
 function love.update(dt)

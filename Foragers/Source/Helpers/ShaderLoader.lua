@@ -8,23 +8,21 @@ local ShaderLoader = {
 	cameraX = 0,
 	cameraY = 0,
 }
+local screenOrigin = { 0, 0 }
 
 function ShaderLoader.loadAll(basePath)
 	ShaderLoader.shaders = {}
 	ShaderLoader.modules = {}
-
-	Path.scanDirectory(basePath, function(fullPath, item)
+	local postprocess = {}
+	Path.scanDirectory(basePath, function(fullPath)
 		local luaPath = Path.lua(fullPath)
 		local success, data = pcall(require, luaPath)
 		if success and type(data) == "table" and data.name then
 			if data.module then
 				-- building block, not a standalone shader
 				ShaderLoader.modules[data.name] = data
-			elseif data.modules then
-				-- pre-declared program: compose listed modules
-				local entry = ShaderLoader._compileProgram(data.modules, data)
-				if entry then
-					table.insert(ShaderLoader.shaders, entry)
+				if data.postprocess then
+					table.insert(postprocess, { name = data.name, order = data.order or 0 })
 				end
 			elseif data.code then
 				-- legacy standalone shader
@@ -42,6 +40,27 @@ function ShaderLoader.loadAll(basePath)
 			end
 		end
 	end)
+	-- Stack every module flagged `postprocess` into ONE screen pass. Explicit
+	-- `order` (tie-broken by name) keeps effect order controllable and stable.
+	table.sort(postprocess, function(a, b)
+		if a.order == b.order then
+			return a.name < b.name
+		end
+		return a.order < b.order
+	end)
+	local names = {}
+	for _, p in ipairs(postprocess) do
+		table.insert(names, p.name)
+	end
+	if #names > 0 then
+		local entry = ShaderLoader._compileProgram(names, {
+			name = "ScreenPost",
+			priority = "postprocess",
+		})
+		if entry then
+			table.insert(ShaderLoader.shaders, entry)
+		end
+	end
 end
 
 -- Build a composed shader from a list of module names. Cached by joined name.
@@ -159,9 +178,9 @@ function ShaderLoader.update(dt)
 	ShaderLoader.time = ShaderLoader.time + dt
 end
 
---- Shader applied to the whole bg canvas at blit time (post-process, not a
---- drawBackground rect). Keyed by the `postprocess` priority marker, so
---- callers never name a specific shader.
+--- The screen post-process program. loadAll composes every module flagged
+--- `postprocess` into exactly one entry with this priority, so the first
+--- match IS the program — callers rely on the single-slot invariant.
 function ShaderLoader.getPostProcess()
 	for _, s in ipairs(ShaderLoader.shaders or {}) do
 		if s.priority == "postprocess" then
@@ -184,6 +203,17 @@ end
 function ShaderLoader.setCamera(x, y)
 	ShaderLoader.cameraX = x
 	ShaderLoader.cameraY = y
+end
+
+--- Share the canvas->screen blit transform (blit scale x output zoom, zoom-pivoted
+--- origin) with every screen effect that declares u_canvasScale/u_canvasOrigin.
+--- Main calls this once per frame; effects sampling in canvas pixels need it.
+--- The origin table is reused, not allocated per frame.
+function ShaderLoader.setScreenTransform(scale, originX, originY)
+	screenOrigin[1] = originX
+	screenOrigin[2] = originY
+	ShaderLoader.sendUniform("u_canvasScale", scale)
+	ShaderLoader.sendUniform("u_canvasOrigin", screenOrigin)
 end
 
 function ShaderLoader.drawBackground(canvasWidth, canvasHeight)

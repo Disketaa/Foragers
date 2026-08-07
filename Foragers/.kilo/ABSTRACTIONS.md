@@ -53,6 +53,29 @@ relevant section before touching that subsystem.
 - **Compile errors are swallowed by `pcall` in `compose`.** If a composed shader
   shows no effect, the cause is almost always a GLSL compile failure returning
   nil. Temporarily print the `pcall` error (or write the generated source) to see it.
+- **Screen post-process = auto-composed modules, not a program data file.** Any
+  module with `postprocess = true` is collected by `ShaderLoader.loadAll` and
+  composed into one `"ScreenPost"` program (`priority = "postprocess"`) returned
+  by `getPostProcess()` — applied to BOTH canvas blits (`Canvas:draw`'s
+  `screenShader` param), so screen-space math must hold for both. Ordering is
+  explicit: sort by `order` (number, default 0), tie-broken by name — Saturation
+  is 10, CircleMask 20 so the mask blackens the final picture. To add a screen
+  effect: flag a module `postprocess = true`, add an `order`, done — the
+  `modules = {...}` program-file path was removed, this is the only way. A
+  postprocess-flagged module can still be composed onto sprites like any module.
+  `getPostProcess()` relies on the single-slot invariant: exactly one postprocess
+  program exists, so first-match is the program.
+- **Post-process mask dither must sample in canvas pixels, not window pixels.**
+  The blit upscales the canvas (nearest) and may output-zoom about a pivot; the
+  shader receives `screen_coords` in window px. Effects convert back via
+  `ShaderLoader.setScreenTransform(...)` — called once per frame in `love.draw` —
+  which broadcasts `u_canvasScale` (blit scale × zoom) and `u_canvasOrigin`
+  (zoom-pivoted blit origin) to every effect declaring them; then
+  `floor(...) + 0.5` snaps to canvas-pixel centers so the circle edge, dither
+  cells and gradient steps follow the game pixel grid at any window size/zoom.
+  `love_ScreenSize` is a vec4 in this LÖVE build — use `.xy`. Dither matrix
+  cells must be offset above 0 (e.g. `(0.5 + m)/4`) or the 0-valued cell leaks
+  single pixels into solid-clear regions via `step(edge=0, x=0)`.
 
 ## Silhouette reveal (tree → silhouette canvas)
 
@@ -115,10 +138,14 @@ relevant section before touching that subsystem.
   the whole `;` chain, so create directories BEFORE moving files, and verify
   files still exist after a botched move — a partial move can lose files that
   must be recreated from known content.
-- `Path.lua` converts `Content/Assets/Shaders/Sprite/Color/X.lua` →
-  `Content.Assets.Shaders.Sprite.Color.X` for `require`. Recursive
+- `Path.lua` converts `Content/Assets/Shaders/Color/X.lua` →
+  `Content.Assets.Shaders.Color.X` for `require`. Recursive
   `ShaderLoader.loadAll` finds modules at any nesting depth, so restructuring
-  shader folders needs NO code change — only the file moves.
+  shader folders needs NO code change — only the file moves. Shader folders
+  encode module type, not usage: `Color/` (color-chain), `UV/` (uv-chain),
+  `Background/` (standalone non-module screen shaders). Usage is a data
+  declaration — `postprocess = true` + `order` for screen effects, `applies_to`
+  for background, the sprite `shaders` array for composition — never a folder.
 
 ## Debug flags
 
