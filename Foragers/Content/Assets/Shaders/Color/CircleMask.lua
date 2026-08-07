@@ -6,7 +6,7 @@ return {
 	order = 20,
 	uniforms = {
 		u_circleRadius = 0,
-		u_softness = 8,
+		u_softness = 32,
 		u_canvasScale = 1,
 		u_canvasOrigin = { 0, 0 },
 	},

@@ -67,7 +67,13 @@ local shakeOffsetY = 0
 -- small (mostly-black) radii.
 local circleMaskRadius = 0
 local circleMaskTarget = 0
-local CIRCLE_MASK_SMOOTHNESS = 0.3
+local CIRCLE_MASK_SMOOTHNESS = 1
+-- Restores normal zoom smoothness once the start-reveal timer ends.
+local introTimer = 0
+local START_ZOOM = 1.25
+local INTRO_DURATION = 1
+-- Zoom's normal easing rate; restored after the intro overrides it.
+local ZOOM_SMOOTHNESS = Zoom.smoothness
 local uiSprites = {}
 local terrainBatch = nil
 local tileSize = World.tileSize
@@ -167,6 +173,12 @@ function initGame()
 		ShaderLoader.loadAll("Content/Assets/Shaders")
 	end)
 	ShaderLoader.reset()
+	-- Start zoomed in for a brief reveal; eases to 1x.
+	introTimer = INTRO_DURATION
+	Zoom.current = START_ZOOM
+	Zoom.target = 1
+	-- expSmooth settles in ~3x its rate; /3 so zoom completes within the intro.
+	Zoom.smoothness = INTRO_DURATION / 3
 	circleMaskRadius = 0
 	circleMaskTarget = 0
 
@@ -276,7 +288,7 @@ function initGame()
 			ShaderLoader.sendUniform("u_saturation", math.max(0.33, math.min(1, s)))
 			local zMax = stats and stats.lowSatietyZoom or 2
 			Zoom.target = f >= low and 1 or (zMax - (zMax - 1) * (f / low))
-			local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2
+			local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16
 			local minR = (stats and stats.lowSatietyMaskRadius) or 24
 			local k = f / low
 			local target = f >= low and 0 or (minR + (maxR - minR) * (k * k))
@@ -674,6 +686,13 @@ function love.update(dt)
 	ShaderLoader.update(scaledDt)
 	Zoom.update(scaledDt)
 
+	if introTimer > 0 then
+		introTimer = introTimer - dt
+		if introTimer <= 0 then
+			introTimer = 0
+			Zoom.smoothness = ZOOM_SMOOTHNESS
+		end
+	end
 	if circleMaskRadius ~= circleMaskTarget then
 		local ease = Math.expSmooth(scaledDt, CIRCLE_MASK_SMOOTHNESS)
 		circleMaskRadius = circleMaskRadius + (circleMaskTarget - circleMaskRadius) * ease
