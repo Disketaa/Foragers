@@ -111,7 +111,7 @@ return {
 			event = "low_satiety",
 			offsetX = 0,
 			offsetY = -7,
-			duration = 1,
+			duration = 0.4,
 		},
 
 		{

@@ -18,8 +18,8 @@ return {
 
 			tags = {
 				hide = {
-					{ target = "scale_x", from = 1, to = 0, duration = 0.5, curve = "InBack" },
-					{ target = "scale_y", from = 1, to = 0, duration = 0.5, curve = "InBack" },
+					{ target = "scale_x", from = 1, to = 0.5, duration = 0.75, curve = "InOutBack" },
+					{ target = "scale_y", from = 1, to = 0, duration = 0.75, curve = "InOutBack" },
 				},
 			},
 		},
