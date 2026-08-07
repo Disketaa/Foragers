@@ -28,13 +28,12 @@ return {
 		{
 			component = "spritesheet",
 			columns = 4,
-			rows = 5,
+			rows = 4,
 			animations = {
 				idle = { row = 1, frames = 4, speed = 4, loop = true },
 				run = { row = 2, frames = 4, speed = 8, loop = true },
 				float = { row = 3, frames = 4, speed = 4, loop = true },
-				swim = { row = 4, frames = 4, speed = 4, loop = true },
-				death = { row = 5, frames = 4, speed = 5, loop = false },
+				swim = { row = 4, frames = 4, speed = 4, loop = true }
 			},
 		},
 
