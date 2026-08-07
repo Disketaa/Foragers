@@ -64,7 +64,11 @@ relevant section before touching that subsystem.
   `modules = {...}` program-file path was removed, this is the only way. A
   postprocess-flagged module can still be composed onto sprites like any module.
   `getPostProcess()` relies on the single-slot invariant: exactly one postprocess
-  program exists, so first-match is the program.
+  program exists, so first-match is the program. Master switch:
+  `ShaderLoader.setPostProcessEnabled(false)` makes `getPostProcess()` return nil,
+  so callers pass it unconditionally and the whole screen (both canvas blits) drops
+  post-process — used on death to avoid saturation/circle leaking onto the death
+  screen. Never add `isDead and nil or getPostProcess()` at the call site.
 - **Post-process mask dither must sample in canvas pixels, not window pixels.**
   The blit upscales the canvas (nearest) and may output-zoom about a pivot; the
   shader receives `screen_coords` in window px. Effects convert back via

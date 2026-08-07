@@ -7,6 +7,7 @@ local ShaderLoader = {
 	time = 0,
 	cameraX = 0,
 	cameraY = 0,
+	postProcessEnabled = true,
 }
 local screenOrigin = { 0, 0 }
 
@@ -180,14 +181,25 @@ end
 
 --- The screen post-process program. loadAll composes every module flagged
 --- `postprocess` into exactly one entry with this priority, so the first
---- match IS the program — callers rely on the single-slot invariant.
+--- match IS the program — callers rely on the single-slot invariant. Returns nil
+--- while disabled so callers can't accidentally keep applying it (e.g. on death).
 function ShaderLoader.getPostProcess()
+	if not ShaderLoader.postProcessEnabled then
+		return nil
+	end
 	for _, s in ipairs(ShaderLoader.shaders or {}) do
 		if s.priority == "postprocess" then
 			return s.shader
 		end
 	end
 	return nil
+end
+
+--- Master switch for the screen post-process (saturation, circle mask). Turned
+--- off on death so the death screen is plain; callers pass getPostProcess()
+--- unconditionally and it just returns nil.
+function ShaderLoader.setPostProcessEnabled(enabled)
+	ShaderLoader.postProcessEnabled = enabled
 end
 
 --- Send a uniform to every shader that declares it, so dynamic values

@@ -200,6 +200,7 @@ function initGame()
 		ShaderLoader.loadAll("Content/Assets/Shaders")
 	end)
 	ShaderLoader.reset()
+	ShaderLoader.setPostProcessEnabled(true)
 	-- Start zoomed in for a brief reveal; eases to 1x.
 	introTimer = INTRO_DURATION
 	Zoom.current = START_ZOOM
@@ -327,9 +328,11 @@ function initGame()
 		end, 5)
 
 		playerSprite:on(Events.DEATH, function()
-			-- Normal time so the death particle animation plays at full speed.
-			-- Sprite removal is deferred to after the update loop — mutating
-			-- objects mid-iteration crashes.
+			-- Drop the post-process (saturation, circle mask) and run at normal
+			-- time so the death particle plays plain and full-speed. Sprite
+			-- removal is deferred to after the update loop — mutating objects
+			-- mid-iteration crashes.
+			ShaderLoader.setPostProcessEnabled(false)
 			TimeScale.scale = 1
 			pendingDeath = true
 		end, 5)
@@ -525,7 +528,7 @@ function love.draw()
 
 		love.graphics.pop() -- world layer end
 	end, isDead and { 0, 0, 0, 1 } or nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
-	isDead and nil or ShaderLoader.getPostProcess(), zoom, zpx, zpy)
+	ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
 	-- its outline. Rects + fills are tagged by group so Gizmo can style each.
