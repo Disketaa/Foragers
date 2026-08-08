@@ -98,7 +98,6 @@ local CIRCLE_MASK_SMOOTHNESS = 1
 local zoomRestoreTimer = 0
 local START_ZOOM = 1.25
 local INTRO_DURATION = 1
-local DEATH_ZOOM_DURATION = 0.6
 -- Zoom's normal easing rate; restored after a temporary ease overrides it.
 local ZOOM_SMOOTHNESS = Zoom.smoothness
 
@@ -392,7 +391,12 @@ function initGame()
 			-- Ease back to full speed (target, not set) so the low-satiety
 			-- slow-mo doesn't snap to normal the instant the death anim plays.
 			TimeScale.target = 1
-			easeZoom(1, DEATH_ZOOM_DURATION)
+			-- Snap (not ease) to the low-satiety zoom-in so the collapse starts
+			-- zoomed on the player.
+			local stats = playerStats
+			local deathZoom = (stats and stats.lowSatietyZoom) or 2
+			Zoom.current = deathZoom
+			Zoom.target = deathZoom
 			-- Force the anim via the event, not _state: Control is the sole writer
 			-- and never runs again once the world freezes, so the anim sticks.
 			playerSprite:emit(Events.STATE_CHANGED, "death")
