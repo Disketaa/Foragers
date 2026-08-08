@@ -14,7 +14,7 @@ return {
 			level = 1,
 			experience = 0,
 			xpCurve = { base = 10, growth = 1.35 },
-			satiety = 100,
+			satiety = 33,
 			maxSatiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
 			lowSatietyPercent = 33,
@@ -145,6 +145,11 @@ return {
 					"Content/Assets/Sounds/Events/Hunger1.ogg",
 					"Content/Assets/Sounds/Events/Hunger2.ogg",
 					"Content/Assets/Sounds/Events/Hunger3.ogg",
+				},
+
+				death = {
+					sounds = { "Content/Assets/Sounds/Events/Death.ogg" },
+					pitchRandomness = 0,
 				},
 			},
 		},

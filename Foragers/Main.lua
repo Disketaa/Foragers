@@ -64,11 +64,11 @@ local playerSprite = nil
 -- to a black screen + death particle. Menus will add more values later.
 local state = "game"
 local deathTimer = 0
-local DEATH_DURATION = 1.25
+local DEATH_DURATION = 3.5
 -- Death background flash: 1 = death-red, decays to 0 = black over the flash.
 local deathFlash = 0
 local DEATH_FLASH_DURATION = 0.75
-local DEATH_FLASH_RED = { 0.7255, 0.1961, 0.1137 }
+local DEATH_FLASH_RED = { 0.72, 0.19, 0.11 }
 -- Cached reference for the satiety handler (reads low-satiety fields); death is
 -- tracked by `state`, not this flag.
 local playerStats = nil
@@ -335,7 +335,11 @@ function initGame()
 			local f = data.value / math.max(1, data.maxValue)
 			TimeScale.scale = f >= low and 1 or 0.15 + 0.85 * (f / low)
 			local s = f >= low and 1 or f / low
-			ShaderLoader.sendUniform("u_saturation", math.max(0.33, math.min(1, s)))
+			ShaderLoader.sendUniform("u_saturation", math.max(0, math.min(1, s)))
+			-- Posterization (color reduction) ramps in below the low threshold:
+			-- 0 at the threshold, 1 (full posterize) as satiety hits zero.
+			local p = f >= low and 0 or (1 - f / low)
+			ShaderLoader.sendUniform("u_posterize", p)
 			local zMax = stats and stats.lowSatietyZoom or 2
 			Zoom.target = f >= low and 1 or (zMax - (zMax - 1) * (f / low))
 			local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16

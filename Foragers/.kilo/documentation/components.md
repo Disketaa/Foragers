@@ -52,7 +52,15 @@ type sway out of phase.
 | **weapon** | Weapon data container (range, cooldown, damage, swing) | `range`, `cooldown`, `damage`, `swing` | — | — |
 | **player_stats** | Player stats container (crit, level, xp, satiety). Low-satiety effects (slow time, desaturate, zoom-in) are driven off `lowSatietyPercent`/`lowSatietyZoom` in `Main.lua`'s VALUE_CHANGED handler. Emits `LOW_SATIETY` once per descending warning threshold (`lowSatietyWarnings` default 3; thresholds at `lowSatietyPercent * (count-i+1)/count`, e.g. 0.33/0.22/0.11; reset when restored above the low threshold). At satiety 0 sets `dead = true` and emits `DEATH`; `dead` makes `consumeSatiety`/`restoreSatiety`/`addExperience` no-op (eating/pickups do nothing after death). `Main.lua` tracks the death render via a `state = "game"|"gameover"` string (AGENTS §XII) — on `DEATH` it flips to `"gameover"`, freezes world simulation, and auto-resets after a timer | `critChance`, `critMult`, `level`, `experience`, `xpCurve`, `satiety`, `maxSatiety`, `lowSatietyPercent`, `lowSatietyZoom`, `lowSatietyWarnings`, `lowSatietyMaskRadius`, `dead` | — | VALUE_CHANGED, LOW_SATIETY, DEATH |
 | **pickup** | Grants XP to player on collection | `xp` (number) | FOLLOW_ARRIVED (5) | — |
-| **sound** | Sound triggered by events | `volume`, `pitch`, `pitchRandomness`, `stepInterval`, `tags` | GROUNDED_CHANGED (15), STATE_CHANGED (15), ANIM_FRAME (15), SLOWDOWN_ENTER (15), PROP_HIT (15), PROP_BROKEN (15), TWEEN_COMPLETED (15), PROP_SPAWNED (15), COUNTER_WRAP (15) | — |
+| **sound** | Sound triggered by events | `volume`, `pitch`, `pitchRandomness`, `stepInterval`, `tags` | GROUNDED_CHANGED (15), STATE_CHANGED (15), ANIM_FRAME (15), SLOWDOWN_ENTER (15), PROP_HIT (15), PROP_BROKEN (15), TWEEN_COMPLETED (15), PROP_SPAWNED (15), COUNTER_WRAP (15), LOW_SATIETY (15), DEATH (15) | — |
+
+### sound tags (per-tag config)
+
+Each `tags` entry is either a plain array of sound paths (`run = { "a.ogg" }`) or a
+config block `{ sounds = { "a.ogg" }, volume, pitch, pitchRandomness, stepInterval }`
+for per-sound overrides. Explicit `0` is honored (e.g. `pitchRandomness = 0`, a
+muted `volume = 0`). The tag key must be a state name (played via `STATE_CHANGED` /
+`ANIM_FRAME`) or an event the component subscribes to (see the Subscribes column).
 
 ## UI / HUD
 

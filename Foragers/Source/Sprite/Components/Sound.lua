@@ -26,13 +26,26 @@ function Sound.new(data)
 	self._stepCounter = 0
 	self.type = "sound"
 
+	-- Per-tag overrides must honor explicit 0 (mute volume, zero pitch randomness),
+	-- which `or` would treat as nil.
+	local function resolve(config, field, default)
+		local v = config[field]
+		if v == nil then
+			v = data[field]
+		end
+		if v == nil then
+			v = default
+		end
+		return v
+	end
+
 	for stateName, config in pairs(self.tags) do
 		local sounds = config.sounds or config
 		local soundSet = {
-			volume = config.volume or data.volume or 1,
-			pitch = config.pitch or data.pitch or 1,
-			pitchRandomness = config.pitchRandomness or data.pitchRandomness or 0,
-			stepInterval = config.stepInterval or data.stepInterval or 1,
+			volume = resolve(config, "volume", 1),
+			pitch = resolve(config, "pitch", 1),
+			pitchRandomness = resolve(config, "pitchRandomness", 0),
+			stepInterval = resolve(config, "stepInterval", 1),
 			baseSources = {},
 		}
 		for _, soundPath in ipairs(sounds) do
@@ -118,6 +131,10 @@ function Sound:attach()
 
 	self.parent:on(Events.LOW_SATIETY, function()
 		self:_play("hunger")
+	end, 15)
+
+	self.parent:on(Events.DEATH, function()
+		self:_play("death")
 	end, 15)
 end
 
