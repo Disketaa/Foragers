@@ -1,6 +1,8 @@
 -- luacheck config for LÖVE2D project
 -- max std includes all Lua globals (require, table, math, etc.)
 std = "max"
+-- Disable line length check
+max_line_length = false
 -- Add LÖVE globals not in standard Lua
 globals = {
   "love", "Source", "Content"
