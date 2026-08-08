@@ -228,6 +228,10 @@ relevant section before touching that subsystem.
   real active-tile count (`props.vegetables.density × activeTiles`); it resets
   the counter, so never call it again mid-game. Vegetables are identified by
   `object == "vegetable"` (set on `_Vegetables.lua`, inherited by Turnip/Carrot).
+  Call `PropPicker.onVegDestroyed()` from `Main.love.update`'s dead-sprite loop
+  whenever a vegetable is destroyed — the initial plan fills the whole cap, so
+  without the decrement `vegQuota` stays 0 and vegetables never respawn,
+  regardless of `pseudoRandomChance`.
 - **Per-call component scans allocate.** `Sprite:getComponents` builds a fresh
   table and an inline predicate is a per-call closure. In per-frame hot loops
   (update loop, shadow pass) use `Sprite:getComponentsInto(type, predicate, out)`

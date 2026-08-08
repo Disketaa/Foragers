@@ -116,6 +116,13 @@ local function pick(remainingSlots)
 	return pickWeighted(_nonVegProps, _nonVegWeight)
 end
 
+--- Free one vegetable quota slot. Called when a vegetable prop is destroyed;
+--- without this, the initial plan fills the whole cap and runtime respawns are
+--- permanently gated by `vegQuota > 0`, regardless of pseudoRandomChance.
+local function onVegDestroyed()
+	_vegSpawned = math.max(0, _vegSpawned - 1)
+end
+
 local function isInitialized()
 	return _initialized
 end
@@ -127,6 +134,7 @@ end
 return {
 	init = init,
 	pick = pick,
+	onVegDestroyed = onVegDestroyed,
 	isInitialized = isInitialized,
 	vegStats = vegStats,
 }

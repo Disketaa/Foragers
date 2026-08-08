@@ -25,6 +25,7 @@ local Shadow = require("Source.Sprite.Components.Shadow")
 local Mask = require("Source.Helpers.Mask")
 local Events = require("Source.Helpers.Events")
 local PropSpawner = require("Source.World.PropSpawner")
+local PropPicker = require("Source.World.PropPicker")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
 local UIComponent = require("Source.UI.Components.UI")
 local TimeScale = require("Source.Helpers.TimeScale")
@@ -851,6 +852,9 @@ function love.update(dt)
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
 		ParticleEmitter.detachAll(sprite)
+		if sprite.object == "vegetable" then
+			PropPicker.onVegDestroyed()
+		end
 		if sprite._replaceWith then
 			local luaPath = Path.lua(sprite._replaceWith)
 			local ok, morphData = pcall(require, luaPath)
