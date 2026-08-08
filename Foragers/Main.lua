@@ -70,7 +70,7 @@ local state = "game"
 -- Auto-restart after DEATH_DURATION on the death screen.
 local AUTO_RESTART = true
 local deathTimer = 0
-local DEATH_DURATION = 3.75
+local DEATH_DURATION = 4.5
 -- Hold-to-restart (normal play): pressing the restart key scales the Loading
 -- sprite in, and holding it for HOLD_DURATION restarts.
 local holdActive = false
@@ -106,7 +106,7 @@ local DEATH_REVEAL_DURATION = 5
 local DEATH_REVEAL_CURVE = "InOutCubic"
 -- After the reveal, wait DEATH_DARKEN_DELAY then fade the canvas to black via
 -- the Darken post-process shader over DEATH_DARKEN_DURATION.
-local DEATH_DARKEN_DELAY = 2
+local DEATH_DARKEN_DELAY = 4
 local DEATH_DARKEN_DURATION = 2
 local DEATH_DARKEN_CURVE = "InOutCubic"
 -- Opening fade: the canvas starts fully dark and reveals in from black.
