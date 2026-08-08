@@ -63,8 +63,16 @@ local playerSprite = nil
 -- Plain scene state (AGENTS §XII): "game" runs the world, "gameover" freezes it
 -- to a black screen + death particle. Menus will add more values later.
 local state = "game"
+-- Death auto-restarts after DEATH_DURATION (no hold needed on the death screen).
 local deathTimer = 0
 local DEATH_DURATION = 3.5
+-- Hold-to-restart (normal play): pressing the restart key scales the Loading
+-- sprite in, and holding it for HOLD_DURATION restarts.
+local holdActive = false
+local holdTimer = 0
+local HOLD_DURATION = 0.25
+local restartTimer = 0
+local LOADING_OUT_DURATION = 0.2
 -- Death background flash: 1 = death-red, decays to 0 = black over the flash.
 local deathFlash = 0
 local DEATH_FLASH_DURATION = 0.75
@@ -101,6 +109,11 @@ local function easeZoom(target, duration)
 	zoomRestoreTimer = duration
 end
 local uiSprites = {}
+-- The Loading sprite (Content/Assets/Sprites/UI/Loading.lua): shown centered on
+-- the death screen, scaled in/out by the hold-to-restart interaction. Its frame
+-- tracks the hold progress (Counter-style fill) rather than playing an animation.
+local loadingSprite = nil
+local loadingSheet = nil
 local terrainBatch = nil
 local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
@@ -230,6 +243,9 @@ function initGame()
 	state = "game"
 	deathTimer = 0
 	deathFlash = 0
+	holdActive = false
+	holdTimer = 0
+	restartTimer = 0
 
 	local worldData = timeIt("WorldGen.generate", function() return WorldGen.generate() end)
 
@@ -317,6 +333,18 @@ function initGame()
 		positionUI(ui)
 	end
 
+	-- Hide the Loading sprite until death (its frame 0 isn't empty), then reveal
+	-- it on the death screen scaled to 0 and grown by the hold interaction.
+	loadingSprite = nil
+	loadingSheet = nil
+	for _, ui in ipairs(uiSprites) do
+		if ui.sprite.object == "loading" then
+			loadingSprite = ui.sprite
+			loadingSheet = ui.sprite:findComponent("spritesheet")
+			loadingSprite.alpha = 0
+		end
+	end
+
 	-- Wire counter components to player sprite (event-driven, no polling)
 	if playerSprite then
 		for _, ui in ipairs(uiSprites) do
@@ -390,6 +418,46 @@ local _needsRestart = false
 --- re-run: it calls love.window.setMode(), which recreates the native window.
 local function resetGame()
 	_needsRestart = true
+end
+
+local function triggerLoading(tag)
+	if loadingSprite then
+		local tw = loadingSprite:findComponent("tween")
+		if tw then
+			tw:triggerTag(tag)
+		end
+	end
+end
+
+local function startLoadingHold()
+	if holdActive then
+		return
+	end
+	holdActive = true
+	holdTimer = 0
+	if loadingSprite then
+		loadingSprite.alpha = 1
+	end
+	triggerLoading("loading_in")
+end
+
+local function cancelLoadingHold()
+	if holdActive then
+		holdActive = false
+		triggerLoading("loading_out")
+	end
+end
+
+-- Hold-to-restart is normal-play only (death auto-restarts), and works from any
+-- bound input (keyboard / mouse / gamepad).
+local function handleRestartPress()
+	if state == "game" then
+		startLoadingHold()
+	end
+end
+
+local function handleRestartRelease()
+	cancelLoadingHold()
 end
 
 -- Unzoomed canvas blit origin (finalX/finalY in Canvas:draw). Shared by the zoom
@@ -628,6 +696,8 @@ function love.draw()
 		for _, ui in ipairs(uiSprites) do
 			ui.sprite:draw()
 		end
+	elseif loadingSprite then
+		loadingSprite:draw()
 	end
 	love.graphics.pop()
 
@@ -664,9 +734,33 @@ local function bindingPressed(binding, key)
 	return false
 end
 
+--- Match a binding against an input of the given type (keyboard/mouse/gamepad
+--- buttons). Restart accepts all three; the other keybinds are keyboard-only.
+local function bindingMatches(binding, inputType, value)
+	if not binding then
+		return false
+	end
+	local list
+	if inputType == "keyboard" then
+		list = binding.keyboard
+	elseif inputType == "mouse" then
+		list = binding.mouse
+	elseif inputType == "gamepad" then
+		list = binding.gamepad and binding.gamepad.buttons
+	end
+	if list then
+		for _, v in ipairs(list) do
+			if v == value then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 function love.keypressed(key)
-	if bindingPressed(Options.keybinds.restart, key) then
-		resetGame()
+	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
+		handleRestartPress()
 	elseif bindingPressed(Options.keybinds.toggleFullscreen, key) then
 		local fullscreen, fstype = love.window.getFullscreen()
 		Options.fullscreen = not fullscreen
@@ -678,6 +772,71 @@ function love.keypressed(key)
 		Debug.toggle("gizmo")
 	elseif bindingPressed(Options.keybinds.toggleProfiler, key) then
 		Debug.toggle("hud.profiler")
+	end
+end
+
+function love.keyreleased(key)
+	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
+		handleRestartRelease()
+	end
+end
+
+function love.mousepressed(_, _, button)
+	if bindingMatches(Options.keybinds.restart, "mouse", button) then
+		handleRestartPress()
+	end
+end
+
+function love.mousereleased(_, _, button)
+	if bindingMatches(Options.keybinds.restart, "mouse", button) then
+		handleRestartRelease()
+	end
+end
+
+function love.gamepadpressed(_, button)
+	if bindingMatches(Options.keybinds.restart, "gamepad", button) then
+		handleRestartPress()
+	end
+end
+
+function love.gamepadreleased(_, button)
+	if bindingMatches(Options.keybinds.restart, "gamepad", button) then
+		handleRestartRelease()
+	end
+end
+
+-- Hold-to-restart + death flash decay. Kept out of love.update — that function
+-- already exceeds LuaJIT's 60-upvalue budget with the world simulation, so this
+-- logic lives in its own function with its own upvalue set.
+local function updateHold(dt)
+	if state == "gameover" then
+		if deathFlash > 0 then
+			deathFlash = math.max(0, deathFlash - dt / DEATH_FLASH_DURATION)
+		end
+		deathTimer = deathTimer + dt
+		if deathTimer >= DEATH_DURATION then
+			resetGame()
+		end
+	end
+	if holdActive then
+		holdTimer = holdTimer + dt
+		local progress = math.min(1, holdTimer / HOLD_DURATION)
+		if loadingSheet then
+			local numFrames = loadingSheet.columns or 1
+			loadingSheet:setFrame(math.floor(progress * (numFrames - 1)) + 1)
+		end
+		if holdTimer >= HOLD_DURATION then
+			holdActive = false
+			triggerLoading("loading_out")
+			restartTimer = LOADING_OUT_DURATION
+		end
+	end
+	if restartTimer > 0 then
+		restartTimer = restartTimer - dt
+		if restartTimer <= 0 then
+			restartTimer = 0
+			resetGame()
+		end
 	end
 end
 
@@ -889,16 +1048,9 @@ function love.update(dt)
 	end
 	end -- world streaming
 
-	-- Game-over auto-restart: hold the death screen, then reset like the R key.
-	if state == "gameover" then
-		if deathFlash > 0 then
-			deathFlash = math.max(0, deathFlash - dt / DEATH_FLASH_DURATION)
-		end
-		deathTimer = deathTimer + dt
-		if deathTimer >= DEATH_DURATION then
-			resetGame()
-		end
-	end
+	-- Hold-to-restart + death flash decay (extracted to keep love.update under
+	-- LuaJIT's 60-upvalue limit).
+	updateHold(dt)
 
 	-- Manual FPS cap (love.timer.setFPS unavailable here): sleep the remainder
 	-- of the target frame budget so CPU isn't pegged at uncapped rates.

@@ -43,6 +43,10 @@ return {
 
 		restart = {
 			keyboard = { "r" },
+			mouse = { 5 },
+			gamepad = {
+				buttons = { "rightshoulder" },
+			},
 		},
 
 		toggleDebug = {

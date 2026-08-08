@@ -387,6 +387,15 @@ function TweenComponent:attach()
 	end, 10)
 end
 
+--- Apply a tween tag by name. Used for externally driven tweens (e.g. the
+--- loading hold) whose trigger isn't one of the standard events.
+function TweenComponent:triggerTag(name)
+	local tag = self.tags and self.tags[name]
+	if tag then
+		applyTweens(self, tag)
+	end
+end
+
 function TweenComponent:update(dt)
 	if self.parent and not self._tweensInitialized then
 		self._tweensInitialized = true
