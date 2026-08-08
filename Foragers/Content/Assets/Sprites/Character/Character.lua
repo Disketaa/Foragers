@@ -16,7 +16,7 @@ return {
 				run = { row = 2, frames = 4, speed = 8, loop = true },
 				float = { row = 3, frames = 4, speed = 4, loop = true },
 				swim = { row = 4, frames = 4, speed = 4, loop = true },
-				death = { row = 4, frames = 4, speed = 4, loop = false }
+				death = { row = 5, frames = 4, speed = 4, loop = false }
 			},
 		},
 
@@ -27,7 +27,7 @@ return {
 			level = 1,
 			experience = 0,
 			xpCurve = { base = 10, growth = 1.35 },
-			satiety = 100,
+			satiety = 2,
 			maxSatiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
 			lowSatietyPercent = 33,
@@ -90,12 +90,6 @@ return {
 			particle = "Content/Assets/Sprites/Particles/Dust.lua",
 			inheritFlip = true,
 			layer = "below",
-		},
-
-		{
-			component = "particle_emitter",
-			spawnOn = { death = true },
-			particle = "Content/Assets/Sprites/Particles/CharacterDeath.lua",
 		},
 
 		{

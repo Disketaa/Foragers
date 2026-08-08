@@ -61,12 +61,16 @@ local camSubY = 0
 local scrollToComp = nil
 local weaponSprite = nil
 local playerSprite = nil
--- Plain scene state (AGENTS §XII): "game" runs the world, "gameover" freezes it
--- to a black screen + death particle. Menus will add more values later.
+-- Plain scene state (AGENTS §XII): "game" runs the world; "dying" freezes the
+-- world but keeps drawing it while the player plays the death anim; "gameover"
+-- is the blackout hold once the circle mask has closed. Menus will add more
+-- values later.
 local state = "game"
--- Death auto-restarts after DEATH_DURATION (no hold needed on the death screen).
+-- Auto-restart after DEATH_DURATION on the death screen. Disabled while the
+-- death sequence is being debugged; flip to true to restore.
+local AUTO_RESTART = false
 local deathTimer = 0
-local DEATH_DURATION = 3.5
+local DEATH_DURATION = 1
 -- Hold-to-restart (normal play): pressing the restart key scales the Loading
 -- sprite in, and holding it for HOLD_DURATION restarts.
 local holdActive = false
@@ -74,16 +78,15 @@ local holdTimer = 0
 local HOLD_DURATION = Options.restartHoldDuration
 local restartTimer = 0
 local LOADING_OUT_DURATION = 0.2
--- Death background flash: 1 = death-red, decays to 0 = black over the flash.
-local deathFlash = 0
-local DEATH_FLASH_DURATION = 0.75
-local DEATH_FLASH_RED = { 0.72, 0.19, 0.11 }
 -- Cached reference for the satiety handler (reads low-satiety fields); death is
 -- tracked by `state`, not this flag.
 local playerStats = nil
--- Death side effects run after the update loop (they mutate the object lists the
--- loop iterates); the DEATH event only flags it and applies safe, immediate ones.
-local pendingDeath = false
+-- clearAttacker() is deferred out of the DEATH handler: that handler fires
+-- mid-loop (a weapon hit on the player can emit PROP_HIT→DEATH inside
+-- AttackSystem.update), and nil-ing `attacker` there makes the same frame's
+-- `if simulating` AttackSystem.update crash. Cleared after the camera/attack
+-- block, like the old deferred destruction.
+local pendingClearAttacker = false
 local shakeOffsetX = 0
 local shakeOffsetY = 0
 -- Canvas px, matches CircleMask's canvas-space math. Eased between satiety
@@ -92,6 +95,13 @@ local shakeOffsetY = 0
 local circleMaskRadius = 0
 local circleMaskTarget = 0
 local CIRCLE_MASK_SMOOTHNESS = 1
+-- Blackout radius: CircleMask shader early-returns when u_circleRadius <= 0
+-- (no mask at all), so "fully black" is a tiny positive radius, not 0.
+local DEATH_CIRCLE_MIN = 0.00001
+-- Death blackout eases with a faster rate so the circle closes quickly
+-- (expSmooth settles in ~3x its rate).
+local DEATH_BLACKOUT_SMOOTHNESS = 6
+local circleMaskSmoothness = CIRCLE_MASK_SMOOTHNESS
 -- Restores normal zoom smoothness after a temporary ease (start reveal / death).
 local zoomRestoreTimer = 0
 local START_ZOOM = 1.25
@@ -241,9 +251,10 @@ function initGame()
 	easeZoom(1, INTRO_DURATION)
 	circleMaskRadius = 0
 	circleMaskTarget = 0
+	circleMaskSmoothness = CIRCLE_MASK_SMOOTHNESS
 	state = "game"
 	deathTimer = 0
-	deathFlash = 0
+	pendingClearAttacker = false
 	holdActive = false
 	holdTimer = 0
 	restartTimer = 0
@@ -382,18 +393,32 @@ function initGame()
 		end, 5)
 
 		playerSprite:on(Events.DEATH, function()
-			-- Drop the post-process (saturation, circle mask) and run at normal
-			-- time so the death particle plays plain and full-speed. Sprite
-			-- removal is deferred to after the update loop — mutating objects
-			-- mid-iteration crashes.
-			ShaderLoader.setPostProcessEnabled(false)
+			print("[DEATH] state=" .. state .. " -> dying, anim -> death")
+			-- Post-process stays ON: CircleMask does the blackout, so do not flip
+			-- setPostProcessEnabled here.
+			state = "dying"
+			deathTimer = 0
 			TimeScale.scale = 1
 			easeZoom(1, DEATH_ZOOM_DURATION)
-			love.audio.stop()
-			state = "gameover"
-			deathTimer = 0
-			deathFlash = 1
-			pendingDeath = true
+			-- Force the anim via the event, not _state: Control is the sole writer
+			-- and never runs again once the world freezes, so the anim sticks.
+			playerSprite:emit(Events.STATE_CHANGED, "death")
+			pendingClearAttacker = true
+		end, 5)
+
+		-- The death anim is non-looping; the frame reaching its last index means
+		-- the collapse is done — close the circle to black.
+		playerSprite:on(Events.ANIM_FRAME, function(frameIndex)
+			if state ~= "dying" then
+				return
+			end
+			local ss = playerSprite:findComponent("spritesheet")
+			local anim = ss and ss.animations and ss.animations.death
+			if anim and frameIndex >= anim.frames then
+				state = "gameover"
+				circleMaskSmoothness = DEATH_BLACKOUT_SMOOTHNESS
+				circleMaskTarget = DEATH_CIRCLE_MIN
+			end
 		end, 5)
 	end
 
@@ -574,24 +599,10 @@ function love.draw()
 		zpy
 	)
 
-	-- Main world canvas. At death the mask is dropped so the death particle —
-	-- drawn over the black-cleared canvas — isn't blacked by the post-process.
-	local deathClear = isDead
-		and {
-			DEATH_FLASH_RED[1] * deathFlash,
-			DEATH_FLASH_RED[2] * deathFlash,
-			DEATH_FLASH_RED[3] * deathFlash,
-			1,
-		}
-		or nil
+	-- Main world canvas. The frozen world keeps drawing through the whole death
+	-- sequence — while dying the player's collapse is visible, and at gameover
+	-- the closing CircleMask blackens it. No separate black-cleared death layer.
 	canvas:draw(function()
-		if isDead then
-			love.graphics.push()
-			love.graphics.translate(camPixelX, camPixelY)
-			ParticleEmitter.drawBursts()
-			love.graphics.pop()
-			return
-		end
 		love.graphics.push()
 		love.graphics.translate(camPixelX, camPixelY)
 
@@ -636,7 +647,7 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, deathClear, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
+	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
 	ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
@@ -796,16 +807,13 @@ function love.gamepadreleased(_, button)
 	end
 end
 
--- Hold-to-restart + death flash decay. Kept out of love.update — that function
--- already exceeds LuaJIT's 60-upvalue budget with the world simulation, so this
--- logic lives in its own function with its own upvalue set.
+-- Hold-to-restart + death screen timeout. Kept out of love.update — that
+-- function already exceeds LuaJIT's 60-upvalue budget with the world
+-- simulation, so this logic lives in its own function with its own upvalue set.
 local function updateHold(dt)
 	if state == "gameover" then
-		if deathFlash > 0 then
-			deathFlash = math.max(0, deathFlash - dt / DEATH_FLASH_DURATION)
-		end
 		deathTimer = deathTimer + dt
-		if deathTimer >= DEATH_DURATION then
+		if AUTO_RESTART and deathTimer >= DEATH_DURATION then
 			resetGame()
 		end
 	end
@@ -924,7 +932,7 @@ function love.update(dt)
 		end
 	end
 	if circleMaskRadius ~= circleMaskTarget then
-		local ease = Math.expSmooth(scaledDt, CIRCLE_MASK_SMOOTHNESS)
+		local ease = Math.expSmooth(scaledDt, circleMaskSmoothness)
 		circleMaskRadius = circleMaskRadius + (circleMaskTarget - circleMaskRadius) * ease
 		if math.abs(circleMaskRadius - circleMaskTarget) < 0.01 then
 			circleMaskRadius = circleMaskTarget
@@ -960,11 +968,14 @@ function love.update(dt)
 	end
 	end -- world update
 
-	if pendingDeath then
-		pendingDeath = false
-		destroySprite(playerSprite)
-		destroySprite(weaponSprite)
-		AttackSystem.clearAttacker()
+	-- The world update loop is frozen while dying, but the collapse anim must
+	-- play out. Advance only the spritesheet — Control must not run, or it would
+	-- rewrite _state and move the player.
+	if state == "dying" and playerSprite then
+		local ss = playerSprite:findComponent("spritesheet")
+		if ss and ss.update then
+			ss:update(dt)
+		end
 	end
 
 	-- Update camera from scroll_to component
@@ -976,6 +987,13 @@ function love.update(dt)
 
 	AttackSystem.update(scaledDt, dynamicObjects)
 	end -- world camera/attack
+
+	-- Drop the attacker reference once AttackSystem.update has finished (it must
+	-- not run mid-loop — see pendingClearAttacker).
+	if pendingClearAttacker then
+		pendingClearAttacker = false
+		AttackSystem.clearAttacker()
+	end
 
 	ParticleEmitter.updateBursts(scaledDt)
 	if simulating then

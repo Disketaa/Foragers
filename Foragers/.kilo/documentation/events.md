@@ -13,13 +13,13 @@ Source of truth: `Source/Helpers/Events.lua`.
 | `STATE_CHANGED` | `"state_changed"` | Control | Spritesheet(5), ParticleEmitter(8), Tween(10), Sound(15) |
 | `FLIPPED` | `"flipped"` | Control | Tween(10), ParticleEmitter(12) |
 | `GROUNDED_CHANGED` | `"grounded_changed"` | Collision | Control(10), Sound(15) |
-| `ANIM_FRAME` | `"anim_frame"` | Spritesheet | Sound(15), ParticleEmitter(13) |
+| `ANIM_FRAME` | `"anim_frame"` | Spritesheet | Sound(15), ParticleEmitter(13), Main.lua(5, death-anim end detection) |
 | `SLOWDOWN_CHANGED` | `"slowdown_changed"` | Collision | Control(10) |
 | `SLOWDOWN_ENTER` | `"slowdown_enter"` | Collision | Sound(15) |
 | `SLOWDOWN_EXIT` | `"slowdown_exit"` | Collision | Sound(15) |
 | `VALUE_CHANGED` | `"value_changed"` | PlayerStats | Counter(5), Main.lua(5) |
 | `LOW_SATIETY` | `"low_satiety"` | PlayerStats | Emote(5), Sound(15) |
-| `DEATH` | `"death"` | PlayerStats (satiety 0) | Main.lua(5), ParticleEmitter(spawnOn, 5) |
+| `DEATH` | `"death"` | PlayerStats (satiety 0) | Main.lua(5) — sets `state = "dying"`, emits `STATE_CHANGED("death")`, clears attacker; Sound(15) — plays the `death` sound tag once |
 | `PROP_HIT` | `"prop_hit"` | AttackSystem | Shader(8), TextEmitter(5), Tween(10), Sound(15) |
 | `PROP_HIT` payload | — | AttackSystem emits `PROP_HIT` with the damage number as the first arg (`emit(PROP_HIT, damage)`). `text_emitter` uses this payload as the display text when its `text` field is nil. | — |
 | `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), Shake(5), Sound(15) |
