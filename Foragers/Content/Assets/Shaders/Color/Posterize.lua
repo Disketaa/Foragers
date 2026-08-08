@@ -2,9 +2,9 @@ return {
 	name = "Posterize",
 	type = "color",
 	module = true,
+	uniforms = { u_posterize = 0 },
 	postprocess = true,
 	order = 15,
-	uniforms = { u_posterize = 0 },
 	code = [[
 vec4 Posterize_color(vec4 color, vec2 screen_coords) {
 	if (u_posterize <= 0.0) {
