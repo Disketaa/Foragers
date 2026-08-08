@@ -60,7 +60,17 @@ local camSubY = 0
 local scrollToComp = nil
 local weaponSprite = nil
 local playerSprite = nil
--- Player's player_stats component — the single dead toggle for the death render.
+-- Plain scene state (AGENTS §XII): "game" runs the world, "gameover" freezes it
+-- to a black screen + death particle. Menus will add more values later.
+local state = "game"
+local deathTimer = 0
+local DEATH_DURATION = 1.25
+-- Death background flash: 1 = death-red, decays to 0 = black over the flash.
+local deathFlash = 0
+local DEATH_FLASH_DURATION = 0.75
+local DEATH_FLASH_RED = { 0.7255, 0.1961, 0.1137 }
+-- Cached reference for the satiety handler (reads low-satiety fields); death is
+-- tracked by `state`, not this flag.
 local playerStats = nil
 -- Death side effects run after the update loop (they mutate the object lists the
 -- loop iterates); the DEATH event only flags it and applies safe, immediate ones.
@@ -217,6 +227,9 @@ function initGame()
 	easeZoom(1, INTRO_DURATION)
 	circleMaskRadius = 0
 	circleMaskTarget = 0
+	state = "game"
+	deathTimer = 0
+	deathFlash = 0
 
 	local worldData = timeIt("WorldGen.generate", function() return WorldGen.generate() end)
 
@@ -344,6 +357,9 @@ function initGame()
 			TimeScale.scale = 1
 			easeZoom(1, DEATH_ZOOM_DURATION)
 			love.audio.stop()
+			state = "gameover"
+			deathTimer = 0
+			deathFlash = 1
 			pendingDeath = true
 		end, 5)
 	end
@@ -455,7 +471,7 @@ function love.draw()
 	ShaderLoader.setCamera(camPixelX, camPixelY)
 	local zoom = Zoom.current
 	local zpx, zpy = computeZoomPivot()
-	local isDead = playerStats and playerStats.dead
+	local isDead = state == "gameover"
 
 	-- CircleMask maps window px back to canvas px; needs the blit transform
 	-- (scale x zoom about the pivot), which changes every frame.
@@ -485,6 +501,14 @@ function love.draw()
 
 	-- Main world canvas. At death the mask is dropped so the death particle —
 	-- drawn over the black-cleared canvas — isn't blacked by the post-process.
+	local deathClear = isDead
+		and {
+			DEATH_FLASH_RED[1] * deathFlash,
+			DEATH_FLASH_RED[2] * deathFlash,
+			DEATH_FLASH_RED[3] * deathFlash,
+			1,
+		}
+		or nil
 	canvas:draw(function()
 		if isDead then
 			love.graphics.push()
@@ -537,7 +561,7 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, isDead and { 0, 0, 0, 1 } or nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
+	end, deathClear, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
 	ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
@@ -669,6 +693,8 @@ function love.update(dt)
 	-- lands in one stall.
 	collectgarbage("step", GC_STEP)
 	Snapshot.markUpdateStart()
+	local simulating = state == "game"
+	if simulating then
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
 		ParticleEmitter.detachAll(sprite)
@@ -728,6 +754,7 @@ function love.update(dt)
 		destroySprite(sprite)
 	end
 	TweenComponent.clearPendingDestroy()
+	end -- world destruction/simulation
 
 	ShaderLoader.update(scaledDt)
 	Zoom.update(scaledDt)
@@ -747,6 +774,7 @@ function love.update(dt)
 		end
 	end
 	ShaderLoader.sendUniform("u_circleRadius", circleMaskRadius)
+	if simulating then
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = screenToWorld(mouseX, mouseY)
 	local moveMouse = (Options.keybinds.moveMouse and Options.keybinds.moveMouse.mouse) or { 1 }
@@ -773,6 +801,7 @@ function love.update(dt)
 			entry.instance:update(scaledDt)
 		end
 	end
+	end -- world update
 
 	if pendingDeath then
 		pendingDeath = false
@@ -782,14 +811,19 @@ function love.update(dt)
 	end
 
 	-- Update camera from scroll_to component
+	if simulating then
 	if scrollToComp then
 		scrollToComp:update(scaledDt)
 	end
 	updateCamera()
 
 	AttackSystem.update(scaledDt, dynamicObjects)
+	end -- world camera/attack
+
 	ParticleEmitter.updateBursts(scaledDt)
-	ParticleEmitter.updateDetached(scaledDt)
+	if simulating then
+		ParticleEmitter.updateDetached(scaledDt)
+	end
 	TextEmitter.updateAll(scaledDt)
 	Debug.update(scaledDt)
 
@@ -812,6 +846,9 @@ function love.update(dt)
 	-- Stream the initial terrain plan in over frames (nearest-first, so ground
 	-- appears around the player immediately), then the prop plan. Each bounded by
 	-- a wall-clock budget so a large world never stalls a single frame's load.
+	-- Stopped on death: spawned props are invisible under the black screen and
+	-- would still emit their spawn sounds.
+	if simulating then
 	local streamBudget = love.timer.getTime() + PROP_SPAWN_TIME_BUDGET
 	while terrainIndex <= #terrainPlan and love.timer.getTime() < streamBudget do
 		local spec = terrainPlan[terrainIndex]
@@ -844,6 +881,18 @@ function love.update(dt)
 		if spawned then
 			table.insert(objects, { instance = spawned, data = {} })
 			table.insert(dynamicObjects, { instance = spawned, data = {} })
+		end
+	end
+	end -- world streaming
+
+	-- Game-over auto-restart: hold the death screen, then reset like the R key.
+	if state == "gameover" then
+		if deathFlash > 0 then
+			deathFlash = math.max(0, deathFlash - dt / DEATH_FLASH_DURATION)
+		end
+		deathTimer = deathTimer + dt
+		if deathTimer >= DEATH_DURATION then
+			resetGame()
 		end
 	end
 

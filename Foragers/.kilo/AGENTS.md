@@ -181,7 +181,7 @@ Read this before proposing a change in these areas — already considered and cl
 |---|---|---|
 | Pool `Sound` sources instead of `base:clone()`? | **Rejected** | ~4 clones/sec — negligible GC. Pooling needs N clones per variant, more memory. Revisit only with profiling. |
 | Guard `DrawOrder.collect()` against double-call? | **Rejected** | No double-call site exists. Buffer clear doesn't fix it either way. |
-| Scene/game-state machine (menu, pause, restart)? | **Deferred** | Not needed yet. If needed: plain string state variable, no framework. |
+| Scene/game-state machine (menu, pause, restart)? | **Plain string adopted; full machine deferred** | `Main.lua` uses a plain `state = "game" \| "gameover"` string (no framework) for death; world simulation gates on `state == "game"`. Menus can add values later. A full scene manager stays deferred — use the string + `if state == ...` dispatch, not a framework. |
 | ModLoader integration for mod content? | **Deferred** | Currently only registers component types. No entry point for mod content yet. |
 
 Full history: `.kilo/CHANGELOG.md`
