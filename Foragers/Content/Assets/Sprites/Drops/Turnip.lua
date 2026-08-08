@@ -16,7 +16,7 @@ return {
 
 		{
 			component = "pickup",
-			satiety = 30,
+			satiety = 50,
 		},
 	},
 }
