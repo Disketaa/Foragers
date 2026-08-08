@@ -27,6 +27,6 @@ param_groups.ui.tags = "horizontal vertical layer sortOffsetY"
 param_groups.sound.tags = "volume pitch pitchRandomness"
 param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius restartHoldDuration"
 
-component_order.order = "player_stats spritesheet spritefont shadow control collision scroll_to follow destructible drop weapon shake tween particle_emitter text_emitter emote sound ui counter silhouette shader"
+component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop weapon shake tween particle_emitter text_emitter emote sound ui counter silhouette shader"
 
 tween_order.order = "x y scale_x scale_y angle brightness tint_mix"
