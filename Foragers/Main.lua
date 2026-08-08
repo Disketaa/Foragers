@@ -70,7 +70,7 @@ local state = "game"
 -- Auto-restart after DEATH_DURATION on the death screen.
 local AUTO_RESTART = true
 local deathTimer = 0
-local DEATH_DURATION = 5
+local DEATH_DURATION = 3.75
 -- Hold-to-restart (normal play): pressing the restart key scales the Loading
 -- sprite in, and holding it for HOLD_DURATION restarts.
 local holdActive = false
