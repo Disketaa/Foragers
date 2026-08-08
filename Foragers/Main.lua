@@ -20,7 +20,9 @@ local Destructible = require("Source.Sprite.Components.Destructible")
 local Collision = require("Source.Sprite.Components.Collision")
 local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 local Drop = require("Source.Sprite.Components.Drop")
-local TweenComponent = require("Source.Sprite.Components.Tween").Component
+local Tween = require("Source.Sprite.Components.Tween")
+local TweenComponent = Tween.Component
+local Easing = Tween.Easing
 local Shadow = require("Source.Sprite.Components.Shadow")
 local Mask = require("Source.Helpers.Mask")
 local Events = require("Source.Helpers.Events")
@@ -65,11 +67,10 @@ local playerSprite = nil
 -- world but keeps drawing it while the player plays the death anim; "gameover"
 -- is the hold once the death anim ends. Menus will add more values later.
 local state = "game"
--- Auto-restart after DEATH_DURATION on the death screen. Disabled while the
--- death sequence is being debugged; flip to true to restore.
-local AUTO_RESTART = false
+-- Auto-restart after DEATH_DURATION on the death screen.
+local AUTO_RESTART = true
 local deathTimer = 0
-local DEATH_DURATION = 1
+local DEATH_DURATION = 5
 -- Hold-to-restart (normal play): pressing the restart key scales the Loading
 -- sprite in, and holding it for HOLD_DURATION restarts.
 local holdActive = false
@@ -100,6 +101,26 @@ local START_ZOOM = 1.25
 local INTRO_DURATION = 1
 -- Zoom's normal easing rate; restored after a temporary ease overrides it.
 local ZOOM_SMOOTHNESS = Zoom.smoothness
+
+local DEATH_REVEAL_DURATION = 5
+local DEATH_REVEAL_CURVE = "InOutCubic"
+-- After the reveal, wait DEATH_DARKEN_DELAY then fade the canvas to black via
+-- the Darken post-process shader over DEATH_DARKEN_DURATION.
+local DEATH_DARKEN_DELAY = 2
+local DEATH_DARKEN_DURATION = 2
+local DEATH_DARKEN_CURVE = "InOutCubic"
+-- Opening fade: the canvas starts fully dark and reveals in from black.
+local INTRO_DARKEN_DURATION = 1.0
+local INTRO_DARKEN_CURVE = "OutCubic"
+local startDarkenTimer = 0
+local startDarkenActive = false
+local revealTimer = 0
+local revealActive = false
+local revealFrom = {}
+-- Current post-process uniform values, tracked so the death reveal can ease them
+-- back to normal from wherever they are.
+local satUniform = 1
+local posterizeUniform = 0
 
 --- Ease zoom to `target` over `duration` seconds with a temporarily faster
 --- smoothness, restoring the normal rate when the timer expires. Shared by the
@@ -242,6 +263,13 @@ function initGame()
 	easeZoom(1, INTRO_DURATION)
 	circleMaskRadius = 0
 	circleMaskTarget = 0
+	satUniform = 1
+	posterizeUniform = 0
+	revealActive = false
+	revealTimer = 0
+	ShaderLoader.sendUniform("u_darken", 1)
+	startDarkenActive = true
+	startDarkenTimer = 0
 	state = "game"
 	deathTimer = 0
 	pendingClearAttacker = false
@@ -365,11 +393,13 @@ function initGame()
 			local f = data.value / math.max(1, data.maxValue)
 			TimeScale.set(f >= low and 1 or 0.15 + 0.85 * (f / low))
 			local s = f >= low and 1 or f / low
-			ShaderLoader.sendUniform("u_saturation", math.max(0.2, math.min(1, s)))
+			satUniform = math.max(0.2, math.min(1, s))
+			ShaderLoader.sendUniform("u_saturation", satUniform)
 			-- Posterization (color reduction) ramps in below the low threshold:
 			-- 0 at the threshold, 1 (full posterize) as satiety hits zero.
 			local p = f >= low and 0 or (1 - f / low)
-			ShaderLoader.sendUniform("u_posterize", p)
+			posterizeUniform = p
+			ShaderLoader.sendUniform("u_posterize", posterizeUniform)
 			local zMax = stats and stats.lowSatietyZoom or 2
 			Zoom.target = f >= low and 1 or (zMax - (zMax - 1) * (f / low))
 			local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16
@@ -397,6 +427,17 @@ function initGame()
 			local deathZoom = (stats and stats.lowSatietyZoom) or 2
 			Zoom.current = deathZoom
 			Zoom.target = deathZoom
+			-- Stop the opening fade so it doesn't fight the death reveal over
+			-- u_darken.
+			startDarkenActive = false
+			revealActive = true
+			revealTimer = 0
+			revealFrom = {
+				zoom = Zoom.current,
+				saturation = satUniform,
+				posterize = posterizeUniform,
+				circle = circleMaskRadius,
+			}
 			-- Force the anim via the event, not _state: Control is the sole writer
 			-- and never runs again once the world freezes, so the anim sticks.
 			playerSprite:emit(Events.STATE_CHANGED, "death")
@@ -835,6 +876,50 @@ local function updateHold(dt)
 	end
 end
 
+-- Kept out of love.update (LuaJIT 60-upvalue budget). Sets current and target
+-- together so Zoom.update and the circle ease see current==target.
+local function updateReveal(dt)
+	if not revealActive then
+		return
+	end
+	revealTimer = revealTimer + dt
+	local t = math.min(revealTimer / DEATH_REVEAL_DURATION, 1)
+	local e = (Easing[DEATH_REVEAL_CURVE] or Easing.Linear)(t)
+	Zoom.current = revealFrom.zoom + (1 - revealFrom.zoom) * e
+	Zoom.target = Zoom.current
+	satUniform = revealFrom.saturation + (1 - revealFrom.saturation) * e
+	posterizeUniform = revealFrom.posterize * (1 - e)
+	ShaderLoader.sendUniform("u_saturation", satUniform)
+	ShaderLoader.sendUniform("u_posterize", posterizeUniform)
+	local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16
+	circleMaskRadius = revealFrom.circle + (maxR - revealFrom.circle) * e
+	circleMaskTarget = circleMaskRadius
+
+	if revealTimer >= DEATH_DARKEN_DELAY then
+		local dtc = math.min((revealTimer - DEATH_DARKEN_DELAY) / DEATH_DARKEN_DURATION, 1)
+		local de = (Easing[DEATH_DARKEN_CURVE] or Easing.Linear)(dtc)
+		ShaderLoader.sendUniform("u_darken", de)
+	end
+
+	if t >= 1 and revealTimer >= DEATH_DARKEN_DELAY + DEATH_DARKEN_DURATION then
+		revealActive = false
+	end
+end
+
+-- Kept out of love.update (LuaJIT 60-upvalue budget).
+local function updateStartDarken(dt)
+	if not startDarkenActive then
+		return
+	end
+	startDarkenTimer = startDarkenTimer + dt
+	local t = math.min(startDarkenTimer / INTRO_DARKEN_DURATION, 1)
+	local e = (Easing[INTRO_DARKEN_CURVE] or Easing.Linear)(t)
+	ShaderLoader.sendUniform("u_darken", 1 - e)
+	if t >= 1 then
+		startDarkenActive = false
+	end
+end
+
 function love.update(dt)
 	if _needsRestart then
 		_needsRestart = false
@@ -848,6 +933,8 @@ function love.update(dt)
 
 	TimeScale.update(dt)
 	local scaledDt = dt * TimeScale.scale
+	updateReveal(dt)
+	updateStartDarken(dt)
 	-- Manual GC step: spread collection across frames so a full trace never
 	-- lands in one stall.
 	collectgarbage("step", GC_STEP)
