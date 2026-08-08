@@ -61,6 +61,10 @@ config block `{ sounds = { "a.ogg" }, volume, pitch, pitchRandomness, stepInterv
 for per-sound overrides. Explicit `0` is honored (e.g. `pitchRandomness = 0`, a
 muted `volume = 0`). The tag key must be a state name (played via `STATE_CHANGED` /
 `ANIM_FRAME`) or an event the component subscribes to (see the Subscribes column).
+A tag that **declares `stepInterval`** is a step sound — played on `STATE_CHANGED`
+once, then replayed every Nth frame via `ANIM_FRAME` (footsteps). A tag that omits
+it is a one-shot, played only by its event (e.g. `death`, `hunger`) or a single
+`STATE_CHANGED`; it is never replayed on frames.
 
 ## UI / HUD
 

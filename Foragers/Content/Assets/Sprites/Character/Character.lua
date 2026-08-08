@@ -125,22 +125,18 @@ return {
 
 		{
 			component = "sound",
-			stepInterval = 2,
 			volume = 0.5,
 			pitch = 1,
 			pitchRandomness = 0.15,
 			tags = {
 				run = {
-					"Content/Assets/Sounds/Steps/Grass1.ogg",
-					"Content/Assets/Sounds/Steps/Grass2.ogg",
-					"Content/Assets/Sounds/Steps/Grass3.ogg",
-					"Content/Assets/Sounds/Steps/Grass4.ogg",
+					sounds = { "Content/Assets/Sounds/Steps/Grass1.ogg", "Content/Assets/Sounds/Steps/Grass2.ogg", "Content/Assets/Sounds/Steps/Grass3.ogg", "Content/Assets/Sounds/Steps/Grass4.ogg", },
+					stepInterval = 2,
 				},
 
 				swim = {
-					"Content/Assets/Sounds/Steps/Water1.ogg",
-					"Content/Assets/Sounds/Steps/Water2.ogg",
-					"Content/Assets/Sounds/Steps/Water3.ogg",
+					sounds = { "Content/Assets/Sounds/Steps/Water1.ogg", "Content/Assets/Sounds/Steps/Water2.ogg", "Content/Assets/Sounds/Steps/Water3.ogg", },
+					stepInterval = 2,
 				},
 				water_in = { "Content/Assets/Sounds/Events/WaterIn.ogg" },
 				water_out = { "Content/Assets/Sounds/Events/WaterOut.ogg" },

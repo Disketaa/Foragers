@@ -46,6 +46,9 @@ function Sound.new(data)
 			pitch = resolve(config, "pitch", 1),
 			pitchRandomness = resolve(config, "pitchRandomness", 0),
 			stepInterval = resolve(config, "stepInterval", 1),
+			-- A tag only steps (replays on frames) if it declares stepInterval;
+			-- event one-shots (death, hunger, ...) omit it.
+			step = config.stepInterval ~= nil,
 			baseSources = {},
 		}
 		for _, soundPath in ipairs(sounds) do
@@ -89,18 +92,19 @@ function Sound:attach()
 	self.parent:on(Events.STATE_CHANGED, function(state)
 		self._currentState = state
 		self._stepCounter = 0
-		self:_play(state)
+		local set = self.soundSets[state]
+		if set and set.step then
+			self:_play(state)
+		end
 	end, 15)
 
 	self.parent:on(Events.ANIM_FRAME, function()
 		local set = self.soundSets[self._currentState]
-		local interval = set and set.stepInterval or 1
-		if interval > 1 then
-			self._stepCounter = self._stepCounter + 1
-			if self._stepCounter % interval == 0 then
-				self:_play(self._currentState)
-			end
-		else
+		if not set or not set.step then
+			return
+		end
+		self._stepCounter = self._stepCounter + 1
+		if self._stepCounter % set.stepInterval == 0 then
 			self:_play(self._currentState)
 		end
 	end, 15)
