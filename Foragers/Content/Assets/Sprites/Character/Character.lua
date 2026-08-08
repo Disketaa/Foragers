@@ -9,14 +9,14 @@ return {
 	components = {
 		{
 			component = "spritesheet",
-			columns = 4,
+			columns = 5,
 			rows = 5,
 			animations = {
 				idle = { row = 1, frames = 4, speed = 4, loop = true },
 				run = { row = 2, frames = 4, speed = 8, loop = true },
 				float = { row = 3, frames = 4, speed = 4, loop = true },
 				swim = { row = 4, frames = 4, speed = 4, loop = true },
-				death = { row = 5, frames = 4, speed = 6, duration = { 7, 1, 1, 1 }, loop = false }
+				death = { row = 5, frames = 5, speed = 10, duration = { 12, 1, 1, 1, 1 }, loop = false }
 			},
 		},
 
