@@ -8,7 +8,7 @@ return {
 	props = {
 		coverage = 0.5,
 		spawnInterval = 3,
-		vegetables = { density = 0.025, pseudoRandomChance = 0.01 },
+		vegetables = { density = 0.025, pseudoRandomChance = 0.1 },
 		items = {
 			{ data = "Content.Assets.Sprites.Props.BirchTree", weight = 2 },
 			{ data = "Content.Assets.Sprites.Props.OakTree", weight = 2 },

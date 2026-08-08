@@ -363,7 +363,7 @@ function initGame()
 			local f = data.value / math.max(1, data.maxValue)
 			TimeScale.scale = f >= low and 1 or 0.15 + 0.85 * (f / low)
 			local s = f >= low and 1 or f / low
-			ShaderLoader.sendUniform("u_saturation", math.max(0, math.min(1, s)))
+			ShaderLoader.sendUniform("u_saturation", math.max(0.2, math.min(1, s)))
 			-- Posterization (color reduction) ramps in below the low threshold:
 			-- 0 at the threshold, 1 (full posterize) as satiety hits zero.
 			local p = f >= low and 0 or (1 - f / low)

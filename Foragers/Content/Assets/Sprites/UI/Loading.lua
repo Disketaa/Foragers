@@ -2,8 +2,8 @@ return {
 	object = "loading",
 	frameWidth = 8,
 	frameHeight = 8,
-	pivotX = "center",
-	pivotY = "center",
+	pivotX = 3,
+	pivotY = 3,
 	layer = 0,
 	components = {
 		{
