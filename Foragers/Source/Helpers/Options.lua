@@ -40,6 +40,7 @@ function Options.serialize()
 	lines[#lines + 1] = "maxFps=" .. toText(Options.maxFps)
 	lines[#lines + 1] = "gamepadDeadzone=" .. toText(Options.gamepadDeadzone)
 	lines[#lines + 1] = "mouseSlowdownRadius=" .. toText(Options.mouseSlowdownRadius)
+	lines[#lines + 1] = "restartHoldDuration=" .. toText(Options.restartHoldDuration)
 	for name, kb in pairs(Options.keybinds) do
 		if kb.keyboard then
 			lines[#lines + 1] = "keybind." .. name .. "=" .. table.concat(kb.keyboard, ",")
@@ -63,6 +64,8 @@ local function apply(key, value)
 		Options.gamepadDeadzone = tonumber(value) or Options.gamepadDeadzone
 	elseif key == "mouseSlowdownRadius" then
 		Options.mouseSlowdownRadius = tonumber(value) or Options.mouseSlowdownRadius
+	elseif key == "restartHoldDuration" then
+		Options.restartHoldDuration = tonumber(value) or Options.restartHoldDuration
 	elseif key:match("^keybind%.") then
 		local name = key:sub(9)
 		local kb = Options.keybinds[name]

@@ -70,7 +70,7 @@ local DEATH_DURATION = 3.5
 -- sprite in, and holding it for HOLD_DURATION restarts.
 local holdActive = false
 local holdTimer = 0
-local HOLD_DURATION = 0.25
+local HOLD_DURATION = Options.restartHoldDuration
 local restartTimer = 0
 local LOADING_OUT_DURATION = 0.2
 -- Death background flash: 1 = death-red, decays to 0 = black over the flash.
@@ -111,7 +111,7 @@ end
 local uiSprites = {}
 -- The Loading sprite (Content/Assets/Sprites/UI/Loading.lua): shown centered on
 -- the death screen, scaled in/out by the hold-to-restart interaction. Its frame
--- tracks the hold progress (Counter-style fill) rather than playing an animation.
+-- tracks the hold progress (progress-to-frame, 1..numFrames).
 local loadingSprite = nil
 local loadingSheet = nil
 local terrainBatch = nil
@@ -449,11 +449,13 @@ local function cancelLoadingHold()
 end
 
 -- Hold-to-restart is normal-play only (death auto-restarts), and works from any
--- bound input (keyboard / mouse / gamepad).
+-- bound input (keyboard / mouse / gamepad). Ignored while a restart is already
+-- winding down (restartTimer > 0) so a re-press can't jump the scale-out tween.
 local function handleRestartPress()
-	if state == "game" then
-		startLoadingHold()
+	if state ~= "game" or restartTimer > 0 then
+		return
 	end
+	startLoadingHold()
 end
 
 local function handleRestartRelease()
@@ -722,18 +724,6 @@ function love.draw()
 	love.graphics.pop()
 end
 
-local function bindingPressed(binding, key)
-	local kb = binding and binding.keyboard
-	if kb then
-		for _, k in ipairs(kb) do
-			if k == key then
-				return true
-			end
-		end
-	end
-	return false
-end
-
 --- Match a binding against an input of the given type (keyboard/mouse/gamepad
 --- buttons). Restart accepts all three; the other keybinds are keyboard-only.
 local function bindingMatches(binding, inputType, value)
@@ -761,16 +751,16 @@ end
 function love.keypressed(key)
 	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
 		handleRestartPress()
-	elseif bindingPressed(Options.keybinds.toggleFullscreen, key) then
+	elseif bindingMatches(Options.keybinds.toggleFullscreen, "keyboard", key) then
 		local fullscreen, fstype = love.window.getFullscreen()
 		Options.fullscreen = not fullscreen
 		love.window.setFullscreen(Options.fullscreen, fstype)
 		Options.save()
-	elseif bindingPressed(Options.keybinds.toggleDebug, key) then
+	elseif bindingMatches(Options.keybinds.toggleDebug, "keyboard", key) then
 		Debug.toggle("hud")
-	elseif bindingPressed(Options.keybinds.toggleGizmo, key) then
+	elseif bindingMatches(Options.keybinds.toggleGizmo, "keyboard", key) then
 		Debug.toggle("gizmo")
-	elseif bindingPressed(Options.keybinds.toggleProfiler, key) then
+	elseif bindingMatches(Options.keybinds.toggleProfiler, "keyboard", key) then
 		Debug.toggle("hud.profiler")
 	end
 end
@@ -823,7 +813,7 @@ local function updateHold(dt)
 		local progress = math.min(1, holdTimer / HOLD_DURATION)
 		if loadingSheet then
 			local numFrames = loadingSheet.columns or 1
-			loadingSheet:setFrame(math.floor(progress * (numFrames - 1)) + 1)
+			loadingSheet:setFrame(math.min(numFrames - 1, math.floor(progress * numFrames)))
 		end
 		if holdTimer >= HOLD_DURATION then
 			holdActive = false

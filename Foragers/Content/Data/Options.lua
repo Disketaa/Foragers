@@ -4,6 +4,7 @@ return {
 	maxFps = 180,
 	gamepadDeadzone = 0.5,
 	mouseSlowdownRadius = 15,
+	restartHoldDuration = 0.25,
 	keybinds = {
 		up = {
 			keyboard = { "w", "up" },
