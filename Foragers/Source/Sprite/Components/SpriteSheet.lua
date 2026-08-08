@@ -14,6 +14,17 @@ SpriteSheet.__index = SpriteSheet
 local imageCache = {}
 local quadCache = {}
 
+--- Map a currentTime (seconds) to its frame index 1..anim.frames, walking the
+--- per-frame duration weights (cum boundaries in frame units).
+local function frameIndexAt(anim, currentTime)
+	local tc = currentTime * anim.speed
+	local i = 1
+	while i < anim.frames and tc >= anim.cum[i] do
+		i = i + 1
+	end
+	return i
+end
+
 function SpriteSheet.new(data)
 	if not data or not data.spriteSheet then
 		return setmetatable({}, SpriteSheet)
@@ -96,10 +107,21 @@ function SpriteSheet.new(data)
 		self.animations = {}
 		for name, animDef in pairs(data.animations) do
 			local numFrames = math.min(animDef.frames or columns, columns)
+			-- Per-frame hold weights (`duration`, default all 1s). cum[i] is the
+			-- weight-sum before frame i, so frame i spans [cum[i-1], cum[i]) in
+			-- frame units; maxTime = total / speed keeps currentTime in seconds.
+			local dur = animDef.duration or {}
+			local cum = { 0 }
+			for i = 1, numFrames do
+				cum[i + 1] = cum[i] + (tonumber(dur[i]) or 1)
+			end
+			local speed = ValueParser.call(animDef, "speed") or 1
 			self.animations[name] = {
 				startIdx = (animDef.row - 1) * columns + 1,
 				frames = numFrames,
-				speed = ValueParser.call(animDef, "speed") or 1,
+				speed = speed,
+				cum = cum,
+				maxTime = cum[numFrames] / speed,
 				loop = animDef.loop ~= false,
 			}
 		end
@@ -146,13 +168,12 @@ function SpriteSheet:update(dt)
 	local speedMult = (self.parent and self.parent.animSpeedFactor) or 1
 	dt = math.min(dt, 0.1)
 	if anim.loop then
-		self.currentTime = (self.currentTime + dt * speedMult) % (anim.frames / anim.speed)
+		self.currentTime = (self.currentTime + dt * speedMult) % anim.maxTime
 	else
-		local maxTime = (anim.frames - 1) / anim.speed
-		self.currentTime = math.min(self.currentTime + dt * speedMult, maxTime)
+		self.currentTime = math.min(self.currentTime + dt * speedMult, anim.maxTime)
 	end
 
-	local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, anim.frames)
+	local frameIndex = frameIndexAt(anim, self.currentTime)
 	if frameIndex ~= self._lastFrame then
 		self._lastFrame = frameIndex
 		if self.parent then
@@ -181,7 +202,7 @@ function SpriteSheet:_getQuad()
 		if not anim then
 			return nil
 		end
-		local frameIndex = math.min(math.floor(self.currentTime * anim.speed) + 1, anim.frames)
+		local frameIndex = frameIndexAt(anim, self.currentTime)
 		quad = self.quads[anim.startIdx + frameIndex - 1]
 	elseif self._currentIndex then
 		quad = self.quads[self._currentIndex]

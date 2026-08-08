@@ -8,6 +8,7 @@ function ShakeComponent.new(data)
 		magnitude = data.magnitude or 2,
 		duration = data.duration or 0.2,
 		decay = data.decay ~= false,
+		triggerOn = data.triggerOn or { Events.PROP_BROKEN },
 		timer = 0,
 		active = false,
 		offsetX = 0,
@@ -17,9 +18,11 @@ function ShakeComponent.new(data)
 end
 
 function ShakeComponent:attach()
-	self.parent:on(Events.PROP_BROKEN, function()
-		self:trigger()
-	end, 5)
+	for _, event in ipairs(self.triggerOn) do
+		self.parent:on(event, function()
+			self:trigger()
+		end, 5)
+	end
 end
 
 --- Start (or restart) the shake from zero. Public so anything can trigger it,

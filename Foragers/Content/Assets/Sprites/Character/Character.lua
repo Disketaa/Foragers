@@ -16,7 +16,7 @@ return {
 				run = { row = 2, frames = 4, speed = 8, loop = true },
 				float = { row = 3, frames = 4, speed = 4, loop = true },
 				swim = { row = 4, frames = 4, speed = 4, loop = true },
-				death = { row = 5, frames = 4, speed = 4, loop = false }
+				death = { row = 5, frames = 4, speed = 6, duration = { 7, 1, 1, 1 }, loop = false }
 			},
 		},
 
@@ -63,6 +63,14 @@ return {
 			component = "scroll_to",
 			chunkSize = 64,
 			smoothness = 10,
+		},
+
+		{
+			component = "shake",
+			magnitude = 3,
+			decay = true,
+			duration = 0.6,
+			triggerOn = { "death" },
 		},
 
 		{

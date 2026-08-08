@@ -46,7 +46,7 @@ Each component table is passed to `ComponentRegistry.create(name, data)`. See `c
 animations = {
     idle = { row = 1, frames = 4, speed = 4, loop = true },
     run  = { row = 2, frames = 4, speed = 8, loop = true },
-    death = { row = 5, frames = 4, speed = 5, loop = false },
+    death = { row = 5, frames = 4, speed = 8, duration = { 1, 1, 1, 4 }, loop = false },
 }
 ```
 
@@ -55,6 +55,7 @@ animations = {
 | `row` | number | Row in spritesheet (1-indexed) |
 | `frames` | number | Number of frames in this animation |
 | `speed` | number | Frames per second |
+| `duration` | table (optional) | Per-frame hold weights, one entry per frame (default all `1`). Frame `i` holds `duration[i] / speed` seconds; total anim time = `sum(duration) / speed`. Uniform (`{}`/omitted) keeps each frame at `1 / speed` |
 | `loop` | boolean | `true` = loop, `false` = play once |
 
 ## Tags (animation mapping)

@@ -63,8 +63,7 @@ local weaponSprite = nil
 local playerSprite = nil
 -- Plain scene state (AGENTS §XII): "game" runs the world; "dying" freezes the
 -- world but keeps drawing it while the player plays the death anim; "gameover"
--- is the blackout hold once the circle mask has closed. Menus will add more
--- values later.
+-- is the hold once the death anim ends. Menus will add more values later.
 local state = "game"
 -- Auto-restart after DEATH_DURATION on the death screen. Disabled while the
 -- death sequence is being debugged; flip to true to restore.
@@ -95,13 +94,6 @@ local shakeOffsetY = 0
 local circleMaskRadius = 0
 local circleMaskTarget = 0
 local CIRCLE_MASK_SMOOTHNESS = 1
--- Blackout radius: CircleMask shader early-returns when u_circleRadius <= 0
--- (no mask at all), so "fully black" is a tiny positive radius, not 0.
-local DEATH_CIRCLE_MIN = 0.00001
--- Death blackout eases with a faster rate so the circle closes quickly
--- (expSmooth settles in ~3x its rate).
-local DEATH_BLACKOUT_SMOOTHNESS = 6
-local circleMaskSmoothness = CIRCLE_MASK_SMOOTHNESS
 -- Restores normal zoom smoothness after a temporary ease (start reveal / death).
 local zoomRestoreTimer = 0
 local START_ZOOM = 1.25
@@ -251,7 +243,6 @@ function initGame()
 	easeZoom(1, INTRO_DURATION)
 	circleMaskRadius = 0
 	circleMaskTarget = 0
-	circleMaskSmoothness = CIRCLE_MASK_SMOOTHNESS
 	state = "game"
 	deathTimer = 0
 	pendingClearAttacker = false
@@ -373,7 +364,7 @@ function initGame()
 			local stats = playerStats
 			local low = (stats and stats.lowSatietyPercent or 33) / 100
 			local f = data.value / math.max(1, data.maxValue)
-			TimeScale.scale = f >= low and 1 or 0.15 + 0.85 * (f / low)
+			TimeScale.set(f >= low and 1 or 0.15 + 0.85 * (f / low))
 			local s = f >= low and 1 or f / low
 			ShaderLoader.sendUniform("u_saturation", math.max(0.2, math.min(1, s)))
 			-- Posterization (color reduction) ramps in below the low threshold:
@@ -394,11 +385,13 @@ function initGame()
 
 		playerSprite:on(Events.DEATH, function()
 			print("[DEATH] state=" .. state .. " -> dying, anim -> death")
-			-- Post-process stays ON: CircleMask does the blackout, so do not flip
-			-- setPostProcessEnabled here.
+			-- Post-process stays ON: the CircleMask holds its satiety-0 radius on
+			-- the death screen, so do not flip setPostProcessEnabled here.
 			state = "dying"
 			deathTimer = 0
-			TimeScale.scale = 1
+			-- Ease back to full speed (target, not set) so the low-satiety
+			-- slow-mo doesn't snap to normal the instant the death anim plays.
+			TimeScale.target = 1
 			easeZoom(1, DEATH_ZOOM_DURATION)
 			-- Force the anim via the event, not _state: Control is the sole writer
 			-- and never runs again once the world freezes, so the anim sticks.
@@ -407,7 +400,8 @@ function initGame()
 		end, 5)
 
 		-- The death anim is non-looping; the frame reaching its last index means
-		-- the collapse is done — close the circle to black.
+		-- the collapse is done. The circle stays at its satiety-0 value — no
+		-- blackout.
 		playerSprite:on(Events.ANIM_FRAME, function(frameIndex)
 			if state ~= "dying" then
 				return
@@ -416,8 +410,6 @@ function initGame()
 			local anim = ss and ss.animations and ss.animations.death
 			if anim and frameIndex >= anim.frames then
 				state = "gameover"
-				circleMaskSmoothness = DEATH_BLACKOUT_SMOOTHNESS
-				circleMaskTarget = DEATH_CIRCLE_MIN
 			end
 		end, 5)
 	end
@@ -844,12 +836,13 @@ function love.update(dt)
 		_needsRestart = false
 		Reset.all()
 		uiSprites = {}
-		TimeScale.scale = 1
+		TimeScale.set(1)
 		Zoom.reset()
 		initGame()
 		return
 	end
 
+	TimeScale.update(dt)
 	local scaledDt = dt * TimeScale.scale
 	-- Manual GC step: spread collection across frames so a full trace never
 	-- lands in one stall.
@@ -932,7 +925,7 @@ function love.update(dt)
 		end
 	end
 	if circleMaskRadius ~= circleMaskTarget then
-		local ease = Math.expSmooth(scaledDt, circleMaskSmoothness)
+		local ease = Math.expSmooth(scaledDt, CIRCLE_MASK_SMOOTHNESS)
 		circleMaskRadius = circleMaskRadius + (circleMaskTarget - circleMaskRadius) * ease
 		if math.abs(circleMaskRadius - circleMaskTarget) < 0.01 then
 			circleMaskRadius = circleMaskTarget
@@ -968,13 +961,17 @@ function love.update(dt)
 	end
 	end -- world update
 
-	-- The world update loop is frozen while dying, but the collapse anim must
-	-- play out. Advance only the spritesheet — Control must not run, or it would
-	-- rewrite _state and move the player.
+	-- The world update loop is frozen while dying, but the collapse anim and
+	-- shake must play out. Advance those manually — Control must not run, or it
+	-- would rewrite _state and move the player.
 	if state == "dying" and playerSprite then
 		local ss = playerSprite:findComponent("spritesheet")
 		if ss and ss.update then
 			ss:update(dt)
+		end
+		local shk = playerSprite:findComponent("shake")
+		if shk and shk.update then
+			shk:update(dt)
 		end
 	end
 
@@ -1013,6 +1010,15 @@ function love.update(dt)
 	if shakeComp and shakeComp.active then
 		shakeOffsetX = shakeComp.offsetX
 		shakeOffsetY = shakeComp.offsetY
+	elseif playerSprite then
+		local pshake = playerSprite:findComponent("shake")
+		if pshake and pshake.active then
+			shakeOffsetX = pshake.offsetX
+			shakeOffsetY = pshake.offsetY
+		else
+			shakeOffsetX = 0
+			shakeOffsetY = 0
+		end
 	else
 		shakeOffsetX = 0
 		shakeOffsetY = 0
