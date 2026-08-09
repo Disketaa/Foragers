@@ -3,6 +3,7 @@ local data = require("Content.Data.Debug")
 local Options = require("Source.Helpers.Options")
 local Snapshot = require("Source.Helpers.Snapshot")
 local Input = require("Source.Helpers.Input")
+local ChatHistory = require("Source.Helpers.ChatHistory")
 
 local Sprite = require("Source.Sprite.Sprite")
 
@@ -184,8 +185,8 @@ local lastSample = 0
 -- the input is open; `chatActive` would duplicate it and drift (Escape/HUD-hide
 -- must close it without flipping the persisted toggle).
 local chatText = ""
-local chatVisible = 0
-local CHAT_FADE_SPEED = 10
+local chatOutput = ""
+local chatOutputTimer = 0
 local chatBlink = 0
 
 -- Cache key "path@size": the same font file at different sizes is a distinct entry.
@@ -304,11 +305,25 @@ function Debug.setChatActive(active)
 	Input.setCaptured(newVal)
 	if not newVal then
 		chatText = ""
+		Debug.resetChatHistory()
+	else
+		chatOutput = ""
 	end
 end
 
 function Debug.chatText()
 	return chatText
+end
+
+function Debug.setChatOutput(text)
+	chatOutput = text or ""
+	if chatOutput ~= "" then
+		chatOutputTimer = (lookup("hud.chat.outputTimeout") or 3)
+	end
+end
+
+function Debug.chatOutput()
+	return chatOutput
 end
 
 function Debug.setChatText(text)
@@ -323,6 +338,46 @@ end
 ---@return number
 function Debug.chatRepeatInterval()
 	return lookup("hud.chat.repeatInterval")
+end
+
+---@return string|nil Path of the one-shot sound played when a command is submitted.
+function Debug.chatEnterSound()
+	return lookup("hud.chat.enterSound")
+end
+
+-- Command history ------------------------------------------------------------
+
+---@return number Max persisted history entries (data `hud.chat.historyMax`).
+function Debug.chatHistoryMax()
+	return lookup("hud.chat.historyMax") or 10
+end
+
+---@return number Max persisted history entries (data `hud.chat.historyMax`).
+function Debug.chatHistoryMax()
+	return lookup("hud.chat.historyMax") or 10
+end
+
+---@param text string
+function Debug.pushChatHistory(text)
+	ChatHistory.push(text, Debug.chatHistoryMax())
+end
+
+function Debug.chatHistoryUp()
+	local text = ChatHistory.up(chatText)
+	if text ~= nil then
+		Debug.setChatText(text)
+	end
+end
+
+function Debug.chatHistoryDown()
+	local text = ChatHistory.down()
+	if text ~= nil then
+		Debug.setChatText(text)
+	end
+end
+
+function Debug.resetChatHistory()
+	ChatHistory.reset()
 end
 
 --- Subscribe to runtime flag changes. Callback receives (key, value).
@@ -374,7 +429,7 @@ end
 --- Runtime-toggleable flag paths (the ones Debug.set/Debug.toggle mutate and
 --- that Options persists). Top-level `debug` is the master switch; the rest are
 --- nested group `enabled` flags.
-local TOGGLE_PATHS = { "debug", "gizmo", "hud", "hud.profiler", "hud.chat" }
+local TOGGLE_PATHS = { "debug", "gizmo", "hud", "hud.profiler" }
 
 ---@return table path → boolean current value for each runtime-toggleable flag.
 function Debug.serializeFlags()
@@ -440,6 +495,15 @@ function Debug.update(dt)
 		-- Sample the snapshot even when the HUD readout is off, so drops are
 		-- captured as long as the profiler is collecting.
 		Snapshot.update(Profiler.enabled(), fps, Profiler.entries(), Profiler.totalMs())
+	end
+
+	-- Auto-hide chat output after its timeout.
+	if chatOutputTimer > 0 then
+		chatOutputTimer = chatOutputTimer - dt
+		if chatOutputTimer <= 0 then
+			chatOutput = ""
+			chatOutputTimer = 0
+		end
 	end
 end
 
@@ -602,57 +666,72 @@ function Debug.drawChat(scale)
 	scale = scale or 1
 	local s = Debug.settings("hud")
 	local cs = Debug.settings("hud.chat")
-	local enabled = Debug.enabled("hud") and Debug.enabled("hud.chat")
-	
-	local targetVis = enabled and 1 or 0
-	if chatVisible ~= targetVis then
-		local step = CHAT_FADE_SPEED * scale * 0.016
-		if math.abs(targetVis - chatVisible) <= step then
-			chatVisible = targetVis
-		else
-			chatVisible = chatVisible + (targetVis > chatVisible and step or -step)
-		end
-	end
-	if chatVisible <= 0 then
+	local hudOn = Debug.enabled("hud")
+	if not hudOn then
 		return
 	end
-	
+
+	local inputActive = Debug.enabled("hud.chat")
+	local hasOutput = chatOutput ~= ""
+	if not inputActive and not hasOutput then
+		return
+	end
+
 	local labelFont, _, fontHeight = hudFonts(s, scale)
 	local offset = (cs.padding ~= nil and cs.padding or s.padding or 4) * scale
 	local gap = (cs.gap ~= nil and cs.gap or s.gap ~= nil and s.gap or offset) * scale
 	local valueColor = s.color or { 1, 1, 1, 1 }
+	local badColor = s.badColor or { 1, 0, 0, 1 }
 	local bg = cs.backgroundColor or s.backgroundColor
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
-	
+
 	local prompt = ""
-	-- The font may reject codepoints it can't decode (e.g. scripts outside its
-	-- charset); guard measurement/draw so a bad char can't crash the frame.
-	local ok, textW = pcall(labelFont.getWidth, labelFont, prompt .. chatText)
-	if not ok then
-		textW = 0
+	local textW = 0
+	if inputActive then
+		-- The font may reject codepoints it can't decode (e.g. scripts outside its
+		-- charset); guard measurement/draw so a bad char can't crash the frame.
+		local ok, w = pcall(labelFont.getWidth, labelFont, prompt .. chatText)
+		if ok then
+			textW = w
+		end
 	end
 	local cursorW = labelFont:getWidth("|")
 	local rowH = fontHeight + gap
-	-- Background hugs the content: from the left edge to just past the cursor.
 	local rowW = gap + textW + cursorW + gap
 
-	local y = love.graphics.getHeight() - offset - rowH
-
-	if bg then
-		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4] * chatVisible)
-		love.graphics.rectangle("fill", offset, y, rowW, rowH)
+	-- When input is closed, output occupies the same row the input would use.
+	-- When input is open, output is suppressed (it was cleared on open).
+	if hasOutput and not inputActive then
+		local outW = labelFont:getWidth(chatOutput) + gap * 2
+		local outY = love.graphics.getHeight() - offset - rowH
+		if bg then
+			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
+			love.graphics.rectangle("fill", offset, outY, outW, rowH)
+		end
+		love.graphics.setColor(badColor[1], badColor[2], badColor[3], badColor[4])
+		love.graphics.setFont(labelFont)
+		pcall(love.graphics.print, chatOutput, offset + gap, outY + gap / 2)
 	end
 
-	love.graphics.setColor(valueColor[1], valueColor[2], valueColor[3], valueColor[4] * chatVisible)
-	love.graphics.setFont(labelFont)
-	pcall(love.graphics.print, prompt .. chatText, offset + gap, y + gap / 2)
+	if inputActive then
+		local y = love.graphics.getHeight() - offset - rowH
 
-	-- I-beam blinks at ~2Hz when the field is focused.
-	chatBlink = (chatBlink + 1) % 60
-	if chatBlink < 30 then
-		love.graphics.setColor(labelColor[1], labelColor[2], labelColor[3], labelColor[4] * chatVisible)
-		local cursorX = offset + gap + textW
-		love.graphics.line(cursorX, y + gap / 2, cursorX, y + rowH - gap / 2)
+		if bg then
+			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
+			love.graphics.rectangle("fill", offset, y, rowW, rowH)
+		end
+
+		love.graphics.setColor(valueColor[1], valueColor[2], valueColor[3], valueColor[4])
+		love.graphics.setFont(labelFont)
+		pcall(love.graphics.print, prompt .. chatText, offset + gap, y + gap / 2)
+
+		-- I-beam blinks at ~2Hz when the field is focused.
+		chatBlink = (chatBlink + 1) % 60
+		if chatBlink < 30 then
+			love.graphics.setColor(labelColor[1], labelColor[2], labelColor[3], labelColor[4])
+			local cursorX = offset + gap + textW
+			love.graphics.line(cursorX, y + gap / 2, cursorX, y + rowH - gap / 2)
+		end
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)
@@ -833,5 +912,8 @@ end
 -- Re-apply persisted toggles from Options.txt. Options loads before Debug, so
 -- its collected overrides are ready by the time this module finishes loading.
 Debug.applyFlags(Options._debug)
+
+-- Load persisted command history from chat_history.txt.
+ChatHistory.load(Debug.chatHistoryMax())
 
 return Debug

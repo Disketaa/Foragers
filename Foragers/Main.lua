@@ -24,6 +24,7 @@ local Tween = require("Source.Sprite.Components.Tween")
 local TweenComponent = Tween.Component
 local Easing = Tween.Easing
 local Shadow = require("Source.Sprite.Components.Shadow")
+local Sound = require("Source.Sprite.Components.Sound")
 local Mask = require("Source.Helpers.Mask")
 local Events = require("Source.Helpers.Events")
 local PropSpawner = require("Source.World.PropSpawner")
@@ -821,27 +822,58 @@ local function bindingMatches(binding, inputType, value)
 	return false
 end
 
--- Backspace auto-repeat while chat is open: LÖVE only repeats keypressed when
+-- Chat key auto-repeat while chat is open: LÖVE only repeats keypressed when
 -- setKeyRepeat is on, which would also repeat the HUD/restart toggles, so the
--- repeat is driven manually here instead. Mirrors the Windows model — one char on
--- press, then a fixed delay before repeats at a steady rate.
-local chatBackspaceHeld = false
-local chatBackspaceTimer = 0
-local chatBackspaceRepeating = false
+-- repeat is driven manually here instead. Mirrors the Windows model — one action
+-- on press, then a fixed delay before repeats at a steady rate. One tracker
+-- covers backspace and the up/down history arrows; the repeat action is stored
+-- with the held key.
+local chatRepeatKey = nil
+local chatRepeatTimer = 0
+local chatRepeatRepeating = false
+local chatRepeatAction = nil
 
-function love.keypressed(key)
+function love.keypressed(key, _, _)
 	if Debug.chatActive() then
 		if key == "escape" then
 			Debug.setChatActive(false)
 			return
 		elseif key == "return" or key == "kpenter" then
+			local text = Debug.chatText()
+			if text ~= "" then
+				Debug.setChatOutput('Unknown command: "' .. text .. '"')
+				Debug.pushChatHistory(text)
+				Debug.setChatText("")
+				Sound.play(Debug.chatEnterSound())
+			end
 			Debug.setChatActive(false)
 			return
 		elseif key == "backspace" then
 			Debug.setChatText(Input.removeLast(Debug.chatText()))
-			chatBackspaceHeld = true
-			chatBackspaceTimer = 0
-			chatBackspaceRepeating = false
+			chatRepeatKey = "backspace"
+			chatRepeatTimer = 0
+			chatRepeatRepeating = false
+			chatRepeatAction = function()
+				Debug.setChatText(Input.removeLast(Debug.chatText()))
+			end
+			return
+		elseif key == "up" then
+			Debug.chatHistoryUp()
+			chatRepeatKey = "up"
+			chatRepeatTimer = 0
+			chatRepeatRepeating = false
+			chatRepeatAction = function()
+				Debug.chatHistoryUp()
+			end
+			return
+		elseif key == "down" then
+			Debug.chatHistoryDown()
+			chatRepeatKey = "down"
+			chatRepeatTimer = 0
+			chatRepeatRepeating = false
+			chatRepeatAction = function()
+				Debug.chatHistoryDown()
+			end
 			return
 		end
 	end
@@ -876,9 +908,10 @@ function love.textinput(text)
 end
 
 function love.keyreleased(key)
-	if key == "backspace" then
-		chatBackspaceHeld = false
-		chatBackspaceRepeating = false
+	if key == chatRepeatKey then
+		chatRepeatKey = nil
+		chatRepeatRepeating = false
+		chatRepeatAction = nil
 	end
 	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
 		handleRestartRelease()
@@ -1163,26 +1196,27 @@ function love.update(dt)
 	TextEmitter.updateAll(scaledDt)
 	Debug.update(scaledDt)
 
-	if chatBackspaceHeld and Debug.chatActive() then
-		chatBackspaceTimer = chatBackspaceTimer + dt
+	if chatRepeatKey and Debug.chatActive() then
+		chatRepeatTimer = chatRepeatTimer + dt
 		local delay = Debug.chatRepeatDelay()
 		local interval = Debug.chatRepeatInterval()
-		if not chatBackspaceRepeating then
-			if chatBackspaceTimer >= delay then
-				Debug.setChatText(Input.removeLast(Debug.chatText()))
-				chatBackspaceTimer = 0
-				chatBackspaceRepeating = true
+		if not chatRepeatRepeating then
+			if chatRepeatTimer >= delay then
+				chatRepeatAction()
+				chatRepeatTimer = 0
+				chatRepeatRepeating = true
 			end
 		else
-			if chatBackspaceTimer >= interval then
-				Debug.setChatText(Input.removeLast(Debug.chatText()))
-				chatBackspaceTimer = 0
+			if chatRepeatTimer >= interval then
+				chatRepeatAction()
+				chatRepeatTimer = 0
 			end
 		end
 	else
-		chatBackspaceHeld = false
-		chatBackspaceTimer = 0
-		chatBackspaceRepeating = false
+		chatRepeatKey = nil
+		chatRepeatTimer = 0
+		chatRepeatRepeating = false
+		chatRepeatAction = nil
 	end
 
 	-- Update UI sprites (for counter animations, etc.)

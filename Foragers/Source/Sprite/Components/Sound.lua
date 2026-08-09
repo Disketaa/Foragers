@@ -155,4 +155,33 @@ function Sound:_play(state)
 	source:play()
 end
 
+--- Play a one-shot sound by path (UI blips). Cache the source so the .ogg
+--- decodes once, then clone cheaply at play — same pattern as the sprite component.
+---@param path string
+---@param volume number|nil
+---@param pitch number|nil
+function Sound.play(path, volume, pitch)
+	if not path or not (love and love.audio) then
+		return
+	end
+	local base = audioCache[path]
+	if base == nil then
+		local ok, src = pcall(love.audio.newSource, path, "static")
+		if ok then
+			base = src
+			audioCache[path] = src
+		else
+			audioCache[path] = false
+			Log.error("Failed to load sound: " .. tostring(path))
+		end
+	end
+	if not base then
+		return
+	end
+	local source = base:clone()
+	source:setVolume(volume or 1)
+	source:setPitch(pitch or 1)
+	source:play()
+end
+
 return Sound
