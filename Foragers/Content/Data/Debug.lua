@@ -58,6 +58,6 @@ return {
 			{ label = "Profiler", path = "hud.profiler", key = "toggleProfiler" },
 		},
 		profiler = { enabled = false, updateSpeed = 10, nameMaxChars = 18, digits = 1, valueMaxChars = 8, limit = 20 },
-		chat = { enabled = false, repeatDelay = 0.4, repeatInterval = 0.03 },
+		chat = { enabled = false, repeatDelay = 0.5, repeatInterval = 0.033 },
 	},
 }

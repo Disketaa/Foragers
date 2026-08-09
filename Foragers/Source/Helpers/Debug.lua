@@ -305,7 +305,6 @@ function Debug.setChatActive(active)
 	if not newVal then
 		chatText = ""
 	end
-	Options.save()
 end
 
 function Debug.chatText()
@@ -314,6 +313,16 @@ end
 
 function Debug.setChatText(text)
 	chatText = Input.sanitize(text or "")
+end
+
+---@return number
+function Debug.chatRepeatDelay()
+	return lookup("hud.chat.repeatDelay")
+end
+
+---@return number
+function Debug.chatRepeatInterval()
+	return lookup("hud.chat.repeatInterval")
 end
 
 --- Subscribe to runtime flag changes. Callback receives (key, value).
