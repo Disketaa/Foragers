@@ -826,7 +826,7 @@ function love.keypressed(key)
 			Debug.setChatActive(false)
 			return
 		elseif key == "return" or key == "kpenter" then
-			Debug.setChatText("")
+			Debug.setChatActive(false)
 			return
 		elseif key == "backspace" then
 			local text = Debug.chatText()

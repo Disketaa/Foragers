@@ -185,6 +185,7 @@ local lastSample = 0
 local chatText = ""
 local chatVisible = 0
 local CHAT_FADE_SPEED = 10
+local chatBlink = 0
 
 -- Cache key "path@size": the same font file at different sizes is a distinct entry.
 local fontCache = {}
@@ -607,26 +608,34 @@ function Debug.drawChat(scale)
 	local gap = (cs.gap ~= nil and cs.gap or s.gap ~= nil and s.gap or offset) * scale
 	local valueColor = s.color or { 1, 1, 1, 1 }
 	local bg = cs.backgroundColor or s.backgroundColor
+	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
 	
-	local prompt = "> "
+	local prompt = ""
 	local textW = labelFont:getWidth(prompt .. chatText)
-	local rowW = textW + labelFont:getWidth("|") + offset * 2
+	local cursorW = labelFont:getWidth("|")
 	local rowH = fontHeight + gap
-	
+	-- Background hugs the content: from the left edge to just past the cursor.
+	local rowW = gap + textW + cursorW + gap
+
 	local y = love.graphics.getHeight() - offset - rowH
-	
+
 	if bg then
 		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4] * chatVisible)
 		love.graphics.rectangle("fill", offset, y, rowW, rowH)
 	end
-	
+
 	love.graphics.setColor(valueColor[1], valueColor[2], valueColor[3], valueColor[4] * chatVisible)
 	love.graphics.setFont(labelFont)
 	love.graphics.print(prompt .. chatText, offset + gap, y + gap / 2)
-	
-	local cursorX = offset + gap + textW
-	love.graphics.line(cursorX, y + gap / 2, cursorX, y + rowH - gap / 2)
-	
+
+	-- I-beam blinks at ~2Hz when the field is focused.
+	chatBlink = (chatBlink + 1) % 60
+	if chatBlink < 30 then
+		love.graphics.setColor(labelColor[1], labelColor[2], labelColor[3], labelColor[4] * chatVisible)
+		local cursorX = offset + gap + textW
+		love.graphics.line(cursorX, y + gap / 2, cursorX, y + rowH - gap / 2)
+	end
+
 	love.graphics.setColor(1, 1, 1, 1)
 end
 

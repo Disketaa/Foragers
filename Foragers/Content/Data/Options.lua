@@ -63,7 +63,7 @@ return {
 		},
 
 		toggleChat = {
-			keyboard = { "f4" },
+			keyboard = { "return" },
 		},
 
 		toggleFullscreen = {
