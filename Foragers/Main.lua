@@ -978,7 +978,7 @@ function love.keypressed(key, _, _)
 		-- bindings (e.g. R-restart) so typing can't trigger the world.
 		return
 	end
-	
+
 	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
 		handleRestartPress()
 	elseif bindingMatches(Options.keybinds.toggleFullscreen, "keyboard", key) then
