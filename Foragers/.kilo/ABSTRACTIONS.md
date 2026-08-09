@@ -196,6 +196,13 @@ relevant section before touching that subsystem.
   flags; the panels' own toggles (F2/F3) already persist the true preference.
 - **`hud.chat.enabled` is deliberately excluded from `TOGGLE_PATHS`** so the console
   never persists to `Options.txt` and always starts closed.
+- **Tab completion must cycle a stored candidate list, not re-run the matcher each
+  press.** `Commands.complete(text)` narrows by the *current* text, so once Tab fills
+  `help` the text is `"help"` and re-running the matcher returns only `{"help"}` —
+  the cycle gets stuck on one result. `Main.lua` keeps a `completionActive` flag and
+  the stored `base`/`candidates`: the first press fills from `Commands.complete`, and
+  each repeat advances through the *stored* list. Only a fresh edit (typing,
+  backspace, history) resets it.
 
 ## Large-world performance / GC / streaming
 

@@ -38,6 +38,13 @@ function Commands.list()
 	return names
 end
 
+--- Trim leading/trailing whitespace so extra spaces in input don't break matching.
+---@param s string
+---@return string
+function Commands.trim(s)
+	return (s or ""):match("^%s*(.-)%s*$")
+end
+
 --- Return tab-completion candidates for the token being typed. Completes command
 --- names before any space; after `cmd ` it completes that command's sub-commands.
 ---@param text string Current chat input.
@@ -100,7 +107,8 @@ function Commands.execute(text, ctx)
 	if not fn then
 		return 'Unknown command: "' .. text .. '"', false
 	end
-	local ok, message, success, hold = pcall(fn, args or "", ctx)
+	-- Trim trailing whitespace so "world clear   " behaves like "world clear".
+	local ok, message, success, hold = pcall(fn, Commands.trim(args or ""), ctx)
 	if not ok then
 		return "Command error: " .. tostring(message), false
 	end
