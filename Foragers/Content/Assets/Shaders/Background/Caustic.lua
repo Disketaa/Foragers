@@ -3,7 +3,7 @@ return {
 	priority = "background",
 	applies_to = "screen",
 	uniforms = {
-		caustic_color = { 0.26, 0.78, 0.75 },
+		caustic_color = { 0.26, 0.71, 0.75 },
 		speed = 0.2,
 		horizontal_scale = 0.2,
 		vertical_scale = 0.1,
