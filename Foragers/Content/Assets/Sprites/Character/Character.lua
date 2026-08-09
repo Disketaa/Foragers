@@ -27,7 +27,7 @@ return {
 			level = 1,
 			experience = 0,
 			xpCurve = { base = 10, growth = 1.35 },
-			satiety = 33,
+			satiety = 100,
 			maxSatiety = 100,
 			satietyDrain = { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 },
 			lowSatietyPercent = 33,

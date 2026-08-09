@@ -107,6 +107,11 @@ local ZOOM_SMOOTHNESS = Zoom.smoothness
 local DEATH_REVEAL_DELAY = 1.25
 local DEATH_REVEAL_DURATION = 2
 local DEATH_REVEAL_CURVE = "OutCubic"
+-- Grain fades from its current opacity to invisible over this window at death,
+-- easing as the timescale recovers to full speed. No hard cutoff — it exits
+-- gently alongside the slow-mo returning to normal.
+local NOISE_FADE_DURATION = 7
+local NOISE_FADE_CURVE = "InOutCubic"
 -- After the reveal, wait DEATH_DARKEN_DELAY then fade the canvas to black via
 -- the Darken post-process shader over DEATH_DARKEN_DURATION.
 local DEATH_DARKEN_DELAY = 3
@@ -900,6 +905,12 @@ local function updateReveal(dt)
 		return
 	end
 	revealTimer = revealTimer + dt
+	-- Fade grain from its max to invisible over NOISE_FADE_DURATION, easing from
+	-- the moment death starts — not tied to the reveal delay.
+	local nt = math.min(revealTimer / NOISE_FADE_DURATION, 1)
+	local ne = (Easing[NOISE_FADE_CURVE] or Easing.OutCubic)(nt)
+	noiseUniform = revealFrom.noise * (1 - ne)
+	ShaderLoader.sendUniform("u_noise", noiseUniform)
 	-- Ease only after DEATH_REVEAL_DELAY elapses, so the death look holds before
 	-- zoom / saturation / contrast return to normal.
 	local t = math.max(0, math.min((revealTimer - DEATH_REVEAL_DELAY) / DEATH_REVEAL_DURATION, 1))
@@ -908,10 +919,8 @@ local function updateReveal(dt)
 	Zoom.target = Zoom.current
 	satUniform = revealFrom.saturation + (1 - revealFrom.saturation) * e
 	posterizeUniform = revealFrom.posterize * (1 - e)
-	noiseUniform = revealFrom.noise * (1 - e)
 	ShaderLoader.sendUniform("u_saturation", satUniform)
 	ShaderLoader.sendUniform("u_posterize", posterizeUniform)
-	ShaderLoader.sendUniform("u_noise", noiseUniform)
 	local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16
 	circleMaskRadius = revealFrom.circle + (maxR - revealFrom.circle) * e
 	circleMaskTarget = circleMaskRadius
