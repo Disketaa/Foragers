@@ -1,5 +1,5 @@
-local Path = require("Source.Helpers.Path")
-local ValueParser = require("Source.Helpers.ValueParser")
+local Path = require("Source.Helpers.Core.Path")
+local ValueParser = require("Source.Helpers.Core.ValueParser")
 local Easing = require("Source.Sprite.Components.Tween").Easing
 local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 

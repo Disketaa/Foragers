@@ -1,8 +1,8 @@
 --- Pre-render sprites marked with `silhouette` component as white silhouettes.
 --- Trees with "Silhouette" shader module sample this canvas and show black
 --- dither where a silhouette overlaps their alpha.
-local Canvas = require("Source.Helpers.Canvas")
-local Pivot = require("Source.Helpers.Pivot")
+local Canvas = require("Source.Helpers.Graphics.Canvas")
+local Pivot = require("Source.Helpers.Core.Pivot")
 local Mask = {}
 
 local silCanvas = nil

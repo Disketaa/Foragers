@@ -1,8 +1,8 @@
 local Sprite = require("Source.Sprite.Sprite")
-local ComponentRegistry = require("Source.Helpers.ComponentRegistry")
-local Merge = require("Source.Helpers.Merge")
-local Path = require("Source.Helpers.Path")
-local ValueParser = require("Source.Helpers.ValueParser")
+local ComponentRegistry = require("Source.Helpers.Core.ComponentRegistry")
+local Merge = require("Source.Helpers.Core.Merge")
+local Path = require("Source.Helpers.Core.Path")
+local ValueParser = require("Source.Helpers.Core.ValueParser")
 
 local SpriteLoader = {}
 

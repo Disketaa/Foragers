@@ -1,6 +1,6 @@
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Collision = require("Source.Sprite.Components.Collision")
-local Events = require("Source.Helpers.Events")
+local Events = require("Source.Helpers.Core.Events")
 local PropPicker = require("Source.World.PropPicker")
 
 local _tileSize

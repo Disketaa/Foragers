@@ -1,7 +1,7 @@
-local Events = require("Source.Helpers.Events")
+local Events = require("Source.Helpers.Core.Events")
 local Easing = require("Source.Sprite.Components.Tween").Easing
 local SpriteFont = require("Source.Sprite.Components.SpriteFont")
-local Pivot = require("Source.Helpers.Pivot")
+local Pivot = require("Source.Helpers.Core.Pivot")
 
 --- Maps source component value to spritesheet frame. Event-driven, opt-in smooth tween.
 --- Optional `label` block renders a text overlay (e.g. level number) via font spritesheet.
@@ -48,7 +48,7 @@ function Counter.new(data)
 end
 
 function Counter:attach()
-	local Path = require("Source.Helpers.Path")
+	local Path = require("Source.Helpers.Core.Path")
 	local SpriteLoader = require("Source.Sprite.SpriteLoader")
 
 	if self._labelFont then

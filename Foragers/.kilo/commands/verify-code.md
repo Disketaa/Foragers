@@ -40,7 +40,7 @@ For each file from step 1, go through all items. Answer not with "yes/no" but po
 - Does the component NOT write `parent._state` or `parent.flipX` directly, unless it's Control? (Violates the single-writer rule from `.kilo/AGENTS.md` §I.)
 - Does the component NOT read another component's fields in `update()`? Even through `parent`? (Cross-component communication — events only — AGENTS.md §I.)
 - If a new component subscribes to an event — is the priority chosen with a gap of 5 (5/10/15/20)? (AGENTS.md §X — exception: STATE_CHANGED/FLIPPED use tight priorities 7↔8, 10↔11↔12.)
-- Are all event references string constants from `Source/Helpers/Events.lua`?
+- Are all event references string constants from `Source/Helpers/Core/Events.lua`?
 
 **2.6 Design constants in config**
 - Is every number or string that could affect gameplay or behavior (safe zone size, animation speed, collision radius, gravity strength, etc.) placed in `Content/Data/`, not hardcoded? (Violates data-driven design from `.kilo/AGENTS.md` §I.)

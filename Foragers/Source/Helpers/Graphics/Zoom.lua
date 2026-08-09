@@ -3,7 +3,7 @@
 --- Clamped to [1, max] — never below 1, so zoom=1 is the maximum view and zooming
 --- in can't reveal edges/background. UI/cursor draw outside the world canvas, so
 --- they are unaffected. Numeric state survives Reset.all() (only array fields cleared).
-local Math = require("Source.Helpers.Math")
+local Math = require("Source.Helpers.Core.Math")
 
 local Zoom = {}
 Zoom.current = 1

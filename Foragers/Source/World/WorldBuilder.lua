@@ -2,8 +2,8 @@ local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
 local Collision = require("Source.Sprite.Components.Collision")
-local Path = require("Source.Helpers.Path")
-local Pivot = require("Source.Helpers.Pivot")
+local Path = require("Source.Helpers.Core.Path")
+local Pivot = require("Source.Helpers.Core.Pivot")
 local PropPicker = require("Source.World.PropPicker")
 local WorldConfig = require("Content.Data.World") or {}
 

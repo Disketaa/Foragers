@@ -1,6 +1,6 @@
-local Events = require("Source.Helpers.Events")
-local Options = require("Source.Helpers.Options")
-local Input = require("Source.Helpers.Input")
+local Events = require("Source.Helpers.Core.Events")
+local Options = require("Source.Helpers.Systems.Options")
+local Input = require("Source.Helpers.Systems.Input")
 
 ---@class Control
 ---@field parent Sprite|nil Parent sprite reference

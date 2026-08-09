@@ -1,6 +1,6 @@
-local Events = require("Source.Helpers.Events")
-local Debug = require("Source.Helpers.Debug")
-local Gizmo = require("Source.Helpers.Gizmo")
+local Events = require("Source.Helpers.Core.Events")
+local Debug = require("Source.Helpers.Debug.Debug")
+local Gizmo = require("Source.Helpers.Debug.Gizmo")
 
 ---@class Collision
 ---@field parent Sprite|nil

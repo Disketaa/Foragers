@@ -5,7 +5,7 @@
 ---@field width number Shadow width in px
 ---@field height number Shadow height in px
 ---@field type "shadow"
-local Canvas = require("Source.Helpers.Canvas")
+local Canvas = require("Source.Helpers.Graphics.Canvas")
 local Shadow = {}
 Shadow.__index = Shadow
 

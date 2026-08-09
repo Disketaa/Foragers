@@ -1,4 +1,4 @@
-local ShaderLoader = require("Source.Helpers.ShaderLoader")
+local ShaderLoader = require("Source.Helpers.Graphics.ShaderLoader")
 
 local ShaderComponent = {}
 ShaderComponent.__index = ShaderComponent

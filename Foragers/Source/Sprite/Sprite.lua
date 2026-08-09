@@ -1,6 +1,6 @@
-local EventEmitter = require("Source.Helpers.EventEmitter")
-local Log = require("Source.Helpers.Log")
-local Pivot = require("Source.Helpers.Pivot")
+local EventEmitter = require("Source.Helpers.Core.EventEmitter")
+local Log = require("Source.Helpers.Core.Log")
+local Pivot = require("Source.Helpers.Core.Pivot")
 
 ---@class Sprite
 ---@field x number World X position

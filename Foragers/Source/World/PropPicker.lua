@@ -1,5 +1,5 @@
-local Merge = require("Source.Helpers.Merge")
-local Path = require("Source.Helpers.Path")
+local Merge = require("Source.Helpers.Core.Merge")
+local Path = require("Source.Helpers.Core.Path")
 
 -- Shared prop-type picker used by both WorldBuilder.buildPropPlan (initial
 -- coverage plan) and PropSpawner (runtime streaming). Owns the vegetable cap

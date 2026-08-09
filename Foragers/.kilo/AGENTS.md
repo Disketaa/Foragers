@@ -92,7 +92,11 @@ Foragers/
 ├── conf.lua
 ├── Main.lua
 ├── Source/
-│   ├── Helpers/          # EventEmitter, Events, ComponentRegistry, DrawOrder, Log, Math, Merge, ModLoader, Path, ShaderLoader, Canvas, AttackSystem
+│   ├── Helpers/
+│   │   ├── Core/         # EventEmitter, Events, ComponentRegistry, Log, Math, Merge, Path, Pivot, ValueParser
+│   │   ├── Graphics/     # Canvas, DrawOrder, Mask, ShaderLoader, Zoom
+│   │   ├── Debug/        # ChatHistory, Commands, Debug, Gizmo, Snapshot
+│   │   └── Systems/      # AttackSystem, Input, ModLoader, Options, Reset, TimeScale
 │   ├── Sprite/
 │   │   ├── Sprite.lua
 │   │   ├── SpriteLoader.lua
@@ -166,7 +170,7 @@ Full event table: `.kilo/documentation/events.md`
 
 ## XI. Component Registry
 
-`Source/Helpers/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 20 core components. Mods register new types:
+`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 20 core components. Mods register new types:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```

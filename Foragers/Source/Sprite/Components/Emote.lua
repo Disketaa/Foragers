@@ -1,7 +1,7 @@
-local Events = require("Source.Helpers.Events")
-local Path = require("Source.Helpers.Path")
-local ValueParser = require("Source.Helpers.ValueParser")
-local Pivot = require("Source.Helpers.Pivot")
+local Events = require("Source.Helpers.Core.Events")
+local Path = require("Source.Helpers.Core.Path")
+local ValueParser = require("Source.Helpers.Core.ValueParser")
+local Pivot = require("Source.Helpers.Core.Pivot")
 local SpriteSheet = require("Source.Sprite.Components.SpriteSheet")
 local TweenModule = require("Source.Sprite.Components.Tween")
 

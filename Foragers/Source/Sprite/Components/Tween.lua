@@ -1,5 +1,5 @@
-local Events = require("Source.Helpers.Events")
-local ValueParser = require("Source.Helpers.ValueParser")
+local Events = require("Source.Helpers.Core.Events")
+local ValueParser = require("Source.Helpers.Core.ValueParser")
 
 ---@class Tween
 ---@field target string Property being tweened

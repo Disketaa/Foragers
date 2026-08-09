@@ -1,7 +1,7 @@
-local Events = require("Source.Helpers.Events")
-local Path = require("Source.Helpers.Path")
-local ValueParser = require("Source.Helpers.ValueParser")
-local Pivot = require("Source.Helpers.Pivot")
+local Events = require("Source.Helpers.Core.Events")
+local Path = require("Source.Helpers.Core.Path")
+local ValueParser = require("Source.Helpers.Core.ValueParser")
+local Pivot = require("Source.Helpers.Core.Pivot")
 
 local eventNames = {}
 for _, name in pairs(Events) do
@@ -93,7 +93,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 			compData.spriteSheet = Path.png(self.particle)
 		end
 
-		local ok, sp = pcall(function() return require("Source.Helpers.ComponentRegistry").create("spritesheet", compData) end)
+		local ok, sp = pcall(function() return require("Source.Helpers.Core.ComponentRegistry").create("spritesheet", compData) end)
 		if not ok or not sp then
 			return
 		end
@@ -145,7 +145,7 @@ function ParticleEmitter:_createParticle(px, py, angle)
 	-- (e.g. the death burst), driven off the trigger, no event wiring.
 	for _, comp in ipairs(data.components or {}) do
 		if comp.component == "shake" then
-			local shake = require("Source.Helpers.ComponentRegistry").create("shake", comp)
+			local shake = require("Source.Helpers.Core.ComponentRegistry").create("shake", comp)
 			if shake then
 				shake:trigger()
 				particle.shake = shake

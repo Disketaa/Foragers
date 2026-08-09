@@ -1,5 +1,5 @@
 local TweenModule = require("Source.Sprite.Components.Tween")
-local Events = require("Source.Helpers.Events")
+local Events = require("Source.Helpers.Core.Events")
 
 local attacker = nil
 

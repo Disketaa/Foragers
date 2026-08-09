@@ -1,4 +1,4 @@
-local Math = require("Source.Helpers.Math")
+local Math = require("Source.Helpers.Core.Math")
 
 local TimeScale = {}
 TimeScale.scale = 1

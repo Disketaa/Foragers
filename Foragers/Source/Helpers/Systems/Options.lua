@@ -15,7 +15,7 @@ local function debugFlags()
 	-- Only read flags if Debug already loaded; requiring it here mid-Options-load
 	-- would cycle (Debug requires Options). First-run save thus omits debug lines,
 	-- which the next explicit save (after a toggle) fills in.
-	local Debug = package.loaded["Source.Helpers.Debug"]
+	local Debug = package.loaded["Source.Helpers.Debug.Debug"]
 	if Debug and Debug.serializeFlags then
 		return Debug.serializeFlags()
 	end

@@ -1,4 +1,4 @@
-local Log = require("Source.Helpers.Log")
+local Log = require("Source.Helpers.Core.Log")
 
 local Merge = {}
 

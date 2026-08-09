@@ -1,6 +1,6 @@
-local Events = require("Source.Helpers.Events")
-local Math = require("Source.Helpers.Math")
-local Pivot = require("Source.Helpers.Pivot")
+local Events = require("Source.Helpers.Core.Events")
+local Math = require("Source.Helpers.Core.Math")
+local Pivot = require("Source.Helpers.Core.Pivot")
 
 ---@class Follow
 ---@field parent Sprite|nil

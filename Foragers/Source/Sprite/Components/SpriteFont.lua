@@ -1,7 +1,7 @@
 local SpriteFont = {}
 SpriteFont.__index = SpriteFont
 
-local Pivot = require("Source.Helpers.Pivot")
+local Pivot = require("Source.Helpers.Core.Pivot")
 
 -- LuaJIT (Lua 5.1) has no utf8 module; string ops are byte-based. The font
 -- `chars` string contains multi-byte UTF-8 (Cyrillic), so we must iterate by

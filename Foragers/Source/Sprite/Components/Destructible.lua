@@ -1,4 +1,4 @@
-local Events = require("Source.Helpers.Events")
+local Events = require("Source.Helpers.Core.Events")
 
 local deadSprites = {}
 

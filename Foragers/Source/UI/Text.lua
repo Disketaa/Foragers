@@ -1,5 +1,5 @@
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
-local Path = require("Source.Helpers.Path")
+local Path = require("Source.Helpers.Core.Path")
 
 local Text = {}
 Text.__index = Text

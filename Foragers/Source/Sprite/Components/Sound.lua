@@ -1,5 +1,5 @@
-local Events = require("Source.Helpers.Events")
-local Log = require("Source.Helpers.Log")
+local Events = require("Source.Helpers.Core.Events")
+local Log = require("Source.Helpers.Core.Log")
 
 ---@class Sound
 ---@field parent Sprite|nil

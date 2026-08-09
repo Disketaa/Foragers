@@ -117,9 +117,9 @@ Before finishing, verify each:
 - `.kilo/documentation/events.md` — all events, emitters, listener priorities
 - `.kilo/documentation/data-format.md` — sprite data file format
 - `Source/Sprite/Sprite.lua` — base sprite, xpcall dispatch
-- `Source/Helpers/Events.lua` — all event constants
-- `Source/Helpers/ComponentRegistry.lua` — component registration
-- `Source/Helpers/EventEmitter.lua` — event bus API
+- `Source/Helpers/Core/Events.lua` — all event constants
+- `Source/Helpers/Core/ComponentRegistry.lua` — component registration
+- `Source/Helpers/Core/EventEmitter.lua` — event bus API
 - `Source/Sprite/Components/Spritesheet.lua` — quad generation, animation switching
 - `Source/Sprite/Components/Tween.lua` — tween data class, easing curves
 - `Source/World/WorldGen.lua` — pure data generation

@@ -1,5 +1,5 @@
-local Path = require("Source.Helpers.Path")
-local Log = require("Source.Helpers.Log")
+local Path = require("Source.Helpers.Core.Path")
+local Log = require("Source.Helpers.Core.Log")
 
 local ShaderLoader = {
 	shaders = {},

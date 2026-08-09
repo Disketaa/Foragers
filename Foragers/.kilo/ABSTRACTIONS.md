@@ -7,7 +7,7 @@ description: Hard-won lessons from past work — read before coding in these are
 Short, brutal notes on mistakes already made so you don't repeat them. Read the
 relevant section before touching that subsystem.
 
-## Shader modules (Source/Helpers/ShaderLoader.lua, Source/Sprite/Components/Shader.lua)
+## Shader modules (Source/Helpers/Graphics/ShaderLoader.lua, Source/Sprite/Components/Shader.lua)
 
 - **Module files MUST be `.lua`, never `.glslinc`.** LÖVE `require` only loads
   `.lua`; `ShaderLoader` scans only `%.lua$`. A `.glslinc` module is silently
@@ -101,7 +101,7 @@ relevant section before touching that subsystem.
   be invisible in the silhouette — they have `sprite.image` but no spritesheet
   component to provide `drawCurrentFrame`.
 
-## Camera zoom (Source/Helpers/Zoom.lua, Canvas.lua, Main.lua)
+## Camera zoom (Source/Helpers/Graphics/Zoom.lua, Canvas.lua, Main.lua)
 
 - **Zoom-in-only ⇒ scale the canvas blit (output), never the world draw.**
   The canvas is rendered at fixed resolution once; zoom magnifies the finished
@@ -126,7 +126,7 @@ relevant section before touching that subsystem.
   same `Math.expSmooth` the camera offset uses, so the satiety zoom animates
   consistently.
 
-## In-process restart (Source/Helpers/Reset.lua, Main.lua initGame/resetGame)
+## In-process restart (Source/Helpers/Systems/Reset.lua, Main.lua initGame/resetGame)
 
 - **NEVER re-run `love.load()` to reset the game.** It calls `love.window.setMode()`, which on Windows recreates the native window (visual "window reopens" — blink, focus loss) even though it's the same process. Split into one-time engine setup (`love.load`: window, default filter, shader/saturation assets, `ModLoader.loadAllMods`) and re-runnable `initGame()` (world, sprites, UI, player). `resetGame()` (R key) sets `_needsRestart`, consumed at the top of `love.update`, then calls `Reset.all()` + `initGame()`.
 - **`Reset.all()` wipes every array-valued field in `Source.`/`Mods.` modules.** This is the point: clears module-owned pools (particles, floating text, dead/pending/detached sets, attacker refs). But it also nukes arrays that are NOT runtime pools — e.g. `ShaderLoader.shaders`. If such asset lists are only loaded in `love.load()`, a restart leaves them empty → the asset silently disappears. Fix pattern: re-run the loader inside `initGame()` (`ShaderLoader.loadAll("Content/Assets/Shaders")`), not `love.load()`. Shader recompilation does not recreate the window.
@@ -159,7 +159,7 @@ relevant section before touching that subsystem.
 - **Debug overlays draw in a native-resolution pass, never into the low-res world
   canvas.** The world canvas (480×270) is upscaled with nearest filter, so any
   1px debug line drawn inside it becomes a blocky `scale`-px square (the "aliasing"
-  that reads as blurry). `Collision` publishes rects to `Source/Helpers/Gizmo.lua`
+  that reads as blurry). `Collision` publishes rects to `Source/Helpers/Debug/Gizmo.lua`
   (world-space buffer) and `Main.lua` draws them after the world canvas with a
   `worldToScreen` transform that mirrors `Canvas:draw`'s placement math — including
   using `shakeOffsetX/Y` as the view offset (NOT `camPixelX`, which is applied once
@@ -168,7 +168,7 @@ relevant section before touching that subsystem.
   a module `local`, so it survives `Reset.all()` but is drained per frame.
 - **`Content/Data/Debug.lua` is a group-based settings table, not flat booleans.**
   Each debug overlay is a group (e.g. `collisions = { enabled, exclude, color,
-  backgroundColor, priority }`). The `Debug` helper (`Source/Helpers/Debug.lua`) exposes group accessors
+  backgroundColor, priority }`). The `Debug` helper (`Source/Helpers/Debug/Debug.lua`) exposes group accessors
   (`enabled`, `excluded`, `settings`, `isEnabled`, `onChange`) and never knows which
   component consumes them — consumers subscribe via `Debug.onChange`, keeping the
   dependency one-directional. `Gizmo.rect`/`Gizmo.fillRect`/`Gizmo.point` tag each entry with its
@@ -176,7 +176,7 @@ relevant section before touching that subsystem.
   outline (`color` + `decor`) and point markers — ordering groups by ascending `priority` so
   e.g. `collisions` layer over `boundaries` and `pivots` stay on top.
 - **The auto-profiler self-wires by global patch, so nothing else imports it.**
-  `Source/Helpers/Debug.lua` patches `Sprite:addComponent` to time each component's
+  `Source/Helpers/Debug/Debug.lua` patches `Sprite:addComponent` to time each component's
   `update`/`draw`, and replaces `_G.require` so any module exposing a known per-frame
   method name (`update`, `updateAll`, `updateBursts`, `updateDetached`, `drawAll`, ...)
   is auto-wrapped on load (plus a sweep of `package.loaded` for modules already loaded
@@ -295,7 +295,7 @@ relevant section before touching that subsystem.
   `require("Source/Sprite/Components/Tween")` for `Tween.Easing` only. Do not pull
   in the whole Tween component lifecycle.
 
-## ValueParser (Source/Helpers/ValueParser.lua) — __raw contract
+## ValueParser (Source/Helpers/Core/ValueParser.lua) — __raw contract
 
 - **`ValueParser.table(tbl)` resolves all strings in place.** Any field whose
   resolved value differs from the original gets stored in `tbl.__raw[field]`. This
@@ -349,7 +349,7 @@ entire data tree. These fields are safe to randomize:
 
 | Field | Works? | Constraint |
 |---|---|---|
-| Top-level: `frameWidth`, `frameHeight`, `pivotX`, `pivotY`, `layer`, `sortOffsetY` | **Yes** | frameWidth/Height must match PNG columns/rows at runtime. `pivotX`/`pivotY` are pixel offsets or keywords (`"left"`/`"center"`/`"right"`, `"top"`/`"center"`/`"bottom"`) — keywords have no `..`/`|`, so they pass through `ValueParser` unresolved. Resolved to pixels by `Source/Helpers/Pivot.lua` (`Pivot.px`) at every draw site |
+| Top-level: `frameWidth`, `frameHeight`, `pivotX`, `pivotY`, `layer`, `sortOffsetY` | **Yes** | frameWidth/Height must match PNG columns/rows at runtime. `pivotX`/`pivotY` are pixel offsets or keywords (`"left"`/`"center"`/`"right"`, `"top"`/`"center"`/`"bottom"`) — keywords have no `..`/`|`, so they pass through `ValueParser` unresolved. Resolved to pixels by `Source/Helpers/Core/Pivot.lua` (`Pivot.px`) at every draw site |
 | `spritesheet` speed | **Yes** | — |
 | `follow` smoothness, smoothnessX/Y, followDelay | **Yes** | — |
 | `scroll_to` smoothness | **Yes** | — |
@@ -374,7 +374,7 @@ entire data tree. These fields are safe to randomize:
 | `font` (module path) | Must resolve to a valid require — pass through |
 | `sprite` (particle/drop asset path) | Must resolve to a valid require — pass through |
 
-## Log / save directory (Source/Helpers/Log.lua, conf.lua)
+## Log / save directory (Source/Helpers/Core/Log.lua, conf.lua)
 
 - **`Log.lua` patches global `print` at require time.** Every module's `print()` routes through the log sink automatically — no caller opts in. `originalPrint` must be captured before the patch, or `print` recurses infinitely. Because the patch runs at `require`, any module loaded before `Log` (before the patch) calling `print` still uses the real one.
 - **Never use `os.execute` to create a directory for file logging.** On Windows with `t.console = false` it spawns a console and a malformed command (e.g. the unix `mkdir -p "..." 2>/dev/null` branch when `os.getenv("OS")` isn't detected) can block waiting on a `Terminate batch job` prompt — the game freezes black for ~10s then continues. Use `love.filesystem` instead: it targets the save directory and creates it as needed, no shell involved.

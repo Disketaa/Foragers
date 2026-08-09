@@ -1,9 +1,9 @@
-local EventEmitter = require("Source.Helpers.EventEmitter")
+local EventEmitter = require("Source.Helpers.Core.EventEmitter")
 local data = require("Content.Data.Debug")
-local Options = require("Source.Helpers.Options")
-local Snapshot = require("Source.Helpers.Snapshot")
-local Input = require("Source.Helpers.Input")
-local ChatHistory = require("Source.Helpers.ChatHistory")
+local Options = require("Source.Helpers.Systems.Options")
+local Snapshot = require("Source.Helpers.Debug.Snapshot")
+local Input = require("Source.Helpers.Systems.Input")
+local ChatHistory = require("Source.Helpers.Debug.ChatHistory")
 
 local Sprite = require("Source.Sprite.Sprite")
 

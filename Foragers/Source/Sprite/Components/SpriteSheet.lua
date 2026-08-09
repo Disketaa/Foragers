@@ -1,6 +1,6 @@
-local Events = require("Source.Helpers.Events")
-local ValueParser = require("Source.Helpers.ValueParser")
-local Pivot = require("Source.Helpers.Pivot")
+local Events = require("Source.Helpers.Core.Events")
+local ValueParser = require("Source.Helpers.Core.ValueParser")
+local Pivot = require("Source.Helpers.Core.Pivot")
 
 local SpriteSheet = {}
 SpriteSheet.__index = SpriteSheet

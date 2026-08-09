@@ -12,7 +12,7 @@
 ---@field lowSatietyMaskRadius number Circle mask radius (canvas px) at zero satiety; full circle at the low threshold
 ---@field dead boolean Whether the player has died (satiety 0); blocks further consumption/restoration
 ---@field type string
-local Events = require("Source.Helpers.Events")
+local Events = require("Source.Helpers.Core.Events")
 local PlayerStats = {}
 PlayerStats.__index = PlayerStats
 

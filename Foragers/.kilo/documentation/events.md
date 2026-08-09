@@ -4,7 +4,7 @@ description: Quick reference for all events — name, emitter, listeners with pr
 
 # Event System Reference
 
-Source of truth: `Source/Helpers/Events.lua`.
+Source of truth: `Source/Helpers/Core/Events.lua`.
 
 ## Event table
 
@@ -61,7 +61,7 @@ Only these four fields may be read across components without events:
 
 ## Adding a new event
 
-1. Add constant to `Source/Helpers/Events.lua`
+1. Add constant to `Source/Helpers/Core/Events.lua`
 2. Add row to events.md event table
 3. Use `sprite:emit(Events.MY_EVENT, ...)` in emitter
 4. Subscribe with `sprite:on(Events.MY_EVENT, callback, priority)`

@@ -1,8 +1,8 @@
-local Events = require("Source.Helpers.Events")
-local Path = require("Source.Helpers.Path")
-local Merge = require("Source.Helpers.Merge")
-local Log = require("Source.Helpers.Log")
-local ValueParser = require("Source.Helpers.ValueParser")
+local Events = require("Source.Helpers.Core.Events")
+local Path = require("Source.Helpers.Core.Path")
+local Merge = require("Source.Helpers.Core.Merge")
+local Log = require("Source.Helpers.Core.Log")
+local ValueParser = require("Source.Helpers.Core.ValueParser")
 
 local pendingDrops = {}
 
