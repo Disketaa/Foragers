@@ -185,8 +185,11 @@ local function positionUI(ui)
 	local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
 	local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
 	local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
-	ui.sprite.x = px + Pivot.px(ui.sprite.pivotX, w, 0)
-	ui.sprite.y = py + Pivot.px(ui.sprite.pivotY, h, 0)
+	local tweens = ui.sprite.tweens
+	local tweenX = tweens and tweens.x and tweens.x:getValue() or 0
+	local tweenY = tweens and tweens.y and tweens.y:getValue() or 0
+	ui.sprite.x = px + Pivot.px(ui.sprite.pivotX, w, 0) + tweenX
+	ui.sprite.y = py + Pivot.px(ui.sprite.pivotY, h, 0) + tweenY
 end
 
 --- One-time engine setup. Runs once at startup. Must NOT touch the window
@@ -744,7 +747,11 @@ function love.draw()
 	love.graphics.translate(canvas.offsetX, canvas.offsetY)
 	love.graphics.scale(canvas.scale, canvas.scale)
 	if not isDead then
+		table.sort(uiSprites, function(a, b)
+			return (a.sprite.layer or 0) < (b.sprite.layer or 0)
+		end)
 		for _, ui in ipairs(uiSprites) do
+			positionUI(ui)
 			ui.sprite:draw()
 		end
 	elseif loadingSprite then

@@ -1,21 +1,21 @@
 return {
-	frameWidth = 19,
-	frameHeight = 20,
+	frameWidth = 22,
+	frameHeight = 22,
 	pivotX = "center",
 	pivotY = "center",
-	layer = 0,
+	layer = 1,
 	components = {
 		{
 			component = "spritesheet",
-			columns = 40,
+			columns = 14,
 		},
 
 		{
 			component = "tween",
 			tags = {
 				counter_tick = {
-					{ target = "scale_x", from = 1.05, to = 1, duration = 0.5, curve = "OutBack" },
-					{ target = "scale_y", from = 1.05, to = 1, duration = 0.5, curve = "OutBack" },
+					{ target = "scale_x", from = 0.9, to = 1, duration = 0.2, curve = "OutCubic" },
+					{ target = "scale_y", from = 1.1, to = 1, duration = 0.4, curve = "OutCubic" },
 					{ target = "tint_mix", from = 0.4, to = 0, duration = 0.3, curve = "OutCubic" },
 				},
 			},
@@ -31,7 +31,7 @@ return {
 		{
 			component = "ui",
 			offsetX = 0,
-			offsetY = 4,
+			offsetY = 0,
 			horizontal = "center",
 			vertical = "top",
 		},
@@ -46,9 +46,9 @@ return {
 			label = {
 				font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
 				charSpacing = -4,
-				color = { 0.95, 0.68, 0.87 },
+				color = { 0.56, 0.32, 0.73 },
 				offsetX = 1,
-				offsetY = -1,
+				offsetY = 0,
 			},
 		},
 

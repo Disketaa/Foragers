@@ -7,7 +7,7 @@ return {
 	components = {
 		{
 			component = "spritesheet",
-			columns = 12,
+			columns = 1,
 		},
 
 		{
@@ -23,26 +23,16 @@ return {
 
 		{
 			component = "ui",
-			offsetX = -19,
+			offsetX = 19,
 			offsetY = 0,
 			horizontal = "center",
 			vertical = "top",
 		},
 
 		{
-			component = "counter",
-			mode = "fraction",
-			field = "satiety",
-			maxField = "maxSatiety",
-			sourceType = "player_stats",
-			smoothness = 0.3,
-			curve = "OutCubic",
-		},
-
-		{
 			component = "shader",
 			shaders = {
-				{ Tint = { u_tint_color = { 0.94, 0.39, 0.12 }, u_additive = 1 } },
+				{ Tint = { u_tint_color = { 0.54, 0.35, 0.24 }, u_additive = 1 } },
 			},
 		},
 	},
