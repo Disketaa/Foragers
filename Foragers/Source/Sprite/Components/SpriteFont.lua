@@ -6,10 +6,13 @@ local Pivot = require("Source.Helpers.Pivot")
 -- LuaJIT (Lua 5.1) has no utf8 module; string ops are byte-based. The font
 -- `chars` string contains multi-byte UTF-8 (Cyrillic), so we must iterate by
 -- visual character, not byte, when building the char->cell index.
+---@param str string
+---@param i integer
+---@return integer, string
 local function utf8Next(str, i)
 	local n = #str
 	if i > n then
-		return nil
+		return i, ""
 	end
 	local b = str:byte(i)
 	local len = 1

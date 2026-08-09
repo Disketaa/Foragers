@@ -43,12 +43,13 @@ local whiteImage = nil
 local shadowBatch = nil
 local function ensureBatch()
 	if shadowBatch then
-		return
+		return shadowBatch
 	end
 	local id = love.image.newImageData(1, 1)
 	id:setPixel(0, 0, 255, 255, 255, 255)
 	whiteImage = love.graphics.newImage(id)
 	shadowBatch = love.graphics.newSpriteBatch(whiteImage, 20000, "dynamic")
+	return shadowBatch
 end
 
 local shadowScan = {}
@@ -68,7 +69,7 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 		shadowCanvas,
 		function()
 			love.graphics.setColor(layerColor[1], layerColor[2], layerColor[3], 1)
-			ensureBatch()
+			shadowBatch = ensureBatch()
 			shadowBatch:clear()
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
