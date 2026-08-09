@@ -5,12 +5,25 @@
 local Commands = {}
 
 local handlers = {}
+local descriptions = {}
 
 --- Register a command handler.
 ---@param name string Invoked name (e.g. "xp"), no leading slash.
 ---@param fn function|nil Handler: (args: string, ctx: table) -> (message: string, success: boolean)
-function Commands.register(name, fn)
+---@param help string|nil Short description shown by the `help` command.
+function Commands.register(name, fn, help)
 	handlers[name] = fn
+	descriptions[name] = help
+end
+
+---@return table Command names, alphabetically sorted.
+function Commands.list()
+	local names = {}
+	for name in pairs(handlers) do
+		names[#names + 1] = name
+	end
+	table.sort(names)
+	return names
 end
 
 --- Parse a signed amount arg. Accepts "+50" / "-50" / "50". Returns the integer
@@ -89,7 +102,7 @@ Commands.register("xp", function(args, ctx)
 	end
 	s:setExperience(amount)
 	return "XP set to " .. amount, true
-end)
+end, "Set, add, or remove XP")
 
 Commands.register("lvl", function(args, ctx)
 	local s, ok = needStats(ctx)
@@ -113,7 +126,7 @@ Commands.register("lvl", function(args, ctx)
 	end
 	s:setLevel(amount)
 	return "Level set to " .. amount, true
-end)
+end, "Set, add, or remove levels")
 
 Commands.register("satiety", function(args, ctx)
 	local s, ok = needStats(ctx)
@@ -133,7 +146,7 @@ Commands.register("satiety", function(args, ctx)
 	end
 	s:setSatiety(amount)
 	return "Satiety set to " .. amount, true
-end)
+end, "Set, add, or remove satiety")
 
 Commands.register("eat", function(_, ctx)
 	local s, ok = needStats(ctx)
@@ -142,7 +155,7 @@ Commands.register("eat", function(_, ctx)
 	end
 	s:restoreSatiety(s.maxSatiety)
 	return "Satiety restored", true
-end)
+end, "Restore satiety to full")
 
 Commands.register("world", function(args, ctx)
 	if args ~= "clear" then
@@ -153,20 +166,35 @@ Commands.register("world", function(args, ctx)
 		return "Cleared " .. n .. " props", true
 	end
 	return "No props", true
-end)
+end, "Destroy all spawned props")
 
 Commands.register("restart", function(_, ctx)
 	if ctx.restart then
 		ctx.restart()
 	end
 	return "Restarting", true
-end)
+end, "Restart the game")
 
 Commands.register("death", function(_, ctx)
 	if ctx.triggerDeath then
 		ctx.triggerDeath()
 	end
 	return "Death", true
-end)
+end, "Trigger the death cycle")
+
+local PAGE_SIZE = 10
+
+Commands.register("help", function(args)
+	local names = Commands.list()
+	local totalPages = math.max(1, math.ceil(#names / PAGE_SIZE))
+	local page = math.max(1, math.min(totalPages, tonumber(args or 1) or 1))
+	local lines = {}
+	for i = (page - 1) * PAGE_SIZE + 1, math.min(page * PAGE_SIZE, #names) do
+		local name = names[i]
+		lines[#lines + 1] = name .. " — " .. (descriptions[name] or "")
+	end
+	lines[#lines + 1] = "Page " .. page .. "/" .. totalPages .. " (help N for more)"
+	return table.concat(lines, "\n"), true
+end, "List commands (help 2 for next page)")
 
 return Commands

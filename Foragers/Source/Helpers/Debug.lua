@@ -185,7 +185,7 @@ local lastSample = 0
 -- the input is open; `chatActive` would duplicate it and drift (Escape/HUD-hide
 -- must close it without flipping the persisted toggle).
 local chatText = ""
-local chatOutput = ""
+local chatOutputLines = {}
 local chatOutputSuccess = false
 local chatOutputTimer = 0
 local chatBlink = 0
@@ -339,7 +339,7 @@ function Debug.setChatActive(active)
 		chatText = ""
 		Debug.resetChatHistory()
 	else
-		chatOutput = ""
+		chatOutputLines = {}
 	end
 end
 
@@ -348,15 +348,22 @@ function Debug.chatText()
 end
 
 function Debug.setChatOutput(text, success)
-	chatOutput = text or ""
+	local value = text or ""
+	chatOutputLines = {}
+	if value ~= "" then
+		for line in value:gmatch("[^\n]+") do
+			chatOutputLines[#chatOutputLines + 1] = line
+		end
+	end
 	chatOutputSuccess = success == true
-	if chatOutput ~= "" then
+	if #chatOutputLines > 0 then
 		chatOutputTimer = (lookup("hud.chat.outputTimeout") or 3)
 	end
 end
 
+---@return string Full output joined by newlines (single-line callers still work).
 function Debug.chatOutput()
-	return chatOutput
+	return table.concat(chatOutputLines, "\n")
 end
 
 function Debug.setChatText(text)
@@ -527,7 +534,7 @@ function Debug.update(dt)
 	if chatOutputTimer > 0 then
 		chatOutputTimer = chatOutputTimer - dt
 		if chatOutputTimer <= 0 then
-			chatOutput = ""
+			chatOutputLines = {}
 			chatOutputTimer = 0
 		end
 	end
@@ -697,7 +704,7 @@ function Debug.drawChat(scale)
 	end
 
 	local inputActive = Debug.enabled("hud.chat")
-	local hasOutput = chatOutput ~= ""
+	local hasOutput = #chatOutputLines > 0
 	if not inputActive and not hasOutput then
 		return
 	end
@@ -724,19 +731,38 @@ function Debug.drawChat(scale)
 	local rowH = fontHeight + gap
 	local rowW = gap + textW + cursorW + gap
 
-	-- When input is closed, output occupies the same row the input would use.
-	-- When input is open, output is suppressed (it was cleared on open).
+	-- Output renders as stacked rows growing upward from the input position,
+	-- capped so a long help listing never fills the screen. Line 1 is the
+	-- bottom row; each subsequent line sits one row above.
 	if hasOutput and not inputActive then
-		local outW = labelFont:getWidth(chatOutput) + gap * 2
-		local outY = love.graphics.getHeight() - offset - rowH
+		local outColor = chatOutputSuccess and goodColor or badColor
+		local maxLines = 10
+		local lines = chatOutputLines
+		if #lines > maxLines then
+			local trimmed = {}
+			for i = #lines - maxLines + 1, #lines do
+				trimmed[#trimmed + 1] = lines[i]
+			end
+			lines = trimmed
+		end
+		local outW = 0
+		for _, line in ipairs(lines) do
+			local w = labelFont:getWidth(line) + gap * 2
+			if w > outW then
+				outW = w
+			end
+		end
+		local baseY = love.graphics.getHeight() - offset - rowH * #lines
 		if bg then
 			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
-			love.graphics.rectangle("fill", offset, outY, outW, rowH)
+			love.graphics.rectangle("fill", offset, baseY, outW, rowH * #lines)
 		end
-		local outColor = chatOutputSuccess and goodColor or badColor
 		love.graphics.setColor(outColor[1], outColor[2], outColor[3], outColor[4])
 		love.graphics.setFont(labelFont)
-		pcall(love.graphics.print, chatOutput, offset + gap, outY + gap / 2)
+		for i, line in ipairs(lines) do
+			local ly = love.graphics.getHeight() - offset - rowH * (#lines - i + 1)
+			pcall(love.graphics.print, line, offset + gap, ly + gap / 2)
+		end
 	end
 
 	if inputActive then
