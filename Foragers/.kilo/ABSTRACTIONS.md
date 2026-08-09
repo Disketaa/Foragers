@@ -185,6 +185,17 @@ relevant section before touching that subsystem.
   system only gets timed if it calls its method through the module table — a module
   holding its update as a bare `local` is invisible. Only a method called as
   `Module.method(...)` is measured.
+- **A "hide everything" master switch must gate RENDERING, not mutate the panel
+  flags.** F1 is the `hud` master switch. Gizmo/profiler/chat render is gated through
+  `Debug.showing(group)` (= `enabled("hud") and enabled(group)`), so hiding the HUD
+  hides them by view without touching their `enabled` toggles. The earlier approach —
+  F1 writing `gizmo.enabled = false` / `hud.profiler.enabled = false` and snapshotting
+  the prior state to restore later — was buggy across restarts: quitting while hidden
+  persisted the derived `false` as if it were the user's real preference, so a later
+  F1-unhide had no snapshot to restore from. Keep transient view state out of persisted
+  flags; the panels' own toggles (F2/F3) already persist the true preference.
+- **`hud.chat.enabled` is deliberately excluded from `TOGGLE_PATHS`** so the console
+  never persists to `Options.txt` and always starts closed.
 
 ## Large-world performance / GC / streaming
 
