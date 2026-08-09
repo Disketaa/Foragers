@@ -19,9 +19,10 @@ return {
 			offsetX = 6,
 			offsetY = -3,
 			smoothnessX = 0.5,
-			smoothnessY = 0.2,
-			leanAngle = 45,
+			smoothnessY = 0.5,
+			leanAngle = -45,
 			leanThreshold = 0.1,
+			leanSmoothness = 0.5,
 		},
 
 		{

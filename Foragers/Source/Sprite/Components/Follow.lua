@@ -13,6 +13,7 @@ local Pivot = require("Source.Helpers.Pivot")
 ---@field followDelay number|nil Seconds to wait before starting follow (scatter first)
 ---@field leanAngle number Degrees to tilt (flip-aware, based on weapon pos vs target)
 ---@field leanThreshold number Min pixel-delta per frame to trigger lean (lower = more sensitive)
+---@field leanSmoothness number Seconds to ease lean angle (0 = instant; defaults to smoothnessX)
 ---@field type "follow"
 local Follow = {}
 Follow.__index = Follow
@@ -29,6 +30,7 @@ function Follow.new(data)
 		followDelay = data.followDelay or nil,
 		leanAngle = data.leanAngle or 0,
 		leanThreshold = data.leanThreshold or 0.5,
+		leanSmoothness = data.leanSmoothness,
 		accelerate = data.accelerate or 0,
 		rotate = data.rotate == true,
 		arrivedThreshold = data.arrivedThreshold or 3,
@@ -169,17 +171,14 @@ function Follow:update(dt)
 	local sy = (self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessY) / accelFactor
 	local easeX = Math.expSmooth(dt, sx)
 	local easeY = Math.expSmooth(dt, sy)
+	local leanEase = Math.expSmooth(dt, self.leanSmoothness or sx)
 
-	-- Lean only during regular character follow, not during deploy flight
-	if self._tempTarget then
-		self._currentAngle = 0
-	else
-		local dx = self.parent.x - (self._prevParentX or self.parent.x)
-		self._prevParentX = self.parent.x
-		local moving = math.abs(dx) > self.leanThreshold
-		local targetAngle = moving and (self.leanAngle * dir) or 0
-		self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * easeX
-	end
+	-- Lean toward travel direction; deploy flight moves too, so keep lean live there.
+	local dx = self.parent.x - (self._prevParentX or self.parent.x)
+	self._prevParentX = self.parent.x
+	local moving = math.abs(dx) > self.leanThreshold
+	local targetAngle = moving and (self.leanAngle * dir) or 0
+	self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * leanEase
 
 	self._followX = self._followX + (liveX - self._followX) * easeX
 	self._followY = self._followY + (liveY - self._followY) * easeY
