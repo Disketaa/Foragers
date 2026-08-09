@@ -25,7 +25,7 @@ end
 --- Normalize legacy string-format keys to the multi-input table format.
 --- Old: { up = "w" } → New: { up = { keyboard = { "w" } } }
 ---@param keys table<string, string|table>|nil
----@return table<string, table>|nil
+---@return table|nil
 local function normalizeKeys(keys)
 	if not keys then
 		return nil
@@ -45,7 +45,7 @@ end
 ---@param kbKeys string[]
 ---@return boolean
 local function isKeyboardDown(kbKeys)
-	return #kbKeys > 0 and love.keyboard.isDown(unpack(kbKeys))
+	return not not (#kbKeys > 0 and love.keyboard.isDown(unpack(kbKeys)))
 end
 
 --- Check if any gamepad button in the array is held down on the joystick.
@@ -53,7 +53,7 @@ end
 ---@param btnKeys string[]
 ---@return boolean
 local function isGamepadButtonDown(joystick, btnKeys)
-	return #btnKeys > 0 and joystick:isGamepadDown(unpack(btnKeys))
+	return not not (#btnKeys > 0 and joystick:isGamepadDown(unpack(btnKeys)))
 end
 
 --- Check if any gamepad axis in the array exceeds the deadzone in the given direction.

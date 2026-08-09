@@ -78,7 +78,7 @@ end
 function Collision:attach()
 	local function updateDebug()
 		local enabled = Debug.enabled("gizmo") and Debug.enabled("gizmo.collisions")
-		self.showDebugBoxes = enabled and not Debug.excluded("gizmo.collisions", self.parent.object)
+		self.showDebugBoxes = not not (enabled and not Debug.excluded("gizmo.collisions", self.parent.object))
 	end
 	updateDebug()
 	Debug.onChange(updateDebug)

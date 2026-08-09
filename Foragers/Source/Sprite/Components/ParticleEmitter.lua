@@ -367,7 +367,7 @@ function ParticleEmitter:update(dt)
 			if not self.parent then
 				shouldAccumulate = false
 			else
-				shouldAccumulate = self.parent.x ~= self._lastParentX or self.parent.y ~= self._lastParentY
+				shouldAccumulate = not not (self.parent.x ~= self._lastParentX or self.parent.y ~= self._lastParentY)
 				self._lastParentX = self.parent.x
 				self._lastParentY = self.parent.y
 			end

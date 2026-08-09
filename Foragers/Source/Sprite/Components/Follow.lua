@@ -205,7 +205,7 @@ function Follow:draw(x, y)
 		return
 	end
 	local parent = self.parent
-	if not parent.image then
+	if not parent or not parent.image then
 		return
 	end
 	local hadShader = parent.applyShader and parent:applyShader() or false
