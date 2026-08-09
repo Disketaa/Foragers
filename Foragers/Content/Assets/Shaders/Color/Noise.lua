@@ -8,7 +8,7 @@ return {
 		u_noise = 0,
 		u_noiseTime = 0,
 		u_noiseStrength = 0.1,
-		u_noiseRate = 60,
+		u_noiseRate = 120,
 		u_canvasScale = 1,
 		u_canvasOrigin = { 0, 0 },
 	},

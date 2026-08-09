@@ -117,7 +117,7 @@ local NOISE_FADE_DURATION = 7
 local NOISE_FADE_CURVE = "InOutCubic"
 -- After the reveal, wait DEATH_DARKEN_DELAY then fade the canvas to black via
 -- the Darken post-process shader over DEATH_DARKEN_DURATION.
-local DEATH_DARKEN_DELAY = 3
+local DEATH_DARKEN_DELAY = 5
 local DEATH_DARKEN_DURATION = 1
 local DEATH_DARKEN_CURVE = "InOutCubic"
 -- Opening fade: the canvas starts fully dark and reveals in from black.
