@@ -6,6 +6,7 @@ local Commands = {}
 
 local handlers = {}
 local descriptions = {}
+local subcommands = {} -- name -> array of sub-command names (sorted)
 
 --- Register a command handler.
 ---@param name string Invoked name (e.g. "xp"), no leading slash.
@@ -16,6 +17,17 @@ function Commands.register(name, fn, help)
 	descriptions[name] = help
 end
 
+--- Register a sub-command for completion (e.g. `world` → `clear`). Doesn't add a
+--- handler; the main command parses its own args at run time.
+---@param name string Main command name.
+---@param sub string Sub-command token.
+function Commands.addSubcommand(name, sub)
+	local list = subcommands[name] or {}
+	list[#list + 1] = sub
+	table.sort(list)
+	subcommands[name] = list
+end
+
 ---@return table Command names, alphabetically sorted.
 function Commands.list()
 	local names = {}
@@ -24,6 +36,33 @@ function Commands.list()
 	end
 	table.sort(names)
 	return names
+end
+
+--- Return tab-completion candidates for the token being typed. Completes command
+--- names before any space; after `cmd ` it completes that command's sub-commands.
+---@param text string Current chat input.
+---@return string base Immutable text kept before the inserted candidate.
+---@return table candidates Matched tokens, alphabetically sorted.
+function Commands.complete(text)
+	local cmd, rest = text:match("^(%S*)%s*(.*)$")
+	local trailingSpace = text:match("^.*%s$") ~= nil
+	local list = {}
+	if trailingSpace or rest ~= "" then
+		-- Completing a sub-command of `cmd`.
+		for _, sub in ipairs(subcommands[cmd] or {}) do
+			if sub:sub(1, #rest) == rest then
+				list[#list + 1] = sub
+			end
+		end
+		return cmd .. " ", list
+	end
+	-- Completing the command name.
+	for _, name in ipairs(Commands.list()) do
+		if name:sub(1, #cmd) == cmd then
+			list[#list + 1] = name
+		end
+	end
+	return "", list
 end
 
 --- Parse a signed amount arg. Accepts "+50" / "-50" / "50". Returns the integer
@@ -160,6 +199,8 @@ Commands.register("eat", function(_, ctx)
 	s:restoreSatiety(s.maxSatiety)
 	return "Satiety restored", true
 end, "Restore satiety to full")
+
+Commands.addSubcommand("world", "clear")
 
 Commands.register("world", function(args, ctx)
 	if args ~= "clear" then

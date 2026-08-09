@@ -581,6 +581,53 @@ local function commandsCtx()
 	}
 end
 
+-- Tab-completion cycle state. Stores the last completed input so a repeated Tab
+-- advances to the next candidate; a fresh edit resets the cycle. `completionActive`
+-- distinguishes "mid-cycle" (cycle the stored list) from a new completion (re-run
+-- Commands.complete on the current text, which narrows it).
+local completionBase = nil
+local completionCandidates = {}
+local completionIndex = 0
+local completionActive = false
+
+local function resetChatCompletion()
+	completionBase = nil
+	completionCandidates = {}
+	completionIndex = 0
+	completionActive = false
+end
+
+-- Tab-complete the current chat input. First press fills the first candidate;
+-- subsequent presses cycle through the remaining ones. A fresh edit (different
+-- base/candidates) restarts from the first candidate. No-op with no matches.
+-- `backwards` (shift+tab) cycles in reverse.
+local function handleChatTab(backwards)
+	if not completionActive then
+		local base, candidates = Commands.complete(Debug.chatText())
+		if #candidates == 0 then
+			return
+		end
+		completionBase = base
+		completionCandidates = candidates
+		completionActive = true
+		completionIndex = backwards and #candidates or 1
+	else
+		local n = #completionCandidates
+		if n == 0 then
+			return
+		end
+		if backwards then
+			completionIndex = completionIndex - 1
+			if completionIndex < 1 then
+				completionIndex = n
+			end
+		else
+			completionIndex = completionIndex % n + 1
+		end
+	end
+	Debug.setChatText(completionBase .. completionCandidates[completionIndex])
+end
+
 -- Unzoomed canvas blit origin (finalX/finalY in Canvas:draw). Shared by the zoom
 -- coordinate transforms so mouse, gizmos and the pivot all agree with the render.
 local function canvasBlitOrigin()
@@ -894,6 +941,7 @@ function love.keypressed(key, _, _)
 			return
 		elseif key == "backspace" then
 			Debug.setChatText(Input.removeLast(Debug.chatText()))
+			resetChatCompletion()
 			chatRepeatKey = "backspace"
 			chatRepeatTimer = 0
 			chatRepeatRepeating = false
@@ -903,6 +951,7 @@ function love.keypressed(key, _, _)
 			return
 		elseif key == "up" then
 			Debug.chatHistoryUp()
+			resetChatCompletion()
 			chatRepeatKey = "up"
 			chatRepeatTimer = 0
 			chatRepeatRepeating = false
@@ -912,12 +961,17 @@ function love.keypressed(key, _, _)
 			return
 		elseif key == "down" then
 			Debug.chatHistoryDown()
+			resetChatCompletion()
 			chatRepeatKey = "down"
 			chatRepeatTimer = 0
 			chatRepeatRepeating = false
 			chatRepeatAction = function()
 				Debug.chatHistoryDown()
 			end
+			return
+		elseif key == "tab" then
+			local backwards = love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
+			handleChatTab(backwards)
 			return
 		end
 		-- Chat consumes every key while open; never fall through to gameplay
@@ -951,6 +1005,7 @@ end
 function love.textinput(text)
 	if Debug.chatActive() then
 		Debug.setChatText(Debug.chatText() .. text)
+		resetChatCompletion()
 	end
 end
 
@@ -1249,13 +1304,13 @@ function love.update(dt)
 		local interval = Debug.chatRepeatInterval()
 		if not chatRepeatRepeating then
 			if chatRepeatTimer >= delay then
-				chatRepeatAction()
+				if chatRepeatAction then chatRepeatAction() end
 				chatRepeatTimer = 0
 				chatRepeatRepeating = true
 			end
 		else
 			if chatRepeatTimer >= interval then
-				chatRepeatAction()
+				if chatRepeatAction then chatRepeatAction() end
 				chatRepeatTimer = 0
 			end
 		end

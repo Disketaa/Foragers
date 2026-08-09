@@ -470,6 +470,11 @@ local function setGroupEnabled(path, value)
 	end
 	if path == "hud.chat" then
 		Input.setCaptured(on)
+		-- Reopening the chat erases any lingering output (its timer may still be
+		-- counting down from a previous command).
+		if on then
+			chatOutputLines = {}
+		end
 	end
 	return true
 end
