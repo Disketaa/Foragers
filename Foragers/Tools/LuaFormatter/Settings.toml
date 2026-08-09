@@ -11,7 +11,6 @@ Modules.AddBlankLines.enabled = true
 
 Modules.WrapTables.enabled = true
 Modules.WrapTables.include_folders = ["Content/"]
-Modules.WrapTables.column_limit = 120
 
 # A param lands in the group whose tag shares the most words with its key
 # (camelCase-aware: offsetX -> offset,x); ties go to the earlier group.

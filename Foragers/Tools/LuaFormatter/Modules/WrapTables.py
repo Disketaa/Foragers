@@ -56,7 +56,10 @@ def _break_table(text: str, open_idx: int, close_idx: int) -> str:
 
 def apply(text: str, config: dict) -> str:
     modules = config.get("Modules", {})
-    limit = (modules.get("WrapTables") or {}).get("column_limit", 120)
+    limit = (modules.get("WrapTables") or {}).get("column_limit")
+    if limit is None:
+        # No column_limit set — never break a table, regardless of length.
+        return text
 
     while True:
         candidates = []
