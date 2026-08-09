@@ -77,18 +77,21 @@ local function ctxOf(ctx)
 	return nil
 end
 
+---@param ctx table
+---@return table|nil s PlayerStats, or nil with `err` set when absent.
+---@return string|nil err
 local function needStats(ctx)
 	local s = ctxOf(ctx)
 	if not s then
-		return nil, false, "No player"
+		return nil, "No player"
 	end
-	return s, true
+	return s, nil
 end
 
 Commands.register("xp", function(args, ctx)
-	local s, ok = needStats(ctx)
-	if not ok then
-		return s, false
+	local s, err = needStats(ctx)
+	if not s then
+		return err, false
 	end
 	local amount, op = Commands.parseAmount(args)
 	if not amount then
@@ -106,9 +109,9 @@ Commands.register("xp", function(args, ctx)
 end, "Set, add, or remove XP")
 
 Commands.register("lvl", function(args, ctx)
-	local s, ok = needStats(ctx)
-	if not ok then
-		return s, false
+	local s, err = needStats(ctx)
+	if not s then
+		return err, false
 	end
 	if args == "" then
 		s:addLevels(1)
@@ -130,9 +133,9 @@ Commands.register("lvl", function(args, ctx)
 end, "Set, add, or remove levels")
 
 Commands.register("satiety", function(args, ctx)
-	local s, ok = needStats(ctx)
-	if not ok then
-		return s, false
+	local s, err = needStats(ctx)
+	if not s then
+		return err, false
 	end
 	local amount, op = Commands.parseAmount(args)
 	if not amount then
@@ -150,9 +153,9 @@ Commands.register("satiety", function(args, ctx)
 end, "Set, add, or remove satiety")
 
 Commands.register("eat", function(_, ctx)
-	local s, ok = needStats(ctx)
-	if not ok then
-		return s, false
+	local s, err = needStats(ctx)
+	if not s then
+		return err, false
 	end
 	s:restoreSatiety(s.maxSatiety)
 	return "Satiety restored", true

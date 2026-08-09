@@ -246,9 +246,11 @@ end
 -- in the draw hot path. Cache the resolved table so the walk happens once.
 local resolved = {}
 
---- Walk a dotted path into the data (e.g. "hud.fpsGraph"); nil if absent.
+--- Resolve a dotted path into the data (e.g. "hud.fpsGraph"); nil if absent.
+--- Typed `any` so accessors that read a known field (e.g. a number or string)
+--- can declare their own return type instead of inheriting `table|nil`.
 ---@param path string
----@return table|nil
+---@return any
 local function lookup(path)
 	local cached = resolved[path]
 	if cached ~= nil then
@@ -315,7 +317,7 @@ end
 ---@param group string
 ---@return boolean
 function Debug.showing(group)
-	return Debug.enabled("hud") and Debug.enabled(group)
+	return not not (Debug.enabled("hud") and Debug.enabled(group))
 end
 
 ---@return boolean Whether the top-level `debug` master switch is on.
@@ -391,24 +393,24 @@ end
 
 ---@return number
 function Debug.chatRepeatDelay()
-	return lookup("hud.chat.repeatDelay")
+	return (lookup("hud.chat.repeatDelay")) --[[@as number]]
 end
 
 ---@return number
 function Debug.chatRepeatInterval()
-	return lookup("hud.chat.repeatInterval")
+	return (lookup("hud.chat.repeatInterval")) --[[@as number]]
 end
 
 ---@return string|nil Path of the one-shot sound played when a command is submitted.
 function Debug.chatEnterSound()
-	return lookup("hud.chat.enterSound")
+	return (lookup("hud.chat.enterSound")) --[[@as string|nil]]
 end
 
 -- Command history ------------------------------------------------------------
 
 ---@return number Max persisted history entries (data `hud.chat.historyMax`).
 function Debug.chatHistoryMax()
-	return lookup("hud.chat.historyMax") or 10
+	return (lookup("hud.chat.historyMax")) --[[@as number]] or 10
 end
 
 ---@param text string
