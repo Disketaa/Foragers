@@ -237,7 +237,7 @@ end
 local function timeIt(label, fn)
 	local t0 = love.timer.getTime()
 	local result = fn()
-	print(string.format("[Load] %-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000))
+	print(string.format("🚩 %-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000))
 	return result
 end
 
@@ -500,7 +500,7 @@ function initGame()
 		end, 5)
 	end
 
-	print(string.format("[Load] total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000))
+	print(string.format("🚩 total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000))
 end
 
 function love.resize(w, h)
@@ -879,11 +879,12 @@ function love.keypressed(key, _, _)
 		elseif key == "return" or key == "kpenter" then
 			local text = Debug.chatText()
 			if text ~= "" then
-				local message, success = Commands.execute(text, commandsCtx())
-				Debug.setChatOutput(message, success)
-				Debug.pushChatHistory(text)
-				Debug.setChatText("")
-				Sound.play(Debug.chatEnterSound())
+			local message, success = Commands.execute(text, commandsCtx())
+			Debug.setChatOutput(message, success)
+			print((success and "✅" or "⚠️") .. " " .. text .. " — " .. message)
+			Debug.pushChatHistory(text)
+			Debug.setChatText("")
+			Sound.play(Debug.chatEnterSound())
 			end
 			Debug.setChatActive(false)
 			return

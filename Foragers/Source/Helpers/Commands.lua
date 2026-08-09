@@ -115,6 +115,26 @@ Commands.register("lvl", function(args, ctx)
 	return "Level set to " .. amount, true
 end)
 
+Commands.register("satiety", function(args, ctx)
+	local s, ok = needStats(ctx)
+	if not ok then
+		return s, false
+	end
+	local amount, op = Commands.parseAmount(args)
+	if not amount then
+		return 'Usage: satiety +N | satiety -N | satiety N', false
+	end
+	if op == "add" then
+		s:restoreSatiety(amount)
+		return "+" .. amount .. " Satiety", true
+	elseif op == "sub" then
+		s:consumeSatiety(amount)
+		return "-" .. amount .. " Satiety", true
+	end
+	s:setSatiety(amount)
+	return "Satiety set to " .. amount, true
+end)
+
 Commands.register("eat", function(_, ctx)
 	local s, ok = needStats(ctx)
 	if not ok then

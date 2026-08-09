@@ -122,16 +122,34 @@ function PlayerStats:subtractExperience(amount)
 	if self.dead then
 		return
 	end
-	self.experience = math.max(0, self.experience - amount)
-	self:_emitStats("experience", self.experience, self:xpForNextLevel())
+	-- Rebuild total earned (thresholds for all completed levels + current
+	-- progress), subtract, then recompute level — mirrors setExperience so a
+	-- `-N` on a high level actually drops levels.
+	local total = 0
+	for lv = 1, self.level - 1 do
+		total = total + math.floor(self.xpCurve.base * self.xpCurve.growth ^ (lv - 1))
+	end
+	total = total + self.experience
+	self:setExperience(math.max(0, total - amount))
 end
 
+--- Set total XP and derive the level it maps to (same curve as addExperience).
+--- The stored `experience` is progress toward the next level; `value` is treated
+--- as total earned so the level is recomputed from the cumulative thresholds.
 ---@param value number
 function PlayerStats:setExperience(value)
 	if self.dead then
 		return
 	end
-	self.experience = math.max(0, value)
+	local remaining = math.max(0, value)
+	-- Recompute level from the cumulative thresholds, as addExperience does for
+	-- incremental grants. `self.level` must advance so xpForNextLevel() moves too.
+	self.level = 1
+	while remaining >= self:xpForNextLevel() do
+		remaining = remaining - self:xpForNextLevel()
+		self.level = self.level + 1
+	end
+	self.experience = remaining
 	self:_emitStats("experience", self.experience, self:xpForNextLevel())
 end
 
@@ -213,6 +231,24 @@ function PlayerStats:restoreSatiety(amount)
 		self._warned = 0
 	end
 	self:_emitStats("satiety", self.satiety, self.maxSatiety)
+end
+
+---@param value number
+function PlayerStats:setSatiety(value)
+	if self.dead then
+		return
+	end
+	self.satiety = math.max(0, math.min(self.maxSatiety, value))
+	if self.satiety >= (self.lowSatietyPercent or 33) / 100 * self.maxSatiety then
+		self._warned = 0
+	end
+	self:_emitStats("satiety", self.satiety, self.maxSatiety)
+	if self.satiety <= 0 then
+		self.dead = true
+		if self.parent then
+			self.parent:emit(Events.DEATH)
+		end
+	end
 end
 
 return PlayerStats

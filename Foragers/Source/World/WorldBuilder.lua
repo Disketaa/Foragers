@@ -273,10 +273,10 @@ end
 local function build(worldData, spawnCallback, playerSprite)
 	local t0 = love.timer.getTime()
 	local terrainPlan = buildTerrainPlan(worldData, spawnCallback, playerSprite)
-	print(string.format("[Load]   buildTerrain: %d tiles in %.1fms", #terrainPlan, (love.timer.getTime() - t0) * 1000))
+	print(string.format("🚩   buildTerrain: %d tiles in %.1fms", #terrainPlan, (love.timer.getTime() - t0) * 1000))
 	local t1 = love.timer.getTime()
 	local propPlan = buildPropPlan(worldData, playerSprite)
-	print(string.format("[Load]   propPlan: %d props in %.1fms", #propPlan, (love.timer.getTime() - t1) * 1000))
+	print(string.format("🚩   propPlan: %d props in %.1fms", #propPlan, (love.timer.getTime() - t1) * 1000))
 	buildBorder()
 	return { terrainPlan = terrainPlan, propPlan = propPlan }
 end
