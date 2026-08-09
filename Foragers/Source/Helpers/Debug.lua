@@ -228,17 +228,39 @@ local function hudFonts(s, scale)
 	return labelFont, valueFont, math.max(labelFont:getHeight(), valueFont:getHeight())
 end
 
+--- Resolve the row offset and gap, preferring the sub-group (`g`) over the base
+--- `hud` group. All three draw panels (chat, profiler, HUD) share this fallback.
+---@param g table Sub-group settings (e.g. `hud.chat`).
+---@param s table Base `hud` settings.
+---@param scale number
+---@return number offset, number gap
+local function spacing(g, s, scale)
+	local offset = (g.padding ~= nil and g.padding or s.padding or 4) * scale
+	local gap = (g.gap ~= nil and g.gap or s.gap ~= nil and s.gap or offset) * scale
+	return offset, gap
+end
+
+-- Resolve cached by path: every accessor (settings, enabled, chat*) calls this
+-- each frame, and re-walking the dotted path via gmatch every time is wasteful
+-- in the draw hot path. Cache the resolved table so the walk happens once.
+local resolved = {}
+
 --- Walk a dotted path into the data (e.g. "hud.fpsGraph"); nil if absent.
 ---@param path string
 ---@return table|nil
 local function lookup(path)
+	local cached = resolved[path]
+	if cached ~= nil then
+		return cached
+	end
 	local t = data
 	for part in (path .. ""):gmatch("[^.]+") do
 		t = t[part]
 		if t == nil then
-			return nil
+			break
 		end
 	end
+	resolved[path] = t
 	return t
 end
 
@@ -352,11 +374,6 @@ function Debug.chatHistoryMax()
 	return lookup("hud.chat.historyMax") or 10
 end
 
----@return number Max persisted history entries (data `hud.chat.historyMax`).
-function Debug.chatHistoryMax()
-	return lookup("hud.chat.historyMax") or 10
-end
-
 ---@param text string
 function Debug.pushChatHistory(text)
 	ChatHistory.push(text, Debug.chatHistoryMax())
@@ -395,6 +412,29 @@ function Debug.set(key, value)
 	Options.save()
 end
 
+--- Set a nested group's `enabled` flag and apply its runtime side effects
+--- (profiler collect switch, input capture). Shared by toggle/applyFlags so the
+--- side-effect mapping lives in one place. Returns false if the path is absent
+--- or not a group table.
+---@param path string Dotted group path, e.g. "hud.profiler".
+---@param value boolean
+---@return boolean
+local function setGroupEnabled(path, value)
+	local on = value == true
+	local t = lookup(path)
+	if type(t) ~= "table" then
+		return false
+	end
+	t.enabled = on
+	if path == "hud.profiler" then
+		Profiler.setEnabled(on)
+	end
+	if path == "hud.chat" then
+		Input.setCaptured(on)
+	end
+	return true
+end
+
 --- Flip a nested group's `enabled` flag at runtime and notify subscribers.
 --- Unlike `Debug.set` (top-level keys only), this walks a dotted path so the
 --- `gizmo`, `hud` and `hud.profiler` groups toggle independently. Subscribers
@@ -403,24 +443,12 @@ end
 ---@param path string Dotted group path, e.g. "gizmo" or "hud.profiler".
 ---@return boolean New enabled state.
 function Debug.toggle(path)
-	local t = data
-	for part in (path .. ""):gmatch("[^.]+") do
-		t = t[part]
-		if t == nil then
-			return false
-		end
-	end
+	local t = lookup(path)
 	if type(t) ~= "table" then
 		return false
 	end
 	local newVal = not (t.enabled == true)
-	t.enabled = newVal
-	if path == "hud.profiler" then
-		Profiler.setEnabled(newVal)
-	end
-	if path == "hud.chat" then
-		Input.setCaptured(newVal)
-	end
+	setGroupEnabled(path, newVal)
 	emitter:emit("flags", path, newVal)
 	Options.save()
 	return newVal
@@ -447,20 +475,7 @@ function Debug.applyFlags(flags)
 		if path == "debug" then
 			data.debug = val == true
 		else
-			local t = data
-			for part in (path .. ""):gmatch("[^.]+") do
-				t = t[part]
-				if t == nil then
-					t = nil
-					break
-				end
-			end
-			if type(t) == "table" then
-				t.enabled = val == true
-			end
-			if path == "hud.profiler" then
-				Profiler.setEnabled(val == true)
-			end
+			setGroupEnabled(path, val)
 		end
 	end
 end
@@ -539,21 +554,18 @@ local function drawProfiler(scale)
 
 	local size = math.max(4, math.floor((s.size or 8) * scale))
 	local labelFont, valueFont, fontHeight = hudFonts(s, scale)
-	local offset = (p.padding ~= nil and p.padding or s.padding or 4) * scale
-	local rowGap = (p.gap ~= nil and p.gap or s.gap ~= nil and s.gap or offset) * scale
+	local offset, rowGap = spacing(p, s, scale)
 	local colGap = math.max(2, size) * scale
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
 	local valueColor = s.color or { 1, 1, 1, 1 }
 	local bg = p.backgroundColor or s.backgroundColor
 
-	local rows = {}
-	for i = 1, math.min(limit, #entries) do
-		table.insert(rows, entries[i])
-	end
+	local count = math.min(limit, #entries)
 
 	local nameMax = math.max(3, math.floor(p.nameMaxChars or 18))
 	local digits = math.max(0, math.floor(p.digits or 4))
-	for _, e in ipairs(rows) do
+	for i = 1, count do
+		local e = entries[i]
 		-- Truncate into a local display name; never mutate the shared entry
 		-- name so the snapshot trace reads the full scope names.
 		local disp = e.name
@@ -596,7 +608,8 @@ local function drawProfiler(scale)
 
 	local nameCol = 0
 	local pctCol = 0
-	for _, e in ipairs(rows) do
+	for i = 1, count do
+		local e = entries[i]
 		nameCol = math.max(nameCol, labelFont:getWidth(e.module .. (e.method or "")))
 		pctCol = math.max(pctCol, valueFont:getWidth(fmtPct(e.ms) .. "%"))
 	end
@@ -605,7 +618,7 @@ local function drawProfiler(scale)
 	local msCol = valueFont:getWidth(string.rep("9", timeChars))
 
 	local rowW = nameCol + colGap + msCol + colGap + pctCol
-	local totalHeight = fontHeight + #rows * (fontHeight + rowGap)
+	local totalHeight = fontHeight + count * (fontHeight + rowGap)
 	local topY = (love.graphics.getHeight() - totalHeight) / 2
 
 	local x1 = offset
@@ -646,7 +659,8 @@ local function drawProfiler(scale)
 		{ { "%", labelColor, valueFont } },
 	}
 	drawRow(header)
-	for _, e in ipairs(rows) do
+	for i = 1, count do
+		local e = entries[i]
 		local num, unit = fmtMs(e.ms)
 		local nameSegs = { { e.module, valueColor, labelFont } }
 		if e.method then
@@ -678,8 +692,7 @@ function Debug.drawChat(scale)
 	end
 
 	local labelFont, _, fontHeight = hudFonts(s, scale)
-	local offset = (cs.padding ~= nil and cs.padding or s.padding or 4) * scale
-	local gap = (cs.gap ~= nil and cs.gap or s.gap ~= nil and s.gap or offset) * scale
+	local offset, gap = spacing(cs, s, scale)
 	local valueColor = s.color or { 1, 1, 1, 1 }
 	local badColor = s.badColor or { 1, 0, 0, 1 }
 	local bg = cs.backgroundColor or s.backgroundColor
@@ -768,8 +781,7 @@ function Debug.draw(objectCount, scale)
 
 	-- `padding` is a single group offset: the whole readout shifts right/down
 	-- by it. `gap` alone spaces the rows inside the block.
-	local offset = (s.padding or 4) * scale
-	local gap = (s.gap ~= nil and s.gap or offset) * scale
+	local offset, gap = spacing(s, s, scale)
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
 	local valueColor = s.color or { 1, 1, 1, 1 }
 	local goodColor = s.goodColor or { 0, 1, 0, 1 }
@@ -858,7 +870,7 @@ function Debug.draw(objectCount, scale)
 				-- target (reading jitter) before marking a segment as bad.
 				local threshold = target - (gs.tolerance or 0)
 				local gy = r.y + (fontHeight - gh) / 2
-				local spacing = (gs.width or 60) * scale / (historyCount - 1)
+				local step = (gs.width or 60) * scale / (historyCount - 1)
 				local gx = offset + graphX
 				-- Walk the ring oldest→newest (history[historyIndex] is the newest).
 				local first = (historyIndex - historyCount) % HISTORY_MAX + 1
@@ -877,7 +889,7 @@ function Debug.draw(objectCount, scale)
 					love.graphics.setColor(c[1], c[2], c[3], c[4])
 					local h1 = math.min(gh, (v1 / target) * gh)
 					local h2 = math.min(gh, (v2 / target) * gh)
-					love.graphics.line(gx + (k - 1) * spacing, gy + gh - h1, gx + k * spacing, gy + gh - h2)
+					love.graphics.line(gx + (k - 1) * step, gy + gh - h1, gx + k * step, gy + gh - h2)
 				end
 			end
 		elseif r.kind == "count" then
