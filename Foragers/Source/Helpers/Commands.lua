@@ -52,19 +52,20 @@ end
 --- Execute a chat line ("xp +50"). Returns `(message, success)`.
 ---@param text string Full input, e.g. "xp +50".
 ---@param ctx table Game-state accessors.
----@return string message
+---@return string|table message (string, or table of styled segment-lines for help)
 ---@return boolean success
+---@return number|nil hold Optional output hide-delay multiplier (help uses 10).
 function Commands.execute(text, ctx)
 	local name, args = text:match("^%s*(%S+)%s*(.*)$")
 	local fn = handlers[name]
 	if not fn then
 		return 'Unknown command: "' .. text .. '"', false
 	end
-	local ok, message = pcall(fn, args or "", ctx)
+	local ok, message, success, hold = pcall(fn, args or "", ctx)
 	if not ok then
 		return "Command error: " .. tostring(message), false
 	end
-	return message, true
+	return message, success == true, hold
 end
 
 -- Built-in commands; each uses `ctx` accessors so this file never touches game
@@ -175,26 +176,28 @@ Commands.register("restart", function(_, ctx)
 	return "Restarting", true
 end, "Restart the game")
 
-Commands.register("death", function(_, ctx)
-	if ctx.triggerDeath then
-		ctx.triggerDeath()
-	end
-	return "Death", true
-end, "Trigger the death cycle")
-
 local PAGE_SIZE = 10
 
 Commands.register("help", function(args)
 	local names = Commands.list()
 	local totalPages = math.max(1, math.ceil(#names / PAGE_SIZE))
 	local page = math.max(1, math.min(totalPages, tonumber(args or 1) or 1))
+	-- Each command line: green name + dim description. Footer is a dim label
+	-- preceded by a blank line. Returns styled segment-lines and a 10x hide delay.
 	local lines = {}
 	for i = (page - 1) * PAGE_SIZE + 1, math.min(page * PAGE_SIZE, #names) do
 		local name = names[i]
-		lines[#lines + 1] = name .. " — " .. (descriptions[name] or "")
+	lines[#lines + 1] = {
+		{ name, "name" },
+		{ " — " .. (descriptions[name] or ""), "label" },
+	}
 	end
-	lines[#lines + 1] = "Page " .. page .. "/" .. totalPages .. " (help N for more)"
-	return table.concat(lines, "\n"), true
+	lines[#lines + 1] = {}
+	lines[#lines + 1] = {
+		{ "Page " .. page .. "/" .. totalPages, "value" },
+		{ " (help N for more)", "label" },
+	}
+	return lines, true, 10
 end, "List commands (help 2 for next page)")
 
 return Commands

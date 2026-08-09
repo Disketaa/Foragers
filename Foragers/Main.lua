@@ -577,11 +577,6 @@ local function commandsCtx()
 		restart = function()
 			resetGame()
 		end,
-		triggerDeath = function()
-			if playerSprite then
-				playerSprite:emit(Events.DEATH)
-			end
-		end,
 		clearProps = clearProps,
 	}
 end
@@ -879,9 +874,18 @@ function love.keypressed(key, _, _)
 		elseif key == "return" or key == "kpenter" then
 			local text = Debug.chatText()
 			if text ~= "" then
-			local message, success = Commands.execute(text, commandsCtx())
-			Debug.setChatOutput(message, success)
-			print((success and "✅" or "⚠️") .. " " .. text .. " — " .. message)
+			local message, success, hold = Commands.execute(text, commandsCtx())
+			Debug.setChatOutput(message, success, hold)
+			local marker = success and "✅" or "⚠️"
+			local output = Debug.chatOutput()
+			if output:find("\n") then
+				-- Multi-line output: one marker per rendered line, like the screen.
+				for line in output:gmatch("[^\n]+") do
+					print(marker .. " " .. text .. " — " .. line)
+				end
+			else
+				print(marker .. " " .. text .. " — " .. output)
+			end
 			Debug.pushChatHistory(text)
 			Debug.setChatText("")
 			Sound.play(Debug.chatEnterSound())

@@ -276,8 +276,8 @@ The `hud.chat` sub-group renders a bottom-left console: a text-input row with a 
 
 - **Submit:** Enter with text sets the `Unknown command` output, pushes the input into history, plays `enterSound` (via `Sound.play`), clears the field and closes. Enter with empty text just closes.
 - **Close:** Enter (empty) or Escape.
-- **History:** Up/Down walk the persisted command history (`Source/Helpers/ChatHistory.lua`, file `chat_history.txt`, newest last, capped by `historyMax`). First Up-press saves the current draft and jumps to the newest entry; Down past the newest restores the draft. Backspace + Up/Down auto-repeat after `repeatDelay` then every `repeatInterval` (driven manually in `Main.lua`, not `setKeyRepeat`, which would also repeat the HUD toggles).
-- **Layout:** output reuses the input row when the chat is closed; reopening clears the output immediately (no multiline).
+- **History:** Up/Down walk the persisted command history (`Source/Helpers/ChatHistory.lua`, file `ChatHistory.txt`, newest last, capped by `historyMax`). First Up-press saves the current draft and jumps to the newest entry; Down past the newest restores the draft. Backspace + Up/Down auto-repeat after `repeatDelay` then every `repeatInterval` (driven manually in `Main.lua`, not `setKeyRepeat`, which would also repeat the HUD toggles).
+- **Layout:** output renders as stacked rows (max 10) growing upward from the input position; reopening clears the output immediately. The `help` command returns styled segment-lines (command name in white, description dimmed, page footer in green+dimmed) and a 10x output hide delay.
 - **Persisted toggles:** `hud.chat.enabled` is deliberately NOT in `TOGGLE_PATHS`, so chat always starts closed and never gets written to `Options.txt`.
 
 ## spawnOn field (particle_emitter)

@@ -347,23 +347,42 @@ function Debug.chatText()
 	return chatText
 end
 
-function Debug.setChatOutput(text, success)
-	local value = text or ""
-	chatOutputLines = {}
-	if value ~= "" then
-		for line in value:gmatch("[^\n]+") do
-			chatOutputLines[#chatOutputLines + 1] = line
-		end
+--- Normalize an output message into lines of styled segments. A string splits
+--- on newlines into single `"value"` segments; a table is used as-is (each entry
+--- is a line: an array of `{ text, style }`, style `"value"` or `"label"`).
+---@param text string|table
+---@return table lines
+local function normalizeOutput(text)
+	if type(text) == "table" then
+		return text
 	end
+	local lines = {}
+	for line in (text or ""):gmatch("[^\n]+") do
+		lines[#lines + 1] = { { line, "value" } }
+	end
+	return lines
+end
+
+function Debug.setChatOutput(text, success, timeoutMult)
+	chatOutputLines = normalizeOutput(text)
 	chatOutputSuccess = success == true
 	if #chatOutputLines > 0 then
-		chatOutputTimer = (lookup("hud.chat.outputTimeout") or 3)
+		local base = lookup("hud.chat.outputTimeout") or 3
+		chatOutputTimer = base * (timeoutMult or 1)
 	end
 end
 
 ---@return string Full output joined by newlines (single-line callers still work).
 function Debug.chatOutput()
-	return table.concat(chatOutputLines, "\n")
+	local out = {}
+	for _, line in ipairs(chatOutputLines) do
+		local text = ""
+		for _, seg in ipairs(line) do
+			text = text .. seg[1]
+		end
+		out[#out + 1] = text
+	end
+	return table.concat(out, "\n")
 end
 
 function Debug.setChatText(text)
@@ -733,7 +752,9 @@ function Debug.drawChat(scale)
 
 	-- Output renders as stacked rows growing upward from the input position,
 	-- capped so a long help listing never fills the screen. Line 1 is the
-	-- bottom row; each subsequent line sits one row above.
+	-- bottom row; each subsequent line sits one row above. Each line is a list
+	-- of styled segments: "value" uses the success/error color, "label" the dim
+	-- label color (e.g. a help command name vs its description).
 	if hasOutput and not inputActive then
 		local outColor = chatOutputSuccess and goodColor or badColor
 		local maxLines = 10
@@ -747,7 +768,10 @@ function Debug.drawChat(scale)
 		end
 		local outW = 0
 		for _, line in ipairs(lines) do
-			local w = labelFont:getWidth(line) + gap * 2
+			local w = gap * 2
+			for _, seg in ipairs(line) do
+				w = w + labelFont:getWidth(seg[1])
+			end
 			if w > outW then
 				outW = w
 			end
@@ -757,11 +781,16 @@ function Debug.drawChat(scale)
 			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
 			love.graphics.rectangle("fill", offset, baseY, outW, rowH * #lines)
 		end
-		love.graphics.setColor(outColor[1], outColor[2], outColor[3], outColor[4])
 		love.graphics.setFont(labelFont)
 		for i, line in ipairs(lines) do
 			local ly = love.graphics.getHeight() - offset - rowH * (#lines - i + 1)
-			pcall(love.graphics.print, line, offset + gap, ly + gap / 2)
+			local x = offset + gap
+			for _, seg in ipairs(line) do
+				local c = seg[2] == "name" and valueColor or (seg[2] == "label" and labelColor or outColor)
+				love.graphics.setColor(c[1], c[2], c[3], c[4])
+				love.graphics.print(seg[1], x, ly + gap / 2)
+				x = x + labelFont:getWidth(seg[1])
+			end
 		end
 	end
 

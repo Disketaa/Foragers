@@ -1,10 +1,10 @@
---- Chat command history persisted to `chat_history.txt` (one entry per line,
+--- Chat command history persisted to `ChatHistory.txt` (one entry per line,
 --- newest last) with cursor-based up/down navigation for re-typing commands.
 --- Decoupled from Debug: callers pass the current input text and max cap rather
 --- than the module reading chat state, so any text-input surface can reuse it.
 local ChatHistory = {}
 
-local HISTORY_FILE = "chat_history.txt"
+local HISTORY_FILE = "ChatHistory.txt"
 
 -- `pos` is 0 while free typing; up/down walk `entries` and return `draft` (the
 -- text captured before the first up-press) when moving past the newest entry.
