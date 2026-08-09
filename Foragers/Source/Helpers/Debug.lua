@@ -308,6 +308,15 @@ function Debug.settings(group)
 	return t
 end
 
+--- Whether a group's overlay should render. Gates on the `hud` master switch so
+--- F1 hides gizmo/profiler/chat by view, not by mutating their flags — leaving
+--- each panel's persisted toggle as the true user preference.
+---@param group string
+---@return boolean
+function Debug.showing(group)
+	return Debug.enabled("hud") and Debug.enabled(group)
+end
+
 ---@return boolean Whether the top-level `debug` master switch is on.
 function Debug.isEnabled()
 	return data.debug == true
@@ -539,7 +548,7 @@ end
 --- rendering as the top-left HUD. `profiler` group adds only `enabled`/`limit`.
 ---@param scale number
 local function drawProfiler(scale)
-	if not Profiler.enabled() then
+	if not Profiler.enabled() or not Debug.enabled("hud") then
 		return
 	end
 	local entries = Profiler.entries()

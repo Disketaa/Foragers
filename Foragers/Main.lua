@@ -712,7 +712,7 @@ function love.draw()
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
 	-- its outline. Rects + fills are tagged by group so Gizmo can style each.
-	if Debug.enabled("gizmo") and Debug.enabled("gizmo.boundaries") then
+	if Debug.showing("gizmo") and Debug.enabled("gizmo.boundaries") then
 		for _, entry in ipairs(objects) do
 			local s = entry.instance
 			if s then
@@ -729,7 +729,7 @@ function love.draw()
 	end
 
 	-- Pivot overlay: solid square centered on each sprite's pivot (sprite.x/y).
-	if Debug.enabled("gizmo") and Debug.enabled("gizmo.pivots") then
+	if Debug.showing("gizmo") and Debug.enabled("gizmo.pivots") then
 		local psize = Debug.settings("gizmo.pivots").size or 5
 		for _, entry in ipairs(objects) do
 			local s = entry.instance
@@ -742,7 +742,7 @@ function love.draw()
 	-- Tile mesh overlay: merged terrain colliders (row-run AABBs from
 	-- WorldBuilder) so you can verify the collision mesh covers exactly the
 	-- active tiles with no gaps or over-reach.
-	if Debug.enabled("gizmo") and Debug.enabled("gizmo.tileMesh") then
+	if Debug.showing("gizmo") and Debug.enabled("gizmo.tileMesh") then
 		for _, r in ipairs(Collision.getTerrainColliders()) do
 			Gizmo.fillRect("tileMesh", r.x, r.y, r.w, r.h)
 			Gizmo.rect("tileMesh", r.x, r.y, r.w, r.h)
@@ -750,7 +750,7 @@ function love.draw()
 	end
 
 	-- Gizmo overlay: native-resolution debug shapes, not scaled by the world canvas.
-	if Debug.enabled("gizmo") then
+	if Debug.showing("gizmo") then
 		local groups = {}
 		for _, name in ipairs({ "collisions", "boundaries", "pivots", "tileMesh" }) do
 			if Debug.enabled("gizmo." .. name) then
