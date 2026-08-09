@@ -765,9 +765,7 @@ function love.draw()
 	-- saturation / contrast back to normal while the HUD remains on screen. The
 	-- Loading sprite is a uiSprite with alpha 0 by default, so it only appears
 	-- via the hold-to-restart interaction.
-	table.sort(uiSprites, function(a, b)
-		return (a.sprite.layer or 0) < (b.sprite.layer or 0)
-	end)
+	table.sort(uiSprites, function(a, b) return (a.sprite.layer or 0) < (b.sprite.layer or 0) end)
 	for _, ui in ipairs(uiSprites) do
 		positionUI(ui)
 		ui.sprite:draw()

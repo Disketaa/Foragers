@@ -2,6 +2,8 @@ return {
 	name = "Noise",
 	type = "color",
 	module = true,
+	postprocess = true,
+	order = 16,
 	uniforms = {
 		u_noise = 0,
 		u_noiseTime = 0,
@@ -10,8 +12,6 @@ return {
 		u_canvasScale = 1,
 		u_canvasOrigin = { 0, 0 },
 	},
-	postprocess = true,
-	order = 16,
 	code = [[
 float Noise_hash(vec3 p) {
 	vec3 p3 = fract(p * 0.1031);
