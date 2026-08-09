@@ -50,7 +50,7 @@ return {
 		{
 			component = "text_emitter",
 			event = "prop_hit",
-			font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
+			font = "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 			offsetX = 0,
 			offsetY = "-6..-8",
 			moveX = "-10|10",

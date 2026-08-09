@@ -16,7 +16,7 @@ function Text.new(opts, x, y, fontPath)
 	opts.text = opts.text or ""
 	opts.x = opts.x or 0
 	opts.y = opts.y or 0
-	opts.font = opts.font or "Content.Assets.Sprites.UI.Fonts.Tinylorder"
+	opts.font = opts.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder"
 
 	local self = setmetatable({
 		_sprite = nil,

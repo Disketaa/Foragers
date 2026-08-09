@@ -78,7 +78,7 @@ it is a one-shot, played only by its event (e.g. `death`, `hunger`) or a single
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `font` | string | `Content.Assets.Sprites.UI.Fonts.Tinylorder` | Module path to a font data file (spritesheet + spritefont) |
+| `font` | string | `Content.Assets.Sprites.UI.SpriteFonts.Tinylorder` | Module path to a font data file (spritesheet + spritefont) |
 | `text` | string | nil | Fixed text. If nil, the emitted event payload (e.g. damage number) is used as the text |
 | `event` | string | `"prop_hit"` | Event the emitter listens to |
 | `color` | table | `{1,1,1}` | RGB tint (0–1) |
@@ -110,7 +110,7 @@ Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `font` | string | `"Content.Assets.Sprites.UI.Fonts.Tinylorder"` | Font data module path for the text spritesheet. |
+| `font` | string | `"Content.Assets.Sprites.UI.SpriteFonts.Tinylorder"` | Font data module path for the text spritesheet. |
 | `charSpacing` | number | font's charSpacing | Pixel spacing between characters. Overrides the font data default. |
 | `color` | table | `{1,1,1}` | RGBA tint (0–1). |
 | `offsetX` | number | `0` | X offset from parent's draw origin (top-left of sprite). |
@@ -223,8 +223,8 @@ hud = {
     goodColor = { 0, 1, 0, 1 },
     badColor = { 1, 0, 0, 1 },
     font = {
-        label = "Content/Assets/Fonts/AzeretMonoMedium.ttf",
-        value = "Content/Assets/Fonts/AzeretMonoSemiBold.ttf",
+        label = "Content/Assets/Sprites/UI/Fonts/AzeretMonoMedium.ttf",
+        value = "Content/Assets/Sprites/UI/Fonts/AzeretMonoSemiBold.ttf",
     },
 
     fps = true,
@@ -378,4 +378,4 @@ Color is **per-instance**, not baked into font data. Set it via `Text.new({ colo
 - `text:setPosition(x, y)`
 - `text:draw()` — delegates to the internal sprite draw
 
-Default font path: `Content.Assets.Sprites.UI.Fonts.Tinylorder` (8×8, 16 columns). The font PNG must have white characters on transparent background so `setColor` tints correctly.
+Default font path: `Content.Assets.Sprites.UI.SpriteFonts.Tinylorder` (8×8, 16 columns). The font PNG must have white characters on transparent background so `setColor` tints correctly.

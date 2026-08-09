@@ -28,7 +28,7 @@ function Counter.new(data)
 	}, Counter)
 
 	if data.label then
-		self._labelFont = data.label.font or "Content.Assets.Sprites.UI.Fonts.Tinylorder"
+		self._labelFont = data.label.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder"
 		self._labelColor = data.label.color and { unpack(data.label.color) } or { 1, 1, 1 }
 		self._labelCharSpacing = data.label.charSpacing
 		self._labelOffsetX = data.label.offsetX or 0

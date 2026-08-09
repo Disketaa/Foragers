@@ -57,7 +57,7 @@ TextEmitter.__index = TextEmitter
 
 function TextEmitter.new(data)
 	return setmetatable({
-		font = data.font or "Content.Assets.Sprites.UI.Fonts.Tinylorder",
+		font = data.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 		text = data.text,
 		event = data.event or "prop_hit",
 

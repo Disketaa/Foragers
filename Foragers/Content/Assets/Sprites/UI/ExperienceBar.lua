@@ -44,7 +44,7 @@ return {
 			smoothness = 0.3,
 			curve = "OutCubic",
 			label = {
-				font = "Content.Assets.Sprites.UI.Fonts.Tinylorder",
+				font = "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 				charSpacing = -4,
 				color = { 0.56, 0.32, 0.73 },
 				offsetX = 1,
