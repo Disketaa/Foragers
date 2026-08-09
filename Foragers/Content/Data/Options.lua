@@ -62,6 +62,10 @@ return {
 			keyboard = { "f3" },
 		},
 
+		toggleChat = {
+			keyboard = { "f4" },
+		},
+
 		toggleFullscreen = {
 			keyboard = { "f11" },
 		},

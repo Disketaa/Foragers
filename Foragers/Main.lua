@@ -821,6 +821,20 @@ local function bindingMatches(binding, inputType, value)
 end
 
 function love.keypressed(key)
+	if Debug.chatActive() then
+		if key == "escape" then
+			Debug.setChatActive(false)
+			return
+		elseif key == "return" or key == "kpenter" then
+			Debug.setChatText("")
+			return
+		elseif key == "backspace" then
+			local text = Debug.chatText()
+			Debug.setChatText(string.sub(text, 1, -2))
+			return
+		end
+	end
+	
 	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
 		handleRestartPress()
 	elseif bindingMatches(Options.keybinds.toggleFullscreen, "keyboard", key) then
@@ -830,10 +844,23 @@ function love.keypressed(key)
 		Options.save()
 	elseif bindingMatches(Options.keybinds.toggleDebug, "keyboard", key) then
 		Debug.toggle("hud")
+		if not Debug.enabled("hud") then
+			Debug.setChatActive(false)
+		end
 	elseif bindingMatches(Options.keybinds.toggleGizmo, "keyboard", key) then
 		Debug.toggle("gizmo")
 	elseif bindingMatches(Options.keybinds.toggleProfiler, "keyboard", key) then
 		Debug.toggle("hud.profiler")
+	elseif bindingMatches(Options.keybinds.toggleChat, "keyboard", key) then
+		if Debug.enabled("hud") then
+			Debug.toggle("hud.chat")
+		end
+	end
+end
+
+function love.textinput(text)
+	if Debug.chatActive() then
+		Debug.setChatText(Debug.chatText() .. text)
 	end
 end
 

@@ -179,6 +179,13 @@ local historyIndex = 0
 local frameCount = 0
 local lastSample = 0
 
+-- Chat state. `data.hud.chat.enabled` is the single source of truth for whether
+-- the input is open; `chatActive` would duplicate it and drift (Escape/HUD-hide
+-- must close it without flipping the persisted toggle).
+local chatText = ""
+local chatVisible = 0
+local CHAT_FADE_SPEED = 10
+
 -- Cache key "path@size": the same font file at different sizes is a distinct entry.
 local fontCache = {}
 
@@ -281,6 +288,31 @@ function Debug.isEnabled()
 	return data.debug == true
 end
 
+--- Chat state accessors
+function Debug.chatActive()
+	return Debug.enabled("hud.chat")
+end
+
+function Debug.setChatActive(active)
+	local newVal = active == true
+	local t = lookup("hud.chat")
+	if type(t) == "table" then
+		t.enabled = newVal
+	end
+	if not newVal then
+		chatText = ""
+	end
+	Options.save()
+end
+
+function Debug.chatText()
+	return chatText
+end
+
+function Debug.setChatText(text)
+	chatText = text or ""
+end
+
 --- Subscribe to runtime flag changes. Callback receives (key, value).
 ---@param callback function
 function Debug.onChange(callback)
@@ -327,7 +359,7 @@ end
 --- Runtime-toggleable flag paths (the ones Debug.set/Debug.toggle mutate and
 --- that Options persists). Top-level `debug` is the master switch; the rest are
 --- nested group `enabled` flags.
-local TOGGLE_PATHS = { "debug", "gizmo", "hud", "hud.profiler" }
+local TOGGLE_PATHS = { "debug", "gizmo", "hud", "hud.profiler", "hud.chat" }
 
 ---@return table path → boolean current value for each runtime-toggleable flag.
 function Debug.serializeFlags()
@@ -494,7 +526,8 @@ local function drawProfiler(scale)
 	local msCol = valueFont:getWidth(string.rep("9", timeChars))
 
 	local rowW = nameCol + colGap + msCol + colGap + pctCol
-	local topY = love.graphics.getHeight() - offset - (fontHeight + #rows * (fontHeight + rowGap))
+	local totalHeight = fontHeight + #rows * (fontHeight + rowGap)
+	local topY = (love.graphics.getHeight() - totalHeight) / 2
 
 	local x1 = offset
 	local x2 = offset + nameCol + colGap
@@ -549,6 +582,54 @@ local function drawProfiler(scale)
 	end
 end
 
+---@param scale number
+function Debug.drawChat(scale)
+	scale = scale or 1
+	local s = Debug.settings("hud")
+	local cs = Debug.settings("hud.chat")
+	local enabled = Debug.enabled("hud") and Debug.enabled("hud.chat")
+	
+	local targetVis = enabled and 1 or 0
+	if chatVisible ~= targetVis then
+		local step = CHAT_FADE_SPEED * scale * 0.016
+		if math.abs(targetVis - chatVisible) <= step then
+			chatVisible = targetVis
+		else
+			chatVisible = chatVisible + (targetVis > chatVisible and step or -step)
+		end
+	end
+	if chatVisible <= 0 then
+		return
+	end
+	
+	local labelFont, _, fontHeight = hudFonts(s, scale)
+	local offset = (cs.padding ~= nil and cs.padding or s.padding or 4) * scale
+	local gap = (cs.gap ~= nil and cs.gap or s.gap ~= nil and s.gap or offset) * scale
+	local valueColor = s.color or { 1, 1, 1, 1 }
+	local bg = cs.backgroundColor or s.backgroundColor
+	
+	local prompt = "> "
+	local textW = labelFont:getWidth(prompt .. chatText)
+	local rowW = textW + labelFont:getWidth("|") + offset * 2
+	local rowH = fontHeight + gap
+	
+	local y = love.graphics.getHeight() - offset - rowH
+	
+	if bg then
+		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4] * chatVisible)
+		love.graphics.rectangle("fill", offset, y, rowW, rowH)
+	end
+	
+	love.graphics.setColor(valueColor[1], valueColor[2], valueColor[3], valueColor[4] * chatVisible)
+	love.graphics.setFont(labelFont)
+	love.graphics.print(prompt .. chatText, offset + gap, y + gap / 2)
+	
+	local cursorX = offset + gap + textW
+	love.graphics.line(cursorX, y + gap / 2, cursorX, y + rowH - gap / 2)
+	
+	love.graphics.setColor(1, 1, 1, 1)
+end
+
 --- Draw the top-left HUD readout (FPS, FPS graph, object count) at native
 --- resolution. Gated by the `hud` group. `scale` is the window upscale factor
 --- (canvas.scale) so the text and graph stay proportional on any window size.
@@ -562,6 +643,7 @@ function Debug.draw(objectCount, scale)
 	Snapshot.setDrawEnd()
 	-- Auto-profiler draws its own table first, independent of the HUD.
 	drawProfiler(scale)
+	Debug.drawChat(scale)
 
 	local s = Debug.settings("hud")
 	local gs = Debug.settings("hud.fpsGraph")
