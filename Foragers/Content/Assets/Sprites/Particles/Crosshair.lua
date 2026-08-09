@@ -7,7 +7,7 @@ return {
 		{
 			component = "spritesheet",
 			animations = {
-				{ row = 1, frames = 4, speed = 12 },
+				{ row = 1, frames = 4, speed = 12, loop = false },
 			},
 		},
 	},
