@@ -102,17 +102,20 @@ local INTRO_DURATION = 1
 -- Zoom's normal easing rate; restored after a temporary ease overrides it.
 local ZOOM_SMOOTHNESS = Zoom.smoothness
 
-local DEATH_REVEAL_DURATION = 5
-local DEATH_REVEAL_CURVE = "InOutCubic"
+-- Hold the death screen (snapped zoom / low-sat look) for DEATH_REVEAL_DELAY
+-- before the reveal eases zoom / saturation / contrast back to normal.
+local DEATH_REVEAL_DELAY = 1.25
+local DEATH_REVEAL_DURATION = 2
+local DEATH_REVEAL_CURVE = "OutCubic"
 -- After the reveal, wait DEATH_DARKEN_DELAY then fade the canvas to black via
 -- the Darken post-process shader over DEATH_DARKEN_DURATION.
-local DEATH_DARKEN_DELAY = 4
-local DEATH_DARKEN_DURATION = 2
+local DEATH_DARKEN_DELAY = 3
+local DEATH_DARKEN_DURATION = 1
 local DEATH_DARKEN_CURVE = "InOutCubic"
 -- Opening fade: the canvas starts fully dark and reveals in from black.
 local INTRO_DARKEN_DURATION = 1.0
 local INTRO_DARKEN_CURVE = "OutCubic"
-local startDarkenTimer = 0
+local startDarkenTimer = 1
 local startDarkenActive = false
 local revealTimer = 0
 local revealActive = false
@@ -121,6 +124,7 @@ local revealFrom = {}
 -- back to normal from wherever they are.
 local satUniform = 1
 local posterizeUniform = 0
+local noiseUniform = 0
 
 --- Ease zoom to `target` over `duration` seconds with a temporarily faster
 --- smoothness, restoring the normal rate when the timer expires. Shared by the
@@ -268,6 +272,8 @@ function initGame()
 	circleMaskTarget = 0
 	satUniform = 1
 	posterizeUniform = 0
+	noiseUniform = 0
+	ShaderLoader.sendUniform("u_noise", 0)
 	revealActive = false
 	revealTimer = 0
 	ShaderLoader.sendUniform("u_darken", 1)
@@ -403,6 +409,9 @@ function initGame()
 			local p = f >= low and 0 or (1 - f / low)
 			posterizeUniform = p
 			ShaderLoader.sendUniform("u_posterize", posterizeUniform)
+			local n = f >= low and 0 or (1 - f / low)
+			noiseUniform = n
+			ShaderLoader.sendUniform("u_noise", noiseUniform)
 			local zMax = stats and stats.lowSatietyZoom or 2
 			Zoom.target = f >= low and 1 or (zMax - (zMax - 1) * (f / low))
 			local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16
@@ -439,6 +448,7 @@ function initGame()
 				zoom = Zoom.current,
 				saturation = satUniform,
 				posterize = posterizeUniform,
+				noise = noiseUniform,
 				circle = circleMaskRadius,
 			}
 			-- Force the anim via the event, not _state: Control is the sole writer
@@ -746,16 +756,16 @@ function love.draw()
 	love.graphics.origin()
 	love.graphics.translate(canvas.offsetX, canvas.offsetY)
 	love.graphics.scale(canvas.scale, canvas.scale)
-	if not isDead then
-		table.sort(uiSprites, function(a, b)
-			return (a.sprite.layer or 0) < (b.sprite.layer or 0)
-		end)
-		for _, ui in ipairs(uiSprites) do
-			positionUI(ui)
-			ui.sprite:draw()
-		end
-	elseif loadingSprite then
-		loadingSprite:draw()
+	-- UI stays visible through the whole death cycle: the reveal eases zoom /
+	-- saturation / contrast back to normal while the HUD remains on screen. The
+	-- Loading sprite is a uiSprite with alpha 0 by default, so it only appears
+	-- via the hold-to-restart interaction.
+	table.sort(uiSprites, function(a, b)
+		return (a.sprite.layer or 0) < (b.sprite.layer or 0)
+	end)
+	for _, ui in ipairs(uiSprites) do
+		positionUI(ui)
+		ui.sprite:draw()
 	end
 	love.graphics.pop()
 
@@ -890,14 +900,18 @@ local function updateReveal(dt)
 		return
 	end
 	revealTimer = revealTimer + dt
-	local t = math.min(revealTimer / DEATH_REVEAL_DURATION, 1)
+	-- Ease only after DEATH_REVEAL_DELAY elapses, so the death look holds before
+	-- zoom / saturation / contrast return to normal.
+	local t = math.max(0, math.min((revealTimer - DEATH_REVEAL_DELAY) / DEATH_REVEAL_DURATION, 1))
 	local e = (Easing[DEATH_REVEAL_CURVE] or Easing.Linear)(t)
 	Zoom.current = revealFrom.zoom + (1 - revealFrom.zoom) * e
 	Zoom.target = Zoom.current
 	satUniform = revealFrom.saturation + (1 - revealFrom.saturation) * e
 	posterizeUniform = revealFrom.posterize * (1 - e)
+	noiseUniform = revealFrom.noise * (1 - e)
 	ShaderLoader.sendUniform("u_saturation", satUniform)
 	ShaderLoader.sendUniform("u_posterize", posterizeUniform)
+	ShaderLoader.sendUniform("u_noise", noiseUniform)
 	local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16
 	circleMaskRadius = revealFrom.circle + (maxR - revealFrom.circle) * e
 	circleMaskTarget = circleMaskRadius

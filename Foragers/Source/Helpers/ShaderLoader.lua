@@ -177,6 +177,10 @@ end
 
 function ShaderLoader.update(dt)
 	ShaderLoader.time = ShaderLoader.time + dt
+	-- Broadcast the clock to any module that declares a u_noiseTime uniform
+	-- (the Noise post-process grain). sendUniform targets only shaders that
+	-- declare the uniform, so this stays decoupled from specific effects.
+	ShaderLoader.sendUniform("u_noiseTime", ShaderLoader.time)
 end
 
 --- The screen post-process program. loadAll composes every module flagged
