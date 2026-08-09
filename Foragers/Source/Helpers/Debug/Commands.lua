@@ -153,7 +153,7 @@ Commands.register("xp", function(args, ctx)
 	end
 	s:setExperience(amount)
 	return "XP set to " .. amount, true
-end, "Set, add, or remove XP")
+end, "set, add, or remove XP.")
 
 Commands.register("lvl", function(args, ctx)
 	local s, err = needStats(ctx)
@@ -177,7 +177,7 @@ Commands.register("lvl", function(args, ctx)
 	end
 	s:setLevel(amount)
 	return "Level set to " .. amount, true
-end, "Set, add, or remove levels")
+end, "set, add, or remove levels.")
 
 Commands.register("satiety", function(args, ctx)
 	local s, err = needStats(ctx)
@@ -197,7 +197,7 @@ Commands.register("satiety", function(args, ctx)
 	end
 	s:setSatiety(amount)
 	return "Satiety set to " .. amount, true
-end, "Set, add, or remove satiety")
+end, "set, add, or remove satiety.")
 
 Commands.register("eat", function(_, ctx)
 	local s, err = needStats(ctx)
@@ -206,27 +206,27 @@ Commands.register("eat", function(_, ctx)
 	end
 	s:restoreSatiety(s.maxSatiety)
 	return "Satiety restored", true
-end, "Restore satiety to full")
+end, "restore satiety to full.")
 
 Commands.addSubcommand("world", "clear")
 
 Commands.register("world", function(args, ctx)
 	if args ~= "clear" then
-		return 'Usage: world clear', false
+		return 'Usage: world clear.', false
 	end
 	if ctx.clearProps then
 		local n = ctx.clearProps()
 		return "Cleared " .. n .. " props", true
 	end
 	return "No props", true
-end, "Destroy all spawned props")
+end, "manipulate world.")
 
 Commands.register("restart", function(_, ctx)
 	if ctx.restart then
 		ctx.restart()
 	end
 	return "Restarting", true
-end, "Restart the game")
+end, "restart the game.")
 
 local PAGE_SIZE = 10
 
@@ -241,15 +241,15 @@ Commands.register("help", function(args)
 		local name = names[i]
 	lines[#lines + 1] = {
 		{ name, "name" },
-		{ " — " .. (descriptions[name] or ""), "label" },
+		{ ": " .. (descriptions[name] or ""), "label" },
 	}
 	end
 	lines[#lines + 1] = {}
 	lines[#lines + 1] = {
 		{ "Page " .. page .. "/" .. totalPages, "value" },
-		{ " (help N for more)", "label" },
+		{ " (help 'N' for more)", "label." },
 	}
 	return lines, true, 10
-end, "List commands (help 2 for next page)")
+end, "list commands (help 2 for next page).")
 
 return Commands

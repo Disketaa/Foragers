@@ -571,9 +571,7 @@ end
 -- (reassigned each initGame); the others are direct closures.
 local function commandsCtx()
 	return {
-		stats = function()
-			return playerStats
-		end,
+		stats = function() return playerStats end,
 		restart = function()
 			resetGame()
 		end,
@@ -906,12 +904,22 @@ end
 -- setKeyRepeat is on, which would also repeat the HUD/restart toggles, so the
 -- repeat is driven manually here instead. Mirrors the Windows model — one action
 -- on press, then a fixed delay before repeats at a steady rate. One tracker
--- covers backspace and the up/down history arrows; the repeat action is stored
--- with the held key.
+-- covers backspace, the up/down history arrows, and Tab; the repeat action is
+-- stored with the held key.
 local chatRepeatKey = nil
 local chatRepeatTimer = 0
 local chatRepeatRepeating = false
 local chatRepeatAction = nil
+
+-- Run a chat key action once and arm the auto-repeat state. Shared by backspace,
+-- the up/down history arrows, and Tab so holding any of them repeats.
+local function startChatRepeat(key, action)
+	action()
+	chatRepeatKey = key
+	chatRepeatTimer = 0
+	chatRepeatRepeating = false
+	chatRepeatAction = action
+end
 
 function love.keypressed(key, _, _)
 	if Debug.chatActive() then
@@ -940,38 +948,28 @@ function love.keypressed(key, _, _)
 			Debug.setChatActive(false)
 			return
 		elseif key == "backspace" then
-			Debug.setChatText(Input.removeLast(Debug.chatText()))
 			resetChatCompletion()
-			chatRepeatKey = "backspace"
-			chatRepeatTimer = 0
-			chatRepeatRepeating = false
-			chatRepeatAction = function()
+			startChatRepeat("backspace", function()
 				Debug.setChatText(Input.removeLast(Debug.chatText()))
-			end
+			end)
 			return
 		elseif key == "up" then
-			Debug.chatHistoryUp()
 			resetChatCompletion()
-			chatRepeatKey = "up"
-			chatRepeatTimer = 0
-			chatRepeatRepeating = false
-			chatRepeatAction = function()
+			startChatRepeat("up", function()
 				Debug.chatHistoryUp()
-			end
+			end)
 			return
 		elseif key == "down" then
-			Debug.chatHistoryDown()
 			resetChatCompletion()
-			chatRepeatKey = "down"
-			chatRepeatTimer = 0
-			chatRepeatRepeating = false
-			chatRepeatAction = function()
+			startChatRepeat("down", function()
 				Debug.chatHistoryDown()
-			end
+			end)
 			return
 		elseif key == "tab" then
-			local backwards = love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
-			handleChatTab(backwards)
+			startChatRepeat("tab", function()
+				local backwards = love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
+				handleChatTab(backwards)
+			end)
 			return
 		end
 		-- Chat consumes every key while open; never fall through to gameplay
