@@ -186,6 +186,7 @@ local lastSample = 0
 -- must close it without flipping the persisted toggle).
 local chatText = ""
 local chatOutput = ""
+local chatOutputSuccess = false
 local chatOutputTimer = 0
 local chatBlink = 0
 
@@ -346,8 +347,9 @@ function Debug.chatText()
 	return chatText
 end
 
-function Debug.setChatOutput(text)
+function Debug.setChatOutput(text, success)
 	chatOutput = text or ""
+	chatOutputSuccess = success == true
 	if chatOutput ~= "" then
 		chatOutputTimer = (lookup("hud.chat.outputTimeout") or 3)
 	end
@@ -703,6 +705,7 @@ function Debug.drawChat(scale)
 	local labelFont, _, fontHeight = hudFonts(s, scale)
 	local offset, gap = spacing(cs, s, scale)
 	local valueColor = s.color or { 1, 1, 1, 1 }
+	local goodColor = s.goodColor or { 0, 1, 0, 1 }
 	local badColor = s.badColor or { 1, 0, 0, 1 }
 	local bg = cs.backgroundColor or s.backgroundColor
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
@@ -730,7 +733,8 @@ function Debug.drawChat(scale)
 			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
 			love.graphics.rectangle("fill", offset, outY, outW, rowH)
 		end
-		love.graphics.setColor(badColor[1], badColor[2], badColor[3], badColor[4])
+		local outColor = chatOutputSuccess and goodColor or badColor
+		love.graphics.setColor(outColor[1], outColor[2], outColor[3], outColor[4])
 		love.graphics.setFont(labelFont)
 		pcall(love.graphics.print, chatOutput, offset + gap, outY + gap / 2)
 	end

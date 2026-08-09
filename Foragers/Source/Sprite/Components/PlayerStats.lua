@@ -82,6 +82,24 @@ function PlayerStats:xpForNextLevel()
 	return math.floor(self.xpCurve.base * self.xpCurve.growth ^ (self.level - 1))
 end
 
+--- Emit VALUE_CHANGED to the parent (counter/HUD). One emit path so every
+--- mutation — XP curve, debug commands, future scaling — reports the same shape.
+---@param field string "experience"|"level"|"satiety"
+---@param value number
+---@param maxValue number
+function PlayerStats:_emitStats(field, value, maxValue)
+	if not self.parent then
+		return
+	end
+	self.parent:emit(Events.VALUE_CHANGED, {
+		sourceType = "player_stats",
+		field = field,
+		value = value,
+		maxValue = maxValue,
+		level = self.level,
+	})
+end
+
 ---@param amount number
 ---@return boolean leveledUp
 function PlayerStats:addExperience(amount)
@@ -95,16 +113,53 @@ function PlayerStats:addExperience(amount)
 		self.level = self.level + 1
 		leveledUp = true
 	end
-	if self.parent then
-		self.parent:emit(Events.VALUE_CHANGED, {
-			sourceType = "player_stats",
-			field = "experience",
-			value = self.experience,
-			maxValue = self:xpForNextLevel(),
-			level = self.level,
-		})
-	end
+	self:_emitStats("experience", self.experience, self:xpForNextLevel())
 	return leveledUp
+end
+
+---@param amount number
+function PlayerStats:subtractExperience(amount)
+	if self.dead then
+		return
+	end
+	self.experience = math.max(0, self.experience - amount)
+	self:_emitStats("experience", self.experience, self:xpForNextLevel())
+end
+
+---@param value number
+function PlayerStats:setExperience(value)
+	if self.dead then
+		return
+	end
+	self.experience = math.max(0, value)
+	self:_emitStats("experience", self.experience, self:xpForNextLevel())
+end
+
+---@param amount number
+function PlayerStats:addLevels(amount)
+	if self.dead then
+		return
+	end
+	self.level = math.max(1, self.level + amount)
+	self:_emitStats("level", self.experience, self:xpForNextLevel())
+end
+
+---@param amount number
+function PlayerStats:subtractLevels(amount)
+	if self.dead then
+		return
+	end
+	self.level = math.max(1, self.level - amount)
+	self:_emitStats("level", self.experience, self:xpForNextLevel())
+end
+
+---@param value number
+function PlayerStats:setLevel(value)
+	if self.dead then
+		return
+	end
+	self.level = math.max(1, value)
+	self:_emitStats("level", self.experience, self:xpForNextLevel())
 end
 
 ---@param amount number
@@ -113,15 +168,7 @@ function PlayerStats:consumeSatiety(amount)
 		return
 	end
 	self.satiety = math.max(0, self.satiety - amount)
-	if self.parent then
-		self.parent:emit(Events.VALUE_CHANGED, {
-			sourceType = "player_stats",
-			field = "satiety",
-			value = self.satiety,
-			maxValue = self.maxSatiety,
-			level = self.level,
-		})
-	end
+	self:_emitStats("satiety", self.satiety, self.maxSatiety)
 	self:_checkHungerWarnings()
 	if self.satiety <= 0 then
 		self.dead = true
@@ -165,15 +212,7 @@ function PlayerStats:restoreSatiety(amount)
 	if self.satiety >= (self.lowSatietyPercent or 33) / 100 * self.maxSatiety then
 		self._warned = 0
 	end
-	if self.parent then
-		self.parent:emit(Events.VALUE_CHANGED, {
-			sourceType = "player_stats",
-			field = "satiety",
-			value = self.satiety,
-			maxValue = self.maxSatiety,
-			level = self.level,
-		})
-	end
+	self:_emitStats("satiety", self.satiety, self.maxSatiety)
 end
 
 return PlayerStats

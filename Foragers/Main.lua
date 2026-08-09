@@ -40,6 +40,7 @@ local Pivot = require("Source.Helpers.Pivot")
 local Zoom = require("Source.Helpers.Zoom")
 local Math = require("Source.Helpers.Math")
 local Input = require("Source.Helpers.Input")
+local Commands = require("Source.Helpers.Commands")
 
 local objects = {}
 local staticObjects = {}
@@ -260,6 +261,23 @@ local function destroySprite(sprite)
 		end
 	end
 	Collision.removeSpriteColliders(sprite)
+end
+
+--- Destroy every spawned prop (dynamic non-player, non-tool sprite) so the
+--- world clears of runtime props while the player/tools/terrain survive. Returns
+--- the number removed. Used by the `world clear` debug command.
+local function clearProps()
+	local targets = {}
+	for _, entry in ipairs(dynamicObjects) do
+		local s = entry.instance
+		if s and s ~= playerSprite and s ~= weaponSprite then
+			targets[#targets + 1] = s
+		end
+	end
+	for _, s in ipairs(targets) do
+		destroySprite(s)
+	end
+	return #targets
 end
 
 --- Rebuild all game state from scratch (world, sprites, UI, player).
@@ -546,6 +564,26 @@ end
 
 local function handleRestartRelease()
 	cancelLoadingHold()
+end
+
+-- Debug-command context: accessors the Commands module resolves without touching
+-- Main.lua internals. `stats` is a function so it reads the current playerStats
+-- (reassigned each initGame); the others are direct closures.
+local function commandsCtx()
+	return {
+		stats = function()
+			return playerStats
+		end,
+		restart = function()
+			resetGame()
+		end,
+		triggerDeath = function()
+			if playerSprite then
+				playerSprite:emit(Events.DEATH)
+			end
+		end,
+		clearProps = clearProps,
+	}
 end
 
 -- Unzoomed canvas blit origin (finalX/finalY in Canvas:draw). Shared by the zoom
@@ -841,7 +879,8 @@ function love.keypressed(key, _, _)
 		elseif key == "return" or key == "kpenter" then
 			local text = Debug.chatText()
 			if text ~= "" then
-				Debug.setChatOutput('Unknown command: "' .. text .. '"')
+				local message, success = Commands.execute(text, commandsCtx())
+				Debug.setChatOutput(message, success)
 				Debug.pushChatHistory(text)
 				Debug.setChatText("")
 				Sound.play(Debug.chatEnterSound())
@@ -876,6 +915,9 @@ function love.keypressed(key, _, _)
 			end
 			return
 		end
+		-- Chat consumes every key while open; never fall through to gameplay
+		-- bindings (e.g. R-restart) so typing can't trigger the world.
+		return
 	end
 	
 	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
@@ -913,31 +955,31 @@ function love.keyreleased(key)
 		chatRepeatRepeating = false
 		chatRepeatAction = nil
 	end
-	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
+	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "keyboard", key) then
 		handleRestartRelease()
 	end
 end
 
 function love.mousepressed(_, _, button)
-	if bindingMatches(Options.keybinds.restart, "mouse", button) then
+	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "mouse", button) then
 		handleRestartPress()
 	end
 end
 
 function love.mousereleased(_, _, button)
-	if bindingMatches(Options.keybinds.restart, "mouse", button) then
+	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "mouse", button) then
 		handleRestartRelease()
 	end
 end
 
 function love.gamepadpressed(_, button)
-	if bindingMatches(Options.keybinds.restart, "gamepad", button) then
+	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "gamepad", button) then
 		handleRestartPress()
 	end
 end
 
 function love.gamepadreleased(_, button)
-	if bindingMatches(Options.keybinds.restart, "gamepad", button) then
+	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "gamepad", button) then
 		handleRestartRelease()
 	end
 end
