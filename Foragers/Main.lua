@@ -38,6 +38,7 @@ local Gizmo = require("Source.Helpers.Gizmo")
 local Pivot = require("Source.Helpers.Pivot")
 local Zoom = require("Source.Helpers.Zoom")
 local Math = require("Source.Helpers.Math")
+local Input = require("Source.Helpers.Input")
 
 local objects = {}
 local staticObjects = {}
@@ -820,6 +821,15 @@ local function bindingMatches(binding, inputType, value)
 	return false
 end
 
+-- Backspace auto-repeat while chat is open: LÖVE only repeats keypressed when
+-- setKeyRepeat is on, which would also repeat the HUD/restart toggles, so the
+-- repeat is driven manually here instead. Mirrors the Windows model — one char on
+-- press, then a longer initial delay before repeats accelerate to a steady rate.
+local chatBackspaceHeld = false
+local chatBackspaceTimer = 0
+local CHAT_BACKSPACE_DELAY = 0.4
+local CHAT_BACKSPACE_INTERVAL = 0.03
+
 function love.keypressed(key)
 	if Debug.chatActive() then
 		if key == "escape" then
@@ -829,8 +839,9 @@ function love.keypressed(key)
 			Debug.setChatActive(false)
 			return
 		elseif key == "backspace" then
-			local text = Debug.chatText()
-			Debug.setChatText(string.sub(text, 1, -2))
+			Debug.setChatText(Input.removeLast(Debug.chatText()))
+			chatBackspaceHeld = true
+			chatBackspaceTimer = 0
 			return
 		end
 	end
@@ -865,6 +876,9 @@ function love.textinput(text)
 end
 
 function love.keyreleased(key)
+	if key == "backspace" then
+		chatBackspaceHeld = false
+	end
 	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
 		handleRestartRelease()
 	end
@@ -1147,6 +1161,19 @@ function love.update(dt)
 	end
 	TextEmitter.updateAll(scaledDt)
 	Debug.update(scaledDt)
+
+	if chatBackspaceHeld and Debug.chatActive() then
+		chatBackspaceTimer = chatBackspaceTimer + dt
+		-- First repeat waits CHAT_BACKSPACE_DELAY, then settles to CHAT_BACKSPACE_INTERVAL.
+		local threshold = chatBackspaceTimer >= CHAT_BACKSPACE_DELAY and CHAT_BACKSPACE_INTERVAL or CHAT_BACKSPACE_DELAY
+		while chatBackspaceTimer >= threshold do
+			chatBackspaceTimer = chatBackspaceTimer - threshold
+			Debug.setChatText(Input.removeLast(Debug.chatText()))
+			threshold = CHAT_BACKSPACE_INTERVAL
+		end
+	else
+		chatBackspaceTimer = 0
+	end
 
 	-- Update UI sprites (for counter animations, etc.)
 	for _, ui in ipairs(uiSprites) do

@@ -1,5 +1,6 @@
 local Events = require("Source.Helpers.Events")
 local Options = require("Source.Helpers.Options")
+local Input = require("Source.Helpers.Input")
 
 ---@class Control
 ---@field parent Sprite|nil Parent sprite reference
@@ -145,6 +146,10 @@ end
 
 function Control:update(dt)
 	if not self.parent or not self.parent.components then
+		return
+	end
+	-- Skip reading keyboard while a text-input surface owns it (chat, etc.).
+	if Input.isCaptured() then
 		return
 	end
 

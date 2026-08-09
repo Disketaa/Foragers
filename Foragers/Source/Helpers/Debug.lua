@@ -2,6 +2,7 @@ local EventEmitter = require("Source.Helpers.EventEmitter")
 local data = require("Content.Data.Debug")
 local Options = require("Source.Helpers.Options")
 local Snapshot = require("Source.Helpers.Snapshot")
+local Input = require("Source.Helpers.Input")
 
 local Sprite = require("Source.Sprite.Sprite")
 
@@ -300,6 +301,7 @@ function Debug.setChatActive(active)
 	if type(t) == "table" then
 		t.enabled = newVal
 	end
+	Input.setCaptured(newVal)
 	if not newVal then
 		chatText = ""
 	end
@@ -311,7 +313,7 @@ function Debug.chatText()
 end
 
 function Debug.setChatText(text)
-	chatText = text or ""
+	chatText = Input.sanitize(text or "")
 end
 
 --- Subscribe to runtime flag changes. Callback receives (key, value).
@@ -351,6 +353,9 @@ function Debug.toggle(path)
 	t.enabled = newVal
 	if path == "hud.profiler" then
 		Profiler.setEnabled(newVal)
+	end
+	if path == "hud.chat" then
+		Input.setCaptured(newVal)
 	end
 	emitter:emit("flags", path, newVal)
 	Options.save()
@@ -611,7 +616,12 @@ function Debug.drawChat(scale)
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
 	
 	local prompt = ""
-	local textW = labelFont:getWidth(prompt .. chatText)
+	-- The font may reject codepoints it can't decode (e.g. scripts outside its
+	-- charset); guard measurement/draw so a bad char can't crash the frame.
+	local ok, textW = pcall(labelFont.getWidth, labelFont, prompt .. chatText)
+	if not ok then
+		textW = 0
+	end
 	local cursorW = labelFont:getWidth("|")
 	local rowH = fontHeight + gap
 	-- Background hugs the content: from the left edge to just past the cursor.
@@ -626,7 +636,7 @@ function Debug.drawChat(scale)
 
 	love.graphics.setColor(valueColor[1], valueColor[2], valueColor[3], valueColor[4] * chatVisible)
 	love.graphics.setFont(labelFont)
-	love.graphics.print(prompt .. chatText, offset + gap, y + gap / 2)
+	pcall(love.graphics.print, prompt .. chatText, offset + gap, y + gap / 2)
 
 	-- I-beam blinks at ~2Hz when the field is focused.
 	chatBlink = (chatBlink + 1) % 60
