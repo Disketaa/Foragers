@@ -1,9 +1,9 @@
 return {
 	name = "CircleMask",
+	order = 20,
+	postprocess = true,
 	type = "color",
 	module = true,
-	postprocess = true,
-	order = 20,
 	uniforms = {
 		u_circleRadius = 0,
 		u_softness = 32,

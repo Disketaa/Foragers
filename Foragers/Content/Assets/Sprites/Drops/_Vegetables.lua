@@ -18,6 +18,11 @@ return {
 		},
 
 		{
+			component = "pickup",
+			satiety = 30,
+		},
+
+		{
 			component = "particle_emitter",
 			moving = true,
 			interval = 0.2,
@@ -32,11 +37,6 @@ return {
 			tags = {
 				arrived = { "Content/Assets/Sounds/Events/Eat.ogg" },
 			},
-		},
-
-		{
-			component = "pickup",
-			satiety = 30,
 		},
 	},
 }

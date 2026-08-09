@@ -1,9 +1,9 @@
 return {
 	name = "Noise",
+	order = 16,
+	postprocess = true,
 	type = "color",
 	module = true,
-	postprocess = true,
-	order = 16,
 	uniforms = {
 		u_noise = 0,
 		u_noiseTime = 0,
