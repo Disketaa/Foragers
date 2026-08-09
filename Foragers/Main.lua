@@ -214,10 +214,13 @@ function love.load()
 	collectgarbage("setpause", 100)
 	collectgarbage("setstepmul", 300)
 	love.graphics.setDefaultFilter("nearest", "nearest")
+	-- `not not x` widens literal `true` to the `boolean` supertype; required
+	-- because love2d's inline-typed flags table rejects narrower boolean
+	-- literals under strict subtype checking.
 	love.window.setMode(canvas.width, canvas.height, {
-		resizable = true,
-		fullscreen = Options.fullscreen,
-		vsync = Options.vsync,
+		resizable = not not true,
+		fullscreen = not not Options.fullscreen,
+		vsync = not not Options.vsync,
 	})
 	local bg = World.backgroundColor or { 0.5, 0.8, 1 }
 	love.graphics.setBackgroundColor(unpack(bg))

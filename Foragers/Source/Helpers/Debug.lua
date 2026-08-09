@@ -239,7 +239,9 @@ function Debug.enabled(group)
 	if type(t) == "boolean" then
 		return t
 	end
-	return type(t) == "table" and t.enabled == true
+	-- `not not` widens the short-circuit `false` literal to `boolean` (luals
+	-- strict subtype check rejects the narrower literal against `@return boolean`).
+	return not not (type(t) == "table" and t.enabled == true)
 end
 
 --- Group "X" carries an `exclude` list of entity ids to skip. Path is dotted
