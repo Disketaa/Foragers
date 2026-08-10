@@ -19,7 +19,7 @@ return {
 
 		{
 			component = "destructible",
-			hp = 3,
+			hp = 15,
 		},
 
 		{

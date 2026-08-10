@@ -23,7 +23,7 @@ return {
 
 		{
 			component = "destructible",
-			hp = 7,
+			hp = 30,
 			replaceWith = "Content/Assets/Sprites/Props/OakStump",
 		},
 

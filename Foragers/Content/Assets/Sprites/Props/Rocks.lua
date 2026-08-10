@@ -15,9 +15,14 @@ return {
 		},
 
 		{
+			component = "destructible",
+			hp = 20,
+		},
+
+		{
 			component = "drop",
 			drops = {
-				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "2..4" },
+				{ sprite = "Content/Assets/Sprites/Drops/SmallCrystal", amount = "1..4" },
 			},
 		},
 
