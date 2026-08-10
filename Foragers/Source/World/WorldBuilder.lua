@@ -5,6 +5,8 @@ local Collision = require("Source.Sprite.Components.Collision")
 local Path = require("Source.Helpers.Core.Path")
 local Pivot = require("Source.Helpers.Core.Pivot")
 local PropPicker = require("Source.World.PropPicker")
+local HostRegistry = require("Source.World.HostRegistry")
+local PropWire = require("Source.World.PropWire")
 local WorldConfig = require("Content.Data.World") or {}
 
 local private = {}
@@ -175,66 +177,120 @@ local function buildPropPlan(worldData, playerSprite)
 	local savedState = love.math.getRandomState()
 	love.math.setRandomSeed(numProps > 0 and activeTiles[1].seed or 0)
 
+	-- Track planned hosts so a berry picked early in the shuffle can still find
+	-- a bush that appears later in the plan. Each host is claimed once so two
+	-- berries never attach to the same bush.
+	local plannedHosts = {} -- hostType -> { [coordKey] = true }
+	local claimedHosts = {} -- hostType -> { [coordKey] = true }
+
+	local function hostProvider(hostType)
+		local hosts = plannedHosts[hostType]
+		if not hosts then
+			return nil
+		end
+		local claims = claimedHosts[hostType] or {}
+		for key in pairs(hosts) do
+			if not claims[key] then
+				claims[key] = true
+				claimedHosts[hostType] = claims
+				return hostType, key
+			end
+		end
+		return nil
+	end
+
 	local plan = {}
 	for i = 1, math.min(numProps, #activeTiles) do
 		local j = love.math.random(i, #activeTiles)
 		activeTiles[i], activeTiles[j] = activeTiles[j], activeTiles[i]
 		local tile = activeTiles[i]
 
-		local chosen = PropPicker.pick(numProps - i + 1)
+		local chosen = PropPicker.pick(numProps - i + 1, hostProvider)
 		if not chosen then
 			break
 		end
 
-		plan[#plan + 1] = {
+		local entry = {
 			data = chosen.data,
 			pngPath = chosen.pngPath,
 			x = tile.x,
 			y = tile.y,
 			seed = tile.seed,
 		}
+
+		-- Host provider (bush/tree/rock/stump): register its tile so later berry
+		-- picks can attach to it.
+		if chosen.data.host then
+			local key = HostRegistry.coordKey(tile.x, tile.y)
+			plannedHosts[chosen.data.host] = plannedHosts[chosen.data.host] or {}
+			plannedHosts[chosen.data.host][key] = true
+		end
+
+		if chosen.host then
+			entry.host = chosen.hostType
+			entry.hostKey = chosen.hostKey
+			entry.modulePath = chosen.modulePath
+			entry.offsetX = chosen.offsetX
+			entry.offsetY = chosen.offsetY
+			entry.inheritFrame = chosen.inheritFrame
+		end
+
+		plan[#plan + 1] = entry
 	end
 
 	love.math.setRandomState(savedState)
 
-	-- Spawn nearest the player first so the visible area fills immediately while
-	-- off-screen props stream in over later frames.
+	-- Partition so host props (bushes) instantiate before the overlay foods that
+	-- attach to them, then sort each group nearest the player first so the
+	-- visible area fills immediately while off-screen props stream in later.
+	local hosts, rest = {}, {}
+	for _, entry in ipairs(plan) do
+		if entry.data.host then
+			table.insert(hosts, entry)
+		else
+			table.insert(rest, entry)
+		end
+	end
+
 	if playerSprite then
 		local px, py = playerSprite.x, playerSprite.y
-		table.sort(plan, function(a, b)
+		local function byDistance(a, b)
 			local dax, day = a.x - px, a.y - py
 			local dbx, dby = b.x - px, b.y - py
 			return dax * dax + day * day < dbx * dbx + dby * dby
-		end)
+		end
+		table.sort(hosts, byDistance)
+		table.sort(rest, byDistance)
+	end
+
+	plan = {}
+	for _, e in ipairs(hosts) do
+		table.insert(plan, e)
+	end
+	for _, e in ipairs(rest) do
+		table.insert(plan, e)
 	end
 
 	return plan
 end
 
---- Instantiate + wire one prop from a plan entry (flip, frame, collision).
----@param spec table { data, pngPath, x, y, seed }
+--- Instantiate + wire one prop from a plan entry. Host providers register in
+--- HostRegistry; overlay foods (berries) attach to their paired host and return
+--- the spawned child.
+---@param spec table { data, pngPath, x, y, seed, host?, hostKey?, modulePath?, offsetX?, offsetY? }
 ---@return table|nil The sprite, or nil if instantiation failed.
 local function instantiateProp(spec)
-	local sprite = SpriteLoader.instantiate(spec.data, spec.x, spec.y, spec.pngPath)
-	if not sprite then
-		return nil
+	-- Overlay food (berry): attach to its paired host. Hosts stream before
+	-- berries, so the host is already registered.
+	if spec.host then
+		local host = HostRegistry.get(spec.host, spec.hostKey)
+		if not host then
+			return nil
+		end
+		return PropWire.onHost(host, spec)
 	end
 
-	sprite.flipX = math.abs(spec.seed + 7777) % 2 == 0
-	local ss = sprite:findComponent("spritesheet")
-	if ss then
-		local numFrames = ss.columns or 1
-		ss:setFrame(math.abs(spec.seed + 5000) % numFrames)
-	end
-	local col = sprite:findComponent("collision")
-	if col then
-		if col.mode == "slowdown" then
-			col:registerAsSlowdown()
-		else
-			col:registerAsSolid()
-		end
-	end
-	return sprite
+	return PropWire.standalone(spec.data, spec.pngPath, spec.x, spec.y, spec.seed)
 end
 
 local function buildBorder()

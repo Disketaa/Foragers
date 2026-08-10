@@ -16,7 +16,7 @@ Modules.WrapTables.include_folders = ["Content/"]
 # (camelCase-aware: offsetX -> offset,x); ties go to the earlier group.
 # Unknown keys stay last in file order. Tune tags here.
 param_groups.order = "identity size frame pivot coords motion stats appearance timing content ui sound options"
-param_groups.identity.tags = "mode name extends object order debug snapshot postprocess id type module priority appliesTo applies_to event field maxField sourceType icon label"
+param_groups.identity.tags = "mode name extends object order debug snapshot postprocess id type module priority appliesTo applies_to host event field maxField sourceType icon label"
 param_groups.size.tags = "width height tileSize chunkSize"
 param_groups.frame.tags = "frameWidth frameHeight collisionWidth collisionHeight columns rows animations chars charSpacing spacing font"
 param_groups.pivot.tags = "pivotX pivotY"

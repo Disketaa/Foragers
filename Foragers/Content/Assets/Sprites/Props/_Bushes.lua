@@ -1,5 +1,6 @@
 return {
 	extends = "Content.Assets.Sprites.Props.__Props",
+	host = "bush",
 	components = {
 		{
 			component = "spritesheet",

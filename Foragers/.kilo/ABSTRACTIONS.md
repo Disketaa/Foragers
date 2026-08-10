@@ -251,6 +251,22 @@ relevant section before touching that subsystem.
   whenever a vegetable is destroyed — the initial plan fills the whole cap, so
   without the decrement `vegQuota` stays 0 and vegetables never respawn,
   regardless of `pseudoRandomChance`.
+- **Overlay food (berries) must NOT abort the prop plan when no host exists.**
+  `PropPicker.pick` returns a non-veg prop when a hosted veg (berry) has no
+  available host, instead of returning nil — `WorldBuilder.buildPropPlan`'s
+  `if not chosen then break end` would otherwise treat a nil as "no more props"
+  and abort the whole plan (0 vegetables). The PRD streak is NOT reset on the
+  skip, so the next veg pick keeps its accumulated chance. Hosts are registered
+  in `HostRegistry` (keyed by tile coords) on spawn; the plan pairs each berry
+  to a planned host at plan time, runtime pairs via `HostRegistry.find`.
+- **Hosted children draw with their host, not on a fixed layer.** An overlay
+  child (berry) must inherit the host's `layer` and sort just after it
+  (`sortOffsetY = host.sortOffsetY + 1 - offsetY`), or a tree in front of the
+  bush (higher sortY) gets covered by the berry. A hardcoded `layer = 1` on the
+  child breaks Y-sorting against layer-0 props.
+- **Hosted children need the spawn pop too.** `Overlay:attach` emits
+  `PROP_SPAWNED` on the child, or the berry spawns silently (no pop sound /
+  scale-in tween) while standalone props pop. Both paths share `PropWire.wire`.
 - **Per-call component scans allocate.** `Sprite:getComponents` builds a fresh
   table and an inline predicate is a per-call closure. In per-frame hot loops
   (update loop, shadow pass) use `Sprite:getComponentsInto(type, predicate, out)`

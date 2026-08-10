@@ -15,6 +15,16 @@ return {
 		},
 
 		{
+			component = "collision",
+			mode = "solid",
+			collisionWidth = 6,
+			collisionHeight = 6,
+			offsetX = 0,
+			offsetY = 0,
+			visible = false,
+		},
+
+		{
 			component = "destructible",
 			hp = 20,
 		},

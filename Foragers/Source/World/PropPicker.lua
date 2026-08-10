@@ -33,7 +33,16 @@ local function load(propConfigs)
 		if ok and type(data) == "table" then
 			data = resolve(data)
 			local pngPath = Path.moduleToPath(cfg.data) .. ".png"
-			local entry = { data = data, pngPath = pngPath, weight = cfg.weight or 1 }
+			local entry = {
+				data = data,
+				pngPath = pngPath,
+				weight = cfg.weight or 1,
+				modulePath = cfg.data,
+				host = cfg.host,
+				offsetX = cfg.offsetX or 0,
+				offsetY = cfg.offsetY or 0,
+				inheritFrame = cfg.inheritFrame or false,
+			}
 			if data.object == "vegetable" then
 				table.insert(_vegProps, entry)
 				_vegWeight = _vegWeight + entry.weight
@@ -86,8 +95,10 @@ end
 
 ---@param remainingSlots number|nil  prop slots left INCLUDING this one (used by
 ---   the initial plan to force the remaining veg quota); nil for unbounded runtime
----@return table|nil  { data, pngPath } entry
-local function pick(remainingSlots)
+---@param hostProvider function|nil  (hostType) -> host, hostKey; resolves the host
+---   an overlay food (berry) attaches to. nil for non-host veg.
+---@return table|nil  { data, pngPath, modulePath, host?, hostKey?, offsetX?, offsetY? }
+local function pick(remainingSlots, hostProvider)
 	if _nonVegWeight == 0 and _vegWeight == 0 then
 		return nil
 	end
@@ -107,9 +118,42 @@ local function pick(remainingSlots)
 	end
 
 	if chooseVeg then
+		local entry = pickWeighted(_vegProps, _vegWeight)
+		if not entry then
+			-- Veg list empty/zero-weight despite a positive quota: skip the veg
+			-- pick and place a non-veg prop instead.
+			_prdStreak = _prdStreak + 1
+			return pickWeighted(_nonVegProps, _nonVegWeight)
+		end
+		if entry.host then
+			local host, hostKey
+			if hostProvider then
+				host, hostKey = hostProvider(entry.host)
+			end
+			if not host then
+				-- Overlay food (berries) with no live host: skip the veg pick but
+				-- place a non-veg prop so the tile isn't wasted. The PRD streak
+				-- is NOT reset, so the next veg pick keeps its accumulated chance.
+				_prdStreak = _prdStreak + 1
+				return pickWeighted(_nonVegProps, _nonVegWeight)
+			end
+			_prdStreak = 0
+			_vegSpawned = _vegSpawned + 1
+			return {
+				data = entry.data,
+				pngPath = entry.pngPath,
+				modulePath = entry.modulePath,
+				host = host,
+				hostType = entry.host,
+				hostKey = hostKey,
+				offsetX = entry.offsetX,
+				offsetY = entry.offsetY,
+				inheritFrame = entry.inheritFrame,
+			}
+		end
 		_prdStreak = 0
 		_vegSpawned = _vegSpawned + 1
-		return pickWeighted(_vegProps, _vegWeight)
+		return entry
 	end
 
 	_prdStreak = _prdStreak + 1

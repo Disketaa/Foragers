@@ -43,7 +43,7 @@ function Merge.merge(base, override)
 end
 
 local function _compKey(comp)
-	return comp.component .. ":" .. (comp.mergeKey or "")
+	return comp.component
 end
 
 -- Shader component merges its `shaders` array by concatenation (parent first,
@@ -85,7 +85,6 @@ end
 
 --- Merge data.components with inheritance: match by component key.
 --- Arrays (component lists) are matched and deep-merged by key.
---- Components in `overrideComponents` with `_remove = true` delete the base entry.
 --- Base order is preserved; new override entries are appended at the end.
 ---@param baseComponents table[]
 ---@param overrideComponents table[]
@@ -97,9 +96,7 @@ function Merge.componentMerge(baseComponents, overrideComponents)
 	end
 	for _, comp in ipairs(overrideComponents) do
 		local key = _compKey(comp)
-		if comp._remove then
-			byKey[key] = nil
-		elseif byKey[key] then
+		if byKey[key] then
 			local merged = Merge.merge(byKey[key], comp)
 			if comp.component == "shader" then
 				merged.shaders = _mergeShaderShaders(byKey[key], comp)

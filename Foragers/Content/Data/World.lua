@@ -17,7 +17,8 @@ return {
 			{ data = "Content.Assets.Sprites.Props.Carrot", weight = 4 },
 			{ data = "Content.Assets.Sprites.Props.OakStump", weight = 5 },
 			{ data = "Content.Assets.Sprites.Props.BirchStump", weight = 5 },
-			{ data = "Content.Assets.Sprites.Props.OakBush", weight = 5 },
+			{ data = "Content.Assets.Sprites.Props.Berries", weight = 40000000, host = "bush", offsetY = -3, inheritFrame = true },
+			{ data = "Content.Assets.Sprites.Props.Bush", weight = 50000000 },
 		},
 	},
 }

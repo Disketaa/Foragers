@@ -100,11 +100,11 @@ Foragers/
 │   ├── Sprite/
 │   │   ├── Sprite.lua
 │   │   ├── SpriteLoader.lua
-│   │   └── Components/   # collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, ui, player_stats, pickup
+│   │   └── Components/   # collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, player_stats, pickup, silhouette, emote
 │   ├── UI/
 │   │   ├── Components/   # TextEmitter, UI
 │   │   └── Text.lua
-│   └── World/            # TilePalette, WorldBuilder, WorldGen, PropSpawner
+│   └── World/            # TilePalette, WorldBuilder, WorldGen, PropSpawner, PropPicker, PropWire, HostRegistry, Overlay
 ├── Content/
 │   ├── Assets/{Shaders,Sprites/{Character,Props,Tiles,Tools,UI},...}
 │   └── Data/{Options.lua, World.lua}
@@ -148,7 +148,7 @@ All Critical Constraints in Section I apply here.
 
 ### Component list
 
-20 core: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `ui`, `player_stats`, `pickup`, `counter`, `silhouette`.
+22 core: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `player_stats`, `pickup`, `silhouette`, `emote`.
 
 ---
 
@@ -170,7 +170,7 @@ Full event table: `.kilo/documentation/events.md`
 
 ## XI. Component Registry
 
-`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 20 core components. Mods register new types:
+`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 22 core components. Mods register new types:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```

@@ -15,6 +15,7 @@ description: Exact format for sprite data files (.lua) in Content/Assets/Sprites
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|---|
 | `object` | string | No | — | String identifier, copied to `sprite.object` at instantiation (used e.g. to exclude sprites from debug collision overlay). `"vegetable"` tags a prop as a vegetable — `Source/World/PropPicker.lua` splits props into veg/non-veg by this value and applies the world's vegetable cap + PRD to it |
+| `host` | string | No | — | Host-provider type (e.g. `"bush"`). Marks the prop as a host that overlay foods (berries) can attach to. Registered in `HostRegistry` on spawn; unregistered on `PROP_BROKEN` |
 | `frameWidth` | number | Yes* | — | Sprite frame width in pixels |
 | `frameHeight` | number | Yes* | — | Sprite frame height in pixels |
 | `pivotX` | number/string | No | `"center"` | X origin. Pixel number from top-left (e.g. `8` on a 16px frame = center) or keyword `"left"` / `"center"` / `"right"` |
@@ -77,7 +78,20 @@ return {
 }
 ```
 
-`Merge.resolveExtends()` deep-merges the base file into the child. Child fields override base fields. Components are matched by `component` type + `mergeKey`, then deep-merged. Two entries with the same key (e.g. two `shader` components without `mergeKey`) are merged into one component. Shader `shaders` arrays concatenate (parent first, dedup by name). Base component order is preserved; new override entries are appended at the end. Use `_remove = true` to delete a base component.
+`Merge.resolveExtends()` deep-merges the base file into the child. Child fields override base fields. Components are matched by `component` type, then deep-merged. Two entries with the same type (e.g. two `shader` components) are merged into one component. Shader `shaders` arrays concatenate (parent first, dedup by name). Base component order is preserved; new override entries are appended at the end.
+
+## World.lua prop item fields
+
+Each entry in `Content/Data/World.lua` `props.items` references a prop data file:
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `data` | string | — | Module path to the prop data file |
+| `weight` | number | `1` | Weighted pick probability |
+| `host` | string | nil | Host type this overlay food attaches to (e.g. `"bush"`). When set, the prop is spawned as a child on a registered host of that type instead of standalone |
+| `offsetX` | number | `0` | Child X offset from the host pivot |
+| `offsetY` | number | `0` | Child Y offset from the host pivot |
+| `inheritFrame` | boolean | `false` | Start the child on the host's current animation frame |
 
 ## Complete example
 

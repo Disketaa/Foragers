@@ -22,8 +22,8 @@ Source of truth: `Source/Helpers/Core/Events.lua`.
 | `DEATH` | `"death"` | PlayerStats (satiety 0) | Main.lua(5) — sets `state = "dying"`, emits `STATE_CHANGED("death")`, starts the death reveal; Shake(5, via `triggerOn = { "death" }`) — death shake; Sound(15) — plays the `death` sound tag once |
 | `PROP_HIT` | `"prop_hit"` | AttackSystem | Shader(8), TextEmitter(5), Tween(10), Sound(15) |
 | `PROP_HIT` payload | — | AttackSystem emits `PROP_HIT` with the damage number as the first arg (`emit(PROP_HIT, damage)`). `text_emitter` uses this payload as the display text when its `text` field is nil. | — |
-| `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), Shake(5), Sound(15) |
-| `PROP_SPAWNED` | `"prop_spawned"` | PropSpawner | Tween(10), Sound(15) |
+| `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), World/Overlay(3, on child → release host claim + unguard; on parent → kill child), Shake(5), Sound(15) |
+| `PROP_SPAWNED` | `"prop_spawned"` | PropWire (standalone props), World/Overlay (hosted child) | Tween(10), Sound(15) |
 | `VALUE_CHANGED` payload | — | PlayerStats emits `VALUE_CHANGED` with `{ sourceType, field, value, maxValue, level }` in `addExperience()` when XP changes. Counter uses `field` to filter and `value/maxValue` for frame; `level` drives optional label text. Main.lua listens for `field == "satiety"` to update the saturation shader and global timescale. | — |
 | `COUNTER_TICK` | `"counter_tick"` | Counter | Tween(10) |
 | `COUNTER_WRAP` | `"counter_wrap"` | Counter | Tween(10), Sound(15) |

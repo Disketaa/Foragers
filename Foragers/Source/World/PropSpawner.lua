@@ -1,7 +1,7 @@
-local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Collision = require("Source.Sprite.Components.Collision")
-local Events = require("Source.Helpers.Core.Events")
 local PropPicker = require("Source.World.PropPicker")
+local HostRegistry = require("Source.World.HostRegistry")
+local PropWire = require("Source.World.PropWire")
 
 local _tileSize
 local _activeTiles = {}
@@ -100,34 +100,19 @@ local function update(dt)
 	local tile = available[love.math.random(1, #available)]
 
 	-- Prop type decided by the shared PRD picker (vegetable cap + Dota-2-style
-	-- accumulated chance), same state as the initial plan.
-	local chosen = PropPicker.pick(nil)
+	-- accumulated chance), same state as the initial plan. Overlay foods (berries)
+	-- resolve a live host here; a pick with no available host is skipped without
+	-- resetting the PRD streak.
+	local chosen = PropPicker.pick(nil, HostRegistry.find)
 	if not chosen then
 		return nil
 	end
 
-	local sprite = SpriteLoader.instantiate(chosen.data, tile.x, tile.y, chosen.pngPath)
-
-	sprite:emit(Events.PROP_SPAWNED)
-
-	sprite.flipX = math.abs(tile.seed + 7777) % 2 == 0
-
-	local ss = sprite:findComponent("spritesheet")
-	if ss then
-		local numFrames = ss.columns or 1
-		local frameIndex = math.abs(tile.seed + 5000) % numFrames
-		ss:setFrame(frameIndex)
-	end
-	local col = sprite:findComponent("collision")
-	if col then
-		if col.mode == "slowdown" then
-			col:registerAsSlowdown()
-		else
-			col:registerAsSolid()
-		end
+	if chosen.host then
+		return PropWire.onHost(chosen.host, chosen)
 	end
 
-	return sprite
+	return PropWire.standalone(chosen.data, chosen.pngPath, tile.x, tile.y, tile.seed)
 end
 
 return {

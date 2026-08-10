@@ -1,5 +1,5 @@
 return {
-	extends = "Content.Assets.Sprites.Drops._Vegetables",
+	extends = "Content.Assets.Sprites.Drops._Foods",
 	components = {
 		{
 			component = "shadow",

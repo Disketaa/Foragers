@@ -191,6 +191,34 @@ function SpriteSheet:setFrame(index)
 	end
 end
 
+--- 1-based index of the frame currently shown by the active animation.
+---@return number|nil
+function SpriteSheet:getAnimFrameIndex()
+	local anim = self.currentAnim and self.animations and self.animations[self.currentAnim]
+	if not anim then
+		return nil
+	end
+	return frameIndexAt(anim, self.currentTime)
+end
+
+--- Snap the active animation to a specific 1-based frame, continuing to animate
+--- from there (used by Overlay.inheritFrame so a child spawns on the host's
+--- current frame).
+---@param index number|nil
+function SpriteSheet:setAnimFrameIndex(index)
+	if not index or not self.currentAnim or not self.animations then
+		return
+	end
+	local anim = self.animations[self.currentAnim]
+	if not anim or index < 1 or index > anim.frames then
+		return
+	end
+	-- cum[index] is the weight-sum boundary before frame index; the frame spans
+	-- [cum[index], cum[index+1]). Restart at that boundary in seconds.
+	self.currentTime = anim.cum[index] / anim.speed
+	self._lastFrame = nil
+end
+
 function SpriteSheet:_getQuad()
 	if not self.quads then
 		return nil

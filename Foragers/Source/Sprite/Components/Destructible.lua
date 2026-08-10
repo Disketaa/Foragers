@@ -9,6 +9,10 @@ function Destructible.new(data)
 	return setmetatable({
 		hp = data.hp or 3,
 		replaceWith = data.replaceWith,
+		-- While guarded, this sprite is not a valid attack target. Set by
+		-- Source/World/Overlay.lua so a host (bush/tree/rock) can't be hit until
+		-- its fruit is destroyed.
+		guarded = false,
 		type = "destructible",
 	}, Destructible)
 end
