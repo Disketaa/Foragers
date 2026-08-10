@@ -45,7 +45,13 @@ function Overlay:attach()
 	-- the bush (higher sortY) then covers the berry too, instead of the berry
 	-- always drawing above every layer-0 prop.
 	child.layer = self.parent.layer
-	child.sortOffsetY = self.parent.sortOffsetY + 1 - self.offsetY
+	-- Sub-pixel step, not +1: a full sortY step would cross a sprite (player)
+	-- standing at the bush's footline, splitting bush and berry around it.
+	child.sortOffsetY = self.parent.sortOffsetY + 0.01 - self.offsetY
+
+	-- Mirror the host's flip so a flipped bush faces its berries the same way.
+	-- Host flip is static (set once at spawn), so copying at attach stays in sync.
+	child.flipX = self.parent.flipX
 
 	-- Optionally start the child on the host's current animation frame so a
 	-- bush at frame 3 spawns berries that also begin at frame 3.

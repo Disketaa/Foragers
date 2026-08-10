@@ -92,13 +92,6 @@ local function update(dt)
 	end
 	_timer = 0
 
-	local available = getAvailableTiles()
-	if #available == 0 then
-		return nil
-	end
-
-	local tile = available[love.math.random(1, #available)]
-
 	-- Prop type decided by the shared PRD picker (vegetable cap + Dota-2-style
 	-- accumulated chance), same state as the initial plan. Overlay foods (berries)
 	-- resolve a live host here; a pick with no available host is skipped without
@@ -108,10 +101,18 @@ local function update(dt)
 		return nil
 	end
 
+	-- Overlay food (berry): attaches to a host, so it needs no free tile. A
+	-- world where every tile is occupied (all-bush) can still respawn fruit.
 	if chosen.host then
 		return PropWire.onHost(chosen.host, chosen)
 	end
 
+	local available = getAvailableTiles()
+	if #available == 0 then
+		return nil
+	end
+
+	local tile = available[love.math.random(1, #available)]
 	return PropWire.standalone(chosen.data, chosen.pngPath, tile.x, tile.y, tile.seed)
 end
 

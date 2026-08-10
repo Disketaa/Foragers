@@ -8,17 +8,17 @@ return {
 	props = {
 		coverage = 0.33,
 		spawnInterval = 3,
-		vegetables = { density = 0.025, pseudoRandomChance = 0.015 },
+		vegetables = { density = 0.025, pseudoRandomChance = 0.025 },
 		items = {
 			{ data = "Content.Assets.Sprites.Props.BirchTree", weight = 1 },
 			{ data = "Content.Assets.Sprites.Props.OakTree", weight = 1 },
+			{ data = "Content.Assets.Sprites.Props.Berries", weight = 3, host = "bush", offsetY = -3, inheritFrame = true },
 			{ data = "Content.Assets.Sprites.Props.Rocks", weight = 4 },
 			{ data = "Content.Assets.Sprites.Props.Turnip", weight = 4 },
 			{ data = "Content.Assets.Sprites.Props.Carrot", weight = 4 },
 			{ data = "Content.Assets.Sprites.Props.OakStump", weight = 5 },
 			{ data = "Content.Assets.Sprites.Props.BirchStump", weight = 5 },
-			{ data = "Content.Assets.Sprites.Props.Berries", weight = 40000000, host = "bush", offsetY = -3, inheritFrame = true },
-			{ data = "Content.Assets.Sprites.Props.Bush", weight = 50000000 },
+			{ data = "Content.Assets.Sprites.Props.Bush", weight = 5 },
 		},
 	},
 }

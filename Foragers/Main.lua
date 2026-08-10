@@ -54,8 +54,8 @@ local collisionScan = {}
 local function isNonSolidCollision(c)
 	return c.mode ~= "solid"
 end
-local canvas = Canvas.new(480, 270, "outer")
-local bgCanvas = Canvas.new(480, 270, "outer")
+local canvas = Canvas.new(320, 180, "outer")
+local bgCanvas = Canvas.new(320, 180, "outer")
 local cursorSprite = nil
 local cameraX = 0
 local cameraY = 0
@@ -1203,7 +1203,7 @@ function love.update(dt)
 		local follow = sprite:findComponent("follow", function(c) return c.followTarget end)
 		if follow then
 			local pickup = sprite:findComponent("pickup", function(c) return c.satiety end)
-			local text = pickup and ("+" .. tostring(pickup.satiety)) or ""
+			local text = pickup and tostring(pickup.satiety) or ""
 			follow.followTarget:emit(Events.PICKUP, text)
 		end
 		destroySprite(sprite)

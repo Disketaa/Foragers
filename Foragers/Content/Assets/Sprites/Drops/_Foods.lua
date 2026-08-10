@@ -2,13 +2,6 @@ return {
 	extends = "Content.Assets.Sprites.Drops.__Drops",
 	components = {
 		{
-			component = "spritesheet",
-			animations = {
-				{ row = 1, frames = 4, speed = 8, loop = true },
-			},
-		},
-
-		{
 			component = "follow",
 			followRadius = 25,
 			followDelay = 0.5,
