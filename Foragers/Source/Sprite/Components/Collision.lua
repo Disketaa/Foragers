@@ -120,17 +120,14 @@ function Collision:update(dt)
 	if self._prevX ~= nil and self._prevY ~= nil then
 		local desiredX, desiredY = self.parent.x, self.parent.y
 
-		-- Start from pre-move position
 		self.parent.x = self._prevX
 		self.parent.y = self._prevY
 
-		-- Try X movement only
 		self.parent.x = desiredX
 		if collidesWithAny(self:getRect(), solidColliders) then
 			self.parent.x = self._prevX
 		end
 
-		-- Try Y movement only (from resolved X)
 		self.parent.y = desiredY
 		if collidesWithAny(self:getRect(), solidColliders) then
 			self.parent.y = self._prevY

@@ -18,8 +18,8 @@ return {
 			offsetY = -3,
 			followRadius = 25,
 			followDelay = 0.5,
-			accelerate = "5",
-			smoothness = "0.25..0.3",
+			accelerate = "3..7",
+			smoothness = "0.25..0.4",
 		},
 
 		{

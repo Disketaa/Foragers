@@ -4,7 +4,7 @@ return {
 	gizmo = {
 		enabled = false,
 		collisions = {
-			enabled = false,
+			enabled = true,
 			exclude = {},
 			decor = "cross",
 			priority = 2,
@@ -12,7 +12,7 @@ return {
 		},
 
 		boundaries = {
-			enabled = true,
+			enabled = false,
 			exclude = { "tiles" },
 			decor = "dashed",
 			thickness = 2,
