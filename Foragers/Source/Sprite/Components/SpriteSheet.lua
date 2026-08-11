@@ -15,11 +15,12 @@ local imageCache = {}
 local quadCache = {}
 
 --- Map a currentTime (seconds) to its frame index 1..anim.frames, walking the
---- per-frame duration weights (cum boundaries in frame units).
+--- per-frame duration weights (cum boundaries in frame units). Frame i spans
+--- [cum[i], cum[i+1]), so advance past frame i only once tc reaches cum[i+1].
 local function frameIndexAt(anim, currentTime)
 	local tc = currentTime * anim.speed
 	local i = 1
-	while i < anim.frames and tc >= anim.cum[i] do
+	while i < anim.frames and tc >= anim.cum[i + 1] do
 		i = i + 1
 	end
 	return i
@@ -108,8 +109,8 @@ function SpriteSheet.new(data)
 		for name, animDef in pairs(data.animations) do
 			local numFrames = math.min(animDef.frames or columns, columns)
 			-- Per-frame hold weights (`duration`, default all 1s). cum[i] is the
-			-- weight-sum before frame i, so frame i spans [cum[i-1], cum[i]) in
-			-- frame units; maxTime = total / speed keeps currentTime in seconds.
+			-- weight-sum boundary before frame i, so frame i spans [cum[i], cum[i+1])
+			-- in frame units; maxTime = total / speed keeps currentTime in seconds.
 			local dur = animDef.duration or {}
 			local cum = { 0 }
 			for i = 1, numFrames do
@@ -121,7 +122,7 @@ function SpriteSheet.new(data)
 				frames = numFrames,
 				speed = speed,
 				cum = cum,
-				maxTime = cum[numFrames] / speed,
+				maxTime = cum[numFrames + 1] / speed,
 				loop = animDef.loop ~= false,
 			}
 		end

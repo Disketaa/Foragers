@@ -1,5 +1,6 @@
 return {
 	extends = "Content.Assets.Sprites.Props.__Props",
+	host = "rock",
 	components = {
 		{
 			component = "spritesheet",

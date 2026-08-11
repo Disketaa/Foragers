@@ -13,6 +13,7 @@ return {
 			{ data = "Content.Assets.Sprites.Props.BirchTree", weight = 1 },
 			{ data = "Content.Assets.Sprites.Props.OakTree", weight = 1 },
 			{ data = "Content.Assets.Sprites.Props.Berries", weight = 3, host = "bush", offsetY = -3, inheritFrame = true },
+			{ data = "Content.Assets.Sprites.Props.Snail", weight = 3, host = "rock", offsetY = -5 },
 			{ data = "Content.Assets.Sprites.Props.Rocks", weight = 4 },
 			{ data = "Content.Assets.Sprites.Props.Turnip", weight = 4 },
 			{ data = "Content.Assets.Sprites.Props.Carrot", weight = 4 },

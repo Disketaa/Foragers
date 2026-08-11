@@ -40,6 +40,10 @@ function Overlay:attach()
 	end
 	self.child = child
 
+	-- Reference back to the host so gameplay targeting (crosshair) can use the
+	-- host's position instead of the child's offset position.
+	child.hostParent = self.parent
+
 	-- Draw the child with its host, not on a fixed layer: inherit the host's
 	-- layer and sort just after it (sortY = y + sortOffsetY). A tree in front of
 	-- the bush (higher sortY) then covers the berry too, instead of the berry
