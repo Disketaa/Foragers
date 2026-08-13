@@ -2,6 +2,14 @@ return {
 	extends = "Content.Assets.Sprites.Drops.__Drops",
 	components = {
 		{
+			component = "shadow",
+			width = 8,
+			height = 3,
+			offsetX = 2,
+			offsetY = 4,
+		},
+
+		{
 			component = "follow",
 			followRadius = 25,
 			followDelay = 0.5,
