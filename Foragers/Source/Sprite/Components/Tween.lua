@@ -378,6 +378,12 @@ function TweenComponent:attach()
 		end
 	end, 10)
 
+	self.parent:on(Events.TARGET_SELECTED, function()
+		if self.tags.target_selected then
+			applyTweens(self, self.tags.target_selected)
+		end
+	end, 10)
+
 	self.parent:on(Events.COUNTER_TICK, function()
 		if self.tags.counter_tick then
 			applyTweens(self, self.tags.counter_tick)

@@ -42,10 +42,6 @@ function Merge.merge(base, override)
 	return result
 end
 
-local function _compKey(comp)
-	return comp.component
-end
-
 -- Shader component merges its `shaders` array by concatenation (parent first,
 -- child appended) so children inherit base shaders plus their own. Each entry
 -- may be a string name or a table spec { name=..., u_*=... }. Dedup by name.
@@ -86,16 +82,27 @@ end
 --- Merge data.components with inheritance: match by component key.
 --- Arrays (component lists) are matched and deep-merged by key.
 --- Base order is preserved; new override entries are appended at the end.
+--- A key is type + occurrence index, so a base may carry multiple components
+--- of the same type (e.g. two particle_emitters); they no longer collapse into
+--- one. A child override of a type merges with the base's first occurrence of
+--- that type, leaving later base occurrences intact.
 ---@param baseComponents table[]
 ---@param overrideComponents table[]
 ---@return table[]
 function Merge.componentMerge(baseComponents, overrideComponents)
 	local byKey = {}
-	for _, comp in ipairs(baseComponents) do
-		byKey[_compKey(comp)] = Merge._deepCopy(comp)
+	local baseKeys = {}
+	local baseTypeCount = {}
+	for i, comp in ipairs(baseComponents) do
+		baseTypeCount[comp.component] = (baseTypeCount[comp.component] or 0) + 1
+		local key = comp.component .. "#" .. baseTypeCount[comp.component]
+		baseKeys[i] = key
+		byKey[key] = Merge._deepCopy(comp)
 	end
+	local overTypeCount = {}
 	for _, comp in ipairs(overrideComponents) do
-		local key = _compKey(comp)
+		overTypeCount[comp.component] = (overTypeCount[comp.component] or 0) + 1
+		local key = comp.component .. "#" .. overTypeCount[comp.component]
 		if byKey[key] then
 			local merged = Merge.merge(byKey[key], comp)
 			if comp.component == "shader" then
@@ -108,8 +115,8 @@ function Merge.componentMerge(baseComponents, overrideComponents)
 		end
 	end
 	local result = {}
-	for _, comp in ipairs(baseComponents) do
-		local key = _compKey(comp)
+	for i in ipairs(baseComponents) do
+		local key = baseKeys[i]
 		if byKey[key] then
 			table.insert(result, byKey[key])
 			byKey[key] = nil

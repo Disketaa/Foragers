@@ -73,13 +73,6 @@ return {
 		},
 
 		{
-			component = "particle_emitter",
-			spawnOn = { target_selected = true },
-			particle = "Content/Assets/Sprites/Particles/Crosshair",
-			layer = "below",
-		},
-
-		{
 			component = "silhouette",
 			color = { 0.36, 0.44, 0.55, 0.75 },
 		},

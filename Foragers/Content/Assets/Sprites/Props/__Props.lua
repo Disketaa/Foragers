@@ -26,6 +26,7 @@ return {
 					{ target = "scale_y", from = 1.5, to = 1, duration = 0.4, curve = "OutBack" },
 					{ target = "brightness", from = 1, to = 0.5, duration = 0.2, curve = "InBack" },
 				},
+				target_selected = { { target = "tint_mix", from = 0.5, to = 0, duration = 0.5, curve = "OutCubic" } },
 			},
 		},
 
@@ -35,6 +36,13 @@ return {
 			spawnOn = { prop_broken = true },
 			particle = "Content/Assets/Sprites/Particles/SmallExplosion.lua",
 			layer = "above",
+		},
+
+		{
+			component = "particle_emitter",
+			spawnOn = { target_selected = true },
+			particle = "Content/Assets/Sprites/Particles/Crosshair",
+			layer = "below",
 		},
 
 		{
@@ -72,7 +80,10 @@ return {
 
 		{
 			component = "shader",
-			shaders = { "Brightness" },
+			shaders = {
+				"Brightness",
+				{ Tint = { u_tint_color = { 0.76, 0.94, 0.16 }, u_additive = 1 } },
+			},
 		},
 	},
 }

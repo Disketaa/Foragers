@@ -113,7 +113,12 @@ function AttackSystem.update(dt, allObjects)
 				local hx, hy = chosen.hostParent and chosen.hostParent.x or chosen.x, chosen.hostParent and chosen.hostParent.y or chosen.y
 				ws._lastHitX = hx
 				ws._lastHitY = hy
-				ws:emit(Events.TARGET_SELECTED)
+				-- Redirect the targeted object's own crosshair to the host position
+				-- so overlay children (berries, snail) show it on the parent, not
+				-- their offset. Supports future multi-prop / splash targeting.
+				chosen._lastHitX = hx
+				chosen._lastHitY = hy
+				chosen:emit(Events.TARGET_SELECTED)
 			end
 		end
 	end

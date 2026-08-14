@@ -78,7 +78,7 @@ return {
 }
 ```
 
-`Merge.resolveExtends()` deep-merges the base file into the child. Child fields override base fields. Components are matched by `component` type, then deep-merged. Two entries with the same type (e.g. two `shader` components) are merged into one component. Shader `shaders` arrays concatenate (parent first, dedup by name). Base component order is preserved; new override entries are appended at the end.
+`Merge.resolveExtends()` deep-merges the base file into the child. Child fields override base fields. Components are matched by `component` type + occurrence index, then deep-merged, so a base may carry multiple components of the same type (e.g. two `particle_emitter`s) — they no longer collapse into one. A child override of a type merges with the base's first occurrence of that type, leaving later base occurrences intact. Shader `shaders` arrays concatenate (parent first, dedup by name). Base component order is preserved; new override entries are appended at the end.
 
 ## World.lua prop item fields
 

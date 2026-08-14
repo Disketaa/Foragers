@@ -124,7 +124,7 @@ local DEATH_DARKEN_DELAY = 5
 local DEATH_DARKEN_DURATION = 1
 local DEATH_DARKEN_CURVE = "InOutCubic"
 -- Opening fade: the canvas starts fully dark and reveals in from black.
-local INTRO_DARKEN_DURATION = 1.0
+local INTRO_DARKEN_DURATION = 1
 local INTRO_DARKEN_CURVE = "OutCubic"
 local startDarkenTimer = 1
 local startDarkenActive = false
@@ -615,7 +615,8 @@ local function commandsCtx()
 		clearProps = clearProps,
 		spawnDrop = spawnDrop,
 		mouseWorld = function()
-			local mx, my = love.mouse.getPosition()
+			local mx,
+		my = love.mouse.getPosition()
 			return screenToWorld(mx, my)
 		end,
 	}
