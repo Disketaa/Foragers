@@ -55,17 +55,21 @@ function Commands.complete(text)
 	local trailingSpace = text:match("^.*%s$") ~= nil
 	local list = {}
 	if trailingSpace or rest ~= "" then
-		-- Completing a sub-command of `cmd`.
+		-- Completing a sub-command of `cmd`. Match case-insensitively so e.g.
+		-- "medi" completes to "MediumCrystal"; the returned candidate keeps its
+		-- original casing.
+		local restLower = rest:lower()
 		for _, sub in ipairs(subcommands[cmd] or {}) do
-			if sub:sub(1, #rest) == rest then
+			if sub:lower():sub(1, #rest) == restLower then
 				list[#list + 1] = sub
 			end
 		end
 		return cmd .. " ", list
 	end
-	-- Completing the command name.
+	-- Completing the command name. Match case-insensitively; candidates keep casing.
+	local cmdLower = cmd:lower()
 	for _, name in ipairs(Commands.list()) do
-		if name:sub(1, #cmd) == cmd then
+		if name:lower():sub(1, #cmd) == cmdLower then
 			list[#list + 1] = name
 		end
 	end
