@@ -221,6 +221,47 @@ Commands.register("world", function(args, ctx)
 	return "No props", true
 end, "manipulate world.")
 
+-- Drop sprite names (base file names under Content/Assets/Sprites/Drops/). Registered
+-- as sub-commands so `spawn ` tab-completes them. Keep in sync with that folder.
+local DROP_NAMES = {
+	"Berries", "BrownMushroom", "Carrot", "MediumCrystal",
+	"RedMushroom", "SmallCrystal", "Snail", "Turnip",
+}
+for _, name in ipairs(DROP_NAMES) do
+	Commands.addSubcommand("spawn", name)
+end
+
+--- Spawn one or more drops at the mouse world position. Args is a space-separated
+--- list of drop names (e.g. "Snail Turnip"). Each name resolves to a drop sprite
+--- via `ctx.spawnDrop`; the spawn point comes from `ctx.mouseWorld`.
+Commands.register("spawn", function(args, ctx)
+	if args == "" then
+		return 'Usage: spawn <drop> [<drop> ...] (at mouse).', false
+	end
+	if not ctx.spawnDrop then
+		return "No spawn accessor", false
+	end
+	local wx, wy = ctx.mouseWorld()
+	if not wx then
+		return "No mouse position", false
+	end
+	local spawned = {}
+	local failed = {}
+	for name in args:gmatch("%S+") do
+		local ok, err = ctx.spawnDrop(name, wx, wy)
+		if ok then
+			spawned[#spawned + 1] = name
+		else
+			failed[#failed + 1] = name .. (err and (" (" .. err .. ")") or "")
+		end
+	end
+	local msg = "Spawned " .. #spawned .. " drop(s): " .. table.concat(spawned, ", ")
+	if #failed > 0 then
+		msg = msg .. " | unknown: " .. table.concat(failed, ", ")
+	end
+	return msg, true
+end, "spawn drops at the mouse position.")
+
 Commands.register("restart", function(_, ctx)
 	if ctx.restart then
 		ctx.restart()

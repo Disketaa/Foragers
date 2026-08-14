@@ -108,6 +108,9 @@ local ZOOM_SMOOTHNESS = Zoom.smoothness
 -- Hold the death screen (snapped zoom / low-sat look) for DEATH_REVEAL_DELAY
 -- before the reveal eases zoom / saturation / contrast back to normal.
 local DEATH_REVEAL_DELAY = 1.25
+-- Forward declaration: defined as an assignment below so the debug `spawn` command's
+-- mouseWorld accessor (built earlier) can close over the same binding.
+local screenToWorld
 local DEATH_REVEAL_DURATION = 2
 local DEATH_REVEAL_CURVE = "OutCubic"
 -- Grain fades from its current opacity to invisible over this window at death,
@@ -278,6 +281,39 @@ local function clearProps()
 		destroySprite(s)
 	end
 	return #targets
+end
+
+--- Spawn a drop sprite at a world position (debug `spawn` command). Resolves the
+--- drop name to its data file under Content/Assets/Sprites/Drops/, instantiates it,
+--- and registers it in the live object lists so it updates/draws/collides. Returns
+--- `true` on success, or `nil, reason` if the drop name is unknown.
+local function spawnDrop(name, x, y)
+	local spritePath = "Content/Assets/Sprites/Drops/" .. name
+	local luaPath = Path.lua(spritePath)
+	local ok, data = pcall(require, luaPath)
+	if not ok or not data then
+		return nil, "unknown drop"
+	end
+	if data.extends then
+		data = Merge.resolveExtends(data)
+	end
+	local pngPath = spritePath .. ".png"
+	local sprite = SpriteLoader.instantiate(data, x, y, pngPath)
+	if not sprite then
+		return nil, "instantiate failed"
+	end
+	-- Drops follow the player via the `follow` component, whose target is set
+	-- elsewhere for normal drops (Drop.getPending). Set it here so spawned drops
+	-- scatter then home in and become edible.
+	if playerSprite then
+		local follow = sprite:findComponent("follow", function(c) return c.setFollowTarget end)
+		if follow then
+			follow:setFollowTarget(playerSprite)
+		end
+	end
+	table.insert(objects, { instance = sprite, data = {} })
+	table.insert(dynamicObjects, { instance = sprite, data = {} })
+	return true
 end
 
 --- Rebuild all game state from scratch (world, sprites, UI, player).
@@ -576,6 +612,11 @@ local function commandsCtx()
 			resetGame()
 		end,
 		clearProps = clearProps,
+		spawnDrop = spawnDrop,
+		mouseWorld = function()
+			local mx, my = love.mouse.getPosition()
+			return screenToWorld(mx, my)
+		end,
 	}
 end
 
@@ -647,7 +688,7 @@ end
 
 -- Inverse of the render chain. Output zoom scales the canvas blit about the pivot:
 -- screen = pivot + (finalX + (p + camPixel)*scale - pivot) * zoom.
-local function screenToWorld(screenX, screenY)
+screenToWorld = function(screenX, screenY)
 	local z = Zoom.current
 	local px, py = computeZoomPivot()
 	local bx, by = canvasBlitOrigin()
