@@ -2,9 +2,10 @@ return {
 	width = 20,
 	height = 20,
 	tileSize = 8,
+	seed = -1,
 	backgroundColor = { 0.21, 0.65, 0.72 },
 	borderTileOffset = 8,
-	noise = { seed = -1, scale = 0.15, detail = 0.3, density = 0.8 },
+	noise = { scale = 0.15, detail = 0.3, density = 0.8 },
 	props = {
 		coverage = 0.33,
 		spawnInterval = 3,

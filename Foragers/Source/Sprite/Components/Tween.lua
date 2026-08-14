@@ -339,8 +339,12 @@ function TweenComponent:attach()
 	end, 10)
 
 	self.parent:on(Events.STATE_CHANGED, function(newState, oldState)
-		if self.tags.splash and oldState and (oldState == "swimming") ~= (newState == "swimming") then
-			applyTweens(self, self.tags.splash)
+		if self.tags.splash and oldState then
+			local wasInWater = oldState == "swim" or oldState == "float"
+			local isInWater = newState == "swim" or newState == "float"
+			if wasInWater ~= isInWater then
+				applyTweens(self, self.tags.splash)
+			end
 		end
 	end, 10)
 

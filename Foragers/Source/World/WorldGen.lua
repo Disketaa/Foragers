@@ -4,6 +4,10 @@ local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local private = {}
 local tileSize = WorldConfig.tileSize or (TileData and TileData.frameWidth) or 8
 
+-- Last generated world seed, exposed via getSeed() for the debug `seed` command.
+-- Persists across the world lifetime so the command reads the current world's seed.
+local lastSeed = nil
+
 for k, v in pairs(WorldConfig) do
 	private[k] = v
 end
@@ -15,10 +19,11 @@ function private.generate()
 	local radius = math.min(centerX, centerY) - 0.5
 
 	local noise = private.noise or {}
-	local effectiveSeed = noise.seed or -1
+	local effectiveSeed = private.seed or -1
 	if effectiveSeed < 0 then
 		effectiveSeed = love.math.random(1, 999999)
 	end
+	lastSeed = effectiveSeed
 
 	for y = 0, private.height - 1 do
 		world[y] = {}
@@ -51,4 +56,6 @@ end
 
 return {
 	generate = private.generate,
+	---@return number|nil The seed of the most recently generated world (nil before first generate).
+	getSeed = function() return lastSeed end,
 }

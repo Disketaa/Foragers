@@ -608,6 +608,7 @@ end
 local function commandsCtx()
 	return {
 		stats = function() return playerStats end,
+		seed = function() return WorldGen.getSeed() end,
 		restart = function()
 			resetGame()
 		end,

@@ -252,13 +252,28 @@ relevant section before touching that subsystem.
   without the decrement `vegQuota` stays 0 and vegetables never respawn,
   regardless of `pseudoRandomChance`.
 - **Overlay food (berries) must NOT abort the prop plan when no host exists.**
-  `PropPicker.pick` returns a non-veg prop when a hosted veg (berry) has no
-  available host, instead of returning nil — `WorldBuilder.buildPropPlan`'s
+  A hosted veg (berry) is decided in `pick()` as `pending` (host resolution
+  deferred); `resolvePending()` later returns a non-veg prop when no host of
+  that type exists in the plan, instead of nil — `buildPropPlan`'s
   `if not chosen then break end` would otherwise treat a nil as "no more props"
   and abort the whole plan (0 vegetables). The PRD streak is NOT reset on the
-  skip, so the next veg pick keeps its accumulated chance. Hosts are registered
-  in `HostRegistry` (keyed by tile coords) on spawn; the plan pairs each berry
-  to a planned host at plan time, runtime pairs via `HostRegistry.find`.
+  fallback, so the next veg pick keeps its accumulated chance. Hosts are
+  registered in `HostRegistry` (keyed by tile coords) on spawn; the plan pairs
+  each berry to a planned host at plan time, runtime pairs via `HostRegistry.find`.
+- **Single-pass plan + deferred host resolution (no snapshot/restore).**
+  `buildPropPlan` shuffles tiles once, then a single RNG pass calls
+  `PropPicker.pick(tile.seed, slots)` with NO hostProvider. `pick()` decides each
+  tile's identity and, for a host-needing veg, commits the veg quota/streak
+  immediately and returns `{ pending = true, hostType, ... }` — it never falls
+  back at identity time. A second, RNG-free pass calls `PropPicker.resolvePending(...)`
+  per pending entry against the now-complete `plannedHosts`, resolving the host
+  (or doing a tile-seeded, quota-inert non-veg fallback). Because `_vegSpawned`/
+  `_prdStreak` mutate exactly once per tile (in `pick`), `chooseVeg`'s threshold
+  is identical regardless of later resolution, so a tile can never flip category
+  between passes. `PropPicker.snapshot`/`restore` were removed — there is no
+  second RNG pass to isolate. `hostProvider` iterates `plannedHosts` in sorted
+  coordKey order so the same berry always binds the same bush across restarts
+  (Lua `pairs` order over string keys is unspecified and reshuffled overlays).
 - **Hosted children draw with their host, not on a fixed layer.** An overlay
   child (berry) must inherit the host's `layer` and sort just after it
   (`sortOffsetY = host.sortOffsetY + 1 - offsetY`), or a tree in front of the

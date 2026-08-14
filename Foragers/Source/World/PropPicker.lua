@@ -93,12 +93,15 @@ local function prdChance()
 	return math.min(1, _pseudoRandomChance * (_prdStreak + 1))
 end
 
+---@param tileSeed number|nil  per-tile seed for deterministic prop choice (nil = global RNG)
 ---@param remainingSlots number|nil  prop slots left INCLUDING this one (used by
 ---   the initial plan to force the remaining veg quota); nil for unbounded runtime
 ---@param hostProvider function|nil  (hostType) -> host, hostKey; resolves the host
----   an overlay food (berry) attaches to. nil for non-host veg.
----@return table|nil  { data, pngPath, modulePath, host?, hostKey?, offsetX?, offsetY? }
-local function pick(remainingSlots, hostProvider)
+---   an overlay food (berry) attaches to. Given => immediate resolution (runtime);
+---   nil => defer (plan-time), returns { pending = true, hostType, ... } for
+---   resolvePending() once plannedHosts is complete.
+---@return table|nil  { data, pngPath, modulePath, host?, hostKey?, hostType?, offsetX?, offsetY?, pending? }
+local function pick(tileSeed, remainingSlots, hostProvider)
 	if _nonVegWeight == 0 and _vegWeight == 0 then
 		return nil
 	end
@@ -106,9 +109,17 @@ local function pick(remainingSlots, hostProvider)
 	local vegQuota = _vegCap - _vegSpawned
 	local chooseVeg = false
 
+	-- Deterministic per-tile RNG when tileSeed given (initial plan, seeded from
+	-- world seed via tile.seed); global RNG stream for runtime spawns (nil seed).
+	-- Matches WorldBuilder's setRandomSeed/getRandomState isolation pattern.
+	local savedState
+	if tileSeed then
+		savedState = love.math.getRandomState()
+		love.math.setRandomSeed(tileSeed)
+	end
+
 	if vegQuota > 0 and _vegWeight > 0 then
 		if remainingSlots and remainingSlots <= vegQuota then
-			-- Not enough slots left to reach the cap any other way.
 			chooseVeg = true
 		elseif _nonVegWeight == 0 then
 			chooseVeg = true
@@ -117,47 +128,93 @@ local function pick(remainingSlots, hostProvider)
 		end
 	end
 
+	local result
 	if chooseVeg then
 		local entry = pickWeighted(_vegProps, _vegWeight)
 		if not entry then
-			-- Veg list empty/zero-weight despite a positive quota: skip the veg
-			-- pick and place a non-veg prop instead.
 			_prdStreak = _prdStreak + 1
-			return pickWeighted(_nonVegProps, _nonVegWeight)
-		end
-		if entry.host then
-			local host, hostKey
+			result = pickWeighted(_nonVegProps, _nonVegWeight)
+		elseif entry.host then
 			if hostProvider then
-				host, hostKey = hostProvider(entry.host)
+				-- Immediate resolution: runtime spawns (live sprites via
+				-- HostRegistry.find), where there is no second pass.
+				local host, hostKey = hostProvider(entry.host)
+				if not host then
+					_prdStreak = _prdStreak + 1
+					result = pickWeighted(_nonVegProps, _nonVegWeight)
+				else
+					_prdStreak = 0
+					_vegSpawned = _vegSpawned + 1
+					result = {
+						data = entry.data, pngPath = entry.pngPath, modulePath = entry.modulePath,
+						host = host, hostType = entry.host, hostKey = hostKey,
+						offsetX = entry.offsetX, offsetY = entry.offsetY, inheritFrame = entry.inheritFrame,
+					}
+				end
+			else
+				-- Deferred: commit quota/streak NOW, once, so this decision is
+				-- fixed and can never be re-rolled by a later pass. The actual
+				-- host lookup happens in resolvePending() after plannedHosts
+				-- is complete.
+				_prdStreak = 0
+				_vegSpawned = _vegSpawned + 1
+				result = {
+					pending = true,
+					data = entry.data, pngPath = entry.pngPath, modulePath = entry.modulePath,
+					hostType = entry.host,
+					offsetX = entry.offsetX, offsetY = entry.offsetY, inheritFrame = entry.inheritFrame,
+				}
 			end
-			if not host then
-				-- Overlay food (berries) with no live host: skip the veg pick but
-				-- place a non-veg prop so the tile isn't wasted. The PRD streak
-				-- is NOT reset, so the next veg pick keeps its accumulated chance.
-				_prdStreak = _prdStreak + 1
-				return pickWeighted(_nonVegProps, _nonVegWeight)
-			end
+		else
 			_prdStreak = 0
 			_vegSpawned = _vegSpawned + 1
-			return {
-				data = entry.data,
-				pngPath = entry.pngPath,
-				modulePath = entry.modulePath,
-				host = host,
-				hostType = entry.host,
-				hostKey = hostKey,
-				offsetX = entry.offsetX,
-				offsetY = entry.offsetY,
-				inheritFrame = entry.inheritFrame,
-			}
+			result = entry
 		end
-		_prdStreak = 0
-		_vegSpawned = _vegSpawned + 1
-		return entry
+	else
+		_prdStreak = _prdStreak + 1
+		result = pickWeighted(_nonVegProps, _nonVegWeight)
 	end
 
-	_prdStreak = _prdStreak + 1
-	return pickWeighted(_nonVegProps, _nonVegWeight)
+	if savedState then
+		love.math.setRandomState(savedState)
+	end
+
+	return result
+end
+
+--- Resolve a pending host-needing entry once plannedHosts is complete.
+--- Pure lookup for the host; the fallback re-roll is tile-seeded for
+--- reproducibility but never touches _vegSpawned/_prdStreak — that decision
+--- was already committed in pick().
+local function resolvePending(pending, hostProvider, tileSeed)
+	local savedState
+	if tileSeed then
+		savedState = love.math.getRandomState()
+		love.math.setRandomSeed(tileSeed)
+	end
+
+	local host, hostKey
+	if hostProvider then
+		host, hostKey = hostProvider(pending.hostType)
+	end
+
+	local result
+	if not host then
+		-- No host of this type exists anywhere in the plan (more berries
+		-- than bushes) — deterministic non-veg fallback.
+		result = pickWeighted(_nonVegProps, _nonVegWeight)
+	else
+		result = {
+			data = pending.data, pngPath = pending.pngPath, modulePath = pending.modulePath,
+			host = host, hostType = pending.hostType, hostKey = hostKey,
+			offsetX = pending.offsetX, offsetY = pending.offsetY, inheritFrame = pending.inheritFrame,
+		}
+	end
+
+	if savedState then
+		love.math.setRandomState(savedState)
+	end
+	return result
 end
 
 --- Free one vegetable quota slot. Called when a vegetable prop is destroyed;
@@ -178,6 +235,7 @@ end
 return {
 	init = init,
 	pick = pick,
+	resolvePending = resolvePending,
 	onVegDestroyed = onVegDestroyed,
 	isInitialized = isInitialized,
 	vegStats = vegStats,

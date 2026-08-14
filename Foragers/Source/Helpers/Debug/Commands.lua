@@ -273,6 +273,14 @@ Commands.register("restart", function(_, ctx)
 	return "Restarting", true
 end, "restart the game.")
 
+Commands.register("seed", function(_, ctx)
+	local seed = ctx.seed and ctx.seed()
+	if not seed then
+		return "No seed", false
+	end
+	return "Seed: " .. seed, true
+end, "print the current world seed.")
+
 local PAGE_SIZE = 10
 
 Commands.register("help", function(args)

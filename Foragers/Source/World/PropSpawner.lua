@@ -96,7 +96,7 @@ local function update(dt)
 	-- accumulated chance), same state as the initial plan. Overlay foods (berries)
 	-- resolve a live host here; a pick with no available host is skipped without
 	-- resetting the PRD streak.
-	local chosen = PropPicker.pick(nil, HostRegistry.find)
+	local chosen = PropPicker.pick(nil, nil, HostRegistry.find)
 	if not chosen then
 		return nil
 	end

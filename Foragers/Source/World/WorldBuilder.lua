@@ -177,19 +177,38 @@ local function buildPropPlan(worldData, playerSprite)
 	local savedState = love.math.getRandomState()
 	love.math.setRandomSeed(numProps > 0 and activeTiles[1].seed or 0)
 
-	-- Track planned hosts so a berry picked early in the shuffle can still find
-	-- a bush that appears later in the plan. Each host is claimed once so two
-	-- berries never attach to the same bush.
+	-- Shuffle once into a local array so the single pick pass uses a fixed order.
+	local shuffledTiles = {}
+	for i = 1, #activeTiles do
+		shuffledTiles[i] = activeTiles[i]
+	end
+	for i = 1, math.min(numProps, #shuffledTiles) do
+		local j = love.math.random(i, #shuffledTiles)
+		shuffledTiles[i], shuffledTiles[j] = shuffledTiles[j], shuffledTiles[i]
+	end
+
+	-- plannedHosts: every host prop (bush/tree/rock/stump) the single pick pass
+	-- decided will be placed. claimedHosts: each host claimed once so two berries
+	-- never attach to the same bush during resolvePending.
 	local plannedHosts = {} -- hostType -> { [coordKey] = true }
 	local claimedHosts = {} -- hostType -> { [coordKey] = true }
 
+	-- Deterministic host claim: iterate plannedHosts in sorted coordKey order so
+	-- the same berry always binds to the same bush across restarts. Lua `pairs`
+	-- order is unspecified for string keys, which made overlay positions
+	-- reshuffle every run despite a fixed seed.
 	local function hostProvider(hostType)
 		local hosts = plannedHosts[hostType]
 		if not hosts then
 			return nil
 		end
 		local claims = claimedHosts[hostType] or {}
+		local keys = {}
 		for key in pairs(hosts) do
+			keys[#keys + 1] = key
+		end
+		table.sort(keys)
+		for _, key in ipairs(keys) do
 			if not claims[key] then
 				claims[key] = true
 				claimedHosts[hostType] = claims
@@ -199,43 +218,49 @@ local function buildPropPlan(worldData, playerSprite)
 		return nil
 	end
 
+	-- _vegSpawned/_prdStreak mutate exactly once per tile here, so chooseVeg's
+	-- threshold is identical regardless of later host resolution.
 	local plan = {}
-	for i = 1, math.min(numProps, #activeTiles) do
-		local j = love.math.random(i, #activeTiles)
-		activeTiles[i], activeTiles[j] = activeTiles[j], activeTiles[i]
-		local tile = activeTiles[i]
-
-		local chosen = PropPicker.pick(numProps - i + 1, hostProvider)
+	local pendingIndices = {}
+	for i = 1, math.min(numProps, #shuffledTiles) do
+		local tile = shuffledTiles[i]
+		local chosen = PropPicker.pick(tile.seed, numProps - i + 1) -- no hostProvider: identity only
 		if not chosen then
 			break
 		end
+		local entry = { data = chosen.data, pngPath = chosen.pngPath, x = tile.x, y = tile.y, seed = tile.seed }
 
-		local entry = {
-			data = chosen.data,
-			pngPath = chosen.pngPath,
-			x = tile.x,
-			y = tile.y,
-			seed = tile.seed,
-		}
-
-		-- Host provider (bush/tree/rock/stump): register its tile so later berry
-		-- picks can attach to it.
-		if chosen.data.host then
+		if chosen.pending then
+			entry.pendingHostType = chosen.hostType
+			entry.modulePath, entry.offsetX, entry.offsetY, entry.inheritFrame =
+				chosen.modulePath, chosen.offsetX, chosen.offsetY, chosen.inheritFrame
+			pendingIndices[#pendingIndices + 1] = #plan + 1
+		elseif chosen.data.host then
 			local key = HostRegistry.coordKey(tile.x, tile.y)
 			plannedHosts[chosen.data.host] = plannedHosts[chosen.data.host] or {}
 			plannedHosts[chosen.data.host][key] = true
 		end
 
-		if chosen.host then
-			entry.host = chosen.hostType
-			entry.hostKey = chosen.hostKey
-			entry.modulePath = chosen.modulePath
-			entry.offsetX = chosen.offsetX
-			entry.offsetY = chosen.offsetY
-			entry.inheritFrame = chosen.inheritFrame
-		end
-
 		plan[#plan + 1] = entry
+	end
+
+	-- plannedHosts is now complete — resolve every deferred berry against it.
+	-- Pure lookup + seeded, quota-inert fallback; never re-rolls tile identity.
+	for _, idx in ipairs(pendingIndices) do
+		local entry = plan[idx]
+		local resolved = PropPicker.resolvePending({
+			data = entry.data, pngPath = entry.pngPath, modulePath = entry.modulePath,
+			hostType = entry.pendingHostType,
+			offsetX = entry.offsetX, offsetY = entry.offsetY, inheritFrame = entry.inheritFrame,
+		}, hostProvider, entry.seed)
+
+		entry.data, entry.pngPath = resolved.data, resolved.pngPath
+		if resolved.host then
+			entry.host, entry.hostKey = resolved.hostType, resolved.hostKey
+			entry.modulePath, entry.offsetX, entry.offsetY, entry.inheritFrame =
+				resolved.modulePath, resolved.offsetX, resolved.offsetY, resolved.inheritFrame
+		end
+		entry.pendingHostType = nil
 	end
 
 	love.math.setRandomState(savedState)
