@@ -33,6 +33,7 @@ local TextEmitter = require("Source.UI.Components.TextEmitter")
 local UIComponent = require("Source.UI.Components.UI")
 local TimeScale = require("Source.Helpers.Systems.TimeScale")
 local Reset = require("Source.Helpers.Systems.Reset")
+local DiscordRPC = require("Source.Helpers.Systems.DiscordRPC")
 local Debug = require("Source.Helpers.Debug.Debug")
 local Snapshot = require("Source.Helpers.Debug.Snapshot")
 local Gizmo = require("Source.Helpers.Debug.Gizmo")
@@ -232,6 +233,8 @@ function love.load()
 
 	ModLoader.loadAllMods("Mods")
 
+	DiscordRPC.init()
+
 	initGame()
 end
 
@@ -343,6 +346,7 @@ function initGame()
 	startDarkenActive = true
 	startDarkenTimer = 0
 	state = "game"
+	DiscordRPC.setScene("game")
 	deathTimer = 0
 	pendingClearAttacker = false
 	holdActive = false
@@ -492,6 +496,7 @@ function initGame()
 			-- Post-process stays ON: the CircleMask holds its satiety-0 radius on
 			-- the death screen, so do not flip setPostProcessEnabled here.
 			state = "dying"
+			DiscordRPC.setScene("dying")
 			deathTimer = 0
 			-- Ease back to full speed (target, not set) so the low-satiety
 			-- slow-mo doesn't snap to normal the instant the death anim plays.
@@ -531,6 +536,7 @@ function initGame()
 			local anim = ss and ss.animations and ss.animations.death
 			if anim and frameIndex >= anim.frames then
 				state = "gameover"
+				DiscordRPC.setScene("gameover")
 			end
 		end, 5)
 	end
@@ -1168,6 +1174,10 @@ local function updateStartDarken(dt)
 	end
 end
 
+function love.quit()
+	DiscordRPC.shutdown()
+end
+
 function love.update(dt)
 	if _needsRestart then
 		_needsRestart = false
@@ -1180,6 +1190,7 @@ function love.update(dt)
 	end
 
 	TimeScale.update(dt)
+	DiscordRPC.update(dt)
 	local scaledDt = dt * TimeScale.scale
 	updateReveal(dt)
 	updateStartDarken(dt)

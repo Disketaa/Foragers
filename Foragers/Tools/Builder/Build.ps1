@@ -90,6 +90,15 @@ foreach ($item in Get-ChildItem -Path $ProjectRoot -Force) {
     }
 }
 
+# LÖVE requires the entrypoint to be lowercase `main.lua`. The source file is
+# `Main.lua` (capital M) for editor/tooling; rename only in the staged build so
+# the shipped game launches. Source tree is left untouched.
+$MainSrc = Join-Path $StageDir "Main.lua"
+$MainDst = Join-Path $StageDir "main.lua"
+if (Test-Path $MainSrc) {
+    Move-Item $MainSrc $MainDst -Force
+}
+
 if (-not (Test-Path (Join-Path $StageDir "conf.lua"))) {
     Write-Error "Staging produced no conf.lua - aborting (nothing would be packaged)."
     exit 1
@@ -148,11 +157,26 @@ $LoveDir = Split-Path -Parent $LoveExePath
 foreach ($dll in Get-ChildItem -Path $LoveDir -Filter "*.dll" -File) {
     Copy-Item -Path $dll.FullName -Destination $BuildDir -Force
 }
-$license = Join-Path $LoveDir "license.txt"
+$license = Join-Path $LoveDir "LICENSE.txt"
 if (Test-Path $license) {
     Copy-Item -Path $license -Destination $BuildDir -Force
 } else {
-    Write-Warning "license.txt not found in '$LoveDir' - LÖVE's license requires it be included in distribution."
+    Write-Warning "LICENSE.txt not found in '$LoveDir' - LÖVE's license requires it be included in distribution."
+}
+
+# --- Phase 5b: bundle legal documents alongside the exe (not inside .love) ---
+# Mirrors the license.txt step: the shipped folder carries the Terms of Use and
+# Privacy Policy that were distributed with this specific build. GitHub hosts the
+# public/up-to-date copies (required by Discord Developer Portal); the local files
+# let a user read the exact version that shipped even offline. Missing docs are a
+# hard error — shipping without them is worse than failing the build.
+foreach ($doc in @("TERMS.md", "PRIVACY.md")) {
+    $docSrc = Join-Path $ProjectRoot $doc
+    if (-not (Test-Path $docSrc)) {
+        Write-Error "Legal document '$doc' not found at '$docSrc' - it must ship with the build."
+        exit 1
+    }
+    Copy-Item -Path $docSrc -Destination $BuildDir -Force
 }
 
 # --- Cleanup intermediate stage ---
@@ -169,10 +193,11 @@ Remove-Item $BuildDir -Recurse -Force -ErrorAction SilentlyContinue
 # --- Phase 7: checklist reminder ---
 Write-Host ""
 Write-Host "Build complete: $ZipFile" -ForegroundColor Green
-Write-Host "Distribute $ZipFile (contains Foragers.exe + LÖVE DLLs + license.txt)." -ForegroundColor Green
+Write-Host "Distribute $ZipFile (contains Foragers.exe + LÖVE DLLs + LICENSE.txt + TERMS.md + PRIVACY.md)." -ForegroundColor Green
 Write-Host "Verify before distributing:" -ForegroundColor Cyan
 Write-Host "  [ ] Title-bar icon shows your Icon.png (t.window.icon in conf.lua)"
 Write-Host "  [ ] Exe shell icon shows Icon.ico (rcedit branding applied to host before fuse)"
 Write-Host "  [ ] Saves land in %APPDATA%\Foragers (fused mode)"
-Write-Host "  [ ] $Timestamp.zip contains the LÖVE DLLs + license.txt (runs on a clean machine)"
+Write-Host "  [ ] $Timestamp.zip contains the LÖVE DLLs + LICENSE.txt + TERMS.md + PRIVACY.md (runs on a clean machine)"
+Write-Host "  [ ] Discord Developer Portal ToS/Privacy URLs point to the public GitHub docs"
 Write-Host "  [ ] No missing-asset errors (Build/ excludes only dev/internal dirs)"
