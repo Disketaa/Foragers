@@ -1,9 +1,9 @@
 # The script needs one thing it cannot invent (it will tell you if missing):
 #   love.exe 64-bit 11.5   (default C:\Program Files\LOVE\love.exe, or -LoveExePath)
 #
-# No exe-icon branding is done: rcedit silently shrinks love.exe's PE on this host
-# and breaks the fused game, so we fuse the untouched host. The in-game/title icon
-# comes from conf.lua (t.window.icon = Icon.png).
+# The exe's Windows shell icon comes from Icon.ico, injected into love.exe via
+# rcedit before fusing (verified: host grows 387072 -> 436736, fuse stays byte-exact).
+# The in-game/title-bar icon comes from conf.lua (t.window.icon = Icon.png).
 
 param(
     [string]$LoveExePath     = "C:\Program Files\LOVE\love.exe",
@@ -35,12 +35,9 @@ $ProjectRoot = Split-Path -Parent (Split-Path -Parent $ScriptDir)
 $BuildDir    = Join-Path $ScriptDir "Output_tmp_$(Get-Date -Format HHmmss)"
 $StageDir    = Join-Path $BuildDir "_stage"
 $OutDir      = Join-Path $ScriptDir "Output"
-$Timestamp   = Get-Date -Format "yyyyMMdd_HHmmss"
+$Timestamp   = "Foragers_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 
 # --- Pre-flight ---
-# No exe-icon branding is performed: rcedit silently shrinks love.exe's PE on this
-# host and breaks the fused game, so we fuse the untouched host. The in-game/title
-# icon comes from conf.lua (t.window.icon = Icon.png).
 if (-not (Test-Path $LoveExePath)) {
     Write-Error "love.exe not found at '$LoveExePath'. Install LÖVE 11.5 (64-bit) or pass -LoveExePath."
     exit 1
@@ -106,12 +103,16 @@ if (Test-Path $LoveFile) { Remove-Item $LoveFile -Force }
 Compress-ArchiveWithRetry -Path (Join-Path $StageDir "*") -DestinationPath $LoveZip
 Move-Item $LoveZip $LoveFile
 
-# --- Phase 3: stage love.exe for fusing (no branding — see header note) ---
-# rcedit silently SHRINKS love.exe's PE on this host (verified: 387 KB -> 57 KB),
-# which breaks the fused game, so we fuse the untouched host. The game icon at
-# runtime comes from conf.lua t.window.icon (Icon.png); the exe keeps love's icon.
+# --- Phase 3: stage love.exe for fusing, inject the exe shell icon via rcedit ---
+# The icon resource lives in the PE, so it must be set on the host BEFORE fusing
+# (fusing appends the .love zip after the PE; branding after fuse would corrupt it).
+# rcedit grows the host 387072 -> 436736 on the current Icon.ico; Phase 4b verifies
+# the fuse stays byte-exact so a truncated/shrunk host can never ship.
+$RceditExe   = Join-Path $ScriptDir "Rcedit.exe"
+$IconPath    = Join-Path $ScriptDir "Icon.ico"
 $UnbrandedLove = Join-Path $BuildDir "_love_host.exe"
 Copy-Item $LoveExePath $UnbrandedLove -Force
+& $RceditExe "$UnbrandedLove" --set-icon "$IconPath"
 $HostSize = (Get-Item $UnbrandedLove).Length
 
 # --- Phase 4: fuse love.exe + Foragers.love -> Foragers.exe ---
@@ -171,7 +172,7 @@ Write-Host "Build complete: $ZipFile" -ForegroundColor Green
 Write-Host "Distribute $ZipFile (contains Foragers.exe + LÖVE DLLs + license.txt)." -ForegroundColor Green
 Write-Host "Verify before distributing:" -ForegroundColor Cyan
 Write-Host "  [ ] Title-bar icon shows your Icon.png (t.window.icon in conf.lua)"
-Write-Host "  [ ] Exe keeps love's icon (no exe-icon branding; rcedit removed - it shrank the host)"
+Write-Host "  [ ] Exe shell icon shows Icon.ico (rcedit branding applied to host before fuse)"
 Write-Host "  [ ] Saves land in %APPDATA%\Foragers (fused mode)"
-Write-Host "  [ ] Foragers.zip contains the LÖVE DLLs + license.txt (runs on a clean machine)"
+Write-Host "  [ ] $Timestamp.zip contains the LÖVE DLLs + license.txt (runs on a clean machine)"
 Write-Host "  [ ] No missing-asset errors (Build/ excludes only dev/internal dirs)"
