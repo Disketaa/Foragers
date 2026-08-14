@@ -57,7 +57,7 @@ return {
 			{ label = "Gizmo", path = "gizmo", key = "toggleGizmo" },
 			{ label = "Profiler", path = "hud.profiler", key = "toggleProfiler" },
 		},
-		profiler = { enabled = false, updateSpeed = 10, nameMaxChars = 18, digits = 1, valueMaxChars = 8, limit = 20 },
+		profiler = { enabled = false, updateSpeed = 10, nameMaxChars = 18, digits = 1, valueMaxChars = 8, limit = 10 },
 		chat = { enabled = false, repeatDelay = 0.5, repeatInterval = 0.033, outputTimeout = 3, historyMax = 10, enterSound = "Content/Assets/Sounds/Events/ShortPop.ogg" },
 	},
 }
