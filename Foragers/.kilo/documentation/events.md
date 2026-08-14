@@ -13,24 +13,24 @@ Source of truth: `Source/Helpers/Core/Events.lua`.
 | `STATE_CHANGED` | `"state_changed"` | Control | Spritesheet(5), ParticleEmitter(8), Tween(10), Sound(15) |
 | `FLIPPED` | `"flipped"` | Control | Tween(10), ParticleEmitter(12) |
 | `GROUNDED_CHANGED` | `"grounded_changed"` | Collision | Control(10), Sound(15) |
-| `ANIM_FRAME` | `"anim_frame"` | Spritesheet | Sound(15), ParticleEmitter(13), Main.lua(5, death-anim end detection) |
+| `ANIM_FRAME` | `"anim_frame"` | Spritesheet | Sound(15), ParticleEmitter(13), main.lua(5, death-anim end detection) |
 | `SLOWDOWN_CHANGED` | `"slowdown_changed"` | Collision | Control(10) |
 | `SLOWDOWN_ENTER` | `"slowdown_enter"` | Collision | Sound(15) |
 | `SLOWDOWN_EXIT` | `"slowdown_exit"` | Collision | Sound(15) |
-| `VALUE_CHANGED` | `"value_changed"` | PlayerStats | Counter(5), Main.lua(5) |
+| `VALUE_CHANGED` | `"value_changed"` | PlayerStats | Counter(5), main.lua(5) |
 | `LOW_SATIETY` | `"low_satiety"` | PlayerStats | Emote(5), Sound(15) |
-| `DEATH` | `"death"` | PlayerStats (satiety 0) | Main.lua(5) — sets `state = "dying"`, emits `STATE_CHANGED("death")`, starts the death reveal; Shake(5, via `triggerOn = { "death" }`) — death shake; Sound(15) — plays the `death` sound tag once |
+| `DEATH` | `"death"` | PlayerStats (satiety 0) | main.lua(5) — sets `state = "dying"`, emits `STATE_CHANGED("death")`, starts the death reveal; Shake(5, via `triggerOn = { "death" }`) — death shake; Sound(15) — plays the `death` sound tag once |
 | `PROP_HIT` | `"prop_hit"` | AttackSystem | Shader(8), TextEmitter(5), Tween(10), Sound(15) |
 | `PROP_HIT` payload | — | AttackSystem emits `PROP_HIT` with the damage number as the first arg (`emit(PROP_HIT, damage)`). `text_emitter` uses this payload as the display text when its `text` field is nil. | — |
 | `PROP_BROKEN` | `"prop_broken"` | Destructible | Drop(3), World/Overlay(3, on child → release host claim + unguard; on parent → kill child), Shake(5), Sound(15) |
 | `PROP_SPAWNED` | `"prop_spawned"` | PropWire (standalone props), World/Overlay (hosted child) | Tween(10), Sound(15) |
-| `VALUE_CHANGED` payload | — | PlayerStats emits `VALUE_CHANGED` with `{ sourceType, field, value, maxValue, level }` in `addExperience()` when XP changes. Counter uses `field` to filter and `value/maxValue` for frame; `level` drives optional label text. Main.lua listens for `field == "satiety"` to update the saturation shader and global timescale. | — |
+| `VALUE_CHANGED` payload | — | PlayerStats emits `VALUE_CHANGED` with `{ sourceType, field, value, maxValue, level }` in `addExperience()` when XP changes. Counter uses `field` to filter and `value/maxValue` for frame; `level` drives optional label text. main.lua listens for `field == "satiety"` to update the saturation shader and global timescale. | — |
 | `COUNTER_TICK` | `"counter_tick"` | Counter | Tween(10) |
 | `COUNTER_WRAP` | `"counter_wrap"` | Counter | Tween(10), Sound(15) |
 | `SWING` | `"swing"` | AttackSystem | — |
 | `TARGET_SELECTED` | `"target_selected"` | AttackSystem | ParticleEmitter(5) |
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
-| `PICKUP` | `"pickup"` | Main.lua (pendingDestroy) | Tween(10) |
+| `PICKUP` | `"pickup"` | main.lua (pendingDestroy) | Tween(10) |
 | `TWEEN_COMPLETED` | `"tween_completed"` | Tween | Sound(15) |
 | `COUNTER_TICK` | `"counter_tick"` | Counter | Tween(10) |
 | `COUNTER_WRAP` | `"counter_wrap"` | Counter | Tween(10), Sound(15) |

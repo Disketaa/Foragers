@@ -90,7 +90,7 @@ python "Tools/LuaFormatter/Formatter.py"
 ```
 Foragers/
 ├── conf.lua
-├── Main.lua
+├── main.lua
 ├── Source/
 │   ├── Helpers/
 │   │   ├── Core/         # EventEmitter, Events, ComponentRegistry, Log, Math, Merge, Path, Pivot, ValueParser
@@ -185,7 +185,7 @@ Read this before proposing a change in these areas — already considered and cl
 |---|---|---|
 | Pool `Sound` sources instead of `base:clone()`? | **Rejected** | ~4 clones/sec — negligible GC. Pooling needs N clones per variant, more memory. Revisit only with profiling. |
 | Guard `DrawOrder.collect()` against double-call? | **Rejected** | No double-call site exists. Buffer clear doesn't fix it either way. |
-| Scene/game-state machine (menu, pause, restart)? | **Plain string adopted; full machine deferred** | `Main.lua` uses a plain `state = "game" \| "dying" \| "gameover"` string (no framework) for death: `"dying"` freezes the world but keeps drawing it while the death anim plays, `"gameover"` is the hold once the anim ends. On death the scene reveals back to normal (zoom/color/mask), then fades to black via the `Darken` post-process shader before auto-restart. World simulation gates on `state == "game"`. Menus can add values later. A full scene manager stays deferred — use the string + `if state == ...` dispatch, not a framework. |
+| Scene/game-state machine (menu, pause, restart)? | **Plain string adopted; full machine deferred** | `main.lua` uses a plain `state = "game" \| "dying" \| "gameover"` string (no framework) for death: `"dying"` freezes the world but keeps drawing it while the death anim plays, `"gameover"` is the hold once the anim ends. On death the scene reveals back to normal (zoom/color/mask), then fades to black via the `Darken` post-process shader before auto-restart. World simulation gates on `state == "game"`. Menus can add values later. A full scene manager stays deferred — use the string + `if state == ...` dispatch, not a framework. |
 | ModLoader integration for mod content? | **Deferred** | Currently only registers component types. No entry point for mod content yet. |
 
 Full history: `.kilo/CHANGELOG.md`

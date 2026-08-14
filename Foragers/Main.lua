@@ -214,7 +214,6 @@ end
 local initGame
 function love.load()
 	Log.init()
-	print("Foragers launches")
 	-- GC pacing: trigger sooner (default pause 200) and work harder per KB
 	-- (default stepmul 200) so collection is spread instead of one big stall.
 	collectgarbage("setpause", 100)

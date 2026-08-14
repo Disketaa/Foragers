@@ -20,7 +20,7 @@ description: Quick reference for all components — purpose, config fields, even
 | Component | Purpose | Config | Subscribes | Emits |
 |---|---|---|---|---|
 | **tween** | Property animation on events (flip, hit, state, arrival, spawned, pickup, counter tick/wrap) | `tweens`, `tags` (event→tween mappings), `destroyOnComplete` | FLIPPED (10), STATE_CHANGED (10), PROP_HIT (10), FOLLOW_ARRIVED (10), PROP_SPAWNED (10), PICKUP (10), COUNTER_TICK (10), COUNTER_WRAP (10) | TWEEN_COMPLETED |
-| **shake** | Screen shake, offsetting the camera/sprite for `duration` then decaying. `triggerOn` (default `{ Events.PROP_BROKEN }`) lists the events that start it; `trigger()` starts it directly (used by burst particles — a `shake` component in particle data shakes that particle in place). `Main.lua` reads the shake's offset as the screen shake, so a `triggerOn = { "death" }` shake on the player shakes the screen during the collapse. | `magnitude`, `duration`, `decay`, `triggerOn` | the configured `triggerOn` events (5) | — |
+| **shake** | Screen shake, offsetting the camera/sprite for `duration` then decaying. `triggerOn` (default `{ Events.PROP_BROKEN }`) lists the events that start it; `trigger()` starts it directly (used by burst particles — a `shake` component in particle data shakes that particle in place). `main.lua` reads the shake's offset as the screen shake, so a `triggerOn = { "death" }` shake on the player shakes the screen during the collapse. | `magnitude`, `duration`, `decay`, `triggerOn` | the configured `triggerOn` events (5) | — |
 | **shader** | Composes shader modules (uv-chain → Texel → color-chain); auto-maps any `parent.tweens.<name>` → uniform `u_<name>` | `shaders` (array; each entry is a string name, `{ name = "X" }`, or compact `{ X = { u_* = ... } }` for per-shader uniform overrides) or `shaderName` (single, legacy) | PROP_HIT (8) | — |
 | **shadow** | Texture-free pixel-perfect shadow (3-rect 1px-rounded shape) | `offsetX`, `offsetY`, `width`, `height` | — (data-only; rendered via `Shadow.renderLayer`) | — |
 | **silhouette** | Marker for silhouette reveal effect. `mode="silhouette"` (default) — sprites captured to white silhouette canvas. `mode="mask"` — foliage reveals silhouettes where its alpha > 0. Canvas rendered by `Helpers/Graphics/Mask.lua:renderSilhouette()` which iterates all dynamic objects and draws every sprite with `mode="silhouette"`. Sprites without a `spritesheet` component fall back to drawing `sprite.image` directly with pivot/flip/tweens. `color` (`{0,0,0,0.75}` default, rgba) tints the reveal: each silhouette sprite is drawn to the canvas in its own color+alpha and the Silhouette shader samples `sil.rgb`/`sil.a`, so the dither color is set per sprite file. **Revealer vs target:** `mode="mask"` sprites sample the canvas (must include the `Silhouette` shader module); `mode="silhouette"` sprites are captured to it (must NOT include `Silhouette`, or they silhouette themselves). `__Props` base provides the shader only as `{ "Brightness" }`; `_Trees/_Stumps/_Bushes` add `Silhouette`, `_Vegetables` sets `mode="silhouette"` | `mode` (`"silhouette"` default, `"mask"` for trees), `color` (`{0,0,0,0.75}`) | — | — |
@@ -50,7 +50,7 @@ type sway out of phase.
 | **destructible** | HP, takeDamage, dead-sprite tracking. `guarded` (default false) marks the sprite as not a valid attack target — set by `Source/World/Overlay.lua` while a hosted child is alive, cleared when the child breaks | `hp`, `replaceWith`, `guarded` | — | PROP_BROKEN |
 | **drop** | Spawn drops on PROP_BROKEN | `drops` (array of `{sprite, amount}`) | PROP_BROKEN (3) | — |
 | **weapon** | Weapon swing data container. Combat stats (`range`, `attackSpeed`, `damage`) now live on `player_stats` (Character) so they scale with the player; `weapon` keeps only the `swing` animation | `swing` | — | — |
-| **player_stats** | Player stats container (crit, level, xp, satiety, combat, movement). `xpCurve` is multiplicative (`base * growth^(level-1)`, resolved by `resolveCurve`). Combat stats (`damage`, `range`, `attackSpeed`), movement (`movementSpeed`, `swimmingSpeed`) and `maxSatiety` may be flat numbers **or** additive `{base, gain}` curves (`base + gain*(level-1)`, resolved by `resolveStat` and the `get*` getters — `getDamage`/`getRange`/`getAttackSpeed`/`getCooldown`(=1/`getAttackSpeed`)/`getMovementSpeed`/`getSwimmingSpeed`/`getMaxSatiety`). `AttackSystem` reads combat stats via getters; `Control` reads speeds via getters; the satiety bar resolves `maxSatiety` through the counter's curve-aware read. `Control` reads the resolved speeds each frame and never owns the formula. Low-satiety effects (slow time, desaturate, zoom-in) are driven off `lowSatietyPercent`/`lowSatietyZoom` in `Main.lua`'s VALUE_CHANGED handler. Emits `LOW_SATIETY` once per descending warning threshold (`lowSatietyWarnings` default 3; thresholds at `lowSatietyPercent * (count-i+1)/count`, e.g. 0.33/0.22/0.11; reset when restored above the low threshold). At satiety 0 sets `dead = true` and emits `DEATH`; `dead` makes `consumeSatiety`/`restoreSatiety`/`addExperience` no-op (eating/pickups do nothing after death). `Main.lua` drives the death sequence via a `state = "game"\|"dying"\|"gameover"` string (AGENTS §XII): on `DEATH` it freezes the world but keeps drawing (`"dying"`), plays the death anim + shake, snaps zoom to `lowSatietyZoom`, then eases back to normal (zoom 1, saturation/contrast, mask open) over `DEATH_REVEAL_DURATION` and fades the canvas to black via the `Darken` post-process shader after `DEATH_DARKEN_DELAY` over `DEATH_DARKEN_DURATION`; it holds on `"gameover"` and auto-restarts after `DEATH_DURATION` (5s). The game also fades in from black on start (`INTRO_DARKEN_DURATION`) | `critChance`, `critMult`, `damage`, `range`, `attackSpeed`, `level`, `maxLevel`, `experience`, `xpCurve`, `movementSpeed`, `swimmingSpeed`, `satiety`, `maxSatiety`, `lowSatietyPercent`, `lowSatietyZoom`, `lowSatietyWarnings`, `lowSatietyMaskRadius`, `dead` | — | VALUE_CHANGED, LOW_SATIETY, DEATH |
+| **player_stats** | Player stats container (crit, level, xp, satiety, combat, movement). `xpCurve` is multiplicative (`base * growth^(level-1)`, resolved by `resolveCurve`). Combat stats (`damage`, `range`, `attackSpeed`), movement (`movementSpeed`, `swimmingSpeed`) and `maxSatiety` may be flat numbers **or** additive `{base, gain}` curves (`base + gain*(level-1)`, resolved by `resolveStat` and the `get*` getters — `getDamage`/`getRange`/`getAttackSpeed`/`getCooldown`(=1/`getAttackSpeed`)/`getMovementSpeed`/`getSwimmingSpeed`/`getMaxSatiety`). `AttackSystem` reads combat stats via getters; `Control` reads speeds via getters; the satiety bar resolves `maxSatiety` through the counter's curve-aware read. `Control` reads the resolved speeds each frame and never owns the formula. Low-satiety effects (slow time, desaturate, zoom-in) are driven off `lowSatietyPercent`/`lowSatietyZoom` in `main.lua`'s VALUE_CHANGED handler. Emits `LOW_SATIETY` once per descending warning threshold (`lowSatietyWarnings` default 3; thresholds at `lowSatietyPercent * (count-i+1)/count`, e.g. 0.33/0.22/0.11; reset when restored above the low threshold). At satiety 0 sets `dead = true` and emits `DEATH`; `dead` makes `consumeSatiety`/`restoreSatiety`/`addExperience` no-op (eating/pickups do nothing after death). `main.lua` drives the death sequence via a `state = "game"\|"dying"\|"gameover"` string (AGENTS §XII): on `DEATH` it freezes the world but keeps drawing (`"dying"`), plays the death anim + shake, snaps zoom to `lowSatietyZoom`, then eases back to normal (zoom 1, saturation/contrast, mask open) over `DEATH_REVEAL_DURATION` and fades the canvas to black via the `Darken` post-process shader after `DEATH_DARKEN_DELAY` over `DEATH_DARKEN_DURATION`; it holds on `"gameover"` and auto-restarts after `DEATH_DURATION` (5s). The game also fades in from black on start (`INTRO_DARKEN_DURATION`) | `critChance`, `critMult`, `damage`, `range`, `attackSpeed`, `level`, `maxLevel`, `experience`, `xpCurve`, `movementSpeed`, `swimmingSpeed`, `satiety`, `maxSatiety`, `lowSatietyPercent`, `lowSatietyZoom`, `lowSatietyWarnings`, `lowSatietyMaskRadius`, `dead` | — | VALUE_CHANGED, LOW_SATIETY, DEATH |
 | **pickup** | Grants XP to player on collection | `xp` (number) | FOLLOW_ARRIVED (5) | — |
 | **sound** | Sound triggered by events; also a module-level one-shot `Sound.play(path, volume, pitch)` for UI blips (caches the source once, clones cheaply at play — safe no-op on a missing file) | `volume`, `pitch`, `pitchRandomness`, `stepInterval`, `tags` | GROUNDED_CHANGED (15), STATE_CHANGED (15), ANIM_FRAME (15), SLOWDOWN_ENTER (15), PROP_HIT (15), PROP_BROKEN (15), TWEEN_COMPLETED (15), PROP_SPAWNED (15), COUNTER_WRAP (15), LOW_SATIETY (15), DEATH (15) | — |
 
@@ -70,7 +70,7 @@ it is a one-shot, played only by its event (e.g. `death`, `hunger`) or a single
 
 | Component | Purpose | Config | Subscribes | Emits |
 |---|---|---|---|---|
-| **text_emitter** | Floating text on events (e.g. damage numbers). Registered in `ComponentRegistry` but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `Main.lua` — NOT via the per-sprite component loop (its `update`/`draw` are no-ops). | `font`, `text`, `event`, `color`, `moveX`, `moveY`, `gravity`, `duration`, `offsetX`, `offsetY`, `destroy`, `destroyCurve` | PROP_HIT (5) | — |
+| **text_emitter** | Floating text on events (e.g. damage numbers). Registered in `ComponentRegistry` but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `main.lua` — NOT via the per-sprite component loop (its `update`/`draw` are no-ops). | `font`, `text`, `event`, `color`, `moveX`, `moveY`, `gravity`, `duration`, `offsetX`, `offsetY`, `destroy`, `destroyCurve` | PROP_HIT (5) | — |
 | **counter** | Maps a value from a source component (e.g. `player_stats`) to a spritesheet frame. Event-driven — subscribes to `VALUE_CHANGED` on the source sprite via `setPlayerSprite()`. `update()` drives smooth tween animation. Optional `label` overlays text (level). Emits `COUNTER_TICK` on parent sprite on every value change and `COUNTER_WRAP` when the source level changes (bar wraps around). | `mode` (`"fraction"`/`"progress"`), `field`, `maxField`, `sourceType`, `frames`, `smoothness`, `curve`, `label` | VALUE_CHANGED (5) on source sprite | COUNTER_TICK, COUNTER_WRAP |
 | **ui** | Data-only screen-positioning. No `update`/`draw` — positioned by Main using `UI.calculate()`. Any sprite in `Content/Assets/Sprites/UI/` with this component is drawn after the world canvas `pop()`. | `horizontal` (`"left"`/`"center"`/`"right"`), `vertical` (`"top"`/`"center"`/`"bottom"`), `offsetX`, `offsetY` | — | — |
 
@@ -120,7 +120,7 @@ Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text
 
 The label text content is `tostring(data.level)` from the `VALUE_CHANGED` payload. The font spritesheet is loaded once in `attach()`. Drawn in `draw()` over the parent sprite.
 
-Connected via `Main.lua`: `counter:setPlayerSprite(playerSprite)` subscribes to `VALUE_CHANGED` on the player and syncs initial value. `update()` drives the smoothing tween.
+Connected via `main.lua`: `counter:setPlayerSprite(playerSprite)` subscribes to `VALUE_CHANGED` on the player and syncs initial value. `update()` drives the smoothing tween.
 
 ### ui config
 
@@ -131,7 +131,7 @@ Connected via `Main.lua`: `counter:setPlayerSprite(playerSprite)` subscribes to 
 | `offsetX` | number | `0` | Pixel offset added after anchor calculation |
 | `offsetY` | number | `0` | Pixel offset added after anchor calculation |
 
-Positioned by `Main.lua` at load and on every `love.resize()` — `UI.calculate(comp, canvasW, canvasH, elemW, elemH)` returns the final `x, y` in canvas-space. Drawn after `love.graphics.pop()` so UI is fixed on screen regardless of camera.
+Positioned by `main.lua` at load and on every `love.resize()` — `UI.calculate(comp, canvasW, canvasH, elemW, elemH)` returns the final `x, y` in canvas-space. Drawn after `love.graphics.pop()` so UI is fixed on screen regardless of camera.
 
 ## Mode field (collision)
 
@@ -166,9 +166,9 @@ gizmo = {
 - `decor` selects the box decoration: `"none"` (plain box outline), `"diagonal"` (outline + one diagonal), `"cross"` (two diagonals forming an X), or `"dashed"` (dashed outline, no diagonals). Default `"diagonal"`. LÖVE has no native dashed primitive, so `"dashed"` draws the outline as dash/gap line segments (dash scaled off line width).
 - `backgroundColor` (optional) draws a solid fill underneath the outline.
 
-Mechanics: `Collision:attach()` subscribes to `Debug.onChange` and caches `showDebugBoxes = Debug.showing("gizmo") and Debug.enabled("gizmo.collisions") and not Debug.excluded("gizmo.collisions", self.parent.object)`. `Collision:draw()` publishes `self:getRect()` to `Gizmo` (world-space buffer, tagged `"collisions"`) instead of drawing directly. `Main.lua` draws the buffered rects in a native-resolution pass after the world canvas — so boxes stay crisp regardless of the low-res world canvas's nearest-filter upscale.
+Mechanics: `Collision:attach()` subscribes to `Debug.onChange` and caches `showDebugBoxes = Debug.showing("gizmo") and Debug.enabled("gizmo.collisions") and not Debug.excluded("gizmo.collisions", self.parent.object)`. `Collision:draw()` publishes `self:getRect()` to `Gizmo` (world-space buffer, tagged `"collisions"`) instead of drawing directly. `main.lua` draws the buffered rects in a native-resolution pass after the world canvas — so boxes stay crisp regardless of the low-res world canvas's nearest-filter upscale.
 
-`Debug.showing(group)` is `Debug.enabled("hud") and Debug.enabled(group)` — it gates every overlay's render on the `hud` master switch (F1). The boundary/pivot/tileMesh passes in `Main.lua` use the same `Debug.showing("gizmo")` guard, so F1 hides all gizmo overlays by view without touching their `enabled` flags.
+`Debug.showing(group)` is `Debug.enabled("hud") and Debug.enabled(group)` — it gates every overlay's render on the `hud` master switch (F1). The boundary/pivot/tileMesh passes in `main.lua` use the same `Debug.showing("gizmo")` guard, so F1 hides all gizmo overlays by view without touching their `enabled` flags.
 
 ## Debug gizmo (boundary overlay)
 
@@ -184,7 +184,7 @@ boundaries = {
 }
 ```
 
-Published by `Main.lua` (iterates all `objects`) into `Gizmo.fillRect` + `Gizmo.rect` (both tagged `"boundaries"`). Exclusion + master gating identical to `collisions` (queried as `gizmo.boundaries`).
+Published by `main.lua` (iterates all `objects`) into `Gizmo.fillRect` + `Gizmo.rect` (both tagged `"boundaries"`). Exclusion + master gating identical to `collisions` (queried as `gizmo.boundaries`).
 
 ## Debug gizmo (pivot overlay)
 
@@ -200,7 +200,7 @@ pivots = {
 }
 ```
 
-Published by `Main.lua` into `Gizmo.point`. Exclusion + master gating identical to `collisions` (queried as `gizmo.pivots`).
+Published by `main.lua` into `Gizmo.point`. Exclusion + master gating identical to `collisions` (queried as `gizmo.pivots`).
 
 ## Gizmo layering
 
@@ -257,7 +257,7 @@ hud = {
 - `enabled` — global switch for the whole HUD (default true). F1 toggles `hud.enabled`. It is the master switch: `Debug.showing(group)` (= `hud.enabled and group.enabled`) gates every overlay's render, so F1 hiding the HUD also hides gizmo, profiler and chat by view — without mutating their `enabled` flags (so each panel's persisted toggle stays the user's real preference and is restored on re-show). There is no independent runtime HUD toggle anymore.
 - `fps` — simple boolean flag, current FPS. Samples are taken `updateSpeed` times per second (Hz).
 - `fpsGraph` — inline line graph of recent FPS samples (60-point ring buffer), drawn to the right of the FPS text on the same line, `gap` px after it. The reference line is `Options.maxFps` (the frame cap). Segments are green (`goodColor`) while at/above `maxFps - tolerance`, red (`badColor`) at the samples that dropped below that threshold — `tolerance` (default 0) absorbs reading jitter so a 1–2 fps dip doesn't color a segment bad. `goodColor`/`badColor` live at the `hud` level and are shared with the `toggles` readout. `width`/`height` set the graph box size (clamped to the row) and `thickness` the line weight, all in base px. The FPS value text is right-aligned into a fixed width (from `maxFps` digit count) so the graph never shifts when the reading goes 2→3 digits.
-- `objectCount` — simple boolean flag, `#objects` from `Main.lua`.
+- `objectCount` — simple boolean flag, `#objects` from `main.lua`.
 - `toggles` — readout of the F-key debug toggles (the `Content/Data/Options.lua` keybinds), drawn below a one-row separator after the readout. Each entry shows `KEY | Label` in `labelColor` with `Enabled`/`Disabled` in `goodColor`/`badColor`. `key` names the `Options.keybinds` entry whose first keyboard key becomes the uppercase prefix; `path` is the `Debug.enabled` group to query (`"debug"` is the top-level master boolean). The `HUD` toggle was removed — the master switch now owns HUD visibility.
 - `chat` — bottom-left console/chat input. Fields: `enabled` (input open; NOT persisted — always starts closed), `repeatDelay`/`repeatInterval` (auto-repeat for backspace and the up/down history arrows), `outputTimeout` (seconds an `Unknown command:` output line stays after closing), `historyMax` (persisted command-history cap), `enterSound` (path to a one-shot `.ogg` played on submit). See *Debug chat* below.
 - `padding` — group offset: shifts the whole readout right/down as one block (the boxes hug their content tightly); `gap` — spacing between rows (defaults to `padding`). Set `gap` to 0 for the tightest spacing between rows.
@@ -276,7 +276,7 @@ The `hud.chat` sub-group renders a bottom-left console: a text-input row with a 
 
 - **Submit:** Enter with text sets the `Unknown command` output, pushes the input into history, plays `enterSound` (via `Sound.play`), clears the field and closes. Enter with empty text just closes.
 - **Close:** Enter (empty) or Escape.
-- **History:** Up/Down walk the persisted command history (`Source/Helpers/Debug/ChatHistory.lua`, file `ChatHistory.txt`, newest last, capped by `historyMax`). First Up-press saves the current draft and jumps to the newest entry; Down past the newest restores the draft. Backspace + Up/Down auto-repeat after `repeatDelay` then every `repeatInterval` (driven manually in `Main.lua`, not `setKeyRepeat`, which would also repeat the HUD toggles).
+- **History:** Up/Down walk the persisted command history (`Source/Helpers/Debug/ChatHistory.lua`, file `ChatHistory.txt`, newest last, capped by `historyMax`). First Up-press saves the current draft and jumps to the newest entry; Down past the newest restores the draft. Backspace + Up/Down auto-repeat after `repeatDelay` then every `repeatInterval` (driven manually in `main.lua`, not `setKeyRepeat`, which would also repeat the HUD toggles).
 - **Tab completion:** Tab completes the current token (command name before a space; a command's sub-commands after `cmd `), cycling through alphabetical matches; shift+tab goes backward. A manual edit resets the cycle. Sub-commands are registered via `Commands.addSubcommand` (`world` → `clear`), and extra whitespace is tolerated because `Commands.execute` trims args.
 - **Layout:** output renders as stacked rows (max 10) growing upward from the input position; reopening clears the output immediately. The `help` command returns styled segment-lines (command name in white, description dimmed, page footer in green+dimmed) and a 10x output hide delay.
 - **Persisted toggles:** `hud.chat.enabled` is deliberately NOT in `TOGGLE_PATHS`, so chat always starts closed and never gets written to `Options.txt`.
@@ -297,7 +297,7 @@ When `moving = true`, the interval timer only accumulates while the parent sprit
 
 ## detach behavior (particle_emitter)
 
-Particle emitters are automatically detached from the parent sprite when the sprite is destroyed. This happens in two paths in `Main.lua`:
+Particle emitters are automatically detached from the parent sprite when the sprite is destroyed. This happens in two paths in `main.lua`:
 
 - **Destructible death:** `Destructible.getDead()` → `ParticleEmitter.detachAll(sprite)` → sprite cleanup
 - **Tween destroyOnComplete:** `TweenComponent.getPendingDestroy()` → `ParticleEmitter.detachAll(sprite)` → sprite cleanup
@@ -307,7 +307,7 @@ Particle emitters are automatically detached from the parent sprite when the spr
 After detachment:
 - **No new particles are spawned** — interval/step/event/spawnOn triggers are dead without a parent
 - **Existing particles continue animating** — age, animation frame, and draw all proceed normally
-- **Auto-cleanup** — `ParticleEmitter.updateDetached(dt)` (called from `Main.lua` each frame) removes the emitter from `detachedEmitters` once `#_particles == 0`
+- **Auto-cleanup** — `ParticleEmitter.updateDetached(dt)` (called from `main.lua` each frame) removes the emitter from `detachedEmitters` once `#_particles == 0`
 
 Detached emitters are drawn in world space at the same layering as live emitters (behind sprites if `layer = "below"`, in front otherwise), via `ParticleEmitter.drawDetachedBehind()` and `ParticleEmitter.drawDetached()` in the `love.draw` canvas callback.
 

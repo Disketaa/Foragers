@@ -101,7 +101,7 @@ relevant section before touching that subsystem.
   be invisible in the silhouette — they have `sprite.image` but no spritesheet
   component to provide `drawCurrentFrame`.
 
-## Camera zoom (Source/Helpers/Graphics/Zoom.lua, Canvas.lua, Main.lua)
+## Camera zoom (Source/Helpers/Graphics/Zoom.lua, Canvas.lua, main.lua)
 
 - **Zoom-in-only ⇒ scale the canvas blit (output), never the world draw.**
   The canvas is rendered at fixed resolution once; zoom magnifies the finished
@@ -121,12 +121,12 @@ relevant section before touching that subsystem.
   `worldToScreen` and both canvas blits must share the same pivot and the same
   unzoomed blit origin (`canvasBlitOrigin`), or mouse/gizmo/pivot disagree with the
   render.
-- `Zoom` is driven by the player's satiety (set in `Main.lua`'s `VALUE_CHANGED`
+- `Zoom` is driven by the player's satiety (set in `main.lua`'s `VALUE_CHANGED`
   handler, 1x at f=0.33 → 2x at f=0); `current`/`target`/`update(dt)` ease with the
   same `Math.expSmooth` the camera offset uses, so the satiety zoom animates
   consistently.
 
-## In-process restart (Source/Helpers/Systems/Reset.lua, Main.lua initGame/resetGame)
+## In-process restart (Source/Helpers/Systems/Reset.lua, main.lua initGame/resetGame)
 
 - **NEVER re-run `love.load()` to reset the game.** It calls `love.window.setMode()`, which on Windows recreates the native window (visual "window reopens" — blink, focus loss) even though it's the same process. Split into one-time engine setup (`love.load`: window, default filter, shader/saturation assets, `ModLoader.loadAllMods`) and re-runnable `initGame()` (world, sprites, UI, player). `resetGame()` (R key) sets `_needsRestart`, consumed at the top of `love.update`, then calls `Reset.all()` + `initGame()`.
 - **`Reset.all()` wipes every array-valued field in `Source.`/`Mods.` modules.** This is the point: clears module-owned pools (particles, floating text, dead/pending/detached sets, attacker refs). But it also nukes arrays that are NOT runtime pools — e.g. `ShaderLoader.shaders`. If such asset lists are only loaded in `love.load()`, a restart leaves them empty → the asset silently disappears. Fix pattern: re-run the loader inside `initGame()` (`ShaderLoader.loadAll("Content/Assets/Shaders")`), not `love.load()`. Shader recompilation does not recreate the window.
@@ -160,7 +160,7 @@ relevant section before touching that subsystem.
   canvas.** The world canvas (480×270) is upscaled with nearest filter, so any
   1px debug line drawn inside it becomes a blocky `scale`-px square (the "aliasing"
   that reads as blurry). `Collision` publishes rects to `Source/Helpers/Debug/Gizmo.lua`
-  (world-space buffer) and `Main.lua` draws them after the world canvas with a
+  (world-space buffer) and `main.lua` draws them after the world canvas with a
   `worldToScreen` transform that mirrors `Canvas:draw`'s placement math — including
   using `shakeOffsetX/Y` as the view offset (NOT `camPixelX`, which is applied once
   inside the world translate) and, when zoomed, the output-zoom pivot; the unzoomed
@@ -199,7 +199,7 @@ relevant section before touching that subsystem.
 - **Tab completion must cycle a stored candidate list, not re-run the matcher each
   press.** `Commands.complete(text)` narrows by the *current* text, so once Tab fills
   `help` the text is `"help"` and re-running the matcher returns only `{"help"}` —
-  the cycle gets stuck on one result. `Main.lua` keeps a `completionActive` flag and
+  the cycle gets stuck on one result. `main.lua` keeps a `completionActive` flag and
   the stored `base`/`candidates`: the first press fills from `Commands.complete`, and
   each repeat advances through the *stored* list. Only a fresh edit (typing,
   backspace, history) resets it.
@@ -304,7 +304,7 @@ relevant section before touching that subsystem.
 - **TextEmitter lives in `Source/UI/Components/`, NOT `Source/Sprite/Components/`.**
   It is a floating-damage-number emitter, not a sprite behavior. It is registered
   in `ComponentRegistry` as `text_emitter` but is driven by global
-  `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` called from `Main.lua`
+  `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` called from `main.lua`
   (NOT via the per-sprite component loop). Do not move it into the sprite
   component folder or wire it into `Sprite:update`.
 - **`drawAll` must disable the active shader then restore it.** Sprites may have a
@@ -346,7 +346,7 @@ relevant section before touching that subsystem.
 
 ## Particle detach pattern (Source/Sprite/Components/ParticleEmitter.lua)
 
-- **Components that outlive their parent belong in a global pool, not kept alive via invisible corpse sprites.** `ParticleEmitter.detachAll(sprite)` is called from `Main.lua` before dead-sprite cleanup. It sets `parent = nil`, stops spawning, and moves the component to `detachedEmitters`. Global `updateDetached(dt)`/`drawDetached()`/`drawDetachedBehind()` loop until `#_particles == 0` then self-clean.
+- **Components that outlive their parent belong in a global pool, not kept alive via invisible corpse sprites.** `ParticleEmitter.detachAll(sprite)` is called from `main.lua` before dead-sprite cleanup. It sets `parent = nil`, stops spawning, and moves the component to `detachedEmitters`. Global `updateDetached(dt)`/`drawDetached()`/`drawDetachedBehind()` loop until `#_particles == 0` then self-clean.
 - **`_burst` and `_spawn` must guard `self.parent` before accessing parent fields.** Event listeners subscribed before detach could theoretically fire after parent=nil — guard defensively even if no caller emits on dead sprites.
 - **Particle aging loop runs unconditionally (attached and detached).** The `_detached` early-return goes between aging and spawning — aging must always run so particles expire and cleanup triggers.
 - **Never mutate `objects`/`dynamicObjects` mid-iteration.** Removing the player/tool inside the DEATH event handler (which fires during the `love.update` sprite loop) crashed the frame. The current death flow no longer destroys the player at all — it stays in the frozen world as the death-anim corpse. `AttackSystem.clearAttacker()` is NOT safe to call synchronously in the DEATH handler either: DEATH can fire *inside* `AttackSystem.update` (a weapon hit emits `PROP_HIT` on the player → `consumeSatiety` → `DEATH`), and nil-ing `attacker` there makes the same frame's stale `simulating`-gated `AttackSystem.update` crash. Defer it with a `pendingClearAttacker` flag cleared after the camera/attack block.
