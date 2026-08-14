@@ -87,7 +87,11 @@ function TextEmitter:attach()
 	end
 
 	self.parent:on(self.event, function(eventText)
-		local displayText = self.text or tostring(eventText or "")
+		local value = eventText
+		if type(value) == "number" then
+			value = math.floor(value)
+		end
+		local displayText = self.text or tostring(value or "")
 		if displayText == "" then
 			return
 		end

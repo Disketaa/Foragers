@@ -98,13 +98,10 @@ function Control.new(data)
 end
 
 function Control:attach()
-	-- Speeds live on player_stats as the source of truth; fall back to
-	-- Control's own data (backward compat) if stats are absent.
-	local pstats = self.parent:findComponent("player_stats")
-	if pstats then
-		self.speed = pstats.movementSpeed or self.speed
-		self.swimmingSpeed = pstats.swimmingSpeed or self.swimmingSpeed
-	end
+	-- Speeds live on player_stats (may be flat numbers or {base, growth}
+	-- curves). Cache the component; read resolved values each frame so
+	-- level-scaled speeds apply without Control knowing the formula.
+	self._pstats = self.parent:findComponent("player_stats")
 	self.parent:on(Events.GROUNDED_CHANGED, function(isGrounded)
 		self._grounded = isGrounded
 		self._groundedInitialized = true
@@ -184,9 +181,18 @@ function Control:update(dt)
 		end
 	end
 
-	local effectiveSpeed = self.speed
-	if self._grounded ~= nil and self._grounded == false and self.swimmingSpeed then
-		effectiveSpeed = self.swimmingSpeed
+	local pstats = self._pstats
+	local effectiveSpeed
+	if pstats then
+		effectiveSpeed = pstats:getMovementSpeed()
+		if self._grounded ~= nil and self._grounded == false then
+			effectiveSpeed = pstats:getSwimmingSpeed()
+		end
+	else
+		effectiveSpeed = self.speed
+		if self._grounded ~= nil and self._grounded == false and self.swimmingSpeed then
+			effectiveSpeed = self.swimmingSpeed
+		end
 	end
 	effectiveSpeed = effectiveSpeed * self._slowdown
 	local speedFactor = 1

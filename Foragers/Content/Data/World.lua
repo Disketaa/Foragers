@@ -1,7 +1,7 @@
 return {
 	seed = -1,
-	width = 20,
-	height = 20,
+	width = 15,
+	height = 15,
 	tileSize = 8,
 	backgroundColor = { 0.21, 0.65, 0.72 },
 	borderTileOffset = 8,
@@ -9,7 +9,7 @@ return {
 	props = {
 		coverage = 0.33,
 		spawnInterval = 3,
-		vegetables = { density = 0.025, pseudoRandomChance = 0.035 },
+		vegetables = { density = 0.025, pseudoRandomChance = 0.075 },
 		items = {
 			{ data = "Content.Assets.Sprites.Props.BirchTree", weight = 1 },
 			{ data = "Content.Assets.Sprites.Props.OakTree", weight = 1 },

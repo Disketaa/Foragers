@@ -13,11 +13,19 @@ local function swingCurve(easeFunc)
 	end
 end
 
-local function getWeaponData(sprite)
-	local comp = sprite and sprite:findComponent("weapon")
-	if comp then
-		return comp.range, comp.cooldown, comp.damage, comp.swing
+local function getWeaponData(weaponSprite, playerSprite)
+	local weapon = weaponSprite and weaponSprite:findComponent("weapon")
+	local ps = playerSprite and playerSprite:findComponent("player_stats")
+	local range, cooldown, damage, attackSpeed, baseAttackSpeed
+	if ps then
+		range = ps:getRange()
+		cooldown = ps:getCooldown()
+		damage = ps:getDamage()
+		attackSpeed = ps:getAttackSpeed()
+		baseAttackSpeed = ps:getBaseAttackSpeed()
 	end
+	local swing = weapon and weapon.swing
+	return range, cooldown, damage, swing, attackSpeed, baseAttackSpeed
 end
 
 local function getWeaponFollow(ws)
@@ -54,7 +62,14 @@ function AttackSystem.update(dt, allObjects)
 	end
 
 	local ws = attacker.weaponSprite
-	local range, cooldown, damage, swing = getWeaponData(ws)
+	local range, cooldown, damage, swing, attackSpeed, baseAttackSpeed = getWeaponData(ws, attacker.sprite)
+	-- Higher attack speed => faster tool travel + swing, so the cooldown actually
+	-- pays off instead of being eaten by fixed follow/swing timing. Reference is
+	-- level-1 attack speed, so level 1 keeps its current feel (speedScale == 1).
+	local speedScale = 1
+	if baseAttackSpeed and baseAttackSpeed > 0 and attackSpeed and attackSpeed > 0 then
+		speedScale = attackSpeed / baseAttackSpeed
+	end
 	local rangeSq = range * range
 	local weaponFollow = getWeaponFollow(ws)
 	local ax, ay = attacker.sprite.x, attacker.sprite.y
@@ -78,7 +93,7 @@ function AttackSystem.update(dt, allObjects)
 		if not targetValid and weaponFollow then
 			local committed = attacker._arrived and attacker.cooldownTimer > 0
 			if not committed and not (ws and ws.tweens and ws.tweens.swing_angle) then
-				weaponFollow:recall()
+				weaponFollow:recall(weaponFollow.smoothnessX / speedScale)
 				attacker.currentTarget = nil
 				attacker.damageTimer = nil
 			end
@@ -102,7 +117,7 @@ function AttackSystem.update(dt, allObjects)
 			-- Deploy to far side of target: away from character, not from weapon
 			local deployDir = (attacker.sprite.x < chosen.x) and 1 or -1
 			if weaponFollow then
-				weaponFollow:deployTo(chosen, swing.offsetX, swing.offsetY, swing.smoothness, deployDir)
+				weaponFollow:deployTo(chosen, swing.offsetX, swing.offsetY, swing.smoothness / speedScale, deployDir)
 			end
 			attacker.currentTarget = chosen
 			attacker._deployDir = deployDir
@@ -166,14 +181,14 @@ if ws then
 	end
 
 	attacker.cooldownTimer = cooldown
-	attacker.damageTimer = swing.duration
+	attacker.damageTimer = swing.duration / speedScale
 
 	-- Swing toward target: opposite of deploy direction
 	local dir = -attacker._deployDir
 	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.OutSine
 	local easeFunc = swingCurve(rawEase)
 	local angleTween =
-		TweenModule.Tween.new("swing_angle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration, easeFunc)
+		TweenModule.Tween.new("swing_angle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration / speedScale, easeFunc)
 	angleTween._smoothness = swing.smoothness
 	ws.tweens.swing_angle = angleTween
 	angleTween:start()

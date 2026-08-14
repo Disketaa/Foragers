@@ -24,7 +24,11 @@ function PlayerStats.new(data)
 	return setmetatable({
 		critChance = data.critChance or 0,
 		critMult = data.critMult or 1.5,
+		damage = data.damage or 1,
+		range = data.range or 20,
+		attackSpeed = data.attackSpeed or 2,
 		level = data.level or 1,
+		maxLevel = data.maxLevel or 99,
 		experience = data.experience or 0,
 		xpCurve = {
 			base = xpCurve.base or 10,
@@ -77,9 +81,73 @@ function PlayerStats:attach()
 	end, 5)
 end
 
+--- Resolve an XP-style curve (multiplicative): `base * growth^(level-1)`.
+--- Used only by `xpCurve`; stats scale additively via `resolveStat`.
+---@param curve {base:number, growth:number}
+---@param level number|nil resolve at a specific level (defaults to current)
+---@return number
+function PlayerStats:resolveCurve(curve, level)
+	level = level or self.level
+	return math.floor(curve.base * curve.growth ^ (level - 1))
+end
+
+--- Resolve a stat defined as a flat number or an additive `{base, gain}`
+--- curve: `base + gain * (level-1)`.
+---@param stat number|{base:number, gain:number}
+---@param level number|nil resolve at a specific level (defaults to current)
+---@return number
+function PlayerStats:resolveStat(stat, level)
+	level = level or self.level
+	if type(stat) == "table" then
+		return math.floor(stat.base + (stat.gain or 0) * (level - 1))
+	end
+	return stat or 0
+end
+
 ---@return number XP required for the current level
 function PlayerStats:xpForNextLevel()
-	return math.floor(self.xpCurve.base * self.xpCurve.growth ^ (self.level - 1))
+	return self:resolveCurve(self.xpCurve)
+end
+
+---@return number movement speed for the current level
+function PlayerStats:getMovementSpeed()
+	return self:resolveStat(self.movementSpeed)
+end
+
+---@return number swimming speed for the current level
+function PlayerStats:getSwimmingSpeed()
+	return self:resolveStat(self.swimmingSpeed)
+end
+
+---@return number damage for the current level
+function PlayerStats:getDamage()
+	return self:resolveStat(self.damage)
+end
+
+---@return number attack range for the current level
+function PlayerStats:getRange()
+	return self:resolveStat(self.range)
+end
+
+---@return number attack speed (attacks/sec) for the current level
+function PlayerStats:getAttackSpeed()
+	return self:resolveStat(self.attackSpeed)
+end
+
+---@return number attack speed (attacks/sec) at level 1 — the curve base. Used as the
+--- reference so follow/swing travel scales up with level without changing the level-1 feel.
+function PlayerStats:getBaseAttackSpeed()
+	return self:resolveStat(self.attackSpeed, 1)
+end
+
+---@return number attack cooldown (sec) for the current level, derived from attack speed
+function PlayerStats:getCooldown()
+	return 1 / self:getAttackSpeed()
+end
+
+---@return number maximum satiety (capacity) for the current level
+function PlayerStats:getMaxSatiety()
+	return self:resolveStat(self.maxSatiety)
 end
 
 --- Emit VALUE_CHANGED to the parent (counter/HUD). One emit path so every
@@ -100,19 +168,41 @@ function PlayerStats:_emitStats(field, value, maxValue)
 	})
 end
 
+--- Preserve the satiety fraction when the level changes (Dota-style partial heal):
+--- current scales by new max capacity / old max capacity, so leveling up is a small
+--- reward rather than making the player relatively hungrier. Emits satiety so the HUD
+--- bar tracks the new capacity. No-op when the level is unchanged.
+function PlayerStats:_applyLevelChange(oldLevel)
+	if self.level == oldLevel then
+		return
+	end
+	local oldMax = self:resolveStat(self.maxSatiety, oldLevel)
+	local newMax = self:getMaxSatiety()
+	if oldMax > 0 then
+		self.satiety = math.min(newMax, self.satiety * newMax / oldMax)
+	end
+	self:_emitStats("satiety", self.satiety, newMax)
+end
+
 ---@param amount number
 ---@return boolean leveledUp
 function PlayerStats:addExperience(amount)
 	if self.dead then
 		return false
 	end
+	local oldLevel = self.level
 	self.experience = self.experience + amount
 	local leveledUp = false
 	while self.experience >= self:xpForNextLevel() do
+		if self.level >= self.maxLevel then
+			self.experience = self:xpForNextLevel()
+			break
+		end
 		self.experience = self.experience - self:xpForNextLevel()
 		self.level = self.level + 1
 		leveledUp = true
 	end
+	self:_applyLevelChange(oldLevel)
 	self:_emitStats("experience", self.experience, self:xpForNextLevel())
 	return leveledUp
 end
@@ -127,7 +217,7 @@ function PlayerStats:subtractExperience(amount)
 	-- `-N` on a high level actually drops levels.
 	local total = 0
 	for lv = 1, self.level - 1 do
-		total = total + math.floor(self.xpCurve.base * self.xpCurve.growth ^ (lv - 1))
+		total = total + self:resolveCurve(self.xpCurve, lv)
 	end
 	total = total + self.experience
 	self:setExperience(math.max(0, total - amount))
@@ -141,15 +231,21 @@ function PlayerStats:setExperience(value)
 	if self.dead then
 		return
 	end
+	local oldLevel = self.level
 	local remaining = math.max(0, value)
 	-- Recompute level from the cumulative thresholds, as addExperience does for
 	-- incremental grants. `self.level` must advance so xpForNextLevel() moves too.
 	self.level = 1
 	while remaining >= self:xpForNextLevel() do
+		if self.level >= self.maxLevel then
+			remaining = 0
+			break
+		end
 		remaining = remaining - self:xpForNextLevel()
 		self.level = self.level + 1
 	end
-	self.experience = remaining
+	self.experience = self.level >= self.maxLevel and self:xpForNextLevel() or remaining
+	self:_applyLevelChange(oldLevel)
 	self:_emitStats("experience", self.experience, self:xpForNextLevel())
 end
 
@@ -158,7 +254,9 @@ function PlayerStats:addLevels(amount)
 	if self.dead then
 		return
 	end
-	self.level = math.max(1, self.level + amount)
+	local oldLevel = self.level
+	self.level = math.min(self.maxLevel, math.max(1, self.level + amount))
+	self:_applyLevelChange(oldLevel)
 	self:_emitStats("level", self.experience, self:xpForNextLevel())
 end
 
@@ -167,7 +265,9 @@ function PlayerStats:subtractLevels(amount)
 	if self.dead then
 		return
 	end
-	self.level = math.max(1, self.level - amount)
+	local oldLevel = self.level
+	self.level = math.min(self.maxLevel, math.max(1, self.level - amount))
+	self:_applyLevelChange(oldLevel)
 	self:_emitStats("level", self.experience, self:xpForNextLevel())
 end
 
@@ -176,7 +276,9 @@ function PlayerStats:setLevel(value)
 	if self.dead then
 		return
 	end
-	self.level = math.max(1, value)
+	local oldLevel = self.level
+	self.level = math.min(self.maxLevel, math.max(1, value))
+	self:_applyLevelChange(oldLevel)
 	self:_emitStats("level", self.experience, self:xpForNextLevel())
 end
 
@@ -186,7 +288,7 @@ function PlayerStats:consumeSatiety(amount)
 		return
 	end
 	self.satiety = math.max(0, self.satiety - amount)
-	self:_emitStats("satiety", self.satiety, self.maxSatiety)
+	self:_emitStats("satiety", self.satiety, self:getMaxSatiety())
 	self:_checkHungerWarnings()
 	if self.satiety <= 0 then
 		self.dead = true
@@ -207,7 +309,7 @@ function PlayerStats:_checkHungerWarnings()
 	if count <= 0 or low <= 0 then
 		return
 	end
-	local f = self.satiety / math.max(1, self.maxSatiety)
+	local f = self.satiety / math.max(1, self:getMaxSatiety())
 	if f >= low then
 		return
 	end
@@ -226,11 +328,11 @@ function PlayerStats:restoreSatiety(amount)
 	if self.dead then
 		return
 	end
-	self.satiety = math.min(self.maxSatiety, self.satiety + amount)
-	if self.satiety >= (self.lowSatietyPercent or 33) / 100 * self.maxSatiety then
+	self.satiety = math.min(self:getMaxSatiety(), self.satiety + amount)
+	if self.satiety >= (self.lowSatietyPercent or 33) / 100 * self:getMaxSatiety() then
 		self._warned = 0
 	end
-	self:_emitStats("satiety", self.satiety, self.maxSatiety)
+	self:_emitStats("satiety", self.satiety, self:getMaxSatiety())
 end
 
 ---@param value number
@@ -238,11 +340,11 @@ function PlayerStats:setSatiety(value)
 	if self.dead then
 		return
 	end
-	self.satiety = math.max(0, math.min(self.maxSatiety, value))
-	if self.satiety >= (self.lowSatietyPercent or 33) / 100 * self.maxSatiety then
+	self.satiety = math.max(0, math.min(self:getMaxSatiety(), value))
+	if self.satiety >= (self.lowSatietyPercent or 33) / 100 * self:getMaxSatiety() then
 		self._warned = 0
 	end
-	self:_emitStats("satiety", self.satiety, self.maxSatiety)
+	self:_emitStats("satiety", self.satiety, self:getMaxSatiety())
 	if self.satiety <= 0 then
 		self.dead = true
 		if self.parent then

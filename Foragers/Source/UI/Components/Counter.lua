@@ -3,6 +3,16 @@ local Easing = require("Source.Sprite.Components.Tween").Easing
 local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 local Pivot = require("Source.Helpers.Core.Pivot")
 
+--- Read a source field, resolving it through the component's curve resolver if
+--- it is a `{base, gain}` table (e.g. a level-scaled `maxSatiety`).
+local function readStat(comp, field)
+	local v = comp[field]
+	if type(v) == "table" and comp.resolveStat then
+		v = comp:resolveStat(v)
+	end
+	return v
+end
+
 --- Maps source component value to spritesheet frame. Event-driven, opt-in smooth tween.
 --- Optional `label` block renders a text overlay (e.g. level number) via font spritesheet.
 local Counter = {}
@@ -118,13 +128,13 @@ function Counter:setPlayerSprite(sprite)
 	-- Initial sync: no animation, jump to current value
 	local comp = sprite:findComponent(self.sourceType)
 	if comp then
-		local value = comp[self.field]
+		local value = readStat(comp, self.field)
 		if value ~= nil then
 			local maxValue
 			if self.mode == "progress" then
 				maxValue = comp:xpForNextLevel()
 			elseif self.maxField then
-				maxValue = comp[self.maxField]
+				maxValue = readStat(comp, self.maxField)
 			end
 			if maxValue and maxValue > 0 then
 				local p = math.max(0, math.min(1, value / maxValue))

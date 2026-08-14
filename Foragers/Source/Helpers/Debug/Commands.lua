@@ -208,7 +208,7 @@ Commands.register("eat", function(_, ctx)
 	if not s then
 		return err, false
 	end
-	s:restoreSatiety(s.maxSatiety)
+	s:restoreSatiety(s:getMaxSatiety())
 	return "Satiety restored", true
 end, "restore satiety to full.")
 

@@ -27,9 +27,6 @@ return {
 
 		{
 			component = "weapon",
-			damage = 5,
-			range = 20,
-			cooldown = 0.5,
 			swing = {
 				angleFrom = 0,
 				angleTo = -75,

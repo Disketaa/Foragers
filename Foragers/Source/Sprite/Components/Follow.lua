@@ -61,11 +61,15 @@ function Follow:deployTo(target, offsetX, offsetY, smoothness, dir)
 	self._deployDir = dir or (self.parent and ((self.parent.x < target.x) and -1 or 1) or 1)
 end
 
-function Follow:recall()
+---@param smoothness number|nil Override the return-trip smoothing (seconds); defaults to the
+--- component's base `smoothnessX`/`smoothnessY`. `AttackSystem` passes a value scaled by
+--- attack speed so a faster swing also recalls the tool faster.
+function Follow:recall(smoothness)
 	self._tempTarget = nil
 	self._tempOffsetX = 0
 	self._tempOffsetY = 0
 	self._deploySmoothness = nil
+	self._recallSmoothness = smoothness
 end
 
 ---@param dt number
@@ -167,8 +171,8 @@ function Follow:update(dt)
 		self.parent.angle = (self.parent.angle or 0) + (accelFactor - 1) * dt * 180
 	end
 
-	local sx = (self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessX) / accelFactor
-	local sy = (self._tempTarget and (self._deploySmoothness or 0.02) or self.smoothnessY) / accelFactor
+	local sx = (self._tempTarget and (self._deploySmoothness or 0.02) or (self._recallSmoothness or self.smoothnessX)) / accelFactor
+	local sy = (self._tempTarget and (self._deploySmoothness or 0.02) or (self._recallSmoothness or self.smoothnessY)) / accelFactor
 	local easeX = Math.expSmooth(dt, sx)
 	local easeY = Math.expSmooth(dt, sy)
 	local leanEase = Math.expSmooth(dt, self.leanSmoothness or sx)
