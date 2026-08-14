@@ -10,13 +10,13 @@ return {
 			component = "particle_emitter",
 			moving = true,
 			interval = 0.2,
-			particle = "Content/Assets/Sprites/Particles/RedMushrooms",
+			particle = "Content/Assets/Sprites/Particles/BrownMushrooms",
 			layer = "below",
 		},
 
 		{
 			component = "silhouette",
-			color = { 0.72, 0.19, 0.11, 0.75 },
+			color = { 0.7, 0.45, 0.21, 0.75 },
 		},
 	},
 }

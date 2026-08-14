@@ -22,7 +22,7 @@ return {
 		{
 			component = "drop",
 			drops = {
-				{ sprite = "Content/Assets/Sprites/Drops/RedMushroom", amount = 1 },
+				{ sprite = "Content/Assets/Sprites/Drops/BrownMushroom", amount = 1 },
 			},
 		},
 
@@ -37,7 +37,7 @@ return {
 		{
 			component = "silhouette",
 			mode = "silhouette",
-			color = { 0.72, 0.19, 0.11, 0.75 },
+			color = { 0.7, 0.45, 0.21, 0.75 },
 		},
 	},
 }
