@@ -29,6 +29,10 @@ function Cursor:update(dt)
 		self.parent.y = (my - self.canvas.offsetY) / self.canvas.scale
 	end
 
+	if self.parent.tweens.alpha then
+		self.parent.alpha = self.parent.tweens.alpha:getValue()
+	end
+
 	if not self._lastX then
 		self._lastX, self._lastY = mx, my
 	end

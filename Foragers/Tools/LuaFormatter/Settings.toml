@@ -32,4 +32,4 @@ param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdo
 
 component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop pickup weapon shake tween particle_emitter text_emitter emote sound cursor ui counter silhouette shader"
 
-tween_order.order = "x y scale_x scale_y angle brightness tint_mix"
+tween_order.order = "x y scale_x scale_y angle brightness tint_mix alpha"
