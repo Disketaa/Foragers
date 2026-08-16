@@ -193,6 +193,7 @@ local chatBlink = 0
 -- Cache key "path@size": the same font file at different sizes is a distinct entry.
 local fontCache = {}
 
+---@alias Font love.Font
 --- Load a font (optional path via love.filesystem), cached by path+size. On
 --- failure (missing/corrupt file) fall back to LÖVE's default font so the HUD
 --- never crashes.
@@ -220,7 +221,7 @@ end
 --- HUD and the bottom-left profiler so both render with the same metrics.
 ---@param s table `hud` settings
 ---@param scale number
----@return Font, Font, number labelFont, valueFont, fontHeight
+---@return Font labelFont, Font valueFont, number fontHeight
 local function hudFonts(s, scale)
 	local size = math.max(4, math.floor((s.size or 8) * scale))
 	local fconf = s.font or {}
@@ -256,7 +257,7 @@ local function lookup(path)
 	if cached ~= nil then
 		return cached
 	end
-	local t = data
+	local t = data --[[@as any]]
 	for part in (path .. ""):gmatch("[^.]+") do
 		t = t[part]
 		if t == nil then

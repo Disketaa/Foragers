@@ -24,6 +24,11 @@ local TweenModule = require("Source.Sprite.Components.Tween")
 ---@field _duration number
 ---@field _hideTweens table[]
 ---@field type "emote"
+---@field frameWidth number|nil Frame width when drawn as plain image
+---@field frameHeight number|nil Frame height when drawn as plain image
+---@field pivotX number|string|nil Pivot X (image emotes only)
+---@field pivotY number|string|nil Pivot Y (image emotes only)
+---@field alpha number|nil Draw alpha override (defaults to 1)
 local Emote = {}
 Emote.__index = Emote
 

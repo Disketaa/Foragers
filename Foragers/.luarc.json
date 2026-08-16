@@ -1,0 +1,26 @@
+{
+  "runtime.version": "LuaJIT",
+  "runtime.path": [
+    "?.lua",
+    "?/init.lua"
+  ],
+  "workspace.library": [
+    "${3rd}/love2d/library"
+  ],
+  "workspace.ignoreDir": [
+    ".git",
+    ".kilo"
+  ],
+  "diagnostics.enable": true,
+  "diagnostics.globals": [
+    "love",
+    "utf8"
+  ],
+  "diagnostics.neededFileStatus": {
+    "nil-type-mismatch": "Warning",
+    "param-type-mismatch": "Warning",
+    "undefined-global": "Warning",
+    "unused-local": "Warning",
+    "redefined-global": "Warning"
+  }
+}

@@ -15,6 +15,9 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 ---@field leanThreshold number Min pixel-delta per frame to trigger lean (lower = more sensitive)
 ---@field leanSmoothness number Seconds to ease lean angle (0 = instant; defaults to smoothnessX)
 ---@field type "follow"
+---@field accelerate number Acceleration factor applied to follow speed over time
+---@field rotate boolean Whether the followed tool spins while accelerating
+---@field arrivedThreshold number Distance (px) under which FOLLOW_ARRIVED emits
 local Follow = {}
 Follow.__index = Follow
 
@@ -213,20 +216,19 @@ function Follow:draw(x, y)
 		return
 	end
 	local hadShader = parent.applyShader and parent:applyShader() or false
-	local img = parent.image
 	local rot = math.rad(self._currentAngle or 0)
 	if parent.tweens and parent.tweens.swing_angle then
 		rot = rot + math.rad(parent.tweens.swing_angle:getValue())
 	end
 	love.graphics.draw(
-		img,
+		parent.image,
 		math.floor(x + 0.5),
 		math.floor(y + 0.5),
 		rot,
 		1,
 		1,
-		Pivot.px(parent.pivotX, parent.frameWidth or img:getWidth(), "center"),
-		Pivot.px(parent.pivotY, parent.frameHeight or img:getHeight(), "bottom")
+		Pivot.px(parent.pivotX, parent.frameWidth or parent.image:getWidth(), "center"),
+		Pivot.px(parent.pivotY, parent.frameHeight or parent.image:getHeight(), "bottom")
 	)
 	if hadShader then
 		love.graphics.setShader()

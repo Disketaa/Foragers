@@ -11,7 +11,7 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 ---@field pivotY number|string|nil Pixel or keyword ("top"|"center"|"bottom") Y origin
 ---@field image love.Image|nil Image for StaticSprite mode
 ---@field type string|nil "StaticSprite" for auto-generated sprites
----@field components table<object> Component instances
+---@field components table<any> Component instances
 ---@field _state string|nil Current sprite state — render-only, do not read for logic
 ---@field flipX boolean|nil Horizontal flip state — render-only, do not read for logic
 ---@field tweens table<string, Tween>|nil Runtime tweens on sprite (Tween→Animation producer/consumer)
@@ -20,6 +20,11 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 ---@field sortOffsetY number Per-sprite vertical offset for Y-sorting (foot position relative to origin)
 ---@field layer integer Draw layer: zKey = layer * 100000 + sortY
 ---@field object string|nil Gameplay identifier from data (e.g. "player", "tile")
+---@field _events EventEmitter Event emitter for sprite-level events
+---@field shader love.Shader|nil Bound shader (set by applyShader path)
+---@field shaderData table|nil Shader uniforms sent on dirty
+---@field angle number|nil Rotation in degrees (render-only, set by Follow/tween)
+---@field alpha number|nil Draw alpha override (defaults to 1)
 local Sprite = {}
 Sprite.__index = Sprite
 

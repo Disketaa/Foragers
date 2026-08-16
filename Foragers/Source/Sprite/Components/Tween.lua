@@ -11,6 +11,8 @@ local ValueParser = require("Source.Helpers.Core.ValueParser")
 ---@field loop boolean If true, replay from start on finish
 ---@field pingPong boolean If true, oscillate forward then backward
 ---@field destroyOnComplete boolean
+---@field _destroyHandled boolean|nil Guard so TWEEN_COMPLETED emits once per finish
+---@field _smoothness number|nil Attack swing smoothness override (set by AttackSystem)
 local Tween = {}
 Tween.__index = Tween
 

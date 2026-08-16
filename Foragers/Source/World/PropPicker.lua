@@ -186,6 +186,7 @@ end
 --- Pure lookup for the host; the fallback re-roll is tile-seeded for
 --- reproducibility but never touches _vegSpawned/_prdStreak — that decision
 --- was already committed in pick().
+---@return {data: table, pngPath: string|nil, modulePath: string|nil, host: any, hostType: string|nil, hostKey: any, offsetX:number, offsetY:number, inheritFrame: boolean|nil}
 local function resolvePending(pending, hostProvider, tileSeed)
 	local savedState
 	if tileSeed then
@@ -214,7 +215,7 @@ local function resolvePending(pending, hostProvider, tileSeed)
 	if savedState then
 		love.math.setRandomState(savedState)
 	end
-	return result
+	return result --[[@as {data: table, pngPath: string|nil, modulePath: string|nil, host: any, hostType: string|nil, hostKey: any, offsetX: number, offsetY: number, inheritFrame: boolean|nil}]]
 end
 
 --- Free one vegetable quota slot. Called when a vegetable prop is destroyed;

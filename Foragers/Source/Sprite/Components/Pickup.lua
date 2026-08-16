@@ -4,6 +4,7 @@ local Events = require("Source.Helpers.Core.Events")
 ---@field parent Sprite|nil
 ---@field xp number XP granted on collection
 ---@field type "pickup"
+---@field satiety number|nil Satiety restored on collection (nil = grant XP instead)
 local Pickup = {}
 Pickup.__index = Pickup
 

@@ -157,7 +157,7 @@ end
 
 --- Play a one-shot sound by path (UI blips). Cache the source so the .ogg
 --- decodes once, then clone cheaply at play — same pattern as the sprite component.
----@param path string
+---@param path string|nil
 ---@param volume number|nil
 ---@param pitch number|nil
 function Sound.play(path, volume, pitch)

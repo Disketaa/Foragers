@@ -22,7 +22,9 @@ local OP_PONG = 4
 
 -- Transport state (module-private; never exposed as an array field so
 -- Reset.all() can't wipe it).
+---@type any
 local ffi = nil
+---@type any
 local lib = nil
 local ffiOk = false
 local isWindows = false

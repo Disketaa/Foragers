@@ -1,3 +1,4 @@
+---@class Events
 local Events = {
 	STATE_CHANGED = "state_changed",
 	FLIPPED = "flipped",

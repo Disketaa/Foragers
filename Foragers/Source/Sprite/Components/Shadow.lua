@@ -1,3 +1,5 @@
+local Canvas = require("Source.Helpers.Graphics.Canvas")
+
 ---@class Shadow
 ---@field parent Sprite|nil
 ---@field offsetX number Offset (px) of the shadow CENTER from the sprite's pivot point (sprite.x, sprite.y)
@@ -5,7 +7,6 @@
 ---@field width number Shadow width in px
 ---@field height number Shadow height in px
 ---@field type "shadow"
-local Canvas = require("Source.Helpers.Graphics.Canvas")
 local Shadow = {}
 Shadow.__index = Shadow
 

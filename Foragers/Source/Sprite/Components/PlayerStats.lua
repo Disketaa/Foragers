@@ -1,3 +1,5 @@
+local Events = require("Source.Helpers.Core.Events")
+
 ---@class PlayerStats
 ---@field parent Sprite|nil
 ---@field critChance number Critical hit chance (0–1)
@@ -10,9 +12,16 @@
 ---@field lowSatietyPercent number Percent of maxSatiety below which low-satiety effects start
 ---@field lowSatietyZoom number Output zoom when satiety reaches 0 (1 at the threshold)
 ---@field lowSatietyMaskRadius number Circle mask radius (canvas px) at zero satiety; full circle at the low threshold
+---@field lowSatietyWarnings number Warning thresholds before death
 ---@field dead boolean Whether the player has died (satiety 0); blocks further consumption/restoration
+---@field damage number|{base:number, gain:number} Base attack damage
+---@field range number|{base:number, gain:number} Attack range
+---@field attackSpeed number|{base:number, gain:number} Attacks per second
+---@field maxLevel number Level cap
+---@field movementSpeed number|{base:number, gain:number} Movement speed (flat or curve)
+---@field swimmingSpeed number|{base:number, gain:number} Swimming speed (flat or curve)
+---@field satietyDrain table<string, number> Per-state satiety drain rates
 ---@field type string
-local Events = require("Source.Helpers.Core.Events")
 local PlayerStats = {}
 PlayerStats.__index = PlayerStats
 

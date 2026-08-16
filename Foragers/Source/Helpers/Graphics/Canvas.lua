@@ -1,3 +1,17 @@
+---@class Canvas
+---@field baseWidth number
+---@field baseHeight number
+---@field width number
+---@field height number
+---@field scale number
+---@field offsetX number
+---@field offsetY number
+---@field canvas love.Canvas
+---@field mode string
+---@field new fun(width: number, height: number, mode?: string): Canvas
+---@field newCanvas fun(w: number, h: number): love.Canvas
+---@field createCanvasManager fun(): fun(w: number, h: number): love.Canvas
+---@field drawTo fun(canvas: love.Canvas, drawFunc: function, clearColor?: table, afterRestore?: function)
 local Canvas = {}
 Canvas.__index = Canvas
 
@@ -61,7 +75,7 @@ end
 ---@param viewY number|nil Camera offset Y (shifts canvas draw position)
 ---@param subX number|nil Sub-pixel offset X (0..1, for smooth canvas movement)
 ---@param subY number|nil Sub-pixel offset Y (0..1, for smooth canvas movement)
----@param screenShader Shader|nil Optional shader applied when drawing canvas to screen (post-process)
+---@param screenShader love.Shader|nil Optional shader applied when drawing canvas to screen (post-process)
 ---@param zoom number|nil Output zoom (1 = none). Scales the whole canvas blit about the
 --- pivot point — magnifies the rendered picture without changing what was drawn.
 ---@param pivotX number|nil Screen-space X to zoom about (default: window center)

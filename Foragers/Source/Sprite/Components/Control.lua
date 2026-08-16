@@ -13,6 +13,7 @@ local Input = require("Source.Helpers.Systems.Input")
 ---@field _grounded boolean|nil Grounded state cached from grounded_changed event
 ---@field _slowdown number Speed multiplier from collision zones (1 = normal)
 ---@field type "control"
+---@field mouseControl table|nil Mouse-follow config ({ slowdownRadius })
 local Control = {}
 Control.__index = Control
 

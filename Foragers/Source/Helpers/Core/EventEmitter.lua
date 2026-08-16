@@ -1,3 +1,4 @@
+---@class EventEmitter
 local EventEmitter = {}
 EventEmitter.__index = EventEmitter
 
