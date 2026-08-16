@@ -152,7 +152,7 @@ All Critical Constraints in Section I apply here.
 
 ### Component list
 
-22 core: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `player_stats`, `pickup`, `silhouette`, `emote`.
+23 core: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `player_stats`, `pickup`, `silhouette`, `emote`, `cursor`.
 
 ---
 
@@ -174,7 +174,7 @@ Full event table: `.kilo/documentation/events.md`
 
 ## XI. Component Registry
 
-`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 22 core components. Mods register new types:
+`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 23 core components. Mods register new types:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```
@@ -191,6 +191,7 @@ Read this before proposing a change in these areas — already considered and cl
 | Guard `DrawOrder.collect()` against double-call? | **Rejected** | No double-call site exists. Buffer clear doesn't fix it either way. |
 | Scene/game-state machine (menu, pause, restart)? | **Plain string adopted; full machine deferred** | `main.lua` uses a plain `state = "game" \| "dying" \| "gameover"` string (no framework) for death: `"dying"` freezes the world but keeps drawing it while the death anim plays, `"gameover"` is the hold once the anim ends. On death the scene reveals back to normal (zoom/color/mask), then fades to black via the `Darken` post-process shader before auto-restart. World simulation gates on `state == "game"`. Menus can add values later. A full scene manager stays deferred — use the string + `if state == ...` dispatch, not a framework. |
 | ModLoader integration for mod content? | **Deferred** | Currently only registers component types. No entry point for mod content yet. |
+| Move cursor `update()` into the `love.draw` guard (instead of `love.update`)? | **Settled — pragmatic fallback, NOT precedent** | `love.update` already sits at the LuaJIT 60-upvalue cap; adding `cursorSprite` as a new local there triggered `function ... has more than 60 upvalues`. `cursorSprite` is already an upvalue of `love.draw`, so the draw-guard update adds no new upvalue. This treats the symptom, not the cause — do NOT read it as license to move other logic into `draw()`. Preferred fix next time: stash the sprite on an already-in-scope bag table instead of a new named local, keeping update logic in `update()` and `draw()` pure. |
 
 Full history: `.kilo/CHANGELOG.md`
 

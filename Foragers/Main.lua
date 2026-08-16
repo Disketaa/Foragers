@@ -423,6 +423,12 @@ function initGame()
 	local cursorData = require("Content.Assets.Sprites.UI.Cursor")
 	local cursorObj = SpriteLoader.instantiate(cursorData, 0, 0, "Content/Assets/Sprites/UI/Cursor.png")
 	if cursorObj then
+		-- data.components is now non-empty, so the loader skips the StaticSprite gate; force it so the PNG still renders.
+		cursorObj.type = "StaticSprite"
+		local cursorComp = cursorObj:findComponent("cursor")
+		if cursorComp then
+			cursorComp.canvas = canvas
+		end
 		cursorSprite = { instance = cursorObj, data = cursorData }
 		love.mouse.setVisible(false)
 	end
@@ -914,11 +920,11 @@ function love.draw()
 	love.graphics.translate(canvas.offsetX, canvas.offsetY)
 	love.graphics.scale(canvas.scale, canvas.scale)
 	if not isDead and cursorSprite and cursorSprite.instance then
-		local mx, my = love.mouse.getPosition()
-		local cx = (mx - canvas.offsetX) / canvas.scale
-		local cy = (my - canvas.offsetY) / canvas.scale
-		cursorSprite.instance.x = cx
-		cursorSprite.instance.y = cy
+		-- Cursor update sets position (mouse->canvas) + idle/hide; dt from wall-clock since draw runs once per frame.
+		local now = love.timer.getTime()
+		local fdt = now - (cursorSprite._lastDraw or now)
+		cursorSprite._lastDraw = now
+		cursorSprite.instance:update(fdt)
 		cursorSprite.instance:draw()
 	end
 	love.graphics.pop()
