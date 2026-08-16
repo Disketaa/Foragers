@@ -1,76 +1,89 @@
 ---
-description: Check written/changed code for hidden runtime instabilities before task delivery
+description: Verify changed code for runtime instabilities and pattern regressions before task delivery
 ---
 
 # Verify Code Workflow
 
-A task is not complete when the code "runs on launch". Explicitly verify it won't break under conditions you didn't test manually. Follow steps in order.
+Task not done when code "runs on launch". Verify it won't break under untested conditions. Follow in order.
 
 ## Step 1. List changed/added files
+List every .lua created/modified this task. Checklist runs **per file**, not whole project — easy to skip "simple" files otherwise.
 
-List every .lua file you created or modified in this task. The checklist below runs **per file individually**, not on the whole project — otherwise it's easy to skip a file that looked "too simple to have anything wrong".
-
-## Step 1.5 Lint check
-
-Run `.\Tools\luacheck.exe Source/` to verify no static analysis errors. Fix any warnings before proceeding.
+## Step 1.5 Lint (nil checks live here)
+Run the LuaLS static check — it surfaces `need-check-nil` and type warnings across all files:
+```
+powershell.exe -ExecutionPolicy Bypass -File Tools/lua-ls-check.ps1
+```
+(or VS Code task `LuaLS Check`). Fix every `need-check-nil` (real latent bug) and undefined-field warning.
+Also run luacheck for style/global leaks: `.\Tools\luacheck.exe Source/`. Fix all warnings before proceeding.
 
 ## Step 2. Category checklist
-
-For each file from step 1, go through all items. Answer not with "yes/no" but point to a specific line if you find an issue.
+For each file from step 1. Point to a specific line, not "yes/no".
 
 **2.1 Declaration order**
-- Is each `local function` used by another function in this file declared ABOVE the usage site? (`local function` does not hoist — unlike `function name()`.)
-- If a function is called from a LÖVE callback (`love.load`, `love.update`, `love.keypressed`, etc.) — is it definitely defined before the engine can call that callback?
+- `local function` used by another in-file function declared ABOVE usage? (`local function` doesn't hoist.)
+- Function called from a LÖVE callback (`love.load`/`update`/`keypressed`) defined before engine can call it?
 
-**2.2 Nil and initialization order**
-- Does each `local` variable that will be read before explicit assignment (e.g. in `love.update`/`love.draw` before `love.load` finishes) have a safe default (`{}`, `0`, explicit nil-check), not just implicit nil?
-- What happens if `require(...)` or a data loading function (`SpriteLoader.loadAll`, reading a Lua config, etc.) returns `nil` or throws an error mid-way — does the module below it crash with "attempt to index/call a nil value", or is it handled?
-- If a variable is read inside a component from `self.parent` — is `self.parent` checked for nil before accessing its fields (`self.parent.x`, `self.parent.tweens`)?
+**2.2 Nil & init order**
+- `local` read before assignment has safe default (`{}`, `0`, explicit nil-check)?
+- `require(...)` / data load returns nil or throws mid-way — does module below crash on nil index/call, or handle it?
+- `self.parent` read in component — nil-checked before field access (`self.parent.x`, `self.parent.tweens`)?
 
-**2.3 Names and scope (scope/shadowing)**
-- Are there two different entities with the same name in different scopes?
-- Variables captured in closures
+**2.3 Names & scope**
+- Two entities same name in different scopes?
+- Variables captured in closures correct?
 
-**2.4 Draw passes (`drawBehind`, `drawOnTop`)**
-- Does a component that draws decals/underlays have `drawBehind = true` set?
-- Does a component that draws debug graphics (collision wireframe) have `drawOnTop = true` set?
-- Do `drawBehind` and `drawOnTop` conflict on the same component? (Lua allows both flags, but behavior is undefined.)
+**2.4 Draw passes**
+- Decal/underlay component has `drawBehind = true`?
+- Debug-graphics component has `drawOnTop = true`?
+- Both flags on same component? (undefined behavior.)
 
-**2.5 Single-writer rule and event model**
-- Does the component NOT write `parent._state` or `parent.flipX` directly, unless it's Control? (Violates the single-writer rule from `.kilo/AGENTS.md` §I.)
-- Does the component NOT read another component's fields in `update()`? Even through `parent`? (Cross-component communication — events only — AGENTS.md §I.)
-- If a new component subscribes to an event — is the priority chosen with a gap of 5 (5/10/15/20)? (AGENTS.md §X — exception: STATE_CHANGED/FLIPPED use tight priorities 7↔8, 10↔11↔12.)
-- Are all event references string constants from `Source/Helpers/Core/Events.lua`?
+**2.5 Single-writer & events**
+- Component doesn't write `parent._state`/`flipX` unless Control? (AGENTS §I.)
+- Component doesn't read another component's fields in `update()`? (events only, AGENTS §I.)
+- New event subscription priority gap of 5 (5/10/15)? (exception: STATE_CHANGED/FLIPPED 7↔8, 10↔11↔12, AGENTS §X.)
+- All event refs are `Events.lua` string constants?
 
-**2.6 Design constants in config**
-- Is every number or string that could affect gameplay or behavior (safe zone size, animation speed, collision radius, gravity strength, etc.) placed in `Content/Data/`, not hardcoded? (Violates data-driven design from `.kilo/AGENTS.md` §I.)
+**2.6 Design constants**
+- Gameplay/behavior numbers (safe zone, anim speed, collision radius, gravity…) in `Content/Data/`, not hardcoded? (AGENTS §I.)
 
-**2.7 Modding and external data (if the file touches these)**
-- If the file reads mod/content data — what happens when a field is missing, a type is wrong, or the mod's Lua file is corrupted? Does it give clean degradation (mod ignored / error log), not a full game crash?
-- Is there an assumption "this field definitely exists" without a guard, for data that a mod could potentially override?
+**2.7 Modding & external data**
+- Missing field / wrong type / corrupted mod Lua — clean degradation (mod ignored / error log), not full crash?
+- "Field definitely exists" assumption without guard on mod-overridable data?
 
-**2.8 Side effects on re-execution**
-- If a function/file can be executed again (repeated `require` after `package.loaded[...] = nil`) — does it accumulate side effects: duplicate event subscriptions, duplicate objects in tables, leaked old resources (e.g. unreleased `Image`/`Quad`)?
+**2.8 Re-execution side effects**
+- Re-`require` (after `package.loaded[...] = nil`) — duplicate subscriptions, duplicate table entries, leaked `Image`/`Quad`?
 
-**2.9 Documentation (Rationale comments only rule)**
-- Is there a decision implemented in a non-obvious way (e.g. a particular declaration order from 2.1, a non-standard way to work around a LÖVE2D limitation, a non-obvious workaround) — and if so, is **why** explained next to the code, not left as a bare fact?
-- Does every `love.*` call / object method / enum string whose behavior doesn't follow directly from its name have a reference to a specific file/symbol in `.kilo/documentation/`, not a generic "see LÖVE2D docs"?
-- If the file exports functions that mods can call (this module's modding API) — do they have LuaDoc/EmmyLua annotations (`---@param`, `---@return`)?
-- Are there comments that just restate the code in words? (Violates the Rationale comments only rule in reverse — this is also a problem, not just missing needed comments.)
+**2.9 Documentation**
+- Non-obvious decision (declaration order, LÖVE workaround) has **why** comment, not bare fact?
+- `love.*`/method/enum with non-obvious behavior references specific `.kilo/documentation/` symbol, not generic "see LÖVE docs"?
+- Mod-callable exports have LuaDoc (`---@param`, `---@return`)?
+- Comments that just restate code? (violates rationale-only rule.)
 
-## Step 3. Comments
+## Step 3. Pattern compliance
+Run weekly or after refactor. Each is a grep — find and fix violations. Allowed exceptions noted.
 
-Run the `adjust-comments` command to verify the rationale-comments-only rule. Do not duplicate that check here.
+1. **Component scan** — must use `findComponent`/`getComponents`:
+   `grep -rn "for _, comp in ipairs(.*components" Source/ Main.lua` and formatter-split `grep -rn "for _, comp in$" Source/ Main.lua`.
+   Exceptions: `Sprite:update()`/`drawComponents()`, `Merge.lua`, `ParticleEmitter.lua:75`.
+2. **Sprite instantiation** — `grep -rn "Sprite\.new(" Source/ Main.lua`. Zero outside `Sprite.lua`/`SpriteLoader.lua`.
+3. **Component creation** — `grep -rn "ComponentRegistry\.create(" Source/ Main.lua`. Zero outside `SpriteLoader.lua`/`ComponentRegistry.lua`.
+4. **_state/flipX writes** — `grep -rn "parent\._state\s*=\|parent\.flipX\s*=" Source/`. Zero outside `Control.lua`.
+5. **Cross-component reads in update()** — `grep -rn "parent\.\w" Source/Sprite/Components/ | grep -v "draw()\|_state\|flipX\|tweens\|shader\|shaderData"`. Events only; `tweens`/`shader`/`shaderData` allowed (AGENTS §X).
+6. **Hardcoded gameplay values** — `grep -rn "love\.math\.random\|math\.random\|timer\s*=\s*[0-9]" Source/ Main.lua | grep -v "Content/Data/"`. Numbers in `Content/Data/`.
+7. **Nil guards on sprite.components** — `grep -rn "\.components\b" Source/ Main.lua | grep -v "or {}\|findComponent\|getComponents\|self\.components\|data\.components\|baseComponents\|overrideComponents"`. Access without `or {}` = potential nil error.
+8. **Event string literals** — `grep -rn 'Events\.' Source/ | grep -v "require.*Events\|Events\.lua"`. Use `Events.lua` constants.
+9. **ModLoader registration** — `grep -rn "ComponentRegistry\.register" Source/ Mods/`. Mods use `register()`, not `_registry` direct add.
+10. **draw() pivot reads** — `grep -rn "parent\.flipX\|parent\._state" Source/Sprite/Components/ | grep -v "draw()"`. Read only inside `draw()` (AGENTS §I).
+11. **Pivot awareness (STRICT)** — `grep -rn "\.x\s*[=:]\|\.y\s*[=:]\|parent\.x\|parent\.y\|offsetX\|offsetY\|pivotX\|pivotY" Source/Sprite/Components/ Source/Helpers/ Source/UI/ Main.lua`. For each: is it pivot-aware? `sprite.x/y` = pivot point; `pivotX/Y` (0–1) compute draw origin (`ox = frameWidth*pivotX`); offsets from pivot, not edge. Violations: treating x/y as top-left, draw without pivot origin, edge-based offset, ox/oy without pivotX/Y.
+12. **Shared utilities** — `grep -rn "local function scan" Source/`. Zero outside `Path.lua` (use `Path.scanDirectory`).
+13. **Restart reset** — before module-level mutable state, ask "reset on restart?" `Reset.all()` only clears exported array fields; module-level `local` tables invisible to it. Asset arrays (e.g. `ShaderLoader.shaders`) must reload in `initGame()`, not only `love.load()`.
 
-## Step 4. Report
+## Step 4. Comments
+Run `adjust-comments` to verify rationale-only rule. Don't duplicate here.
 
-After going through the checklist — briefly, for each item found:
-- file and line
-- what scenario this breaks (specific conditions, not "could be a problem") — or for item 2.9, which decision remained unexplained
-- proposed minimal fix: either a code change (without rewriting the architecture — see MINIMAL CHANGES and SIMPLICITY FIRST), or a missing comment/LuaDoc annotation (see RATIONALE COMMENTS, NOT NARRATION)
+## Step 5. Report
+Per item found: file+line, exact break scenario (specific conditions), minimal fix (code change or missing comment/LuaDoc). Omit clean items. If all clean — one line.
 
-If no problems are found for a checklist item — don't describe it to the user, just omit it from the report. If all items are clean — say so in one line, don't artificially find nitpicks for the sake of looking busy.
-
-## Step 5. Applying fixes
-
-Fixes from the report are applied only after user confirmation — do not make silent changes within this workflow. This is a verification step, not a rewrite step.
+## Step 6. Applying fixes
+Apply only after user confirmation. Verification, not rewrite.
