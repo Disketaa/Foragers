@@ -170,8 +170,11 @@ if (Test-Path $license) {
 # public/up-to-date copies (required by Discord Developer Portal); the local files
 # let a user read the exact version that shipped even offline. Missing docs are a
 # hard error — shipping without them is worse than failing the build.
+# The docs live one level above the project root (C:\Projects\Foragers\), outside
+# the repo, so they are sourced from $DocsRoot rather than $ProjectRoot.
+$DocsRoot = Split-Path -Parent $ProjectRoot
 foreach ($doc in @("TERMS.md", "PRIVACY.md")) {
-    $docSrc = Join-Path $ProjectRoot $doc
+    $docSrc = Join-Path $DocsRoot $doc
     if (-not (Test-Path $docSrc)) {
         Write-Error "Legal document '$doc' not found at '$docSrc' - it must ship with the build."
         exit 1
