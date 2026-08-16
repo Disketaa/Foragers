@@ -20,9 +20,7 @@ local function encode_escape_sequences_replace(char)
 	return encode_escape_sequences[char] or string.format("\\u%04x", char:byte())
 end
 
-local encode_string = function(string)
-	return '"' .. string.gsub(string, '[%z\1-\31"\\]', encode_escape_sequences_replace) .. '"'
-end
+local encode_string = function(string) return '"' .. string.gsub(string, '[%z\1-\31"\\]', encode_escape_sequences_replace) .. '"' end
 
 local encode_number = function(number)
 	if math.huge == number then
@@ -98,9 +96,7 @@ encode_value = function(value)
 	error("Cannot encode value of type " .. type(value))
 end
 
-json.encode = function(value)
-	return encode_value(value)
-end
+json.encode = function(value) return encode_value(value) end
 
 local parse
 

@@ -37,9 +37,9 @@ return {
 			lowSatietyMaskRadius = 24,
 			damage = { base = 5, gain = 0.5 },
 			range = { base = 20, gain = 0.25 },
-			attackSpeed = { base = 2, gain = 0.1 },
 			critChance = 0,
 			critMult = 1.5,
+			attackSpeed = { base = 2, gain = 0.1 },
 		},
 
 		{
