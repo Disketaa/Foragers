@@ -48,6 +48,10 @@ Grep, don't read top-to-bottom. If unsure whether a doc applies, read it.
 # Lint all source
 .\Tools\luacheck.exe Source/
 
+# Static type check (LuaLS) — all files, all warnings
+# Run via VS Code task "LuaLS Check" (Ctrl+Shift+P -> Tasks: Run Task), or directly:
+powershell.exe -ExecutionPolicy Bypass -File Tools/lua-ls-check.ps1
+
 # Format (run from project root)
 python "Tools/LuaFormatter/Formatter.py"
 
