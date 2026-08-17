@@ -48,9 +48,14 @@ reassigned module-level singletons into a single shared state table.
    death-sequence + restart-input phases into one coherent lifecycle module;
    `PostProcess` owns the graphics transitions. Move relevant state into
    `GameState`. Fixed `Easing` require path (`Tween.Easing`).
-4. Extract `Chat.lua`; move chat/completion/repeat state into `GameState`; wire
-   `handleChatTab`, `resetChatCompletion`, `startChatRepeat`, `bindingMatches`,
-   `commandsCtx`.
+4. [DONE] Extract `Chat.lua` (`Source/Helpers/Debug/Chat.lua`): `handleChatTab`,
+   `resetChatCompletion`, `startChatRepeat`, `updateRepeat`, `cancelRepeat`.
+   Completion-cycle locals (`completionCandidates/Index/Active`) and repeat
+   locals (`chatRepeatTimer/Repeating`) stay module-local in Chat (transient per
+   session, not game state); `completionBase`/`chatRepeatKey`/`chatRepeatAction`
+   already live in `GameState`. `commandsCtx` stays in Main (closes over Main
+   game-state locals: `playerStats`, `canvas`, `clearProps`, `spawnDrop`).
+   `bindingMatches` stays in Main (Phase 6 InputBindings).
 5. Extract `UILayout.lua` (`positionUI`).
 6. Extract `InputBindings.lua` (non-restart input bindings; restart press/release
    already live in `Lifecycle`).

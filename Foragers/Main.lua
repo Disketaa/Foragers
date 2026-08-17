@@ -41,6 +41,7 @@ local Zoom = require("Source.Helpers.Graphics.Zoom")
 local Math = require("Source.Helpers.Core.Math")
 local Input = require("Source.Helpers.Systems.Input")
 local Commands = require("Source.Helpers.Debug.Commands")
+local Chat = require("Source.Helpers.Debug.Chat")
 local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local Lifecycle = require("Source.Helpers.Systems.Lifecycle")
 local Camera = require("Source.Helpers.Graphics.Camera")
@@ -539,52 +540,6 @@ local function commandsCtx()
 	}
 end
 
--- Tab-completion cycle state. Stores the last completed input so a repeated Tab
--- advances to the next candidate; a fresh edit resets the cycle. `completionActive`
--- distinguishes "mid-cycle" (cycle the stored list) from a new completion (re-run
--- Commands.complete on the current text, which narrows it).
-local completionCandidates = {}
-local completionIndex = 0
-local completionActive = false
-
-local function resetChatCompletion()
-	GameState.completionBase = nil
-	completionCandidates = {}
-	completionIndex = 0
-	completionActive = false
-end
-
--- Tab-complete the current chat input. First press fills the first candidate;
--- subsequent presses cycle through the remaining ones. A fresh edit (different
--- base/candidates) restarts from the first candidate. No-op with no matches.
--- `backwards` (shift+tab) cycles in reverse.
-local function handleChatTab(backwards)
-	if not completionActive then
-		local base, candidates = Commands.complete(Debug.chatText())
-		if #candidates == 0 then
-			return
-		end
-		GameState.completionBase = base
-		completionCandidates = candidates
-		completionActive = true
-		completionIndex = backwards and #candidates or 1
-	else
-		local n = #completionCandidates
-		if n == 0 then
-			return
-		end
-		if backwards then
-			completionIndex = completionIndex - 1
-			if completionIndex < 1 then
-				completionIndex = n
-			end
-		else
-			completionIndex = completionIndex % n + 1
-		end
-	end
-	Debug.setChatText(GameState.completionBase .. completionCandidates[completionIndex])
-end
-
 function love.draw()
 	Snapshot.markDrawStart()
 	ShaderLoader.setCamera(GameState.camPixelX, GameState.camPixelY)
@@ -781,25 +736,6 @@ local function bindingMatches(binding, inputType, value)
 	return false
 end
 
--- Chat key auto-repeat while chat is open: LÖVE only repeats keypressed when
--- setKeyRepeat is on, which would also repeat the HUD/restart toggles, so the
--- repeat is driven manually here instead. Mirrors the Windows model — one action
--- on press, then a fixed delay before repeats at a steady rate. One tracker
--- covers backspace, the up/down history arrows, and Tab; the repeat action is
--- stored with the held key.
-local chatRepeatTimer = 0
-local chatRepeatRepeating = false
-
--- Run a chat key action once and arm the auto-repeat state. Shared by backspace,
--- the up/down history arrows, and Tab so holding any of them repeats.
-local function startChatRepeat(key, action)
-	action()
-	GameState.chatRepeatKey = key
-	chatRepeatTimer = 0
-	chatRepeatRepeating = false
-	GameState.chatRepeatAction = action
-end
-
 function love.keypressed(key, _, _)
 	if Debug.chatActive() then
 		if key == "escape" then
@@ -827,27 +763,27 @@ function love.keypressed(key, _, _)
 			Debug.setChatActive(false)
 			return
 		elseif key == "backspace" then
-			resetChatCompletion()
-			startChatRepeat("backspace", function()
+			Chat.resetChatCompletion()
+			Chat.startChatRepeat("backspace", function()
 				Debug.setChatText(Input.removeLast(Debug.chatText()))
 			end)
 			return
 		elseif key == "up" then
-			resetChatCompletion()
-			startChatRepeat("up", function()
+			Chat.resetChatCompletion()
+			Chat.startChatRepeat("up", function()
 				Debug.chatHistoryUp()
 			end)
 			return
 		elseif key == "down" then
-			resetChatCompletion()
-			startChatRepeat("down", function()
+			Chat.resetChatCompletion()
+			Chat.startChatRepeat("down", function()
 				Debug.chatHistoryDown()
 			end)
 			return
 		elseif key == "tab" then
-			startChatRepeat("tab", function()
+			Chat.startChatRepeat("tab", function()
 				local backwards = love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
-				handleChatTab(backwards)
+				Chat.handleChatTab(backwards)
 			end)
 			return
 		end
@@ -882,16 +818,12 @@ end
 function love.textinput(text)
 	if Debug.chatActive() then
 		Debug.setChatText(Debug.chatText() .. text)
-		resetChatCompletion()
+		Chat.resetChatCompletion()
 	end
 end
 
 function love.keyreleased(key)
-	if key == GameState.chatRepeatKey then
-		GameState.chatRepeatKey = nil
-		chatRepeatRepeating = false
-		GameState.chatRepeatAction = nil
-	end
+	Chat.cancelRepeat(key)
 	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "keyboard", key) then
 		Lifecycle.handleRestartRelease()
 	end
@@ -1100,28 +1032,7 @@ function love.update(dt)
 	TextEmitter.updateAll(scaledDt)
 	Debug.update(scaledDt)
 
-	if GameState.chatRepeatKey and Debug.chatActive() then
-		chatRepeatTimer = chatRepeatTimer + dt
-		local delay = Debug.chatRepeatDelay()
-		local interval = Debug.chatRepeatInterval()
-		if not chatRepeatRepeating then
-			if chatRepeatTimer >= delay then
-				if GameState.chatRepeatAction then GameState.chatRepeatAction() end
-				chatRepeatTimer = 0
-				chatRepeatRepeating = true
-			end
-		else
-			if chatRepeatTimer >= interval then
-				if GameState.chatRepeatAction then GameState.chatRepeatAction() end
-				chatRepeatTimer = 0
-			end
-		end
-	else
-		GameState.chatRepeatKey = nil
-		chatRepeatTimer = 0
-		chatRepeatRepeating = false
-		GameState.chatRepeatAction = nil
-	end
+	Chat.updateRepeat(dt)
 
 	-- Update UI sprites (for counter animations, etc.)
 	for _, ui in ipairs(uiSprites) do
