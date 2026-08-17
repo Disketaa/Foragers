@@ -69,7 +69,6 @@ function PostProcess.updateReveal(dt, canvas)
 	end
 end
 
---- Opening fade: the canvas starts fully dark and reveals in from black.
 function PostProcess.updateStartDarken(dt)
 	if not GameState.startDarkenActive then
 		return

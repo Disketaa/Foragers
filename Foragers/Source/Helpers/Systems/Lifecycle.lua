@@ -58,7 +58,6 @@ function Lifecycle.handleRestartRelease()
 	cancelLoadingHold()
 end
 
---- Hold-to-restart + death screen timeout.
 function Lifecycle.updateHold(dt)
 	if GameState.state == "gameover" then
 		GameState.deathTimer = GameState.deathTimer + dt
