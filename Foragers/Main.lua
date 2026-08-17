@@ -655,24 +655,6 @@ local function handleChatTab(backwards)
 	Debug.setChatText(GameState.completionBase .. completionCandidates[completionIndex])
 end
 
--- Unzoomed canvas blit origin (finalX/finalY in Canvas:draw). Shared by the zoom
--- coordinate transforms so mouse, gizmos and the pivot all agree with the render.
-
--- Zoom pivot: the player's on-screen position (unzoomed), so output zoom magnifies
--- around the player rather than the fixed window center. Falls back to window center
--- when there is no player.
-
--- Inverse of the render chain. Output zoom scales the canvas blit about the pivot:
--- screen = pivot + (finalX + (p + camPixel)*scale - pivot) * zoom.
-
--- Forward of the render chain: screen = pivot + (finalX + (wx + camPixel)*scale - pivot)*zoom.
--- Mirrors Canvas:draw's placement so gizmo rects land on the exact pixels the
--- world canvas occupies, at native resolution.
-
---- Fill `visible` with the entries whose frame box intersects the camera view,
---- expanded by CULL_MARGIN to avoid boundary flicker. Same box math as the
---- gizmo boundaries overlay. Runs once per frame; all draw passes reuse it.
-
 function love.draw()
 	Snapshot.markDrawStart()
 	ShaderLoader.setCamera(GameState.camPixelX, GameState.camPixelY)
