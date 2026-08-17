@@ -30,6 +30,7 @@ local PropSpawner = require("Source.World.PropSpawner")
 local PropPicker = require("Source.World.PropPicker")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
 local UIComponent = require("Source.UI.Components.UI")
+local Layout = require("Source.UI.Layout")
 local TimeScale = require("Source.Helpers.Systems.TimeScale")
 local Reset = require("Source.Helpers.Systems.Reset")
 local DiscordRPC = require("Source.Helpers.Systems.DiscordRPC")
@@ -154,17 +155,6 @@ local function getSpawnPosition(data)
 		return tileX * tileSize + tileSize / 2, tileY * tileSize + tileSize / 2
 	end
 	return 0, 0
-end
-
-local function positionUI(ui)
-	local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
-	local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
-	local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
-	local tweens = ui.sprite.tweens
-	local tweenX = tweens and tweens.x and tweens.x:getValue() or 0
-	local tweenY = tweens and tweens.y and tweens.y:getValue() or 0
-	ui.sprite.x = px + Pivot.px(ui.sprite.pivotX, w, 0) + tweenX
-	ui.sprite.y = py + Pivot.px(ui.sprite.pivotY, h, 0) + tweenY
 end
 
 --- One-time engine setup. Runs once at startup. Must NOT touch the window
@@ -401,7 +391,7 @@ function initGame()
 		end
 	end
 	for _, ui in ipairs(uiSprites) do
-		positionUI(ui)
+		Layout.positionUI(ui, canvas)
 	end
 
 	-- Hide the Loading sprite until death (its frame 0 isn't empty), then reveal
@@ -514,7 +504,7 @@ function love.resize(w, h)
 	bgCanvas:resize(w, h)
 	Camera.update(canvas)
 	for _, ui in ipairs(uiSprites) do
-		positionUI(ui)
+		Layout.positionUI(ui, canvas)
 	end
 end
 
@@ -686,7 +676,7 @@ function love.draw()
 	-- via the hold-to-restart interaction.
 	table.sort(uiSprites, function(a, b) return (a.sprite.layer or 0) < (b.sprite.layer or 0) end)
 	for _, ui in ipairs(uiSprites) do
-		positionUI(ui)
+		Layout.positionUI(ui, canvas)
 		ui.sprite:draw()
 	end
 	love.graphics.pop()
