@@ -1,9 +1,9 @@
-# Compact LuaLS CLI check: one line per diagnostic, run from the game root.
+# Compact LuaAnalyzer CLI check: one line per diagnostic, run from the game root.
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $gameRoot = Split-Path $PSScriptRoot
 Set-Location $gameRoot
 
-$exe = Join-Path $PSScriptRoot "LuaLS\bin\lua-language-server.exe"
+$exe = Join-Path $PSScriptRoot "LuaAnalyzer\bin\lua-language-server.exe"
 $raw = & $exe --check . 2>&1 | Out-String
 
 # Strip ANSI color codes, split into lines.
