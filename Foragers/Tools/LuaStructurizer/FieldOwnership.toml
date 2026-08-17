@@ -10,5 +10,8 @@
 # are intentionally absent: their reads are allowed across components, so the
 # structurizer must not flag them. Add a new entry ONLY with a Section X justification.
 
+[_state]
+owner = "Control"
+
 [flipX]
 owner = "Control"
