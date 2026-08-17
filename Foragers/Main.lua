@@ -739,6 +739,7 @@ end
 function love.keypressed(key, _, _)
 	if Debug.chatActive() then
 		if key == "escape" then
+			Chat.resetChatCompletion()
 			Debug.setChatActive(false)
 			return
 		elseif key == "return" or key == "kpenter" then
@@ -760,9 +761,10 @@ function love.keypressed(key, _, _)
 			Debug.setChatText("")
 			Sound.play(Debug.chatEnterSound())
 			end
-			Debug.setChatActive(false)
-			return
-		elseif key == "backspace" then
+		Debug.setChatActive(false)
+		Chat.resetChatCompletion()
+		return
+	elseif key == "backspace" then
 			Chat.resetChatCompletion()
 			Chat.startChatRepeat("backspace", function()
 				Debug.setChatText(Input.removeLast(Debug.chatText()))
@@ -810,7 +812,12 @@ function love.keypressed(key, _, _)
 		Debug.toggle("hud.profiler")
 	elseif bindingMatches(Options.keybinds.toggleChat, "keyboard", key) then
 		if Debug.enabled("hud") then
+			local wasActive = Debug.chatActive()
 			Debug.toggle("hud.chat")
+			-- Reset only on open: close already resets via escape / send handlers.
+			if not wasActive and Debug.chatActive() then
+				Chat.resetChatCompletion()
+			end
 		end
 	end
 end
