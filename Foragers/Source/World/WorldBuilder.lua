@@ -22,8 +22,9 @@ end
 
 local tilePngPath = Path.moduleToPath("Content.Assets.Sprites.Tiles.GrassTiles") .. ".png"
 
--- SpriteBatch built incrementally as terrain tiles stream in (see
--- instantiateTerrainTile). Drawn via getTerrainBatch().
+-- SpriteBatch built incrementally as terrain tiles stream in (reset in
+-- buildTerrainPlan, filled in instantiateTerrainTile, read in getTerrainBatch).
+-- Single owner per world build; reassigned only across a full rebuild.
 local terrainBatch = nil
 
 local function computeMask(world, x, y)

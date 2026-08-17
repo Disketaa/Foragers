@@ -162,12 +162,14 @@ function AttackSystem.update(dt, allObjects)
 						ws:emit(Events.PROP_BROKEN)
 					end
 					attacker.currentTarget:emit(Events.PROP_HIT, damage)
-if ws then
-					local hx, hy = attacker.currentTarget.hostParent and attacker.currentTarget.hostParent.x or attacker.currentTarget.x, attacker.currentTarget.hostParent and attacker.currentTarget.hostParent.y or attacker.currentTarget.y
-					ws._lastHitX = hx
-					ws._lastHitY = hy
-					ws:emit(Events.PROP_HIT)
-				end
+					if ws then
+						local hx, hy =
+							attacker.currentTarget.hostParent and attacker.currentTarget.hostParent.x or attacker.currentTarget.x,
+							attacker.currentTarget.hostParent and attacker.currentTarget.hostParent.y or attacker.currentTarget.y
+						ws._lastHitX = hx
+						ws._lastHitY = hy
+						ws:emit(Events.PROP_HIT)
+					end
 					if attacker.sprite then
 						attacker.sprite:emit(Events.PROP_HIT, damage)
 					end
@@ -187,8 +189,7 @@ if ws then
 	local dir = -attacker._deployDir
 	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.OutSine
 	local easeFunc = swingCurve(rawEase)
-	local angleTween =
-		TweenModule.Tween.new("swing_angle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration / speedScale, easeFunc)
+	local angleTween = TweenModule.Tween.new("swing_angle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration / speedScale, easeFunc)
 	angleTween._smoothness = swing.smoothness
 	ws.tweens.swing_angle = angleTween
 	angleTween:start()

@@ -30,6 +30,9 @@ function Canvas.new(width, height, mode)
 	self.offsetY = 0
 	self.canvas = nil
 	self.mode = mode or "outer"
+	if self.mode ~= "inner" and self.mode ~= "outer" then
+		error("Canvas: unknown mode '" .. tostring(self.mode) .. "'")
+	end
 	self:_recreateCanvas()
 	return self
 end
