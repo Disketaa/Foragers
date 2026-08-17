@@ -212,16 +212,14 @@ def main():
 
     all_violations.sort(key=lambda v: (str(v[0]), v[1], v[3]))
     errors = 0
-    current = None
     for path, line, name, sev, msg in all_violations:
-        if path != current:
-            print(f"\n{path}")
-            current = path
-        print(f"  [{sev.upper()}] {name} (L{line}): {msg}")
+        icon = "🛑" if sev == "error" else "⚠️"
+        rel = path.relative_to(project_root)
+        print(f"{icon} {rel} L{line}: {name} — {msg}")
         if sev == "error":
             errors += 1
 
-    print(f"\n\u2705 Done. {len(all_violations)} violation(s), {errors} error(s) across {len(all_files)} file(s).")
+    print(f"Total: {len(all_violations)} warnings / {errors} errors in {len(all_files)} files")
     sys.stdout.flush()
 
     if errors > 0:

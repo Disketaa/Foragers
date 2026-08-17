@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "lint": ".\\Tools\\luacheck.exe Source Content",
+    "lint": ".\\Tools\\luacheck.exe -q Source Content",
     "format": "echo 'Use VS Code format-on-save (stylua extension) or install stylua binary'"
   },
   "devDependencies": {

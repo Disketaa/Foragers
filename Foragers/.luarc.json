@@ -5,7 +5,7 @@
     "?/init.lua"
   ],
   "workspace.library": [
-    "${3rd}/love2d/library"
+    "C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer/libs/love2d-luacats"
   ],
   "workspace.ignoreDir": [
     ".git",

@@ -4,9 +4,10 @@ $gameRoot = Split-Path (Split-Path $PSScriptRoot)
 Set-Location $gameRoot
 
 $exe = Join-Path $PSScriptRoot "bin\lua-language-server.exe"
+$cfg = Join-Path $gameRoot ".luarc.json"
 # Scan only game source/content, not Tools/LuaAnalyzer/meta (huge, ~1200 files -> hangs).
-$out1 = & $exe --check Source 2>&1 | Out-String
-$out2 = & $exe --check Content 2>&1 | Out-String
+$out1 = & $exe --check Source --configpath $cfg 2>&1 | Out-String
+$out2 = & $exe --check Content --configpath $cfg 2>&1 | Out-String
 $raw = $out1 + "`n" + $out2
 
 # Strip ANSI color codes, split into lines.
@@ -26,8 +27,10 @@ $diag = $lines | Where-Object { $_ -match '^\S+?\.lua:\d+:\d+ \[' } | ForEach-Ob
 }
 
 $diag
-$summary = $lines | Where-Object { $_ -match 'problems found' } | Select-Object -Last 1
-if ($summary) { $summary.Trim() }
+$warnings = ($diag | Where-Object { $_ -match '^\[WARN\]' }).Count
+$errors = ($diag | Where-Object { $_ -match '^\[ERROR\]' }).Count
+$files = (Get-ChildItem -Path $gameRoot\Source, $gameRoot\Content -Recurse -Filter *.lua -File).Count
+Write-Host "Total: $warnings warnings / $errors errors in $files files"
 
 # Always exit 0 so F5 still launches the game alongside the report.
 exit 0
