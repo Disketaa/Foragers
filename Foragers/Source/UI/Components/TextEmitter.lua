@@ -153,7 +153,11 @@ function TextEmitter.updateAll(dt)
 			elseif t.destroy == "scale" then
 				t.scale = 1 - eased
 				t.alpha = 1
-			else -- instant
+			elseif t.destroy == "instant" then
+				t.alpha = 1
+				t.scale = 1
+			else
+				Log.error("TextEmitter", "unknown destroy mode '%s'; defaulting to instant", tostring(t.destroy))
 				t.alpha = 1
 				t.scale = 1
 			end
