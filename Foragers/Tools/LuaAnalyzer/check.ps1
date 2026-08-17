@@ -4,7 +4,10 @@ $gameRoot = Split-Path (Split-Path $PSScriptRoot)
 Set-Location $gameRoot
 
 $exe = Join-Path $PSScriptRoot "bin\lua-language-server.exe"
-$raw = & $exe --check . 2>&1 | Out-String
+# Scan only game source/content, not Tools/LuaAnalyzer/meta (huge, ~1200 files -> hangs).
+$out1 = & $exe --check Source 2>&1 | Out-String
+$out2 = & $exe --check Content 2>&1 | Out-String
+$raw = $out1 + "`n" + $out2
 
 # Strip ANSI color codes, split into lines.
 $clean = $raw -replace '\x1b\[[0-9;]*m', ''
