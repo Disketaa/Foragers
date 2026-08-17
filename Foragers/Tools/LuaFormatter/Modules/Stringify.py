@@ -56,7 +56,8 @@ def _collapse_tags(text: str) -> str:
         if m.start() < pos:
             continue
         out.append(text[pos:m.start()])
-        indent = re.match(r"[ \t]*", m.group()).group()
+        indent_match = re.match(r"[ \t]*", m.group())
+        indent = indent_match.group() if indent_match else ""
         _, close, inner = table_block(text, m)
         if inner.strip():
             body = _format_tags(inner, indent)

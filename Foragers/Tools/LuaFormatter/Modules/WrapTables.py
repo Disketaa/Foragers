@@ -45,7 +45,8 @@ def _scan_tables(text: str):
 
 def _break_table(text: str, open_idx: int, close_idx: int) -> str:
     line_start = text.rfind("\n", 0, open_idx) + 1
-    indent = re.match(r"[ \t]*", text[line_start:open_idx]).group()
+    indent_match = re.match(r"[ \t]*", text[line_start:open_idx])
+    indent = indent_match.group() if indent_match else ""
     items = split_top_level(text[open_idx + 1: close_idx])
     if len(items) < 2:
         return text

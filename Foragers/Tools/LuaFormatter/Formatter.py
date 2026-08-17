@@ -1,6 +1,8 @@
 import importlib.util
+import io
 import sys
 from pathlib import Path
+from typing import cast
 
 
 def load_config(config_path: Path) -> dict:
@@ -51,14 +53,16 @@ def load_plugin(name: str, plugins_dir: Path):
     if str(plugins_dir) not in sys.path:
         sys.path.insert(0, str(plugins_dir))
     spec = importlib.util.spec_from_file_location(name, plugin_path)
+    if spec is None or spec.loader is None:
+        return None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
 def main():
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    cast(io.TextIOWrapper, sys.stdout).reconfigure(encoding="utf-8", errors="replace")
+    cast(io.TextIOWrapper, sys.stderr).reconfigure(encoding="utf-8", errors="replace")
 
     script_dir = Path(__file__).resolve().parent
     config_path = script_dir / "Settings.toml"

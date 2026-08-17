@@ -135,8 +135,10 @@ def _collect_params(entries, listed: set, missing: list):
             missing.append(key)
 
 
-def _sort_params(text: str, groups, listed=None, missing=None) -> str:
+def _sort_params(text: str, groups, listed: set | None = None, missing: list | None = None) -> str:
     if not groups:
+        return text
+    if listed is None or missing is None:
         return text
     m = re.search(r"^([ \t]*)return\s*\{$", text, re.M)
     if not m:
@@ -196,8 +198,10 @@ def _sort_components(text: str, order: list, missing=None) -> str:
     )
 
 
-def _sort_component_params(text: str, groups, listed=None, missing=None) -> str:
+def _sort_component_params(text: str, groups, listed: set | None = None, missing: list | None = None) -> str:
     if not groups:
+        return text
+    if listed is None or missing is None:
         return text
     m = re.search(r"^([ \t]*)components\s*=\s*\{$", text, re.M)
     if not m:
@@ -264,7 +268,8 @@ def _sort_tween_array(text: str, open_idx: int, close_idx: int, oi: dict, missin
         return text
     if "\n" in inner:
         line_start = text.rfind("\n", 0, open_idx) + 1
-        base_indent = re.match(r"[ \t]*", text[line_start:open_idx]).group()
+        base_match = re.match(r"[ \t]*", text[line_start:open_idx])
+        base_indent = base_match.group() if base_match else ""
         entry_indent = base_indent + "\t"
         new_inner = f"\n{entry_indent}{f',\n{entry_indent}'.join(sorted_items)},\n{base_indent}"
     else:
