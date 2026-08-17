@@ -1,0 +1,37 @@
+targets.folders = ["*"]
+targets.exclude_folders = ["Tools"]
+targets.exclude_files = ["lldebugger.lua"]
+
+# Each rule: enabled (bool) + optional severity override ("error" | "warn").
+# Rules live in Tools/StructureRules/<Name>.py and expose check(text, path, config)
+# -> list[(line:int, message:str, severity:str)]. Mirrors LuaFormatter's plugin shape.
+
+[Rules.PrintVsLog]
+enabled = true
+severity = "error"
+
+[Rules.DotColonMix]
+enabled = true
+severity = "warn"
+
+[Rules.MagicNumbers]
+enabled = true
+severity = "warn"
+include_folders = ["Source/"]
+
+[Rules.UnguardedStringMode]
+enabled = true
+severity = "warn"
+
+[Rules.ModuleSingleton]
+enabled = true
+severity = "warn"
+
+[Rules.RngPairing]
+enabled = true
+severity = "error"
+
+# Needs Tools/StructureRules/field_ownership.toml seeded first. Off until manifest exists.
+[Rules.FieldOwnership]
+enabled = false
+severity = "error"
