@@ -5,10 +5,11 @@
 # Exit code reflects StructureCheck's error count so it can gate CI / pre-commit.
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$gameRoot = Split-Path $root
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 Write-Host "`n=== luacheck ===" -ForegroundColor Cyan
-& "$root\luacheck.exe" Source/ Content/ 2>&1 | Write-Host
+& "$root\luacheck.exe" "$gameRoot\Source" "$gameRoot\Content" 2>&1 | Write-Host
 
 Write-Host "`n=== lua language server ===" -ForegroundColor Cyan
 powershell -File "$root\lua-ls-check.ps1" 2>&1 | Write-Host
