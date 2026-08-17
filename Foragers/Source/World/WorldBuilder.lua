@@ -1,4 +1,5 @@
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
+local Log = require("Source.Helpers.Core.Log")
 local TileData = require("Content.Assets.Sprites.Tiles.GrassTiles")
 local TilePalette = require("Source.World.TilePalette")
 local Collision = require("Source.Sprite.Components.Collision")
@@ -354,10 +355,10 @@ end
 local function build(worldData, spawnCallback, playerSprite)
 	local t0 = love.timer.getTime()
 	local terrainPlan = buildTerrainPlan(worldData, spawnCallback, playerSprite)
-	print(string.format("🚩   buildTerrain: %d tiles in %.1fms", #terrainPlan, (love.timer.getTime() - t0) * 1000))
+	Log.write(string.format("🚩   buildTerrain: %d tiles in %.1fms", #terrainPlan, (love.timer.getTime() - t0) * 1000))
 	local t1 = love.timer.getTime()
 	local propPlan = buildPropPlan(worldData, playerSprite)
-	print(string.format("🚩   propPlan: %d props in %.1fms", #propPlan, (love.timer.getTime() - t1) * 1000))
+	Log.write(string.format("🚩   propPlan: %d props in %.1fms", #propPlan, (love.timer.getTime() - t1) * 1000))
 	buildBorder()
 	return { terrainPlan = terrainPlan, propPlan = propPlan }
 end

@@ -242,7 +242,7 @@ end
 local function timeIt(label, fn)
 	local t0 = love.timer.getTime()
 	local result = fn()
-	print(string.format("🚩 %-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000))
+	Log.write(string.format("🚩 %-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000))
 	return result
 end
 
@@ -498,7 +498,7 @@ function initGame()
 		end, 5)
 
 		playerSprite:on(Events.DEATH, function()
-			print("[DEATH] state=" .. state .. " -> dying, anim -> death")
+			Log.write("[DEATH] state=" .. state .. " -> dying, anim -> death")
 			-- Post-process stays ON: the CircleMask holds its satiety-0 radius on
 			-- the death screen, so do not flip setPostProcessEnabled here.
 			state = "dying"
@@ -547,7 +547,7 @@ function initGame()
 		end, 5)
 	end
 
-	print(string.format("🚩 total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000))
+	Log.write(string.format("🚩 total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000))
 end
 
 function love.resize(w, h)
@@ -990,10 +990,10 @@ function love.keypressed(key, _, _)
 			if output:find("\n") then
 				-- Multi-line output: one marker per rendered line, like the screen.
 				for line in output:gmatch("[^\n]+") do
-					print(marker .. " " .. text .. " — " .. line)
+					Log.write(marker .. " " .. text .. " — " .. line)
 				end
 			else
-				print(marker .. " " .. text .. " — " .. output)
+				Log.write(marker .. " " .. text .. " — " .. output)
 			end
 			Debug.pushChatHistory(text)
 			Debug.setChatText("")

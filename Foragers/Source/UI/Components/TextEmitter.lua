@@ -1,4 +1,5 @@
 local Path = require("Source.Helpers.Core.Path")
+local Log = require("Source.Helpers.Core.Log")
 local ValueParser = require("Source.Helpers.Core.ValueParser")
 local Easing = require("Source.Sprite.Components.Tween").Easing
 local SpriteFont = require("Source.Sprite.Components.SpriteFont")
@@ -17,14 +18,14 @@ local function loadFont(fontPath)
 
 	local ok, fontData = pcall(require, fontPath)
 	if not ok or not fontData then
-		print("[TextEmitter] FONT REQUIRE FAILED: " .. tostring(fontPath) .. " err=" .. tostring(fontData))
+		Log.error("[TextEmitter] FONT REQUIRE FAILED: " .. tostring(fontPath) .. " err=" .. tostring(fontData))
 		fontCache[fontPath] = false
 		return nil
 	end
 
 	local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
 	if not sprite then
-		print("[TextEmitter] FONT INSTANTIATE FAILED: " .. tostring(fontPath))
+		Log.error("[TextEmitter] FONT INSTANTIATE FAILED: " .. tostring(fontPath))
 		fontCache[fontPath] = false
 		return nil
 	end
