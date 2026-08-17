@@ -10,8 +10,6 @@ local CULL_MARGIN = 32
 
 local Camera = {}
 
---- Recompute the integer pixel offset + fractional sub-pixel remainder from the
---- scroll_to target (or world center fallback).
 function Camera.update(canvas)
 	if GameState.scrollToComp then
 		local targetX, targetY = GameState.scrollToComp:getCameraOffset()

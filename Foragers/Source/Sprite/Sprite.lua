@@ -136,7 +136,7 @@ function Sprite:applyShader()
 		if ok then
 			return true
 		end
-		Log.error("[Sprite] shader: " .. tostring(err))
+		Log.error("Sprite", "shader: %s", tostring(err))
 		love.graphics.setShader()
 		self._shaderBroken = true
 	end
@@ -174,7 +174,7 @@ function Sprite:update(dt)
 		if not component._broken and component.update then
 			local ok, err = xpcall(component.update, debug.traceback, component, dt)
 			if not ok then
-				Log.error(string.format("[%s] update: %s", component.type or "?", err))
+				Log.error(component.type or "?", "update: %s", err)
 				component._broken = true
 			end
 		end
@@ -187,7 +187,7 @@ local function drawComponents(sprite, predicate)
 		if not component._broken and predicate(component) and component.draw then
 			local ok, err = xpcall(component.draw, debug.traceback, component, sprite.x, sprite.y)
 			if not ok then
-				Log.error(string.format("[%s] draw: %s", component.type or "?", err))
+				Log.error(component.type or "?", "draw: %s", err)
 				component._broken = true
 			end
 		end

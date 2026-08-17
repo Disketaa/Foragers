@@ -8,6 +8,7 @@ local Events = require("Source.Helpers.Core.Events")
 local Path = require("Source.Helpers.Core.Path")
 local Merge = require("Source.Helpers.Core.Merge")
 local HostRegistry = require("Source.World.HostRegistry")
+local Log = require("Source.Helpers.Core.Log")
 
 local Overlay = {}
 Overlay.__index = Overlay
@@ -75,8 +76,12 @@ function Overlay:attach()
 	if col then
 		if col.mode == "slowdown" then
 			col:registerAsSlowdown()
-		else
+		elseif col.mode == "solid" then
 			col:registerAsSolid()
+		elseif col.mode == "detect" or col.mode == "solid_and_detect" then
+			Log.write("Collision", "overlay child uses dynamic-only collision mode '%s'; not baking a static collider", tostring(col.mode))
+		else
+			Log.error("Collision", "overlay child has unknown collision mode '%s'; not baking a static collider", tostring(col.mode))
 		end
 	end
 

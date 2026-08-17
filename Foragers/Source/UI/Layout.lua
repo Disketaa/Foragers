@@ -3,9 +3,8 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 
 local Layout = {}
 
---- Position a UI sprite from its layout descriptor, applying pivot and active
---- tween offsets. `canvas` is the render context (width/height), passed in like
---- Camera.update so layout stays free of game state.
+--- Apply pivot and active tween offsets; `canvas` is the render context
+--- (width/height), passed like Camera.update so layout stays free of game state.
 function Layout.positionUI(ui, canvas)
 	local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
 	local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()

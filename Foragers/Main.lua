@@ -192,7 +192,7 @@ end
 local function timeIt(label, fn)
 	local t0 = love.timer.getTime()
 	local result = fn()
-	Log.write(string.format("🚩 %-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000))
+	Log.write("Timing", "%-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000)
 	return result
 end
 
@@ -376,7 +376,7 @@ function initGame()
 		end, 5)
 
 		GameState.playerSprite:on(Events.DEATH, function()
-			Log.write("[DEATH] state=" .. GameState.state .. " -> dying, anim -> death")
+			Log.write("Death", "state=%s -> dying, anim -> death", GameState.state)
 			-- Post-process stays ON: the CircleMask holds its satiety-0 radius on
 			-- the death screen, so do not flip setPostProcessEnabled here.
 			GameState.state = "dying"
@@ -425,7 +425,7 @@ function initGame()
 		end, 5)
 	end
 
-	Log.write(string.format("🚩 total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000))
+	Log.write("Timing", "total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000)
 end
 
 function love.resize(w, h)
@@ -649,10 +649,10 @@ function love.keypressed(key, _, _)
 			if output:find("\n") then
 				-- Multi-line output: one marker per rendered line, like the screen.
 				for line in output:gmatch("[^\n]+") do
-					Log.write(marker .. " " .. text .. " — " .. line)
+					Log.write("Cmd", "%s %s — %s", marker, text, line)
 				end
 			else
-				Log.write(marker .. " " .. text .. " — " .. output)
+				Log.write("Cmd", "%s %s — %s", marker, text, output)
 			end
 			Debug.pushChatHistory(text)
 			Debug.setChatText("")
@@ -811,11 +811,15 @@ function love.update(dt)
 				end
 				local col = newSprite:findComponent("collision")
 				if col then
-					if col.mode == "slowdown" then
-						col:registerAsSlowdown()
-					else
-						col:registerAsSolid()
-					end
+				if col.mode == "slowdown" then
+					col:registerAsSlowdown()
+				elseif col.mode == "solid" then
+					col:registerAsSolid()
+				elseif col.mode == "detect" or col.mode == "solid_and_detect" then
+					Log.write("Collision", "morph sprite uses dynamic-only collision mode '%s'; not baking a static collider", tostring(col.mode))
+				else
+					Log.error("Collision", "morph sprite has unknown collision mode '%s'; not baking a static collider", tostring(col.mode))
+				end
 				end
 
 				table.insert(objects, { instance = newSprite, data = morphData })

@@ -3,8 +3,10 @@ targets.exclude_folders = ["Tools"]
 targets.exclude_files = ["lldebugger.lua"]
 
 # Each rule: enabled (bool) + optional severity override ("error" | "warn").
-# Rules live in Tools/StructureRules/<Name>.py and expose check(text, path, config)
-# -> list[(line:int, message:str, severity:str)]. Mirrors LuaFormatter's plugin shape.
+# Rules live in Tools/LuaStructurizer/Modules/<Name>.py and expose
+# check(stripped, path, config) -> list[(line:int, message:str, severity:str)].
+# Optional set_path(path) / set_original(text) hooks let a rule receive the file
+# path or the un-blanked source (string/comment contents are blanked in `stripped`).
 
 [Rules.PrintVsLog]
 enabled = true
@@ -25,6 +27,10 @@ severity = "warn"
 [Rules.RngPairing]
 enabled = true
 severity = "error"
+
+[Rules.LogCaps]
+enabled = true
+severity = "warn"
 
 # Needs Tools/StructureRules/field_ownership.toml seeded first. Off until manifest exists.
 [Rules.FieldOwnership]

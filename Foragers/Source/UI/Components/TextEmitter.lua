@@ -18,14 +18,14 @@ local function loadFont(fontPath)
 
 	local ok, fontData = pcall(require, fontPath)
 	if not ok or not fontData then
-		Log.error("[TextEmitter] FONT REQUIRE FAILED: " .. tostring(fontPath) .. " err=" .. tostring(fontData))
+		Log.error("TextEmitter", "font require failed: %s err=%s", tostring(fontPath), tostring(fontData))
 		fontCache[fontPath] = false
 		return nil
 	end
 
 	local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
 	if not sprite then
-		Log.error("[TextEmitter] FONT INSTANTIATE FAILED: " .. tostring(fontPath))
+		Log.error("TextEmitter", "font instantiate failed: %s", tostring(fontPath))
 		fontCache[fontPath] = false
 		return nil
 	end

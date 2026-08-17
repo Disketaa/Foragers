@@ -21,10 +21,9 @@ function Chat.resetChatCompletion()
 	completionActive = false
 end
 
---- Tab-complete the current chat input. First press fills the first candidate;
---- subsequent presses cycle through the remaining ones. A fresh edit (different
---- base/candidates) restarts from the first candidate. No-op with no matches.
---- `backwards` (shift+tab) cycles in reverse.
+--- First press fills the first candidate; subsequent presses cycle through the
+--- remaining ones. A fresh edit (different base/candidates) restarts from the
+--- first candidate. No-op with no matches. `backwards` (shift+tab) cycles in reverse.
 function Chat.handleChatTab(backwards)
 	if not completionActive then
 		local base, candidates = Commands.complete(Debug.chatText())
@@ -52,8 +51,8 @@ function Chat.handleChatTab(backwards)
 	Debug.setChatText(GameState.completionBase .. completionCandidates[completionIndex])
 end
 
---- Run a chat key action once and arm the auto-repeat state. Shared by backspace,
---- the up/down history arrows, and Tab so holding any of them repeats.
+--- Shared by backspace, the up/down history arrows, and Tab so holding any of
+--- them repeats.
 function Chat.startChatRepeat(key, action)
 	action()
 	GameState.chatRepeatKey = key
@@ -62,10 +61,10 @@ function Chat.startChatRepeat(key, action)
 	GameState.chatRepeatAction = action
 end
 
---- Advance the chat key auto-repeat. LÖVE only repeats keypressed when setKeyRepeat
---- is on, which would also repeat the HUD/restart toggles, so the repeat is driven
---- manually here. Mirrors the Windows model — one action on press, then a fixed
---- delay before repeats at a steady rate.
+--- LÖVE only repeats keypressed when setKeyRepeat is on, which would also repeat
+--- the HUD/restart toggles, so the repeat is driven manually here. Mirrors the
+--- Windows model — one action on press, then a fixed delay before repeats at a
+--- steady rate.
 function Chat.updateRepeat(dt)
 	if GameState.chatRepeatKey and Debug.chatActive() then
 		chatRepeatTimer = chatRepeatTimer + dt
@@ -91,7 +90,6 @@ function Chat.updateRepeat(dt)
 	end
 end
 
---- Cancel an in-progress key repeat when its key is released.
 function Chat.cancelRepeat(key)
 	if key == GameState.chatRepeatKey then
 		GameState.chatRepeatKey = nil

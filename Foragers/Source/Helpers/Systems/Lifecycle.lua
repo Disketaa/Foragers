@@ -130,9 +130,8 @@ function Lifecycle.clearProps(dynamicObjects, objects, weaponSprite)
 	return #targets
 end
 
---- Spawn a drop sprite at a world position (debug `spawn` command). Resolves the
---- drop name to its data file, instantiates it, and registers it in the live
---- object lists. Returns `true` on success, or `nil, reason` if the drop is unknown.
+--- Returns `true` on success, or `nil, reason` if the drop is unknown. Debug
+--- `spawn` command.
 function Lifecycle.spawnDrop(name, x, y, objects, dynamicObjects)
 	local spritePath = "Content/Assets/Sprites/Drops/" .. name
 	local luaPath = Path.lua(spritePath)

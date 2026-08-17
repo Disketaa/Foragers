@@ -79,7 +79,7 @@ function ShaderLoader.compose(names)
 		return entry
 	end
 	if not ok then
-		Log.error(string.format("ShaderLoader compose(%s) FAILED: %s", table.concat(names, ","), tostring(entry)))
+		Log.error("ShaderLoader", "compose(%s) FAILED: %s", table.concat(names, ","), tostring(entry))
 	end
 	return nil
 end

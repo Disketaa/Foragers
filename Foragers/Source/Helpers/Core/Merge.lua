@@ -135,13 +135,13 @@ function Merge.resolveExtends(data)
 	local visited = {}
 	while data.extends do
 		if visited[data.extends] then
-			Log.error("Circular extends detected: " .. data.extends)
+			Log.error("Merge", "Circular extends detected: %s", data.extends)
 			break
 		end
 		visited[data.extends] = true
 		local ok, base = pcall(require, data.extends)
 		if not ok or type(base) ~= "table" then
-			Log.error("Failed to load base module: " .. tostring(data.extends))
+			Log.error("Merge", "Failed to load base module: %s", tostring(data.extends))
 			break
 		end
 		local mergedComponents = Merge.componentMerge(base.components or {}, data.components or {})

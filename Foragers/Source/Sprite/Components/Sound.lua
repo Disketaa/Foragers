@@ -63,7 +63,7 @@ function Sound.new(data)
 					audioCache[soundPath] = src
 				else
 					audioCache[soundPath] = false
-					Log.error("Failed to load sound: " .. tostring(soundPath))
+					Log.error("Sound", "Failed to load sound: %s", tostring(soundPath))
 				end
 			end
 			if baseSource then
@@ -172,7 +172,7 @@ function Sound.play(path, volume, pitch)
 			audioCache[path] = src
 		else
 			audioCache[path] = false
-			Log.error("Failed to load sound: " .. tostring(path))
+			Log.error("Sound", "Failed to load sound: %s", tostring(path))
 		end
 	end
 	if not base then

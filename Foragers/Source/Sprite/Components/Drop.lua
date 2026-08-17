@@ -20,7 +20,7 @@ function Drop.new(data)
 				end
 				table.insert(drops, entry)
 			else
-				Log.error("Drop entry missing required field 'sprite'")
+				Log.error("Drop", "entry missing required field 'sprite'")
 			end
 		end
 	elseif data.sprite then
@@ -31,7 +31,7 @@ function Drop.new(data)
 		table.insert(drops, entry)
 	end
 	if #drops == 0 then
-		Log.error("Drop component has no drops defined")
+		Log.error("Drop", "component has no drops defined")
 	end
 	return setmetatable({
 		drops = drops,

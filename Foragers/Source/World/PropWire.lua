@@ -6,6 +6,7 @@ local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Events = require("Source.Helpers.Core.Events")
 local HostRegistry = require("Source.World.HostRegistry")
 local Overlay = require("Source.World.Overlay")
+local Log = require("Source.Helpers.Core.Log")
 
 local PropWire = {}
 
@@ -28,8 +29,12 @@ local function wire(sprite, data, seed)
 	if col then
 		if col.mode == "slowdown" then
 			col:registerAsSlowdown()
-		else
+		elseif col.mode == "solid" then
 			col:registerAsSolid()
+		elseif col.mode == "detect" or col.mode == "solid_and_detect" then
+			Log.write("Collision", "prop uses dynamic-only collision mode '%s'; not baking a static collider", tostring(col.mode))
+		else
+			Log.error("Collision", "prop has unknown collision mode '%s'; not baking a static collider", tostring(col.mode))
 		end
 	end
 

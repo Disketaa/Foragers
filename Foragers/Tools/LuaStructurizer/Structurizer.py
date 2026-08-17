@@ -199,6 +199,8 @@ def main():
             try:
                 if hasattr(module, "set_path"):
                     module.set_path(path)
+                if hasattr(module, "set_original"):
+                    module.set_original(original)
                 results = module.check(stripped, path, config)
             except Exception as e:
                 print(f"Skip (rule failed): {path} ({name}: {e})", file=sys.stderr)
