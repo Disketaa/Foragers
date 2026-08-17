@@ -27,12 +27,14 @@ reassigned module-level singletons into a single shared state table.
   u_noise/u_circleRadius/u_darken). Name matches the project's existing
   "postprocess" shader terminology (the ScreenPost program).
 - `Source/Helpers/Debug/Chat.lua` — `handleChatTab`, `resetChatCompletion`,
-  `startChatRepeat`, chat-repeat state, `bindingMatches`, `commandsCtx`.
+   `startChatRepeat`, `updateRepeat`, `cancelRepeat` (chat input UX). `commandsCtx`
+   stays in Main (closes over Main locals `playerStats`/`canvas`/`clearProps`/`spawnDrop`).
 - `Source/UI/UILayout.lua` — `positionUI`.
-- `Source/Helpers/Systems/Lifecycle.lua` — full game lifecycle: `initGame`,
-  `resetGame`, `destroySprite`, `clearProps`, `spawnDrop`, `timeIt`, `updateHold`,
-  `handleRestartPress/Release`, `triggerLoading`, `startLoadingHold`,
-  `cancelLoadingHold`. Absorbs the old death-sequence + restart-input phases.
+- `Source/Helpers/Systems/Lifecycle.lua` — world lifecycle: `resetGame`,
+   `destroySprite`, `clearProps`, `spawnDrop`, `updateHold`,
+   `handleRestartPress/Release`, `triggerLoading`, `startLoadingHold`,
+   `cancelLoadingHold`. `initGame`/`timeIt` stay in Main (core setup referencing
+   many Main locals). Absorbs the old death-sequence + restart-input phases.
 
 ## Phases (each: implement → `Tools/check.ps1` → in-game checks → pause)
 0. Write this plan.
@@ -64,7 +66,14 @@ reassigned module-level singletons into a single shared state table.
    `InputBindings`) to avoid redundancy with existing `Input.lua`; handles
    keyboard/mouse/gamepad so `KeyBindings` would be too narrow. Toggle logic
    stays in Main's dispatch (stateful, couples to Debug/Lifecycle/Options).
-7. Final trim of `Main.lua` to dispatchers; full `check.ps1`; final in-game plan.
+7. [DONE] Final trim: move world-mutation helpers `destroySprite`, `clearProps`,
+   `spawnDrop` into `Lifecycle` (passing `objects`/`dynamicObjects`/`weaponSprite`
+   as explicit params — Main owns the lists). `initGame` and `love.update` stay in
+   Main: `initGame` is core setup closing over many Main locals; `love.update` is the
+   per-frame sim loop kept under LuaJIT's 60-upvalue budget (collapsing it into one
+   function would exceed the cap — the original reason for extracting logic OUT of it).
+   `commandsCtx` stays in Main (debug bridge over `playerStats`/`canvas`). Full
+   `check.ps1` passes 0 errors; final in-game plan below.
 
 ## Risk controls
 - Behavior must stay byte-for-byte identical (no logic changes, only relocation).

@@ -196,78 +196,6 @@ local function timeIt(label, fn)
 	return result
 end
 
---- Drop a sprite from the world: active lists + collision registry. The object
---- stays referenced by callers (camera/counters/attacker read it), so removal is
---- not destruction — it just stops updates/draws/collision.
-local function destroySprite(sprite)
-	if not sprite then
-		return
-	end
-	for i = #objects, 1, -1 do
-		if objects[i].instance == sprite then
-			table.remove(objects, i)
-			break
-		end
-	end
-	for i = #dynamicObjects, 1, -1 do
-		if dynamicObjects[i].instance == sprite then
-			table.remove(dynamicObjects, i)
-			break
-		end
-	end
-	Collision.removeSpriteColliders(sprite)
-end
-
---- Destroy every spawned prop (dynamic non-player, non-tool sprite) so the
---- world clears of runtime props while the player/tools/terrain survive. Returns
---- the number removed. Used by the `world clear` debug command.
-local function clearProps()
-	local targets = {}
-	for _, entry in ipairs(dynamicObjects) do
-		local s = entry.instance
-		if s and s ~= GameState.playerSprite and s ~= weaponSprite then
-			targets[#targets + 1] = s
-		end
-	end
-	for _, s in ipairs(targets) do
-		destroySprite(s)
-	end
-	return #targets
-end
-
---- Spawn a drop sprite at a world position (debug `spawn` command). Resolves the
---- drop name to its data file under Content/Assets/Sprites/Drops/, instantiates it,
---- and registers it in the live object lists so it updates/draws/collides. Returns
---- `true` on success, or `nil, reason` if the drop name is unknown.
-local function spawnDrop(name, x, y)
-	local spritePath = "Content/Assets/Sprites/Drops/" .. name
-	local luaPath = Path.lua(spritePath)
-	local ok, data = pcall(require, luaPath)
-	if not ok or not data then
-		return nil, "unknown drop"
-	end
-	if data.extends then
-		data = Merge.resolveExtends(data)
-	end
-	local pngPath = spritePath .. ".png"
-	local sprite = SpriteLoader.instantiate(data, x, y, pngPath)
-	if not sprite then
-		return nil, "instantiate failed"
-	end
-	-- Drops follow the player via the `follow` component, whose target is set
-	-- elsewhere for normal drops (Drop.getPending). Set it here so spawned drops
-	-- scatter then home in and become edible.
-	if GameState.playerSprite then
-		local follow = sprite:findComponent("follow", function(c) return c.setFollowTarget end)
-		if follow then
-			follow:setFollowTarget(GameState.playerSprite)
-		end
-	end
-	table.insert(objects, { instance = sprite, data = {} })
-	table.insert(dynamicObjects, { instance = sprite, data = {} })
-	return true
-end
-
 --- Rebuild all game state from scratch (world, sprites, UI, player).
 --- Called at startup and on every restart. No window/graphics recreation.
 function initGame()
@@ -521,8 +449,8 @@ local function commandsCtx()
 		restart = function()
 			Lifecycle.resetGame()
 		end,
-		clearProps = clearProps,
-		spawnDrop = spawnDrop,
+		clearProps = function() return Lifecycle.clearProps(dynamicObjects, objects, weaponSprite) end,
+		spawnDrop = function(name, x, y) return Lifecycle.spawnDrop(name, x, y, objects, dynamicObjects) end,
 		mouseWorld = function()
 			local mx,
 		my = love.mouse.getPosition()
@@ -894,7 +822,7 @@ function love.update(dt)
 				table.insert(dynamicObjects, { instance = newSprite, data = morphData })
 			end
 		end
-		destroySprite(sprite)
+		Lifecycle.destroySprite(sprite, objects, dynamicObjects)
 	end
 	Destructible.clearDead()
 
@@ -918,7 +846,7 @@ function love.update(dt)
 			local text = pickup and tostring(pickup.satiety) or ""
 			follow.followTarget:emit(Events.PICKUP, text)
 		end
-		destroySprite(sprite)
+		Lifecycle.destroySprite(sprite, objects, dynamicObjects)
 	end
 	TweenComponent.clearPendingDestroy()
 	end -- world destruction/simulation
