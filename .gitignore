@@ -3,5 +3,6 @@
 /Foragers/.vscode
 /Foragers/node_modules/
 /Foragers/Tools/Builder/Output
+/Foragers/Tools/LuaAnalyzer/libs/love2d-luacats/
 /Foragers/Tools/LuaAnalyzer/log
 /Workspace/
