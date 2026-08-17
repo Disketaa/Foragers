@@ -55,12 +55,15 @@ reassigned module-level singletons into a single shared state table.
    session, not game state); `completionBase`/`chatRepeatKey`/`chatRepeatAction`
    already live in `GameState`. `commandsCtx` stays in Main (closes over Main
    game-state locals: `playerStats`, `canvas`, `clearProps`, `spawnDrop`).
-   `bindingMatches` stays in Main (Phase 6 InputBindings).
+   `bindingMatches` moved to `Bindings.lua` (Phase 6).
 5. [DONE] Extract `Layout.lua` (`Source/UI/Layout.lua`): `positionUI(ui, canvas)`.
    `canvas` passed as a param (render context, not game state) — matches the
    `Camera.update(canvas)` convention. Single function for now (YAGNI).
-6. Extract `InputBindings.lua` (non-restart input bindings; restart press/release
-   already live in `Lifecycle`).
+6. [DONE] Extract `Bindings.lua` (`Source/Helpers/Systems/Bindings.lua`): pure
+   `matches(binding, inputType, value)` predicate. Named `Bindings` (not
+   `InputBindings`) to avoid redundancy with existing `Input.lua`; handles
+   keyboard/mouse/gamepad so `KeyBindings` would be too narrow. Toggle logic
+   stays in Main's dispatch (stateful, couples to Debug/Lifecycle/Options).
 7. Final trim of `Main.lua` to dispatchers; full `check.ps1`; final in-game plan.
 
 ## Risk controls

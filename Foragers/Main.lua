@@ -41,6 +41,7 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 local Zoom = require("Source.Helpers.Graphics.Zoom")
 local Math = require("Source.Helpers.Core.Math")
 local Input = require("Source.Helpers.Systems.Input")
+local Bindings = require("Source.Helpers.Systems.Bindings")
 local Commands = require("Source.Helpers.Debug.Commands")
 local Chat = require("Source.Helpers.Debug.Chat")
 local PostProcess = require("Source.Helpers.Graphics.PostProcess")
@@ -704,28 +705,6 @@ end
 
 --- Match a binding against an input of the given type (keyboard/mouse/gamepad
 --- buttons). Restart accepts all three; the other keybinds are keyboard-only.
-local function bindingMatches(binding, inputType, value)
-	if not binding then
-		return false
-	end
-	local list
-	if inputType == "keyboard" then
-		list = binding.keyboard
-	elseif inputType == "mouse" then
-		list = binding.mouse
-	elseif inputType == "gamepad" then
-		list = binding.gamepad and binding.gamepad.buttons
-	end
-	if list then
-		for _, v in ipairs(list) do
-			if v == value then
-				return true
-			end
-		end
-	end
-	return false
-end
-
 function love.keypressed(key, _, _)
 	if Debug.chatActive() then
 		if key == "escape" then
@@ -784,23 +763,23 @@ function love.keypressed(key, _, _)
 		return
 	end
 
-	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
+	if Bindings.matches(Options.keybinds.restart, "keyboard", key) then
 		Lifecycle.handleRestartPress()
-	elseif bindingMatches(Options.keybinds.toggleFullscreen, "keyboard", key) then
+	elseif Bindings.matches(Options.keybinds.toggleFullscreen, "keyboard", key) then
 		local fullscreen, fstype = love.window.getFullscreen()
 		Options.fullscreen = not fullscreen
 		love.window.setFullscreen(Options.fullscreen, fstype)
 		Options.save()
-	elseif bindingMatches(Options.keybinds.toggleDebug, "keyboard", key) then
+	elseif Bindings.matches(Options.keybinds.toggleDebug, "keyboard", key) then
 		Debug.toggle("hud")
 		if not Debug.enabled("hud") then
 			Debug.setChatActive(false)
 		end
-	elseif bindingMatches(Options.keybinds.toggleGizmo, "keyboard", key) then
+	elseif Bindings.matches(Options.keybinds.toggleGizmo, "keyboard", key) then
 		Debug.toggle("gizmo")
-	elseif bindingMatches(Options.keybinds.toggleProfiler, "keyboard", key) then
+	elseif Bindings.matches(Options.keybinds.toggleProfiler, "keyboard", key) then
 		Debug.toggle("hud.profiler")
-	elseif bindingMatches(Options.keybinds.toggleChat, "keyboard", key) then
+	elseif Bindings.matches(Options.keybinds.toggleChat, "keyboard", key) then
 		if Debug.enabled("hud") then
 			local wasActive = Debug.chatActive()
 			Debug.toggle("hud.chat")
@@ -821,31 +800,31 @@ end
 
 function love.keyreleased(key)
 	Chat.cancelRepeat(key)
-	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "keyboard", key) then
+	if not Debug.chatActive() and Bindings.matches(Options.keybinds.restart, "keyboard", key) then
 		Lifecycle.handleRestartRelease()
 	end
 end
 
 function love.mousepressed(_, _, button)
-	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "mouse", button) then
+	if not Debug.chatActive() and Bindings.matches(Options.keybinds.restart, "mouse", button) then
 		Lifecycle.handleRestartPress()
 	end
 end
 
 function love.mousereleased(_, _, button)
-	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "mouse", button) then
+	if not Debug.chatActive() and Bindings.matches(Options.keybinds.restart, "mouse", button) then
 		Lifecycle.handleRestartRelease()
 	end
 end
 
 function love.gamepadpressed(_, button)
-	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "gamepad", button) then
+	if not Debug.chatActive() and Bindings.matches(Options.keybinds.restart, "gamepad", button) then
 		Lifecycle.handleRestartPress()
 	end
 end
 
 function love.gamepadreleased(_, button)
-	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "gamepad", button) then
+	if not Debug.chatActive() and Bindings.matches(Options.keybinds.restart, "gamepad", button) then
 		Lifecycle.handleRestartRelease()
 	end
 end
