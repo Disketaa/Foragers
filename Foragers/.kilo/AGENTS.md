@@ -98,15 +98,16 @@ Foragers/
 ├── Source/
 │   ├── Helpers/
 │   │   ├── Core/         # EventEmitter, Events, ComponentRegistry, Log, Math, Merge, Path, Pivot, ValueParser
-│   │   ├── Graphics/     # Canvas, DrawOrder, Mask, ShaderLoader, Zoom
-│   │   ├── Debug/        # ChatHistory, Commands, Debug, Gizmo, Snapshot
-│   │   └── Systems/      # AttackSystem, Input, ModLoader, Options, Reset, TimeScale
+│   │   ├── Graphics/     # Canvas, DrawOrder, Mask, ShaderLoader, Zoom, Camera, PostProcess
+│   │   ├── Debug/        # ChatHistory, Commands, Debug, Gizmo, Snapshot, Chat
+│   │   └── Systems/      # AttackSystem, Input, ModLoader, Options, Reset, TimeScale, GameState, Lifecycle, Bindings
 │   ├── Sprite/
 │   │   ├── Sprite.lua
 │   │   ├── SpriteLoader.lua
 │   │   └── Components/   # collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, player_stats, pickup, silhouette, emote
 │   ├── UI/
 │   │   ├── Components/   # TextEmitter, UI
+│   │   ├── Layout.lua
 │   │   └── Text.lua
 │   └── World/            # TilePalette, WorldBuilder, WorldGen, PropSpawner, PropPicker, PropWire, HostRegistry, Overlay
 ├── Content/
