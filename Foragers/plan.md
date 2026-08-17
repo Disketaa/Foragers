@@ -22,34 +22,39 @@ reassigned module-level singletons into a single shared state table.
 - `Source/Helpers/Systems/GameState.lua` — shared mutable state + `reset()`.
 - `Source/Helpers/Graphics/Camera.lua` — `updateCamera`, `screenToWorld`,
   `worldToScreen`, `computeZoomPivot`, `canvasBlitOrigin`, `cullVisible`.
-- `Source/Helpers/Systems/DeathSequence.lua` — `updateReveal`, `updateStartDarken`,
-  `updateHold` (the LuaJIT-60-upvalue-extracted helpers).
+- `Source/Helpers/Graphics/PostProcess.lua` — `updateReveal`, `updateStartDarken`,
+  `easeZoom` (screen post-process transitions: Zoom + u_saturation/u_posterize/
+  u_noise/u_circleRadius/u_darken). Name matches the project's existing
+  "postprocess" shader terminology (the ScreenPost program).
 - `Source/Helpers/Debug/Chat.lua` — `handleChatTab`, `resetChatCompletion`,
   `startChatRepeat`, chat-repeat state, `bindingMatches`, `commandsCtx`.
 - `Source/UI/UILayout.lua` — `positionUI`.
-- `Source/Helpers/Systems/InputBindings.lua` — restart press/release + hold-to-restart.
-- `Source/Helpers/Systems/Lifecycle.lua` — `initGame`, `resetGame`, `destroySprite`,
-  `clearProps`, `spawnDrop`, `timeIt`.
+- `Source/Helpers/Systems/Lifecycle.lua` — full game lifecycle: `initGame`,
+  `resetGame`, `destroySprite`, `clearProps`, `spawnDrop`, `timeIt`, `updateHold`,
+  `handleRestartPress/Release`, `triggerLoading`, `startLoadingHold`,
+  `cancelLoadingHold`. Absorbs the old death-sequence + restart-input phases.
 
 ## Phases (each: implement → `Tools/check.ps1` → in-game checks → pause)
 0. Write this plan.
-1. Create `GameState.lua`; migrate the 7 flagged singletons
+1. [DONE] Create `GameState.lua`; migrate the 7 flagged singletons
    (`playerSprite`, `loadingSprite`, `loadingSheet`, `terrainBatch`,
    `completionBase`, `chatRepeatKey`, `chatRepeatAction`) to `GameState.*`.
-   Verify the 7 `ModuleSingleton` warnings disappear.
-2. Extract `Camera.lua`; move camera state into `GameState`; wire `updateCamera`,
-   `screenToWorld`, `worldToScreen`, `computeZoomPivot`, `canvasBlitOrigin`,
-   `cullVisible`.
-3. Extract `DeathSequence.lua`; move death/reveal/hold state into `GameState`;
-   wire `updateReveal`, `updateStartDarken`, `updateHold`.
+2. [DONE] Extract `Camera.lua`; move camera state into `GameState`; wire
+   `updateCamera`, `screenToWorld`, `worldToScreen`, `computeZoomPivot`,
+   `canvasBlitOrigin`, `cullVisible`.
+3. [DONE] Extract `PostProcess.lua` (`updateReveal`, `updateStartDarken`, `easeZoom`)
+   and `Lifecycle.lua` (`resetGame`, `triggerLoading`, `startLoadingHold`,
+   `cancelLoadingHold`, `handleRestartPress/Release`, `updateHold`). Merges the old
+   death-sequence + restart-input phases into one coherent lifecycle module;
+   `PostProcess` owns the graphics transitions. Move relevant state into
+   `GameState`. Fixed `Easing` require path (`Tween.Easing`).
 4. Extract `Chat.lua`; move chat/completion/repeat state into `GameState`; wire
    `handleChatTab`, `resetChatCompletion`, `startChatRepeat`, `bindingMatches`,
    `commandsCtx`.
 5. Extract `UILayout.lua` (`positionUI`).
-6. Extract `InputBindings.lua` (restart press/release + hold-to-restart).
-7. Extract `Lifecycle.lua` (`initGame`, `resetGame`, `destroySprite`, `clearProps`,
-   `spawnDrop`, `timeIt`); move remaining shared state into `GameState`.
-8. Final trim of `Main.lua` to dispatchers; full `check.ps1`; final in-game plan.
+6. Extract `InputBindings.lua` (non-restart input bindings; restart press/release
+   already live in `Lifecycle`).
+7. Final trim of `Main.lua` to dispatchers; full `check.ps1`; final in-game plan.
 
 ## Risk controls
 - Behavior must stay byte-for-byte identical (no logic changes, only relocation).

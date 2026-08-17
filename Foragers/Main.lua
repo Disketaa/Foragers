@@ -22,7 +22,6 @@ local ParticleEmitter = require("Source.Sprite.Components.ParticleEmitter")
 local Drop = require("Source.Sprite.Components.Drop")
 local Tween = require("Source.Sprite.Components.Tween")
 local TweenComponent = Tween.Component
-local Easing = Tween.Easing
 local Shadow = require("Source.Sprite.Components.Shadow")
 local Sound = require("Source.Sprite.Components.Sound")
 local Mask = require("Source.Helpers.Graphics.Mask")
@@ -42,6 +41,8 @@ local Zoom = require("Source.Helpers.Graphics.Zoom")
 local Math = require("Source.Helpers.Core.Math")
 local Input = require("Source.Helpers.Systems.Input")
 local Commands = require("Source.Helpers.Debug.Commands")
+local PostProcess = require("Source.Helpers.Graphics.PostProcess")
+local Lifecycle = require("Source.Helpers.Systems.Lifecycle")
 local Camera = require("Source.Helpers.Graphics.Camera")
 local GameState = require("Source.Helpers.Systems.GameState")
 
@@ -70,18 +71,14 @@ local weaponSprite = nil
 -- Plain scene state (AGENTS §XII): "game" runs the world; "dying" freezes the
 -- world but keeps drawing it while the player plays the death anim; "gameover"
 -- is the hold once the death anim ends. Menus will add more values later.
-local state = "game"
+GameState.state = "game"
 -- Auto-restart after DEATH_DURATION on the death screen.
-local AUTO_RESTART = true
-local deathTimer = 0
-local DEATH_DURATION = 4.5
+GameState.deathTimer = 0
 -- Hold-to-restart (normal play): pressing the restart key scales the Loading
 -- sprite in, and holding it for HOLD_DURATION restarts.
-local holdActive = false
-local holdTimer = 0
-local HOLD_DURATION = Options.restartHoldDuration
-local restartTimer = 0
-local LOADING_OUT_DURATION = 0.2
+GameState.holdActive = false
+GameState.holdTimer = 0
+GameState.restartTimer = 0
 -- Cached reference for the satiety handler (reads low-satiety fields); death is
 -- tracked by `state`, not this flag.
 local playerStats = nil
@@ -96,11 +93,11 @@ GameState.shakeOffsetY = 0
 -- Canvas px, matches CircleMask's canvas-space math. Eased between satiety
 -- changes; snapped at the off/on boundary so entry/exit never sweeps through
 -- small (mostly-black) radii.
-local circleMaskRadius = 0
-local circleMaskTarget = 0
+GameState.circleMaskRadius = 0
+GameState.circleMaskTarget = 0
 local CIRCLE_MASK_SMOOTHNESS = 1
 -- Restores normal zoom smoothness after a temporary ease (start reveal / death).
-local zoomRestoreTimer = 0
+GameState.zoomRestoreTimer = 0
 local START_ZOOM = 1.25
 local INTRO_DURATION = 1
 -- Zoom's normal easing rate; restored after a temporary ease overrides it.
@@ -108,42 +105,27 @@ local ZOOM_SMOOTHNESS = Zoom.smoothness
 
 -- Hold the death screen (snapped zoom / low-sat look) for DEATH_REVEAL_DELAY
 -- before the reveal eases zoom / saturation / contrast back to normal.
-local DEATH_REVEAL_DELAY = 1.25
-local DEATH_REVEAL_DURATION = 2
-local DEATH_REVEAL_CURVE = "OutCubic"
 -- Grain fades from its current opacity to invisible over this window at death,
 -- easing as the timescale recovers to full speed. No hard cutoff — it exits
 -- gently alongside the slow-mo returning to normal.
-local NOISE_FADE_DURATION = 7
-local NOISE_FADE_CURVE = "InOutCubic"
 -- After the reveal, wait DEATH_DARKEN_DELAY then fade the canvas to black via
 -- the Darken post-process shader over DEATH_DARKEN_DURATION.
-local DEATH_DARKEN_DELAY = 5
-local DEATH_DARKEN_DURATION = 1
-local DEATH_DARKEN_CURVE = "InOutCubic"
 -- Opening fade: the canvas starts fully dark and reveals in from black.
-local INTRO_DARKEN_DURATION = 1
-local INTRO_DARKEN_CURVE = "OutCubic"
-local startDarkenTimer = 1
-local startDarkenActive = false
-local revealTimer = 0
-local revealActive = false
-local revealFrom = {}
+GameState.startDarkenTimer = 1
+GameState.startDarkenActive = false
+GameState.revealTimer = 0
+GameState.revealActive = false
+GameState.revealFrom = {}
 -- Current post-process uniform values, tracked so the death reveal can ease them
 -- back to normal from wherever they are.
-local satUniform = 1
-local posterizeUniform = 0
-local noiseUniform = 0
+GameState.satUniform = 1
+GameState.posterizeUniform = 0
+GameState.noiseUniform = 0
 
 --- Ease zoom to `target` over `duration` seconds with a temporarily faster
 --- smoothness, restoring the normal rate when the timer expires. Shared by the
 --- start reveal and the death unzoom. Smoothness = duration/3 because expSmooth
 --- settles in ~3x its rate, so the ease completes within `duration`.
-local function easeZoom(target, duration)
-	Zoom.target = target
-	Zoom.smoothness = math.max(0.01, duration / 3)
-	zoomRestoreTimer = duration
-end
 local uiSprites = {}
 -- The Loading sprite (Content/Assets/Sprites/UI/Loading.lua): shown centered on
 -- the death screen, scaled in/out by the hold-to-restart interaction. Its frame
@@ -187,7 +169,7 @@ end
 --- One-time engine setup. Runs once at startup. Must NOT touch the window
 --- or re-create graphics assets on later restarts (love.window.setMode
 --- recreates the native window), so only the persistent world/sprite state
---- lives in initGame(), which resetGame() re-runs.
+--- lives in initGame(), which Lifecycle.resetGame() re-runs.
 local initGame
 function love.load()
 	Log.init()
@@ -309,25 +291,25 @@ function initGame()
 	ShaderLoader.setPostProcessEnabled(true)
 	-- Start zoomed in for a brief reveal; eases to 1x.
 	Zoom.current = START_ZOOM
-	easeZoom(1, INTRO_DURATION)
-	circleMaskRadius = 0
-	circleMaskTarget = 0
-	satUniform = 1
-	posterizeUniform = 0
-	noiseUniform = 0
+	PostProcess.easeZoom(1, INTRO_DURATION)
+	GameState.circleMaskRadius = 0
+	GameState.circleMaskTarget = 0
+	GameState.satUniform = 1
+	GameState.posterizeUniform = 0
+	GameState.noiseUniform = 0
 	ShaderLoader.sendUniform("u_noise", 0)
-	revealActive = false
-	revealTimer = 0
+	GameState.revealActive = false
+	GameState.revealTimer = 0
 	ShaderLoader.sendUniform("u_darken", 1)
-	startDarkenActive = true
-	startDarkenTimer = 0
-	state = "game"
+	GameState.startDarkenActive = true
+	GameState.startDarkenTimer = 0
+	GameState.state = "game"
 	DiscordRPC.setScene("game")
-	deathTimer = 0
+	GameState.deathTimer = 0
 	pendingClearAttacker = false
-	holdActive = false
-	holdTimer = 0
-	restartTimer = 0
+	GameState.holdActive = false
+	GameState.holdTimer = 0
+	GameState.restartTimer = 0
 
 	local worldData = timeIt("WorldGen.generate", function() return WorldGen.generate() end)
 
@@ -451,35 +433,35 @@ function initGame()
 			local f = data.value / math.max(1, data.maxValue)
 			TimeScale.set(f >= low and 1 or 0.15 + 0.85 * (f / low))
 			local s = f >= low and 1 or f / low
-			satUniform = math.max(0.2, math.min(1, s))
-			ShaderLoader.sendUniform("u_saturation", satUniform)
+			GameState.satUniform = math.max(0.2, math.min(1, s))
+			ShaderLoader.sendUniform("u_saturation", GameState.satUniform)
 			-- Posterization (color reduction) ramps in below the low threshold:
 			-- 0 at the threshold, 1 (full posterize) as satiety hits zero.
 			local p = f >= low and 0 or (1 - f / low)
-			posterizeUniform = p
-			ShaderLoader.sendUniform("u_posterize", posterizeUniform)
+			GameState.posterizeUniform = p
+			ShaderLoader.sendUniform("u_posterize", GameState.posterizeUniform)
 			local n = f >= low and 0 or (1 - f / low)
-			noiseUniform = n
-			ShaderLoader.sendUniform("u_noise", noiseUniform)
+			GameState.noiseUniform = n
+			ShaderLoader.sendUniform("u_noise", GameState.noiseUniform)
 			local zMax = stats and stats.lowSatietyZoom or 2
 			Zoom.target = f >= low and 1 or (zMax - (zMax - 1) * (f / low))
 			local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16
 			local minR = (stats and stats.lowSatietyMaskRadius) or 24
 			local k = f / low
 			local target = f >= low and 0 or (minR + (maxR - minR) * (k * k))
-			if target == 0 or circleMaskRadius == 0 then
-				circleMaskRadius = target
+			if target == 0 or GameState.circleMaskRadius == 0 then
+				GameState.circleMaskRadius = target
 			end
-			circleMaskTarget = target
+			GameState.circleMaskTarget = target
 		end, 5)
 
 		GameState.playerSprite:on(Events.DEATH, function()
-			Log.write("[DEATH] state=" .. state .. " -> dying, anim -> death")
+			Log.write("[DEATH] state=" .. GameState.state .. " -> dying, anim -> death")
 			-- Post-process stays ON: the CircleMask holds its satiety-0 radius on
 			-- the death screen, so do not flip setPostProcessEnabled here.
-			state = "dying"
+			GameState.state = "dying"
 			DiscordRPC.setScene("dying")
-			deathTimer = 0
+			GameState.deathTimer = 0
 			-- Ease back to full speed (target, not set) so the low-satiety
 			-- slow-mo doesn't snap to normal the instant the death anim plays.
 			TimeScale.target = 1
@@ -491,15 +473,15 @@ function initGame()
 			Zoom.target = deathZoom
 			-- Stop the opening fade so it doesn't fight the death reveal over
 			-- u_darken.
-			startDarkenActive = false
-			revealActive = true
-			revealTimer = 0
-			revealFrom = {
+			GameState.startDarkenActive = false
+			GameState.revealActive = true
+			GameState.revealTimer = 0
+			GameState.revealFrom = {
 				zoom = Zoom.current,
-				saturation = satUniform,
-				posterize = posterizeUniform,
-				noise = noiseUniform,
-				circle = circleMaskRadius,
+				saturation = GameState.satUniform,
+				posterize = GameState.posterizeUniform,
+				noise = GameState.noiseUniform,
+				circle = GameState.circleMaskRadius,
 			}
 			-- Force the anim via the event, not _state: Control is the sole writer
 			-- and never runs again once the world freezes, so the anim sticks.
@@ -511,13 +493,13 @@ function initGame()
 		-- the collapse is done. The circle stays at its satiety-0 value — no
 		-- blackout.
 		GameState.playerSprite:on(Events.ANIM_FRAME, function(frameIndex)
-			if state ~= "dying" then
+			if GameState.state ~= "dying" then
 				return
 			end
 			local ss = GameState.playerSprite:findComponent("spritesheet")
 			local anim = ss and ss.animations and ss.animations.death
 			if anim and frameIndex >= anim.frames then
-				state = "gameover"
+				GameState.state = "gameover"
 				DiscordRPC.setScene("gameover")
 			end
 		end, 5)
@@ -535,59 +517,7 @@ function love.resize(w, h)
 	end
 end
 
-local _needsRestart = false
-
---- Reload the whole game state in-process (R / game over).
---- Re-runs initGame() so the world, sprites, UI and player are rebuilt
---- from scratch. Reset.all() clears every module-owned pool (particles,
---- floating text, dead/pending/detached sets, attacker refs, time scale) so
---- no stale references to old sprites remain. love.load() itself is NOT
---- re-run: it calls love.window.setMode(), which recreates the native window.
-local function resetGame()
-	_needsRestart = true
-end
-
-local function triggerLoading(tag)
-	if GameState.loadingSprite then
-		local tw = GameState.loadingSprite:findComponent("tween")
-		if tw then
-			tw:triggerTag(tag)
-		end
-	end
-end
-
-local function startLoadingHold()
-	if holdActive then
-		return
-	end
-	holdActive = true
-	holdTimer = 0
-	if GameState.loadingSprite then
-		GameState.loadingSprite.alpha = 1
-	end
-	triggerLoading("loading_in")
-end
-
-local function cancelLoadingHold()
-	if holdActive then
-		holdActive = false
-		triggerLoading("loading_out")
-	end
-end
-
--- Hold-to-restart is normal-play only (death auto-restarts), and works from any
--- bound input (keyboard / mouse / gamepad). Ignored while a restart is already
--- winding down (restartTimer > 0) so a re-press can't jump the scale-out tween.
-local function handleRestartPress()
-	if state ~= "game" or restartTimer > 0 then
-		return
-	end
-	startLoadingHold()
-end
-
-local function handleRestartRelease()
-	cancelLoadingHold()
-end
+GameState._needsRestart = false
 
 -- Debug-command context: accessors the Commands module resolves without touching
 -- Main.lua internals. `stats` is a function so it reads the current playerStats
@@ -597,7 +527,7 @@ local function commandsCtx()
 		stats = function() return playerStats end,
 		seed = function() return WorldGen.getSeed() end,
 		restart = function()
-			resetGame()
+			Lifecycle.resetGame()
 		end,
 		clearProps = clearProps,
 		spawnDrop = spawnDrop,
@@ -660,7 +590,7 @@ function love.draw()
 	ShaderLoader.setCamera(GameState.camPixelX, GameState.camPixelY)
 	local zoom = Zoom.current
 	local zpx, zpy = Camera.computeZoomPivot(canvas)
-	local isDead = state == "gameover"
+	local isDead = GameState.state == "gameover"
 
 	-- CircleMask maps window px back to canvas px; needs the blit transform
 	-- (scale x zoom about the pivot), which changes every frame.
@@ -927,7 +857,7 @@ function love.keypressed(key, _, _)
 	end
 
 	if bindingMatches(Options.keybinds.restart, "keyboard", key) then
-		handleRestartPress()
+		Lifecycle.handleRestartPress()
 	elseif bindingMatches(Options.keybinds.toggleFullscreen, "keyboard", key) then
 		local fullscreen, fstype = love.window.getFullscreen()
 		Options.fullscreen = not fullscreen
@@ -963,115 +893,31 @@ function love.keyreleased(key)
 		GameState.chatRepeatAction = nil
 	end
 	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "keyboard", key) then
-		handleRestartRelease()
+		Lifecycle.handleRestartRelease()
 	end
 end
 
 function love.mousepressed(_, _, button)
 	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "mouse", button) then
-		handleRestartPress()
+		Lifecycle.handleRestartPress()
 	end
 end
 
 function love.mousereleased(_, _, button)
 	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "mouse", button) then
-		handleRestartRelease()
+		Lifecycle.handleRestartRelease()
 	end
 end
 
 function love.gamepadpressed(_, button)
 	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "gamepad", button) then
-		handleRestartPress()
+		Lifecycle.handleRestartPress()
 	end
 end
 
 function love.gamepadreleased(_, button)
 	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "gamepad", button) then
-		handleRestartRelease()
-	end
-end
-
--- Hold-to-restart + death screen timeout. Kept out of love.update — that
--- function already exceeds LuaJIT's 60-upvalue budget with the world
--- simulation, so this logic lives in its own function with its own upvalue set.
-local function updateHold(dt)
-	if state == "gameover" then
-		deathTimer = deathTimer + dt
-		if AUTO_RESTART and deathTimer >= DEATH_DURATION then
-			resetGame()
-		end
-	end
-	if holdActive then
-		holdTimer = holdTimer + dt
-		local progress = math.min(1, holdTimer / HOLD_DURATION)
-		if GameState.loadingSheet then
-			local numFrames = GameState.loadingSheet.columns or 1
-			GameState.loadingSheet:setFrame(math.min(numFrames - 1, math.floor(progress * numFrames)))
-		end
-		if holdTimer >= HOLD_DURATION then
-			holdActive = false
-			triggerLoading("loading_out")
-			restartTimer = LOADING_OUT_DURATION
-		end
-	end
-	if restartTimer > 0 then
-		restartTimer = restartTimer - dt
-		if restartTimer <= 0 then
-			restartTimer = 0
-			resetGame()
-		end
-	end
-end
-
--- Kept out of love.update (LuaJIT 60-upvalue budget). Sets current and target
--- together so Zoom.update and the circle ease see current==target.
-local function updateReveal(dt)
-	if not revealActive then
-		return
-	end
-	revealTimer = revealTimer + dt
-	-- Fade grain from its max to invisible over NOISE_FADE_DURATION, easing from
-	-- the moment death starts — not tied to the reveal delay.
-	local nt = math.min(revealTimer / NOISE_FADE_DURATION, 1)
-	local ne = (Easing[NOISE_FADE_CURVE] or Easing.OutCubic)(nt)
-	noiseUniform = revealFrom.noise * (1 - ne)
-	ShaderLoader.sendUniform("u_noise", noiseUniform)
-	-- Ease only after DEATH_REVEAL_DELAY elapses, so the death look holds before
-	-- zoom / saturation / contrast return to normal.
-	local t = math.max(0, math.min((revealTimer - DEATH_REVEAL_DELAY) / DEATH_REVEAL_DURATION, 1))
-	local e = (Easing[DEATH_REVEAL_CURVE] or Easing.Linear)(t)
-	Zoom.current = revealFrom.zoom + (1 - revealFrom.zoom) * e
-	Zoom.target = Zoom.current
-	satUniform = revealFrom.saturation + (1 - revealFrom.saturation) * e
-	posterizeUniform = revealFrom.posterize * (1 - e)
-	ShaderLoader.sendUniform("u_saturation", satUniform)
-	ShaderLoader.sendUniform("u_posterize", posterizeUniform)
-	local maxR = math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) / 2 + 16
-	circleMaskRadius = revealFrom.circle + (maxR - revealFrom.circle) * e
-	circleMaskTarget = circleMaskRadius
-
-	if revealTimer >= DEATH_DARKEN_DELAY then
-		local dtc = math.min((revealTimer - DEATH_DARKEN_DELAY) / DEATH_DARKEN_DURATION, 1)
-		local de = (Easing[DEATH_DARKEN_CURVE] or Easing.Linear)(dtc)
-		ShaderLoader.sendUniform("u_darken", de)
-	end
-
-	if t >= 1 and revealTimer >= DEATH_DARKEN_DELAY + DEATH_DARKEN_DURATION then
-		revealActive = false
-	end
-end
-
--- Kept out of love.update (LuaJIT 60-upvalue budget).
-local function updateStartDarken(dt)
-	if not startDarkenActive then
-		return
-	end
-	startDarkenTimer = startDarkenTimer + dt
-	local t = math.min(startDarkenTimer / INTRO_DARKEN_DURATION, 1)
-	local e = (Easing[INTRO_DARKEN_CURVE] or Easing.Linear)(t)
-	ShaderLoader.sendUniform("u_darken", 1 - e)
-	if t >= 1 then
-		startDarkenActive = false
+		Lifecycle.handleRestartRelease()
 	end
 end
 
@@ -1080,8 +926,8 @@ function love.quit()
 end
 
 function love.update(dt)
-	if _needsRestart then
-		_needsRestart = false
+	if GameState._needsRestart then
+		GameState._needsRestart = false
 		Reset.all()
 		uiSprites = {}
 		GameState.playerSprite = nil
@@ -1097,13 +943,13 @@ function love.update(dt)
 	TimeScale.update(dt)
 	DiscordRPC.update(dt)
 	local scaledDt = dt * TimeScale.scale
-	updateReveal(dt)
-	updateStartDarken(dt)
+	PostProcess.updateReveal(dt, canvas)
+	PostProcess.updateStartDarken(dt)
 	-- Manual GC step: spread collection across frames so a full trace never
 	-- lands in one stall.
 	collectgarbage("step", GC_STEP)
 	Snapshot.markUpdateStart()
-	local simulating = state == "game"
+	local simulating = GameState.state == "game"
 	if simulating then
 	local dead = Destructible.getDead()
 	for _, sprite in ipairs(dead) do
@@ -1172,21 +1018,21 @@ function love.update(dt)
 	ShaderLoader.update(scaledDt)
 	Zoom.update(scaledDt)
 
-	if zoomRestoreTimer > 0 then
-		zoomRestoreTimer = zoomRestoreTimer - dt
-		if zoomRestoreTimer <= 0 then
-			zoomRestoreTimer = 0
+	if GameState.zoomRestoreTimer > 0 then
+		GameState.zoomRestoreTimer = GameState.zoomRestoreTimer - dt
+		if GameState.zoomRestoreTimer <= 0 then
+			GameState.zoomRestoreTimer = 0
 			Zoom.smoothness = ZOOM_SMOOTHNESS
 		end
 	end
-	if circleMaskRadius ~= circleMaskTarget then
+	if GameState.circleMaskRadius ~= GameState.circleMaskTarget then
 		local ease = Math.expSmooth(scaledDt, CIRCLE_MASK_SMOOTHNESS)
-		circleMaskRadius = circleMaskRadius + (circleMaskTarget - circleMaskRadius) * ease
-		if math.abs(circleMaskRadius - circleMaskTarget) < 0.01 then
-			circleMaskRadius = circleMaskTarget
+		GameState.circleMaskRadius = GameState.circleMaskRadius + (GameState.circleMaskTarget - GameState.circleMaskRadius) * ease
+		if math.abs(GameState.circleMaskRadius - GameState.circleMaskTarget) < 0.01 then
+			GameState.circleMaskRadius = GameState.circleMaskTarget
 		end
 	end
-	ShaderLoader.sendUniform("u_circleRadius", circleMaskRadius)
+	ShaderLoader.sendUniform("u_circleRadius", GameState.circleMaskRadius)
 	if simulating then
 	local mouseX, mouseY = love.mouse.getPosition()
 	local worldX, worldY = Camera.screenToWorld(canvas, mouseX, mouseY)
@@ -1219,7 +1065,7 @@ function love.update(dt)
 	-- The world update loop is frozen while dying, but the collapse anim and
 	-- shake must play out. Advance those manually — Control must not run, or it
 	-- would rewrite _state and move the player.
-	if state == "dying" and GameState.playerSprite then
+	if GameState.state == "dying" and GameState.playerSprite then
 		local ss = GameState.playerSprite:findComponent("spritesheet")
 		if ss and ss.update then
 			ss:update(dt)
@@ -1346,7 +1192,7 @@ function love.update(dt)
 
 	-- Hold-to-restart + death flash decay (extracted to keep love.update under
 	-- LuaJIT's 60-upvalue limit).
-	updateHold(dt)
+	Lifecycle.updateHold(dt)
 
 	-- Manual FPS cap (love.timer.setFPS unavailable here): sleep the remainder
 	-- of the target frame budget so CPU isn't pegged at uncapped rates.
