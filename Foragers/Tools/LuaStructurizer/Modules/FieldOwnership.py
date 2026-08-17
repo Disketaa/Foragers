@@ -5,7 +5,7 @@ from _shared import find_block_end
 # Cross-component single-writer enforcement. Reads field_ownership.toml,
 # a hand-maintained manifest mapping a field -> owning component. Flags:
 #   - writes to parent.<field> / self.parent.<field> (cross-component write)
-#   - reads of .<field> inside any update() function (single-writer violation)
+#   - reads of parent.<field> / self.parent.<field> inside any update() function (single-writer violation)
 # Disabled by default in Settings.toml until the manifest is seeded.
 
 MANIFEST = Path(__file__).resolve().parent / "field_ownership.toml"
@@ -40,11 +40,11 @@ def check(text, path, config):
                 if stem == owner:
                     continue
                 wre = re.compile(r"(?:self\.parent|parent)\." + re.escape(field) + r"\s*=")
-                rre = re.compile(r"(?<!\.)\." + re.escape(field) + r"\b")
+                rre = re.compile(r"(?:self\.parent|parent)\." + re.escape(field) + r"\b")
                 for j in range(start, end + 1):
                     if wre.search(lines[j]):
                         violations.append((j + 1, f"field '{field}' (owner '{owner}') written via parent — cross-component write", "error"))
-                    if rre.search(lines[j]):
+                    elif rre.search(lines[j]):
                         violations.append((j + 1, f"field '{field}' (owner '{owner}') read inside update() — single-writer rule", "error"))
             i = end + 1
             continue

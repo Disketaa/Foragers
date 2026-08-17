@@ -47,9 +47,12 @@ _LONG_OPEN = re.compile(r"\[=*\[")
 
 
 def _blank_inside(span: str, keep_ends: bool) -> str:
+    # Preserve embedded newlines so multi-line --[[ ]] comments and [[ ]] strings
+    # don't collapse and shift every later violation's reported line number.
     if keep_ends and len(span) >= 2:
-        return span[0] + " " * (len(span) - 2) + span[-1]
-    return " " * len(span)
+        inner = "".join(c if c == "\n" else " " for c in span[1:-1])
+        return span[0] + inner + span[-1]
+    return "".join(c if c == "\n" else " " for c in span)
 
 
 def _strip_span(text, start, end, keep_ends):

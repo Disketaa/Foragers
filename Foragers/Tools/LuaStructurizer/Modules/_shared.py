@@ -11,8 +11,18 @@ _OPENS = {"if", "for", "while", "function", "do", "repeat"}
 
 
 def _line_block_delta(line: str) -> int:
+    # In Lua, `for`/`while` always carry a mandatory `do` on the same clause
+    # (for i=1,n do / while x do). That `do` is part of the loop's own syntax,
+    # not a separate block — counting it would open +2 for one block closed by
+    # a single `end`, corrupting all downstream depth. Skip `do` when the line
+    # also has `for`/`while`. Standalone `do ... end` blocks (no for/while) still
+    # count as a real opener.
+    kws = _BLOCK_KW.findall(line)
+    has_loop = any(k in ("for", "while") for k in kws)
     delta = 0
-    for kw in _BLOCK_KW.findall(line):
+    for kw in kws:
+        if kw == "do" and has_loop:
+            continue
         delta += 1 if kw in _OPENS else -1
     return delta
 
