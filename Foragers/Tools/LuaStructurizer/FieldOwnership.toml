@@ -1,0 +1,14 @@
+# Field-ownership manifest for Tools/LuaStructurizer/Modules/FieldOwnership.py.
+#
+# Maps a parent.<field> -> owning component (file stem, without .lua). The owning
+# component may write/read the field; every other component is flagged for a
+# cross-component write, or for reading the field inside update() (single-writer
+# rule, AGENTS §X).
+#
+# Only fields with a DOCUMENTED single writer belong here. Multi-consumer fields
+# (parent.tweens / parent.shader / parent.shaderData — AGENTS §X exceptions 2-3)
+# are intentionally absent: their reads are allowed across components, so the
+# structurizer must not flag them. Add a new entry ONLY with a Section X justification.
+
+[flipX]
+owner = "Control"

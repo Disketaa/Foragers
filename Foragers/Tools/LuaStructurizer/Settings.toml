@@ -32,7 +32,19 @@ severity = "error"
 enabled = true
 severity = "warn"
 
-# Needs Tools/StructureRules/field_ownership.toml seeded first. Off until manifest exists.
+# Manifest seeded at FieldOwnership.toml (_state/flipX -> Control).
 [Rules.FieldOwnership]
-enabled = false
+enabled = true
+severity = "error"
+
+[Rules.SpriteNewOutsideCore]
+enabled = true
+severity = "error"
+
+[Rules.ComponentCreateOutsideCore]
+enabled = true
+severity = "error"
+
+[Rules.LocalScanOutsideCore]
+enabled = true
 severity = "error"

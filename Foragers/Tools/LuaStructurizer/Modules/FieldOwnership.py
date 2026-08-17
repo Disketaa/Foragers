@@ -2,13 +2,13 @@ import re
 from pathlib import Path
 from _shared import find_block_end
 
-# Cross-component single-writer enforcement. Reads field_ownership.toml,
+# Cross-component single-writer enforcement. Reads FieldOwnership.toml,
 # a hand-maintained manifest mapping a field -> owning component. Flags:
 #   - writes to parent.<field> / self.parent.<field> (cross-component write)
 #   - reads of parent.<field> / self.parent.<field> inside any update() function (single-writer violation)
 # Disabled by default in Settings.toml until the manifest is seeded.
 
-MANIFEST = Path(__file__).resolve().parent / "field_ownership.toml"
+MANIFEST = Path(__file__).resolve().parent.parent / "FieldOwnership.toml"
 
 
 def _load_manifest():
