@@ -1,4 +1,5 @@
 import re
+from _shared import find_block_end
 
 # Flags string-mode comparison chains (if x == "a" elseif x == "b" ... else) whose
 # final else branch has no error/assert/Log guard. An unvalidated mode that falls
@@ -18,11 +19,11 @@ def check(text, path, config):
     while i < n:
         line = lines[i]
         if re.search(r"\bif\b", line) and STR_CMP.search(line) and not TYPE_CHECK.search(line):
+            end = find_block_end(lines, i)
+            end = min(end, len(lines) - 1)
             nest = 0
-            k = i
             else_line = -1
-            end_line = -1
-            while k < n:
+            for k in range(i, end + 1):
                 lk = lines[k]
                 if re.match(r"\s*if\b", lk):
                     nest += 1
@@ -33,18 +34,11 @@ def check(text, path, config):
                         else_line = k
                 elif re.match(r"\s*end\b", lk):
                     nest -= 1
-                    if nest == 0:
-                        end_line = k
-                        break
-                k += 1
-
-            if else_line != -1 and end_line != -1:
-                body = "\n".join(lines[else_line + 1:end_line])
+            if else_line != -1:
+                body = "\n".join(lines[else_line + 1:end])
                 if body.strip() and not GUARD.search(body):
                     violations.append((else_line + 1, "string-mode 'else' branch has no error/assert/Log guard — unvalidated mode falls through silently", "warn"))
-                i = end_line + 1
-                continue
-            i = k + 1
+            i = end + 1
             continue
         i += 1
     return violations

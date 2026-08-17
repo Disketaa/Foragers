@@ -21,9 +21,9 @@ def check(text, path, config):
             lj = lines[j]
             if lj.lstrip().startswith(f"local {name} ="):
                 continue
-            if ASSIGN.search(lj):
+            am = ASSIGN.search(lj)
+            if am and am.group(1) == name:
                 count += 1
-                break
         if count >= 2:
             violations.append((idx + 1, f"module-level singleton '{name}' (local = nil) reassigned {count}x — prefer an explicit state object", "warn"))
     return violations

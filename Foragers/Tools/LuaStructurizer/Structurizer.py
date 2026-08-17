@@ -1,5 +1,6 @@
 import importlib.util
 import io
+import re
 import sys
 from pathlib import Path
 from typing import cast
@@ -39,6 +40,81 @@ def load_rule(name: str, rules_dir: Path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+_ALLOW_TOKEN = "structure:allow-print"
+_LONG_OPEN = re.compile(r"\[=*\[")
+
+
+def _blank_inside(span: str, keep_ends: bool) -> str:
+    if keep_ends and len(span) >= 2:
+        return span[0] + " " * (len(span) - 2) + span[-1]
+    return " " * len(span)
+
+
+def _strip_span(text, start, end, keep_ends):
+    seg = text[start:end]
+    if _ALLOW_TOKEN in seg:
+        out = list(" " * len(seg))
+        idx = seg.index(_ALLOW_TOKEN)
+        for off, ch in enumerate(_ALLOW_TOKEN):
+            out[idx + off] = ch
+        return "".join(out)
+    return _blank_inside(seg, keep_ends)
+
+
+def strip_comments_and_strings(text: str) -> str:
+    # Replace comment and string spans with equal-length whitespace so line numbers
+    # and column offsets stay valid for downstream regex rules. String literals keep
+    # their quotes (inside blanked) so rules that match `== "..."` still see the
+    # quote; comment/string content can no longer false-trigger keyword scans.
+    # The project opt-out token is preserved so PrintVsLog's allow-print still works.
+    out = []
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if ch == "-" and i + 1 < n and text[i + 1] == "-":
+            j = text.find("\n", i)
+            if j == -1:
+                j = n
+            out.append(_strip_span(text, i, j, False))
+            i = j
+            continue
+        if ch == "[":
+            m = _LONG_OPEN.match(text, i)
+            if m:
+                eq = m.group(0)
+                close = eq[0] + eq[1:-1] + "]"
+                j = text.find(close, i + len(eq))
+                if j == -1:
+                    j = n
+                else:
+                    j += len(close)
+                is_comment = i >= 2 and text[i - 2:i] == "--"
+                out.append(_strip_span(text, i, j, not is_comment))
+                i = j
+                continue
+            out.append(ch)
+            i += 1
+            continue
+        if ch == '"' or ch == "'":
+            quote = ch
+            j = i + 1
+            while j < n:
+                if text[j] == "\\" and j + 1 < n:
+                    j += 2
+                    continue
+                if text[j] == quote:
+                    j += 1
+                    break
+                j += 1
+            out.append(_strip_span(text, i, j, True))
+            i = j
+            continue
+        out.append(ch)
+        i += 1
+    return "".join(out)
 
 
 def main():
@@ -115,11 +191,12 @@ def main():
         except (OSError, UnicodeDecodeError) as e:
             print(f"Skip (unreadable): {path} ({e})", file=sys.stderr)
             continue
+        stripped = strip_comments_and_strings(original)
         for name, module, rcfg in enabled_rules:
             try:
                 if hasattr(module, "set_path"):
                     module.set_path(path)
-                results = module.check(original, path, config)
+                results = module.check(stripped, path, config)
             except Exception as e:
                 print(f"Skip (rule failed): {path} ({name}: {e})", file=sys.stderr)
                 continue
