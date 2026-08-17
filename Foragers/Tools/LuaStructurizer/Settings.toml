@@ -14,11 +14,6 @@ severity = "error"
 enabled = true
 severity = "warn"
 
-[Rules.MagicNumbers]
-enabled = true
-severity = "warn"
-include_folders = ["Source/"]
-
 [Rules.UnguardedStringMode]
 enabled = true
 severity = "warn"
