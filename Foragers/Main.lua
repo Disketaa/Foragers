@@ -42,6 +42,7 @@ local Zoom = require("Source.Helpers.Graphics.Zoom")
 local Math = require("Source.Helpers.Core.Math")
 local Input = require("Source.Helpers.Systems.Input")
 local Commands = require("Source.Helpers.Debug.Commands")
+local GameState = require("Source.Helpers.Systems.GameState")
 
 local objects = {}
 local staticObjects = {}
@@ -66,7 +67,6 @@ local camSubX = 0
 local camSubY = 0
 local scrollToComp = nil
 local weaponSprite = nil
-local playerSprite = nil
 -- Plain scene state (AGENTS §XII): "game" runs the world; "dying" freezes the
 -- world but keeps drawing it while the player plays the death anim; "gameover"
 -- is the hold once the death anim ends. Menus will add more values later.
@@ -151,9 +151,6 @@ local uiSprites = {}
 -- The Loading sprite (Content/Assets/Sprites/UI/Loading.lua): shown centered on
 -- the death screen, scaled in/out by the hold-to-restart interaction. Its frame
 -- tracks the hold progress (progress-to-frame, 1..numFrames).
-local loadingSprite = nil
-local loadingSheet = nil
-local terrainBatch = nil
 local tileSize = World.tileSize
 local worldPixelWidth = World.width * tileSize
 local worldPixelHeight = World.height * tileSize
@@ -275,7 +272,7 @@ local function clearProps()
 	local targets = {}
 	for _, entry in ipairs(dynamicObjects) do
 		local s = entry.instance
-		if s and s ~= playerSprite and s ~= weaponSprite then
+		if s and s ~= GameState.playerSprite and s ~= weaponSprite then
 			targets[#targets + 1] = s
 		end
 	end
@@ -307,10 +304,10 @@ local function spawnDrop(name, x, y)
 	-- Drops follow the player via the `follow` component, whose target is set
 	-- elsewhere for normal drops (Drop.getPending). Set it here so spawned drops
 	-- scatter then home in and become edible.
-	if playerSprite then
+	if GameState.playerSprite then
 		local follow = sprite:findComponent("follow", function(c) return c.setFollowTarget end)
 		if follow then
-			follow:setFollowTarget(playerSprite)
+			follow:setFollowTarget(GameState.playerSprite)
 		end
 	end
 	table.insert(objects, { instance = sprite, data = {} })
@@ -357,19 +354,19 @@ function initGame()
 
 	local charEntries = timeIt("SpriteLoader Character", function() return SpriteLoader.loadAll("Content/Assets/Sprites/Character", getSpawnPosition) or {} end)
 
-	playerSprite = nil
+	GameState.playerSprite = nil
 	for _, entry in ipairs(charEntries) do
 		if entry.data and entry.data.object == "player" then
-			playerSprite = entry.instance
+			GameState.playerSprite = entry.instance
 			break
 		end
 	end
-	playerStats = playerSprite and playerSprite:findComponent("player_stats") or nil
+	playerStats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats") or nil
 
 	local result = timeIt("WorldBuilder.build", function()
-		return WorldBuilder.build(worldData, function(data) return data.x, data.y end, playerSprite)
+		return WorldBuilder.build(worldData, function(data) return data.x, data.y end, GameState.playerSprite)
 	end)
-	terrainBatch = nil
+	GameState.terrainBatch = nil
 	terrainPlan = result.terrainPlan or {}
 	terrainIndex = 1
 	propSpawnPlan = result.propPlan or {}
@@ -393,28 +390,28 @@ function initGame()
 		table.insert(objects, entry)
 	end
 
-	if playerSprite then
+	if GameState.playerSprite then
 		for _, entry in ipairs(toolEntries) do
 			local follow = entry.instance:findComponent("follow", function(c) return c.setFollowTarget end)
 			if follow then
-				follow:setFollowTarget(playerSprite)
+				follow:setFollowTarget(GameState.playerSprite)
 			end
 			table.insert(dynamicObjects, entry)
 			table.insert(objects, entry)
 		end
-		local scrollComp = playerSprite:findComponent("scroll_to", function(c) return c.setFollowTarget end)
+		local scrollComp = GameState.playerSprite:findComponent("scroll_to", function(c) return c.setFollowTarget end)
 		if scrollComp then
 			scrollToComp = scrollComp
-			scrollComp:setFollowTarget(playerSprite)
-			scrollComp._currentX = playerSprite.x + (scrollComp.offsetX or 0)
-			scrollComp._currentY = playerSprite.y + (scrollComp.offsetY or 0)
+			scrollComp:setFollowTarget(GameState.playerSprite)
+			scrollComp._currentX = GameState.playerSprite.x + (scrollComp.offsetX or 0)
+			scrollComp._currentY = GameState.playerSprite.y + (scrollComp.offsetY or 0)
 		end
-		AttackSystem.registerAttacker(playerSprite, toolEntries[1] and toolEntries[1].instance)
+		AttackSystem.registerAttacker(GameState.playerSprite, toolEntries[1] and toolEntries[1].instance)
 		weaponSprite = toolEntries[1] and toolEntries[1].instance
 	end
 
 	PropSpawner.init(worldData, World, {
-		playerSprite = playerSprite,
+		playerSprite = GameState.playerSprite,
 	})
 
 	updateCamera()
@@ -447,26 +444,26 @@ function initGame()
 
 	-- Hide the Loading sprite until death (its frame 0 isn't empty), then reveal
 	-- it on the death screen scaled to 0 and grown by the hold interaction.
-	loadingSprite = nil
-	loadingSheet = nil
+	GameState.loadingSprite = nil
+	GameState.loadingSheet = nil
 	for _, ui in ipairs(uiSprites) do
 		if ui.sprite.object == "loading" then
-			loadingSprite = ui.sprite
-			loadingSheet = ui.sprite:findComponent("spritesheet")
-			loadingSprite.alpha = 0
+			GameState.loadingSprite = ui.sprite
+			GameState.loadingSheet = ui.sprite:findComponent("spritesheet")
+			GameState.loadingSprite.alpha = 0
 		end
 	end
 
 	-- Wire counter components to player sprite (event-driven, no polling)
-	if playerSprite then
+	if GameState.playerSprite then
 		for _, ui in ipairs(uiSprites) do
 			local counter = ui.sprite:findComponent("counter", function(c) return c.setPlayerSprite end)
 			if counter then
-				counter:setPlayerSprite(playerSprite)
+				counter:setPlayerSprite(GameState.playerSprite)
 			end
 		end
 
-		playerSprite:on(Events.VALUE_CHANGED, function(data)
+		GameState.playerSprite:on(Events.VALUE_CHANGED, function(data)
 			if data.field ~= "satiety" then
 				return
 			end
@@ -497,7 +494,7 @@ function initGame()
 			circleMaskTarget = target
 		end, 5)
 
-		playerSprite:on(Events.DEATH, function()
+		GameState.playerSprite:on(Events.DEATH, function()
 			Log.write("[DEATH] state=" .. state .. " -> dying, anim -> death")
 			-- Post-process stays ON: the CircleMask holds its satiety-0 radius on
 			-- the death screen, so do not flip setPostProcessEnabled here.
@@ -527,18 +524,18 @@ function initGame()
 			}
 			-- Force the anim via the event, not _state: Control is the sole writer
 			-- and never runs again once the world freezes, so the anim sticks.
-			playerSprite:emit(Events.STATE_CHANGED, "death")
+			GameState.playerSprite:emit(Events.STATE_CHANGED, "death")
 			pendingClearAttacker = true
 		end, 5)
 
 		-- The death anim is non-looping; the frame reaching its last index means
 		-- the collapse is done. The circle stays at its satiety-0 value — no
 		-- blackout.
-		playerSprite:on(Events.ANIM_FRAME, function(frameIndex)
+		GameState.playerSprite:on(Events.ANIM_FRAME, function(frameIndex)
 			if state ~= "dying" then
 				return
 			end
-			local ss = playerSprite:findComponent("spritesheet")
+			local ss = GameState.playerSprite:findComponent("spritesheet")
 			local anim = ss and ss.animations and ss.animations.death
 			if anim and frameIndex >= anim.frames then
 				state = "gameover"
@@ -572,8 +569,8 @@ local function resetGame()
 end
 
 local function triggerLoading(tag)
-	if loadingSprite then
-		local tw = loadingSprite:findComponent("tween")
+	if GameState.loadingSprite then
+		local tw = GameState.loadingSprite:findComponent("tween")
 		if tw then
 			tw:triggerTag(tag)
 		end
@@ -586,8 +583,8 @@ local function startLoadingHold()
 	end
 	holdActive = true
 	holdTimer = 0
-	if loadingSprite then
-		loadingSprite.alpha = 1
+	if GameState.loadingSprite then
+		GameState.loadingSprite.alpha = 1
 	end
 	triggerLoading("loading_in")
 end
@@ -637,13 +634,12 @@ end
 -- advances to the next candidate; a fresh edit resets the cycle. `completionActive`
 -- distinguishes "mid-cycle" (cycle the stored list) from a new completion (re-run
 -- Commands.complete on the current text, which narrows it).
-local completionBase = nil
 local completionCandidates = {}
 local completionIndex = 0
 local completionActive = false
 
 local function resetChatCompletion()
-	completionBase = nil
+	GameState.completionBase = nil
 	completionCandidates = {}
 	completionIndex = 0
 	completionActive = false
@@ -659,7 +655,7 @@ local function handleChatTab(backwards)
 		if #candidates == 0 then
 			return
 		end
-		completionBase = base
+		GameState.completionBase = base
 		completionCandidates = candidates
 		completionActive = true
 		completionIndex = backwards and #candidates or 1
@@ -677,7 +673,7 @@ local function handleChatTab(backwards)
 			completionIndex = completionIndex % n + 1
 		end
 	end
-	Debug.setChatText(completionBase .. completionCandidates[completionIndex])
+	Debug.setChatText(GameState.completionBase .. completionCandidates[completionIndex])
 end
 
 -- Unzoomed canvas blit origin (finalX/finalY in Canvas:draw). Shared by the zoom
@@ -691,10 +687,10 @@ end
 -- around the player rather than the fixed window center. Falls back to window center
 -- when there is no player.
 local function computeZoomPivot()
-	if playerSprite then
+	if GameState.playerSprite then
 		local s = canvas.scale
 		local bx, by = canvasBlitOrigin()
-		return bx + (playerSprite.x + camPixelX) * s, by + (playerSprite.y + camPixelY) * s
+		return bx + (GameState.playerSprite.x + camPixelX) * s, by + (GameState.playerSprite.y + camPixelY) * s
 	end
 	return love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.5
 end
@@ -801,8 +797,8 @@ function love.draw()
 		-- Static terrain (pre-ordered by generation — no sorting needed).
 		-- Drawn as one SpriteBatch call; the per-tile sprites stay in
 		-- staticObjects only for collision and gizmo overlays.
-		if terrainBatch then
-			love.graphics.draw(terrainBatch)
+		if GameState.terrainBatch then
+			love.graphics.draw(GameState.terrainBatch)
 		end
 
 		cullVisible()
@@ -960,19 +956,17 @@ end
 -- on press, then a fixed delay before repeats at a steady rate. One tracker
 -- covers backspace, the up/down history arrows, and Tab; the repeat action is
 -- stored with the held key.
-local chatRepeatKey = nil
 local chatRepeatTimer = 0
 local chatRepeatRepeating = false
-local chatRepeatAction = nil
 
 -- Run a chat key action once and arm the auto-repeat state. Shared by backspace,
 -- the up/down history arrows, and Tab so holding any of them repeats.
 local function startChatRepeat(key, action)
 	action()
-	chatRepeatKey = key
+	GameState.chatRepeatKey = key
 	chatRepeatTimer = 0
 	chatRepeatRepeating = false
-	chatRepeatAction = action
+	GameState.chatRepeatAction = action
 end
 
 function love.keypressed(key, _, _)
@@ -1062,10 +1056,10 @@ function love.textinput(text)
 end
 
 function love.keyreleased(key)
-	if key == chatRepeatKey then
-		chatRepeatKey = nil
+	if key == GameState.chatRepeatKey then
+		GameState.chatRepeatKey = nil
 		chatRepeatRepeating = false
-		chatRepeatAction = nil
+		GameState.chatRepeatAction = nil
 	end
 	if not Debug.chatActive() and bindingMatches(Options.keybinds.restart, "keyboard", key) then
 		handleRestartRelease()
@@ -1109,9 +1103,9 @@ local function updateHold(dt)
 	if holdActive then
 		holdTimer = holdTimer + dt
 		local progress = math.min(1, holdTimer / HOLD_DURATION)
-		if loadingSheet then
-			local numFrames = loadingSheet.columns or 1
-			loadingSheet:setFrame(math.min(numFrames - 1, math.floor(progress * numFrames)))
+		if GameState.loadingSheet then
+			local numFrames = GameState.loadingSheet.columns or 1
+			GameState.loadingSheet:setFrame(math.min(numFrames - 1, math.floor(progress * numFrames)))
 		end
 		if holdTimer >= HOLD_DURATION then
 			holdActive = false
@@ -1189,6 +1183,10 @@ function love.update(dt)
 		_needsRestart = false
 		Reset.all()
 		uiSprites = {}
+		GameState.playerSprite = nil
+		GameState.loadingSprite = nil
+		GameState.loadingSheet = nil
+		GameState.terrainBatch = nil
 		TimeScale.set(1)
 		Zoom.reset()
 		initGame()
@@ -1246,10 +1244,10 @@ function love.update(dt)
 	Destructible.clearDead()
 
 	for _, sprite in ipairs(Drop.getPending()) do
-		if playerSprite then
+		if GameState.playerSprite then
 			local follow = sprite:findComponent("follow", function(c) return c.setFollowTarget end)
 			if follow then
-				follow:setFollowTarget(playerSprite)
+				follow:setFollowTarget(GameState.playerSprite)
 			end
 		end
 		table.insert(objects, { instance = sprite, data = {} })
@@ -1320,12 +1318,12 @@ function love.update(dt)
 	-- The world update loop is frozen while dying, but the collapse anim and
 	-- shake must play out. Advance those manually — Control must not run, or it
 	-- would rewrite _state and move the player.
-	if state == "dying" and playerSprite then
-		local ss = playerSprite:findComponent("spritesheet")
+	if state == "dying" and GameState.playerSprite then
+		local ss = GameState.playerSprite:findComponent("spritesheet")
 		if ss and ss.update then
 			ss:update(dt)
 		end
-		local shk = playerSprite:findComponent("shake")
+		local shk = GameState.playerSprite:findComponent("shake")
 		if shk and shk.update then
 			shk:update(dt)
 		end
@@ -1355,27 +1353,27 @@ function love.update(dt)
 	TextEmitter.updateAll(scaledDt)
 	Debug.update(scaledDt)
 
-	if chatRepeatKey and Debug.chatActive() then
+	if GameState.chatRepeatKey and Debug.chatActive() then
 		chatRepeatTimer = chatRepeatTimer + dt
 		local delay = Debug.chatRepeatDelay()
 		local interval = Debug.chatRepeatInterval()
 		if not chatRepeatRepeating then
 			if chatRepeatTimer >= delay then
-				if chatRepeatAction then chatRepeatAction() end
+				if GameState.chatRepeatAction then GameState.chatRepeatAction() end
 				chatRepeatTimer = 0
 				chatRepeatRepeating = true
 			end
 		else
 			if chatRepeatTimer >= interval then
-				if chatRepeatAction then chatRepeatAction() end
+				if GameState.chatRepeatAction then GameState.chatRepeatAction() end
 				chatRepeatTimer = 0
 			end
 		end
 	else
-		chatRepeatKey = nil
+		GameState.chatRepeatKey = nil
 		chatRepeatTimer = 0
 		chatRepeatRepeating = false
-		chatRepeatAction = nil
+		GameState.chatRepeatAction = nil
 	end
 
 	-- Update UI sprites (for counter animations, etc.)
@@ -1389,8 +1387,8 @@ function love.update(dt)
 	if shakeComp and shakeComp.active then
 		shakeOffsetX = shakeComp.offsetX
 		shakeOffsetY = shakeComp.offsetY
-	elseif playerSprite then
-		local pshake = playerSprite:findComponent("shake")
+	elseif GameState.playerSprite then
+		local pshake = GameState.playerSprite:findComponent("shake")
 		if pshake and pshake.active then
 			shakeOffsetX = pshake.offsetX
 			shakeOffsetY = pshake.offsetY
@@ -1420,7 +1418,7 @@ function love.update(dt)
 			table.insert(objects, entry)
 		end
 	end
-	terrainBatch = WorldBuilder.getTerrainBatch()
+	GameState.terrainBatch = WorldBuilder.getTerrainBatch()
 
 	if propSpawnIndex <= #propSpawnPlan then
 		local budgetEnd = love.timer.getTime() + PROP_SPAWN_TIME_BUDGET

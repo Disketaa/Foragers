@@ -3,4 +3,5 @@
 /Foragers/.vscode
 /Foragers/node_modules/
 /Foragers/Tools/Builder/Output
+/Foragers/Tools/LuaAnalyzer/log
 /Workspace/
