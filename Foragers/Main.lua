@@ -42,6 +42,7 @@ local Zoom = require("Source.Helpers.Graphics.Zoom")
 local Math = require("Source.Helpers.Core.Math")
 local Input = require("Source.Helpers.Systems.Input")
 local Commands = require("Source.Helpers.Debug.Commands")
+local Camera = require("Source.Helpers.Graphics.Camera")
 local GameState = require("Source.Helpers.Systems.GameState")
 
 local objects = {}
@@ -51,7 +52,6 @@ local dynamicObjects = {}
 -- silhouette, shadow and main passes. Single AABB test per sprite, no sort
 -- change. Props fully outside the view are skipped in all passes.
 local visible = {}
-local CULL_MARGIN = 32
 local collisionScan = {}
 local function isNonSolidCollision(c)
 	return c.mode ~= "solid"
@@ -59,13 +59,13 @@ end
 local canvas = Canvas.new(320, 180, "outer")
 local bgCanvas = Canvas.new(320, 180, "outer")
 local cursorSprite = nil
-local cameraX = 0
-local cameraY = 0
-local camPixelX = 0
-local camPixelY = 0
-local camSubX = 0
-local camSubY = 0
-local scrollToComp = nil
+GameState.cameraX = 0
+GameState.cameraY = 0
+GameState.camPixelX = 0
+GameState.camPixelY = 0
+GameState.camSubX = 0
+GameState.camSubY = 0
+GameState.scrollToComp = nil
 local weaponSprite = nil
 -- Plain scene state (AGENTS §XII): "game" runs the world; "dying" freezes the
 -- world but keeps drawing it while the player plays the death anim; "gameover"
@@ -91,8 +91,8 @@ local playerStats = nil
 -- `if simulating` AttackSystem.update crash. Cleared after the camera/attack
 -- block, like the old deferred destruction.
 local pendingClearAttacker = false
-local shakeOffsetX = 0
-local shakeOffsetY = 0
+GameState.shakeOffsetX = 0
+GameState.shakeOffsetY = 0
 -- Canvas px, matches CircleMask's canvas-space math. Eased between satiety
 -- changes; snapped at the off/on boundary so entry/exit never sweeps through
 -- small (mostly-black) radii.
@@ -109,9 +109,6 @@ local ZOOM_SMOOTHNESS = Zoom.smoothness
 -- Hold the death screen (snapped zoom / low-sat look) for DEATH_REVEAL_DELAY
 -- before the reveal eases zoom / saturation / contrast back to normal.
 local DEATH_REVEAL_DELAY = 1.25
--- Forward declaration: defined as an assignment below so the debug `spawn` command's
--- mouseWorld accessor (built earlier) can close over the same binding.
-local screenToWorld
 local DEATH_REVEAL_DURATION = 2
 local DEATH_REVEAL_CURVE = "OutCubic"
 -- Grain fades from its current opacity to invisible over this window at death,
@@ -152,8 +149,8 @@ local uiSprites = {}
 -- the death screen, scaled in/out by the hold-to-restart interaction. Its frame
 -- tracks the hold progress (progress-to-frame, 1..numFrames).
 local tileSize = World.tileSize
-local worldPixelWidth = World.width * tileSize
-local worldPixelHeight = World.height * tileSize
+GameState.worldPixelWidth = World.width * tileSize
+GameState.worldPixelHeight = World.height * tileSize
 local lastFrameTime = 0
 -- GC pacing: LuaJIT has no "incremental" mode, so spread collection via a per-
 -- frame manual step; GC_STEP is the KB budget per frame. Tune up until spikes vanish.
@@ -166,24 +163,6 @@ local terrainIndex = 1
 local propSpawnPlan = {}
 local propSpawnIndex = 1
 
-local function updateCamera()
-	if scrollToComp then
-		local targetX, targetY = scrollToComp:getCameraOffset()
-		-- Center camera on target
-		cameraX = (canvas.width / 2) - targetX
-		cameraY = (canvas.height / 2) - targetY
-	else
-		-- fallback: center on world
-		cameraX = math.floor((canvas.width - worldPixelWidth) / 2)
-		cameraY = math.floor((canvas.height - worldPixelHeight) / 2)
-	end
-
-	-- Split into integer pixel offset + fractional sub-pixel remainder
-	camPixelX = math.floor(cameraX)
-	camPixelY = math.floor(cameraY)
-	camSubX = cameraX - camPixelX
-	camSubY = cameraY - camPixelY
-end
 
 local function getSpawnPosition(data)
 	if data.object == "player" then
@@ -401,7 +380,7 @@ function initGame()
 		end
 		local scrollComp = GameState.playerSprite:findComponent("scroll_to", function(c) return c.setFollowTarget end)
 		if scrollComp then
-			scrollToComp = scrollComp
+			GameState.scrollToComp = scrollComp
 			scrollComp:setFollowTarget(GameState.playerSprite)
 			scrollComp._currentX = GameState.playerSprite.x + (scrollComp.offsetX or 0)
 			scrollComp._currentY = GameState.playerSprite.y + (scrollComp.offsetY or 0)
@@ -414,7 +393,7 @@ function initGame()
 		playerSprite = GameState.playerSprite,
 	})
 
-	updateCamera()
+	Camera.update(canvas)
 
 	-- Cursor loaded separately: has no "ui" component, follows mouse instead of anchor.
 	local cursorData = require("Content.Assets.Sprites.UI.Cursor")
@@ -550,7 +529,7 @@ end
 function love.resize(w, h)
 	canvas:resize(w, h)
 	bgCanvas:resize(w, h)
-	updateCamera()
+	Camera.update(canvas)
 	for _, ui in ipairs(uiSprites) do
 		positionUI(ui)
 	end
@@ -625,7 +604,7 @@ local function commandsCtx()
 		mouseWorld = function()
 			local mx,
 		my = love.mouse.getPosition()
-			return screenToWorld(mx, my)
+			return Camera.screenToWorld(canvas, mx, my)
 		end,
 	}
 end
@@ -678,92 +657,32 @@ end
 
 -- Unzoomed canvas blit origin (finalX/finalY in Canvas:draw). Shared by the zoom
 -- coordinate transforms so mouse, gizmos and the pivot all agree with the render.
-local function canvasBlitOrigin()
-	local s = canvas.scale
-	return canvas.offsetX - s + shakeOffsetX + camSubX * s, canvas.offsetY - s + shakeOffsetY + camSubY * s
-end
 
 -- Zoom pivot: the player's on-screen position (unzoomed), so output zoom magnifies
 -- around the player rather than the fixed window center. Falls back to window center
 -- when there is no player.
-local function computeZoomPivot()
-	if GameState.playerSprite then
-		local s = canvas.scale
-		local bx, by = canvasBlitOrigin()
-		return bx + (GameState.playerSprite.x + camPixelX) * s, by + (GameState.playerSprite.y + camPixelY) * s
-	end
-	return love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.5
-end
 
 -- Inverse of the render chain. Output zoom scales the canvas blit about the pivot:
 -- screen = pivot + (finalX + (p + camPixel)*scale - pivot) * zoom.
-screenToWorld = function(screenX, screenY)
-	local z = Zoom.current
-	local px, py = computeZoomPivot()
-	local bx, by = canvasBlitOrigin()
-	local pcx = ((screenX - px) / z + px - bx) / canvas.scale
-	local pcy = ((screenY - py) / z + py - by) / canvas.scale
-	return pcx - camPixelX, pcy - camPixelY
-end
 
 -- Forward of the render chain: screen = pivot + (finalX + (wx + camPixel)*scale - pivot)*zoom.
 -- Mirrors Canvas:draw's placement so gizmo rects land on the exact pixels the
 -- world canvas occupies, at native resolution.
-local function worldToScreen(wx, wy)
-	local s = canvas.scale
-	local z = Zoom.current
-	local px, py = computeZoomPivot()
-	local bx, by = canvasBlitOrigin()
-	local cx = bx + (wx + camPixelX) * s
-	local cy = by + (wy + camPixelY) * s
-	return (cx - px) * z + px, (cy - py) * z + py
-end
 
 --- Fill `visible` with the entries whose frame box intersects the camera view,
 --- expanded by CULL_MARGIN to avoid boundary flicker. Same box math as the
 --- gizmo boundaries overlay. Runs once per frame; all draw passes reuse it.
-local function cullVisible()
-	-- View rect in world space (world→screen adds camPixelX/Y, canvas clips to view).
-	-- Zoom happens at the canvas blit, so the world view never changes — no cull change needed.
-	local vx = -camPixelX - CULL_MARGIN
-	local vy = -camPixelY - CULL_MARGIN
-	local vw = canvas.width + CULL_MARGIN * 2
-	local vh = canvas.height + CULL_MARGIN * 2
-	local n = 0
-	for i = 1, #dynamicObjects do
-		local s = dynamicObjects[i].instance
-		if s then
-			local w = s.frameWidth or (s.image and s.image:getWidth() or 0) or 0
-			local h = s.frameHeight or (s.image and s.image:getHeight() or 0) or 0
-			if w > 0 and h > 0 then
-				local bx = s.x - Pivot.px(s.pivotX, w, 0)
-				local by = s.y - Pivot.px(s.pivotY, h, 0)
-				if bx + w >= vx and bx <= vx + vw and by + h >= vy and by <= vy + vh then
-					n = n + 1
-					visible[n] = dynamicObjects[i]
-				end
-			else
-				-- No frame box known: keep it (player, cursor-like, etc.).
-				n = n + 1
-				visible[n] = dynamicObjects[i]
-			end
-		end
-	end
-	for i = n + 1, #visible do
-		visible[i] = nil
-	end
-end
 
 function love.draw()
 	Snapshot.markDrawStart()
-	ShaderLoader.setCamera(camPixelX, camPixelY)
+	ShaderLoader.setCamera(GameState.camPixelX, GameState.camPixelY)
 	local zoom = Zoom.current
-	local zpx, zpy = computeZoomPivot()
+	local zpx, zpy = Camera.computeZoomPivot(canvas)
 	local isDead = state == "gameover"
 
 	-- CircleMask maps window px back to canvas px; needs the blit transform
 	-- (scale x zoom about the pivot), which changes every frame.
-	local bx, by = canvasBlitOrigin()
+	local bx, by = Camera.canvasBlitOrigin(canvas)
 	ShaderLoader.setScreenTransform(canvas.scale * zoom, zpx + (bx - zpx) * zoom, zpy + (by - zpy) * zoom)
 
 	-- The world render must not inherit the color the HUD/Debug left on the
@@ -777,10 +696,10 @@ function love.draw()
 			ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
 		end,
 		World.backgroundColor,
-		shakeOffsetX,
-		shakeOffsetY,
-		camSubX,
-		camSubY,
+		GameState.shakeOffsetX,
+		GameState.shakeOffsetY,
+		GameState.camSubX,
+		GameState.camSubY,
 		ShaderLoader.getPostProcess(),
 		zoom,
 		zpx,
@@ -792,7 +711,7 @@ function love.draw()
 	-- the closing CircleMask blackens it. No separate black-cleared death layer.
 	canvas:draw(function()
 		love.graphics.push()
-		love.graphics.translate(camPixelX, camPixelY)
+		love.graphics.translate(GameState.camPixelX, GameState.camPixelY)
 
 		-- Static terrain (pre-ordered by generation — no sorting needed).
 		-- Drawn as one SpriteBatch call; the per-tile sprites stay in
@@ -801,14 +720,14 @@ function love.draw()
 			love.graphics.draw(GameState.terrainBatch)
 		end
 
-		cullVisible()
+		Camera.cullVisible(canvas, dynamicObjects, visible)
 
-		Mask.renderSilhouette(visible, canvas.width, canvas.height, camPixelX, camPixelY)
+		Mask.renderSilhouette(visible, canvas.width, canvas.height, GameState.camPixelX, GameState.camPixelY)
 
 		-- Shadow layer: all shadows drawn opaque onto one layer, composited once
 		-- at low alpha (union, not additive). Drawn AFTER terrain so shadows sit
 		-- on top of tiles, but BEFORE dynamic sprites.
-		Shadow.renderLayer(visible, canvas.width, canvas.height, camPixelX, camPixelY)
+		Shadow.renderLayer(visible, canvas.width, canvas.height, GameState.camPixelX, GameState.camPixelY)
 
 		ParticleEmitter.drawBurstsBehind()
 		ParticleEmitter.drawDetachedBehind()
@@ -835,7 +754,7 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, nil, shakeOffsetX, shakeOffsetY, camSubX, camSubY,
+	end, nil, GameState.shakeOffsetX, GameState.shakeOffsetY, GameState.camSubX, GameState.camSubY,
 	ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
@@ -885,7 +804,7 @@ function love.draw()
 				groups[name] = Debug.settings("gizmo." .. name)
 			end
 		end
-		Gizmo.draw(worldToScreen, groups)
+		Gizmo.draw(function(wx, wy) return Camera.worldToScreen(canvas, wx, wy) end, groups)
 	end
 	Gizmo.clear()
 
@@ -1288,7 +1207,7 @@ function love.update(dt)
 	ShaderLoader.sendUniform("u_circleRadius", circleMaskRadius)
 	if simulating then
 	local mouseX, mouseY = love.mouse.getPosition()
-	local worldX, worldY = screenToWorld(mouseX, mouseY)
+	local worldX, worldY = Camera.screenToWorld(canvas, mouseX, mouseY)
 	local moveMouse = (Options.keybinds.moveMouse and Options.keybinds.moveMouse.mouse) or { 1 }
 	local isMouseDown = love.mouse.isDown(unpack(moveMouse))
 
@@ -1331,10 +1250,10 @@ function love.update(dt)
 
 	-- Update camera from scroll_to component
 	if simulating then
-	if scrollToComp then
-		scrollToComp:update(scaledDt)
+	if GameState.scrollToComp then
+		GameState.scrollToComp:update(scaledDt)
 	end
-	updateCamera()
+	Camera.update(canvas)
 
 	AttackSystem.update(scaledDt, dynamicObjects)
 	end -- world camera/attack
@@ -1385,20 +1304,20 @@ function love.update(dt)
 
 	local shakeComp = weaponSprite and weaponSprite:findComponent("shake") or nil
 	if shakeComp and shakeComp.active then
-		shakeOffsetX = shakeComp.offsetX
-		shakeOffsetY = shakeComp.offsetY
+		GameState.shakeOffsetX = shakeComp.offsetX
+		GameState.shakeOffsetY = shakeComp.offsetY
 	elseif GameState.playerSprite then
 		local pshake = GameState.playerSprite:findComponent("shake")
 		if pshake and pshake.active then
-			shakeOffsetX = pshake.offsetX
-			shakeOffsetY = pshake.offsetY
+			GameState.shakeOffsetX = pshake.offsetX
+			GameState.shakeOffsetY = pshake.offsetY
 		else
-			shakeOffsetX = 0
-			shakeOffsetY = 0
+			GameState.shakeOffsetX = 0
+			GameState.shakeOffsetY = 0
 		end
 	else
-		shakeOffsetX = 0
-		shakeOffsetY = 0
+		GameState.shakeOffsetX = 0
+		GameState.shakeOffsetY = 0
 	end
 
 	-- Stream the initial terrain plan in over frames (nearest-first, so ground
