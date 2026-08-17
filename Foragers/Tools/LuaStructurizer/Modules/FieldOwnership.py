@@ -31,7 +31,7 @@ def check(text, path, config):
     n = len(lines)
     i = 0
     while i < n:
-        if re.match(r"\s*(local\s+)?function\s+[\w.:]*update\b", lines[i]):
+        if re.match(r"\s*(local\s+)?function\s+[\w.:]*[Uu]pdate\w*\b", lines[i]):
             start = i
             end = find_block_end(lines, i)
             end = min(end, len(lines) - 1)
