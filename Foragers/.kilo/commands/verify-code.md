@@ -12,7 +12,7 @@ List every .lua created/modified this task. Checklist runs **per file**, not who
 ## Step 1.5 Lint (nil checks live here)
 Run the LuaLS static check — it surfaces `need-check-nil` and type warnings across all files:
 ```
-powershell.exe -ExecutionPolicy Bypass -File Tools/lua-ls-check.ps1
+powershell.exe -ExecutionPolicy Bypass -File Tools/LuaAnalyzer/check.ps1
 ```
 (or VS Code task `LuaLS Check`). Fix every `need-check-nil` (real latent bug) and undefined-field warning.
 Also run luacheck for style/global leaks: `.\Tools\luacheck.exe Source/`. Fix all warnings before proceeding.

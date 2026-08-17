@@ -1,0 +1,346 @@
+[06:11:04.447][info] [#0:C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer\main.lua:71]: Lua Lsp startup, root: 	C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer
+[06:11:04.448][info] [#0:C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer\main.lua:72]: ROOT:	C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer
+[06:11:04.448][info] [#0:C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer\main.lua:73]: LOGPATH:	C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer/log
+[06:11:04.448][info] [#0:C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer\main.lua:74]: METAPATH:	C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta
+[06:11:04.448][info] [#0:C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer\main.lua:75]: VERSION:	3.19.1
+[06:11:04.492][info] [#0:script\language.lua:137]: VSC language: nil
+[06:11:04.492][info] [#0:script\language.lua:138]: LS  language: en-us
+[06:11:04.492][info] [#0:script\client.lua:657]: Client init	{
+  capabilities = {
+    textDocument = {
+      completion = {
+        completionItem = {
+          tagSupport = {
+            valueSet = { 1, 2 }
+          }
+        }
+      }
+    },
+    workspace = {
+      configuration = true
+    }
+  },
+  initializationOptions = {
+    changeConfiguration = true,
+    trustByClient = true,
+    useSemanticByRange = true,
+    viewDocument = true
+  },
+  rootUri = "file:///c%3A/Projects/Foragers/Foragers"
+}
+[06:11:04.492][info] [#0:script\language.lua:137]: VSC language: nil
+[06:11:04.492][info] [#0:script\language.lua:138]: LS  language: en-us
+[06:11:04.492][info] [#0:script\workspace\workspace.lua:38]: Workspace init root: 	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.492][info] [#0:script\workspace\workspace.lua:42]: Log path: 	C:/Projects/Foragers/Foragers/Tools/LuaAnalyzer/log/file_c%3A_Projects_Foragers_Foragers.log
+[06:11:04.508][info] [#0:script\workspace\workspace.lua:48]: Workspace create: 	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.509][warn] [#0:script\config\loader.lua:99]: No config?	nil
+[06:11:04.509][info] [#0:script\provider\provider.lua:56]: Load config from .luarc.json/.luarc.jsonc	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.510][info] [#0:script\provider\provider.lua:57]: {
+  ["diagnostics.enable"] = true,
+  ["diagnostics.globals"] = { "love", "utf8" },
+  ["diagnostics.neededFileStatus"] = {
+    ["nil-type-mismatch"] = "Warning",
+    ["param-type-mismatch"] = "Warning",
+    ["redefined-global"] = "Warning",
+    ["undefined-global"] = "Warning",
+    ["unused-local"] = "Warning"
+  },
+  ["runtime.path"] = { "?.lua", "?/init.lua" },
+  ["runtime.version"] = "LuaJIT",
+  ["workspace.ignoreDir"] = { ".git", ".kilo" },
+  ["workspace.library"] = { "${3rd}/love2d/library" }
+}
+[06:11:04.510][warn] [#0:script\config\loader.lua:99]: No config?	nil
+[06:11:04.510][info] [#0:script\provider\provider.lua:65]: Load config from client	fallback
+[06:11:04.510][info] [#0:script\provider\provider.lua:66]: nil
+[06:11:04.510][info] [#0:script\library.lua:216]: Init builtin library at:	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.537][info] [#0:script\library.lua:216]: Init builtin library at:	nil
+[06:11:04.551][warn] [#0:script\config\loader.lua:99]: No config?	nil
+[06:11:04.551][info] [#0:script\provider\provider.lua:56]: Load config from .luarc.json/.luarc.jsonc	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.551][info] [#0:script\provider\provider.lua:57]: {
+  ["diagnostics.enable"] = true,
+  ["diagnostics.globals"] = { "love", "utf8" },
+  ["diagnostics.neededFileStatus"] = {
+    ["nil-type-mismatch"] = "Warning",
+    ["param-type-mismatch"] = "Warning",
+    ["redefined-global"] = "Warning",
+    ["undefined-global"] = "Warning",
+    ["unused-local"] = "Warning"
+  },
+  ["runtime.path"] = { "?.lua", "?/init.lua" },
+  ["runtime.version"] = "LuaJIT",
+  ["workspace.ignoreDir"] = { ".git", ".kilo" },
+  ["workspace.library"] = { "${3rd}/love2d/library" }
+}
+[06:11:04.552][warn] [#0:script\config\loader.lua:99]: No config?	nil
+[06:11:04.552][info] [#0:script\provider\provider.lua:65]: Load config from client	fallback
+[06:11:04.552][info] [#0:script\provider\provider.lua:66]: nil
+[06:11:04.552][info] [#0:script\workspace\workspace.lua:340]: Preload start:	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.556][info] [#0:script\workspace\workspace.lua:346]: Scan files at:	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.571][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table/new.lua
+[06:11:04.571][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/coroutine.lua
+[06:11:04.571][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/string/buffer.lua
+[06:11:04.572][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/math.lua
+[06:11:04.572][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/io.lua
+[06:11:04.572][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/bit.lua
+[06:11:04.572][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/debug.lua
+[06:11:04.572][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit/profile.lua
+[06:11:04.572][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/string.lua
+[06:11:04.572][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit/util.lua
+[06:11:04.573][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/basic.lua
+[06:11:04.573][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit.lua
+[06:11:04.573][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table/clear.lua
+[06:11:04.573][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table.lua
+[06:11:04.573][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/builtin.lua
+[06:11:04.573][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/package.lua
+[06:11:04.573][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/os.lua
+[06:11:04.574][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.575][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/ffi.lua
+[06:11:04.575][info] [#0:script\workspace\workspace.lua:340]: Preload start:	<fallback>
+[06:11:04.577][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/debug.lua
+[06:11:04.577][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/io.lua
+[06:11:04.577][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/table.lua
+[06:11:04.577][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/coroutine.lua
+[06:11:04.577][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/utf8.lua
+[06:11:04.578][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/package.lua
+[06:11:04.578][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/string.lua
+[06:11:04.578][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/os.lua
+[06:11:04.578][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/builtin.lua
+[06:11:04.578][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/math.lua
+[06:11:04.578][info] [#0:script\workspace\workspace.lua:369]: Scan library at:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/basic.lua
+[06:11:04.578][info] [#0:script\workspace\workspace.lua:397]: Found 164 files at:	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.578][info] [#0:script\workspace\loading.lua:160]: Load files from disk:	file:///c%3A/Projects/Foragers/Foragers
+[06:11:04.579][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/ffi.lua , size = 2.529 KB
+[06:11:04.582][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/ffi.lua
+[06:11:04.582][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/audio.lua , size = 34.357 KB
+[06:11:04.602][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.603][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/data.lua , size = 9.907 KB
+[06:11:04.607][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.608][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/event.lua , size = 4.802 KB
+[06:11:04.610][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.611][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/filesystem.lua , size = 23.353 KB
+[06:11:04.624][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.625][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/font.lua , size = 7.861 KB
+[06:11:04.632][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.633][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/graphics.lua , size = 163.874 KB
+[06:11:04.715][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.715][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/image.lua , size = 22.051 KB
+[06:11:04.723][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.724][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/joystick.lua , size = 14.642 KB
+[06:11:04.730][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.730][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/keyboard.lua , size = 24.166 KB
+[06:11:04.743][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.743][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/math.lua , size = 30.446 KB
+[06:11:04.759][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.759][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/mouse.lua , size = 9.033 KB
+[06:11:04.764][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.764][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/physics.lua , size = 112.545 KB
+[06:11:04.827][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.828][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/sound.lua , size = 5.984 KB
+[06:11:04.831][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.831][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/system.lua , size = 3.716 KB
+[06:11:04.834][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.834][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/thread.lua , size = 7.288 KB
+[06:11:04.837][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.837][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/timer.lua , size = 1.793 KB
+[06:11:04.838][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.838][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/touch.lua , size = 1.495 KB
+[06:11:04.839][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.839][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/video.lua , size = 2.432 KB
+[06:11:04.840][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.841][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love/window.lua , size = 18.382 KB
+[06:11:04.848][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.848][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library/love.lua , size = 11.151 KB
+[06:11:04.853][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/3rd/love2d/library
+[06:11:04.853][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/os.lua , size = 5.872 KB
+[06:11:04.857][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/os.lua
+[06:11:04.857][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/package.lua , size = 2.805 KB
+[06:11:04.858][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/package.lua
+[06:11:04.858][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/builtin.lua , size = 0.302 KB
+[06:11:04.859][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/builtin.lua
+[06:11:04.859][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table.lua , size = 5.134 KB
+[06:11:04.862][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table.lua
+[06:11:04.863][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table/clear.lua , size = 0.806 KB
+[06:11:04.863][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table/clear.lua
+[06:11:04.863][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit.lua , size = 0.884 KB
+[06:11:04.864][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit.lua
+[06:11:04.864][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/basic.lua , size = 16.495 KB
+[06:11:04.872][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/basic.lua
+[06:11:04.873][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit/util.lua , size = 1.984 KB
+[06:11:04.875][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit/util.lua
+[06:11:04.875][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/string.lua , size = 6.591 KB
+[06:11:04.879][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/string.lua
+[06:11:04.879][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit/profile.lua , size = 0.348 KB
+[06:11:04.879][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/jit/profile.lua
+[06:11:04.879][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/debug.lua , size = 7.485 KB
+[06:11:04.885][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/debug.lua
+[06:11:04.885][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/bit.lua , size = 1.243 KB
+[06:11:04.886][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/bit.lua
+[06:11:04.886][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/io.lua , size = 6.566 KB
+[06:11:04.890][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/io.lua
+[06:11:04.890][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/math.lua , size = 8.332 KB
+[06:11:04.895][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/math.lua
+[06:11:04.895][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/string/buffer.lua , size = 18.057 KB
+[06:11:04.900][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/string/buffer.lua
+[06:11:04.900][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/coroutine.lua , size = 2.620 KB
+[06:11:04.901][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/coroutine.lua
+[06:11:04.901][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table/new.lua , size = 0.650 KB
+[06:11:04.902][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/LuaJIT%20en-us%20utf8/table/new.lua
+[06:11:04.902][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/conf.lua , size = 0.153 KB
+[06:11:04.903][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Background/Caustic.lua , size = 2.893 KB
+[06:11:04.904][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Color/Brightness.lua , size = 0.415 KB
+[06:11:04.904][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Color/CircleMask.lua , size = 1.273 KB
+[06:11:04.905][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Color/Darken.lua , size = 0.255 KB
+[06:11:04.905][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Color/Noise.lua , size = 0.987 KB
+[06:11:04.906][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Color/Posterize.lua , size = 0.505 KB
+[06:11:04.907][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Color/Saturation.lua , size = 0.339 KB
+[06:11:04.907][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Color/Silhouette.lua , size = 0.505 KB
+[06:11:04.908][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/Color/Tint.lua , size = 0.465 KB
+[06:11:04.909][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Shaders/UV/Skew.lua , size = 0.769 KB
+[06:11:04.909][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Character/Character.lua , size = 4.038 KB
+[06:11:04.912][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/Berries.lua , size = 0.217 KB
+[06:11:04.912][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/BrownMushroom.lua , size = 0.389 KB
+[06:11:04.913][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/Carrot.lua , size = 0.162 KB
+[06:11:04.913][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/MediumCrystal.lua , size = 0.236 KB
+[06:11:04.914][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/RedMushroom.lua , size = 0.388 KB
+[06:11:04.914][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/SmallCrystal.lua , size = 0.187 KB
+[06:11:04.915][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/Snail.lua , size = 0.380 KB
+[06:11:04.915][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/Turnip.lua , size = 0.218 KB
+[06:11:04.916][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/_Crystals.lua , size = 0.549 KB
+[06:11:04.916][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/_Foods.lua , size = 0.712 KB
+[06:11:04.917][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Drops/__Drops.lua , size = 1.413 KB
+[06:11:04.918][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/BrownMushrooms.lua , size = 0.257 KB
+[06:11:04.919][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/CharacterDeath.lua , size = 0.320 KB
+[06:11:04.919][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/Crosshair.lua , size = 0.232 KB
+[06:11:04.920][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/CrystalSpark.lua , size = 0.254 KB
+[06:11:04.921][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/Dust.lua , size = 0.231 KB
+[06:11:04.922][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/HungerEmoteBubble.lua , size = 0.658 KB
+[06:11:04.923][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/Leaves.lua , size = 0.256 KB
+[06:11:04.923][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/RedMushrooms.lua , size = 0.257 KB
+[06:11:04.923][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/Shells.lua , size = 0.257 KB
+[06:11:04.924][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/SmallExplosion.lua , size = 0.248 KB
+[06:11:04.924][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/Spark.lua , size = 0.247 KB
+[06:11:04.925][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Particles/Swing.lua , size = 0.251 KB
+[06:11:04.926][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/Berries.lua , size = 0.798 KB
+[06:11:04.926][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/BirchStump.lua , size = 0.086 KB
+[06:11:04.927][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/BirchTree.lua , size = 0.297 KB
+[06:11:04.927][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/BrownMushroom.lua , size = 0.794 KB
+[06:11:04.928][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/Bush.lua , size = 0.063 KB
+[06:11:04.929][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/Carrot.lua , size = 0.304 KB
+[06:11:04.929][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/OakStump.lua , size = 0.084 KB
+[06:11:04.929][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/OakTree.lua , size = 0.062 KB
+[06:11:04.930][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/RedMushroom.lua , size = 0.793 KB
+[06:11:04.931][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/Rocks.lua , size = 0.885 KB
+[06:11:04.932][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/Snail.lua , size = 0.781 KB
+[06:11:04.932][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/Turnip.lua , size = 0.304 KB
+[06:11:04.933][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/_Bushes.lua , size = 1.166 KB
+[06:11:04.934][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/_Stumps.lua , size = 0.752 KB
+[06:11:04.934][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/_Trees.lua , size = 1.549 KB
+[06:11:04.936][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/_Vegetables.lua , size = 0.891 KB
+[06:11:04.937][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Props/__Props.lua , size = 2.030 KB
+[06:11:04.939][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Tiles/GrassTiles.lua , size = 0.377 KB
+[06:11:04.939][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/Tools/Pickaxe.lua , size = 1.412 KB
+[06:11:04.940][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/UI/Cursor.lua , size = 0.413 KB
+[06:11:04.941][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/UI/ExperienceBar.lua , size = 1.229 KB
+[06:11:04.942][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/UI/Loading.lua , size = 0.894 KB
+[06:11:04.943][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/UI/SatietyBar.lua , size = 0.964 KB
+[06:11:04.944][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/UI/SpriteFonts/Tinylorder.lua , size = 0.537 KB
+[06:11:04.945][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Assets/Sprites/UI/TimeBar.lua , size = 0.772 KB
+[06:11:04.946][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Data/Debug.lua , size = 1.756 KB
+[06:11:04.948][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Data/DiscordRPC.lua , size = 0.242 KB
+[06:11:04.948][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Data/Options.lua , size = 1.192 KB
+[06:11:04.949][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Content/Data/World.lua , size = 1.265 KB
+[06:11:04.951][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Main.lua , size = 51.265 KB
+[06:11:04.993][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/ComponentRegistry.lua , size = 2.534 KB
+[06:11:04.995][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/EventEmitter.lua , size = 1.026 KB
+[06:11:04.997][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/Events.lua , size = 0.674 KB
+[06:11:04.998][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/JSON.lua , size = 5.729 KB
+[06:11:05.002][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/Log.lua , size = 1.515 KB
+[06:11:05.004][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/Math.lua , size = 0.282 KB
+[06:11:05.004][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/Merge.lua , size = 4.419 KB
+[06:11:05.007][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/Path.lua , size = 1.569 KB
+[06:11:05.009][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/Pivot.lua , size = 0.938 KB
+[06:11:05.010][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Core/ValueParser.lua , size = 2.880 KB
+[06:11:05.012][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Debug/ChatHistory.lua , size = 2.209 KB
+[06:11:05.014][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Debug/Commands.lua , size = 9.421 KB
+[06:11:05.022][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Debug/Debug.lua , size = 31.604 KB
+[06:11:05.047][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Debug/Gizmo.lua , size = 5.539 KB
+[06:11:05.051][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Debug/Snapshot.lua , size = 6.634 KB
+[06:11:05.055][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Graphics/Canvas.lua , size = 6.633 KB
+[06:11:05.063][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Graphics/DrawOrder.lua , size = 0.780 KB
+[06:11:05.064][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Graphics/Mask.lua , size = 2.646 KB
+[06:11:05.066][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Graphics/ShaderLoader.lua , size = 7.753 KB
+[06:11:05.070][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Graphics/Zoom.lua , size = 1.136 KB
+[06:11:05.071][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Systems/AttackSystem.lua , size = 6.789 KB
+[06:11:05.075][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Systems/DiscordRPC.lua , size = 9.239 KB
+[06:11:05.083][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Systems/Input.lua , size = 2.347 KB
+[06:11:05.084][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Systems/ModLoader.lua , size = 0.796 KB
+[06:11:05.085][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Systems/Options.lua , size = 3.778 KB
+[06:11:05.088][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Systems/Reset.lua , size = 1.436 KB
+[06:11:05.089][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Helpers/Systems/TimeScale.lua , size = 0.718 KB
+[06:11:05.089][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Collision.lua , size = 6.205 KB
+[06:11:05.094][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Control.lua , size = 7.582 KB
+[06:11:05.102][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Cursor.lua , size = 1.655 KB
+[06:11:05.103][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Destructible.lua , size = 1.047 KB
+[06:11:05.104][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Drop.lua , size = 2.537 KB
+[06:11:05.106][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Emote.lua , size = 7.543 KB
+[06:11:05.112][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Follow.lua , size = 8.429 KB
+[06:11:05.120][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/ParticleEmitter.lua , size = 10.371 KB
+[06:11:05.128][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Pickup.lua , size = 1.133 KB
+[06:11:05.129][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/PlayerStats.lua , size = 11.923 KB
+[06:11:05.140][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/ScrollTo.lua , size = 1.880 KB
+[06:11:05.141][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Shader.lua , size = 3.504 KB
+[06:11:05.144][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Shadow.lua , size = 3.823 KB
+[06:11:05.147][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Shake.lua , size = 1.393 KB
+[06:11:05.149][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Silhouette.lua , size = 0.470 KB
+[06:11:05.149][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Sound.lua , size = 5.062 KB
+[06:11:05.155][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/SpriteFont.lua , size = 4.354 KB
+[06:11:05.159][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/SpriteSheet.lua , size = 8.674 KB
+[06:11:05.167][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Tween.lua , size = 11.231 KB
+[06:11:05.182][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Components/Weapon.lua , size = 0.829 KB
+[06:11:05.183][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/Sprite.lua , size = 7.264 KB
+[06:11:05.190][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/Sprite/SpriteLoader.lua , size = 2.925 KB
+[06:11:05.193][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/UI/Components/Counter.lua , size = 8.299 KB
+[06:11:05.200][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/UI/Components/TextEmitter.lua , size = 4.927 KB
+[06:11:05.204][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/UI/Components/UI.lua , size = 1.239 KB
+[06:11:05.206][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/UI/Text.lua , size = 1.962 KB
+[06:11:05.208][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/World/HostRegistry.lua , size = 2.381 KB
+[06:11:05.210][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/World/Overlay.lua , size = 4.588 KB
+[06:11:05.214][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/World/PropPicker.lua , size = 7.859 KB
+[06:11:05.219][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/World/PropSpawner.lua , size = 3.509 KB
+[06:11:05.221][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/World/PropWire.lua , size = 2.218 KB
+[06:11:05.223][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/World/TilePalette.lua , size = 0.386 KB
+[06:11:05.224][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/World/WorldBuilder.lua , size = 12.929 KB
+[06:11:05.234][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Source/World/WorldGen.lua , size = 1.869 KB
+[06:11:05.236][info] [#0:script\workspace\loading.lua:172]: Loaded files takes [0.657] sec: file:///c%3A/Projects/Foragers/Foragers
+[06:11:05.236][info] [#0:script\workspace\loading.lua:181]: Compile files takes [0.000] sec: file:///c%3A/Projects/Foragers/Foragers
+[06:11:05.236][info] [#0:script\workspace\loading.lua:182]: Loaded finish:	file:///c%3A/Projects/Foragers/Foragers
+[06:11:05.236][info] [#0:script\workspace\workspace.lua:399]: Preload finish at:	file:///c%3A/Projects/Foragers/Foragers
+[06:11:08.157][info] [#0:script\workspace\workspace.lua:397]: Found 11 files at:	<fallback>
+[06:11:08.157][info] [#0:script\workspace\loading.lua:160]: Load files from disk:	<fallback>
+[06:11:08.157][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/basic.lua , size = 17.708 KB
+[06:11:08.176][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/basic.lua
+[06:11:08.176][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/math.lua , size = 8.909 KB
+[06:11:08.181][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/math.lua
+[06:11:08.181][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/builtin.lua , size = 0.302 KB
+[06:11:08.182][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/builtin.lua
+[06:11:08.182][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/os.lua , size = 5.872 KB
+[06:11:08.185][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/os.lua
+[06:11:08.185][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/string.lua , size = 6.608 KB
+[06:11:08.189][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/string.lua
+[06:11:08.189][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/package.lua , size = 3.050 KB
+[06:11:08.190][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/package.lua
+[06:11:08.190][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/utf8.lua , size = 2.448 KB
+[06:11:08.192][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/utf8.lua
+[06:11:08.192][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/coroutine.lua , size = 2.669 KB
+[06:11:08.194][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/coroutine.lua
+[06:11:08.194][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/table.lua , size = 5.134 KB
+[06:11:08.197][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/table.lua
+[06:11:08.197][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/io.lua , size = 6.566 KB
+[06:11:08.208][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/io.lua
+[06:11:08.208][info] [#0:script\workspace\loading.lua:100]: Preload file at: file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/debug.lua , size = 7.812 KB
+[06:11:08.213][info] [#0:script\workspace\loading.lua:112]: ++++As library of:	file:///c%3A/Projects/Foragers/Foragers/Tools/LuaAnalyzer/meta/Lua%205.4%20en-us%20utf8/debug.lua
+[06:11:08.213][info] [#0:script\workspace\loading.lua:172]: Loaded files takes [0.056] sec: <fallback>
+[06:11:08.213][info] [#0:script\workspace\loading.lua:181]: Compile files takes [0.000] sec: <fallback>
+[06:11:08.213][info] [#0:script\workspace\loading.lua:182]: Loaded finish:	<fallback>
+[06:11:08.213][info] [#0:script\workspace\workspace.lua:399]: Preload finish at:	<fallback>

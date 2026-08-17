@@ -1,9 +1,0 @@
-# LuaAnalyzer CLI artifacts
-log/
-meta/
-
-# Bundled language-server binary (not committed)
-Tools/LuaAnalyzer/
-
-# Vendored third-party debugger (kept tracked by git, excluded from LuaLS scan)
-lldebugger.lua
