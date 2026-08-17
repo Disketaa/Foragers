@@ -48,3 +48,7 @@ severity = "error"
 [Rules.LocalScanOutsideCore]
 enabled = true
 severity = "error"
+
+[Rules.DuplicateLogCall]
+enabled = true
+severity = "warn"
