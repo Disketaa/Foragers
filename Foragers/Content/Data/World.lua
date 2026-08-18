@@ -3,7 +3,7 @@ return {
 	width = 15,
 	height = 15,
 	tileSize = 8,
-	backgroundColor = { 0.21, 0.6, 0.72 },
+	backgroundColor = { 0.21, 0.61, 0.7 },
 	borderTileOffset = 8,
 	noise = { scale = 0.15, detail = 0.3, density = 0.8 },
 	dayCycle = {
@@ -11,7 +11,7 @@ return {
 		sunriseHour = 6,
 		sunsetHour = 18,
 		smoothness = 0.15,
-		shadow = { maxLen = 4, stretchPx = 8, stretchWindow = 0.125, stretchPower = 4 },
+		shadow = { maxLen = 4, stretchPx = 8, stretchWindow = 0.125, stretchPower = 4, timeShiftPerPx = 0.001, worldCenterX = 0 },
 	},
 
 	props = {

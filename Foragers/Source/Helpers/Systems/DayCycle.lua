@@ -13,8 +13,9 @@ local DayCycle = {
 	time = 12,
 	emitter = EventEmitter.new(),
 	-- Smoothed render target, eased toward getSunData(time) every frame so the
-	-- shadow doesn't teleport on scrub/`time` jumps. Reused table (no per-frame alloc).
-	display = { offsetX = 0, offsetY = 0, sunLength = 0, isDay = false, alpha = 0 },
+	-- shadow doesn't teleport on scrub/time jumps. `time` is the eased clock Shadow
+	-- phase-shifts per prop (see Shadow.renderLayer). Reused table (no per-frame alloc).
+	display = { offsetX = 0, offsetY = 0, sunLength = 0, isDay = false, alpha = 0, time = 12 },
 }
 
 local lastMinute = -1
@@ -118,6 +119,10 @@ function DayCycle._approachDisplay(dt)
 	local target = DayCycle.getSunData(DayCycle.time)
 	local tau = Data.smoothness or 0.3
 	local d = DayCycle.display
+	-- Ease the clock (24h wrap) so Shadow's per-prop phase shift (d.time + xOffset)
+	-- eases instead of snapping on scrub/time jumps.
+	local diff = (DayCycle.time - (d.time or DayCycle.time) + 12) % 24 - 12
+	d.time = ((d.time or DayCycle.time) + diff * (1 - math.exp(-dt / tau))) % 24
 	d.offsetX = approach(d.offsetX, target.offsetX, dt, tau)
 	d.offsetY = approach(d.offsetY, target.offsetY, dt, tau)
 	d.sunLength = approach(d.sunLength, target.sunLength, dt, tau)
@@ -125,7 +130,9 @@ function DayCycle._approachDisplay(dt)
 	d.isDay = target.isDay
 end
 
---- Smoothed sun data for rendering. Shadow reads THIS, not getSunData().
+--- Smoothed render state. Shadow reads `display.time` from THIS (the eased clock)
+--- and phase-shifts it per prop via `getSunData(effTime)`; it does NOT read the
+--- global eased offsetX/alpha (those are now computed per prop from effTime).
 function DayCycle.getDisplaySunData()
 	return DayCycle.display
 end
@@ -166,6 +173,7 @@ end
 function DayCycle.reset()
 	DayCycle.time = 12
 	lastMinute = -1
+	DayCycle.display.time = 12
 	DayCycle.display.offsetX = 0
 	DayCycle.display.offsetY = 0
 	DayCycle.display.sunLength = 0

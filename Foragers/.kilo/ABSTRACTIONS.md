@@ -218,6 +218,12 @@ relevant section before touching that subsystem.
   (one AABB test per sprite vs the camera view + `CULL_MARGIN`) and passes it to
   `Mask.renderSilhouette`, `Shadow.renderLayer`, `DrawOrder.collect`. Off-screen
   props are never submitted. Don't iterate `dynamicObjects` directly in a draw pass.
+- **Shadow phase-shifts the golden hour per prop via `DayCycle.getSunData(effTime)`.**
+  `getSunData` allocates a fresh table per call, so this is one table alloc per
+  *visible* (culled) prop per frame — bounded by the on-screen set, not total world
+  props, so it stays cheap. Do NOT "optimize" by caching a single sun state; the
+  per-prop `effTime` (eased `display.time` + X offset) is what produces the
+  X-swept golden hour, and a shared state would collapse every prop back to one peak.
 - **GC pacing bounds the sawtooth, not the live heap.** LuaJIT has no
   `"incremental"` mode — use `collectgarbage("setpause")`/`("setstepmul")` + a
   per-frame `collectgarbage("step", KB)`. This stops single-frame stalls, but the

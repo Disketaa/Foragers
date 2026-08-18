@@ -68,30 +68,32 @@ end
 ---@param camY number Camera pixel offset Y (float for smooth scrolling)
 function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 	shadowCanvas = ensureCanvas(viewW, viewH)
-	local sun = DayCycle.getDisplaySunData()
+	local display = DayCycle.getDisplaySunData()
+	local timeShiftPerPx = Data.shadow.timeShiftPerPx or 0
+	local worldCenterX = Data.shadow.worldCenterX or 0
 
 	Canvas.drawTo(
 		shadowCanvas,
 		function()
-			love.graphics.setColor(layerColor[1], layerColor[2], layerColor[3], 1)
 			shadowBatch = ensureBatch()
 			shadowBatch:clear()
-			-- The sun only LENGTHENS the shadow in its direction; it does not
-			-- translate the shadow off the character. Read the eased display state
-			-- (not raw time) so scrubbing eases. Derive extraPx from |offsetX| so
-			-- width and the pivot flip stay consistent: both hit 0 at offsetX=0.
-			local lengthRatio = Data.shadow.maxLen > 0 and math.min(1, math.abs(sun.offsetX) / Data.shadow.maxLen) or 0
-			-- Flat pixel count added at the far edge (not proportional to width).
-			local extraPx = math.floor((Data.shadow.stretchPx or 0) * lengthRatio + 0.5)
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
 				if sprite and sprite.components then
 					local comps = sprite:getComponentsInto("shadow", hasShadow, shadowScan)
 					for _, comp in ipairs(comps) do
-						-- Shadow is anchored on the character (no sun translation), so
-						-- the near edge stays at its rest position and the stretch never
-						-- slides the shadow onto the character's center.
-						local ccx = math.floor(sprite.x + 0.5) + (comp.offsetX or 0) + camX
+						-- Phase-shift the golden hour per prop so stretch/offset/alpha
+						-- sweep across the island by X instead of all props peaking at once.
+						local sx = math.floor(sprite.x + 0.5)
+						local effTime = (display.time + (sx - worldCenterX) * timeShiftPerPx) % 24
+						local sun = DayCycle.getSunData(effTime)
+
+						-- Derive extraPx from |offsetX| so width and the pivot flip stay
+						-- consistent: both hit 0 at offsetX=0 (phase-shifted horizon).
+						local lengthRatio = Data.shadow.maxLen > 0 and math.min(1, math.abs(sun.offsetX) / Data.shadow.maxLen) or 0
+						local extraPx = math.floor((Data.shadow.stretchPx or 0) * lengthRatio + 0.5)
+
+						local ccx = sx + (comp.offsetX or 0) + camX
 						local ccy = math.floor(sprite.y + 0.5) + (comp.offsetY or 0) + camY
 						local halfW = math.floor(comp.width / 2 + 0.5)
 						local w = comp.width + extraPx
@@ -102,6 +104,7 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 						local x = sun.offsetX < 0 and (ccx + halfW - w) or (ccx - halfW)
 						local y = ccy - math.floor(h / 2)
 						if w > 0 and h > 0 then
+							shadowBatch:setColor(layerColor[1], layerColor[2], layerColor[3], sun.alpha or 0)
 							if w <= 2 or h <= 2 then
 								shadowBatch:add(x, y, 0, w, h)
 							else
@@ -117,7 +120,7 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 		end,
 		nil,
 		function()
-			love.graphics.setColor(1, 1, 1, layerAlpha * (sun.alpha or 1))
+			love.graphics.setColor(1, 1, 1, layerAlpha)
 			love.graphics.draw(shadowCanvas, 0, 0)
 		end
 	)
