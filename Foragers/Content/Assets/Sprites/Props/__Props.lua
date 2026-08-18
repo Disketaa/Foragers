@@ -74,6 +74,11 @@ return {
 		},
 
 		{
+			component = "emissive",
+			intensity = 1,
+		},
+
+		{
 			component = "silhouette",
 			mode = "mask",
 		},
