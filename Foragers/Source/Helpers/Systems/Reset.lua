@@ -1,10 +1,15 @@
---- Universal state reset. Scans every loaded `Source.` module and
---- clears all **array-valued** fields (sequential integer keys 1..n).
---- This covers all runtime pools (burst particles, active texts,
---- pending drops, etc.) without touching dict-based registries
---- (factories, caches) or metamethods (__index, __call, etc.).
---- New components with module-level array pools are reset
---- automatically — no per-component code needed.
+--- Universal state reset. Scans every loaded `Source.`/`Mods.` module and
+--- clears all **array-valued** fields (sequential integer keys 1..n), and
+--- invokes any module-exposed `reset()` for non-array state (e.g. DayCycle's
+--- clock, which drives shader uniforms every frame and would otherwise freeze
+--- across a restart). New components with array pools reset automatically;
+--- modules owning other resettable state just add a `reset()` function.
+--- DEV RULE: a module's `reset()` must not read other modules' state (iteration
+--- order over package.loaded is non-deterministic), and any file-scope local
+--- state must be reset explicitly inside `reset()` (Reset.all only sees module
+--- table fields, not upvalues).
+local Log = require("Source.Helpers.Core.Log")
+
 local Reset = {}
 
 ---@param key string
@@ -37,6 +42,12 @@ end
 function Reset.all()
 	for key, mod in pairs(package.loaded) do
 		if isSourceModule(key) and type(mod) == "table" then
+			if type(mod.reset) == "function" then
+				local ok, err = pcall(mod.reset)
+				if not ok then
+					Log.error("Reset", "mod.reset for %s failed: %s", key, tostring(err))
+				end
+			end
 			for k, v in pairs(mod) do
 				if type(k) ~= "string" or not k:find("^__") then
 					if isArray(v) then

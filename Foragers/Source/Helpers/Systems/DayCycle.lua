@@ -160,4 +160,17 @@ function DayCycle.setTime(hours)
 	DayCycle.emitter:emit(Events.TIME_CHANGED, DayCycle.getSunData())
 end
 
+--- Restore the world clock and eased render state to the neutral day start.
+--- Hooked by Reset.all() on restart so the DayNightGrade shader (driven from
+--- here every frame) and the shadow both reset instead of freezing.
+function DayCycle.reset()
+	DayCycle.time = 12
+	lastMinute = -1
+	DayCycle.display.offsetX = 0
+	DayCycle.display.offsetY = 0
+	DayCycle.display.sunLength = 0
+	DayCycle.display.isDay = true
+	DayCycle.display.alpha = 1
+end
+
 return DayCycle

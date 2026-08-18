@@ -7,7 +7,7 @@ return {
 	borderTileOffset = 8,
 	noise = { scale = 0.15, detail = 0.3, density = 0.8 },
 	dayCycle = {
-		dayLengthSec = 8,
+		dayLengthSec = 16,
 		sunriseHour = 6,
 		sunsetHour = 18,
 		smoothness = 0.15,

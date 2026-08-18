@@ -29,6 +29,12 @@ function ShaderLoader.loadAll(basePath)
 				-- legacy standalone shader
 				local ok, shader = pcall(love.graphics.newShader, data.code)
 				if ok then
+					-- Push data-file uniform defaults at creation so the GPU state
+					-- matches the Lua default (LOVE initializes new uniforms to 0),
+					-- independent of any later reset() timing.
+					for u, v in pairs(data.uniforms or {}) do
+						shader:send(u, v)
+					end
 					table.insert(ShaderLoader.shaders, {
 						name = data.name,
 						applies_to = data.applies_to or "unknown",
@@ -143,6 +149,12 @@ function ShaderLoader._compileProgram(names, meta)
 		.. "	return color;\n}\n"
 
 	local shader = love.graphics.newShader(code)
+	-- Push composed defaults at creation so the GPU uniform state matches the
+	-- Lua default (LOVE initializes new uniforms to 0), covering post-process
+	-- programs universally without a separate reset() timing step.
+	for u, v in pairs(uniforms) do
+		shader:send(u, v)
+	end
 	return {
 		name = meta.name or ("prog_" .. table.concat(names, "_")),
 		applies_to = meta.applies_to or "sprite",
