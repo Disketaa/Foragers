@@ -10,10 +10,5 @@ return {
 				{ row = 1, frames = 4, speed = 12, loop = false },
 			},
 		},
-
-		{
-			component = "emissive",
-			intensity = 1,
-		},
 	},
 }

@@ -2,11 +2,6 @@ return {
 	extends = "Content.Assets.Sprites.Drops.__Drops",
 	components = {
 		{
-			component = "emissive",
-			intensity = 0.75,
-		},
-
-		{
 			component = "pickup",
 			xp = 1,
 		},

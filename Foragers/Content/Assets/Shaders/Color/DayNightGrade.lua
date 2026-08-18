@@ -4,12 +4,8 @@ return {
 	postprocess = true,
 	type = "color",
 	module = true,
-	uniforms = { u_dayTime = 12, u_emissiveSize = { 1, 1 } },
+	uniforms = { u_dayTime = 12 },
 	code = [[
-// Emissive mask: per-pixel coverage of self-lit sprites (see Emissive.lua).
-// Image uniform — declared here, not in `uniforms` (only float/vec/bool/mat4
-// auto-declare). Sent directly to the post-process shader each frame.
-extern Image u_emissiveTexture;
 // Day/night grade keyframes: hour -> rgb grade multiplier. Edit here, not in Lua.
 // Two sets: kfColorHighlight (warm grade for lit areas) and kfColorShadow (cool
 // grade for shadowed areas). Split-toning gives golden hour its warm-highlight /
@@ -77,17 +73,8 @@ vec4 DayNightGrade_color(vec4 color, vec2 screen_coords) {
 	float luma = dot(color.rgb, vec3(0.299, 0.587, 0.114));
 	// Split-tone grade: warm on lit pixels, cool on shadowed pixels.
 	vec3 grade = mix(sh.rgb, hi.rgb, luma);
-	vec3 graded = color.rgb * grade;
-
-	// Emissive exemption: sample the mask at this pixel's canvas position
-	// (same transform CircleMask uses); where mask alpha > 0, keep the ungraded
-	// color so the sprite ignores the day/night grade but still receives
-	// Darken / CircleMask / Saturation applied to the world canvas.
-	vec2 px = floor((screen_coords - u_canvasOrigin) / u_canvasScale) + 0.5;
-	vec2 uv = px / u_emissiveSize;
-	vec4 em = Texel(u_emissiveTexture, uv);
-	vec3 finalRgb = mix(graded, color.rgb, em.a);
-	return vec4(finalRgb, color.a);
+	vec3 blended = color.rgb * grade;
+	return vec4(blended, color.a);
 }
 ]],
 }
