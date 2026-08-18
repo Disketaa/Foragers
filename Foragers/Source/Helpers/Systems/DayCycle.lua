@@ -14,7 +14,7 @@ local DayCycle = {
 	emitter = EventEmitter.new(),
 	-- Smoothed render target, eased toward getSunData(time) every frame so the
 	-- shadow doesn't teleport on scrub/`time` jumps. Reused table (no per-frame alloc).
-	display = { offsetX = 0, offsetY = 0, sunLength = 0, isDay = false },
+	display = { offsetX = 0, offsetY = 0, sunLength = 0, isDay = false, alpha = 0 },
 }
 
 local lastMinute = -1
@@ -63,18 +63,39 @@ function DayCycle.getSunData(time)
 	local stretch, dir = 0, 0
 	local dSr = time - sr
 	if dSr > -winH and dSr < winH then
-		stretch = (1 - math.abs(dSr) / winH) ^ power
+		-- Sunrise: hold MAX stretch across the horizon half (where opacity fades in)
+		-- so the shadow appears already lengthened, then ramp to default on the day
+		-- half as the sun rises. Prevents the shadow growing during fade-in.
 		dir = 1
+		stretch = dSr < 0 and 1 or (1 - dSr / winH) ^ power
 	else
 		local dSs = time - ss
 		if dSs > -winH and dSs < winH then
-			stretch = (1 - math.abs(dSs) / winH) ^ power
+			-- Sunset: ramp up on the day half (shadow lengthens as the sun lowers),
+			-- hold MAX across the horizon half (where opacity fades out) so it
+			-- dissolves at full length instead of easing back to default.
 			dir = -1
+			stretch = dSs > 0 and 1 or (1 + dSs / winH) ^ power
 		end
 	end
 	if stretch > 0 then
 		sunLength = Data.maxShadowLen * stretch
 		offsetX = dir * sunLength
+	end
+	-- Shadow opacity: full across the day, fades out across the golden hour after
+	-- sunset and back in before sunrise, so the post-sunset stretch ease-back is
+	-- hidden (no visible snap) and night carries no shadow. Reuses winH for fade width.
+	local alpha = 0
+	if time >= sr and time <= ss then
+		alpha = 1
+	else
+		local dSr = time - sr
+		local dSs = time - ss
+		if dSr >= -winH and dSr < 0 then
+			alpha = 1 - math.abs(dSr) / winH -- 0 at sr-winH -> 1 at sr
+		elseif dSs > 0 and dSs <= winH then
+			alpha = 1 - math.abs(dSs) / winH -- 1 at ss -> 0 at ss+winH
+		end
 	end
 	return {
 		time = time,
@@ -83,6 +104,7 @@ function DayCycle.getSunData(time)
 		offsetX = offsetX,
 		offsetY = offsetY,
 		isDay = isDay,
+		alpha = alpha,
 	}
 end
 
@@ -99,6 +121,7 @@ function DayCycle._approachDisplay(dt)
 	d.offsetX = approach(d.offsetX, target.offsetX, dt, tau)
 	d.offsetY = approach(d.offsetY, target.offsetY, dt, tau)
 	d.sunLength = approach(d.sunLength, target.sunLength, dt, tau)
+	d.alpha = approach(d.alpha or 0, target.alpha, dt, tau)
 	d.isDay = target.isDay
 end
 

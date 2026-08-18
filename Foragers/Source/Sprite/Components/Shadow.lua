@@ -66,6 +66,7 @@ end
 ---@param camY number Camera pixel offset Y (float for smooth scrolling)
 function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 	shadowCanvas = ensureCanvas(viewW, viewH)
+	local sun = DayCycle.getDisplaySunData()
 
 	Canvas.drawTo(
 		shadowCanvas,
@@ -76,7 +77,6 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 			-- Sun-driven shadow offset/length is global (same for every sprite this
 			-- frame); compute it once and scale per sprite via offsetMultiplier.
 			-- Read the eased display state, not raw time, so scrubbing eases.
-			local sun = DayCycle.getDisplaySunData()
 			-- Derive width from |offsetX| (not sunLength) so width and position stay
 			-- consistent through the pivot flip: both hit 0 together at offsetX=0,
 			-- so extra=w-comp.width collapses to 0 exactly when the anchor flips.
@@ -122,7 +122,7 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 		end,
 		nil,
 		function()
-			love.graphics.setColor(1, 1, 1, layerAlpha)
+			love.graphics.setColor(1, 1, 1, layerAlpha * (sun.alpha or 1))
 			love.graphics.draw(shadowCanvas, 0, 0)
 		end
 	)
