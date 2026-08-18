@@ -11,7 +11,7 @@ return {
 
 		{
 			component = "shadow",
-			width = 12,
+			width = 8,
 			height = 6,
 			offsetY = 1,
 		},
