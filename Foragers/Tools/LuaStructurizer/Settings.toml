@@ -52,3 +52,7 @@ severity = "error"
 [Rules.DuplicateLogCall]
 enabled = true
 severity = "warn"
+
+[Rules.TypeFieldPlacement]
+enabled = true
+severity = "warn"

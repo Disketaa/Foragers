@@ -192,7 +192,7 @@ end
 local function timeIt(label, fn)
 	local t0 = love.timer.getTime()
 	local result = fn()
-	Log.write("Timing", "%-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000)
+	Log.write("Loading", "%-30s %8.1fms", label, (love.timer.getTime() - t0) * 1000)
 	return result
 end
 
@@ -425,7 +425,7 @@ function initGame()
 		end, 5)
 	end
 
-	Log.write("Timing", "total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000)
+	Log.write("Loading", "total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000)
 end
 
 function love.resize(w, h)
@@ -646,13 +646,16 @@ function love.keypressed(key, _, _)
 			Debug.setChatOutput(message, success, hold)
 			local marker = success and "✅" or "⚠️"
 			local output = Debug.chatOutput()
+			local function logChat(detail)
+				Log.write("Chat", "%s %s — %s", marker, text, detail)
+			end
 			if output:find("\n") then
 				-- Multi-line output: one marker per rendered line, like the screen.
 				for line in output:gmatch("[^\n]+") do
-					Log.write("Cmd", "%s %s — %s", marker, text, line)
+					logChat(line)
 				end
 			else
-				Log.write("Cmd", "%s %s — %s", marker, text, output)
+				logChat(output)
 			end
 			Debug.pushChatHistory(text)
 			Debug.setChatText("")

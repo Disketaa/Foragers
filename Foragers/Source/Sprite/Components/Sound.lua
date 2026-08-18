@@ -16,15 +16,19 @@ Sound.__index = Sound
 -- initial spawn). Cloning from a shared base at play is cheap, so reuse is safe.
 local audioCache = {}
 
+--- Report a failed sound load (shared by Sound.new and Sound.play).
+local function logLoadFail(what)
+	Log.error("Sound", "Failed to load sound: %s", tostring(what))
+end
+
 ---@param data table
 ---@return Sound
 function Sound.new(data)
-	local self = setmetatable({}, Sound)
+	local self = setmetatable({ type = "sound" }, Sound)
 	self.soundSets = {}
 	self.tags = data.tags or {}
 	self._currentState = nil
 	self._stepCounter = 0
-	self.type = "sound"
 
 	-- Per-tag overrides must honor explicit 0 (mute volume, zero pitch randomness),
 	-- which `or` would treat as nil.
@@ -63,7 +67,7 @@ function Sound.new(data)
 					audioCache[soundPath] = src
 				else
 					audioCache[soundPath] = false
-					Log.error("Sound", "Failed to load sound: %s", tostring(soundPath))
+					logLoadFail(soundPath)
 				end
 			end
 			if baseSource then
@@ -172,7 +176,7 @@ function Sound.play(path, volume, pitch)
 			audioCache[path] = src
 		else
 			audioCache[path] = false
-			Log.error("Sound", "Failed to load sound: %s", tostring(path))
+			logLoadFail(path)
 		end
 	end
 	if not base then
