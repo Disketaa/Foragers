@@ -4,7 +4,7 @@ local Data = require("Content.Data.World").dayCycle
 
 ---@class Shadow
 ---@field parent Sprite|nil
----@field offsetMultiplier number Scale applied to the global sun-driven shadow offset (taller sprites can use >1)
+---@field offsetMultiplier number Reserved; previously scaled the sun-driven shadow offset. The sun no longer translates the shadow, so this is currently unused.
 ---@field offsetX number Static px added to the shadow position on top of the sun-driven offset (per-object horizontal nudge)
 ---@field offsetY number Static px added to the shadow position on top of the sun-driven offset (per-object vertical nudge)
 ---@field width number Shadow width in px
@@ -76,38 +76,31 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 			love.graphics.setColor(layerColor[1], layerColor[2], layerColor[3], 1)
 			shadowBatch = ensureBatch()
 			shadowBatch:clear()
-			-- Sun-driven shadow offset/length is global (same for every sprite this
-			-- frame); compute it once and scale per sprite via offsetMultiplier.
-			-- Read the eased display state, not raw time, so scrubbing eases.
-			-- Derive width from |offsetX| (not sunLength) so width and position stay
-			-- consistent through the pivot flip: both hit 0 together at offsetX=0,
-			-- so extra=w-comp.width collapses to 0 exactly when the anchor flips.
-			local lengthRatio = Data.maxShadowLen > 0 and math.min(1, math.abs(sun.offsetX) / Data.maxShadowLen) or 0
-			local widthMult = 1 + ((Data.maxShadowStretch or 1) - 1) * lengthRatio
+			-- The sun only LENGTHENS the shadow in its direction; it does not
+			-- translate the shadow off the character. Read the eased display state
+			-- (not raw time) so scrubbing eases. Derive extraPx from |offsetX| so
+			-- width and the pivot flip stay consistent: both hit 0 at offsetX=0.
+			local lengthRatio = Data.shadow.maxLen > 0 and math.min(1, math.abs(sun.offsetX) / Data.shadow.maxLen) or 0
+			-- Flat pixel count added at the far edge (not proportional to width).
+			local extraPx = math.floor((Data.shadow.stretchPx or 0) * lengthRatio + 0.5)
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
 				if sprite and sprite.components then
 					local comps = sprite:getComponentsInto("shadow", hasShadow, shadowScan)
 					for _, comp in ipairs(comps) do
-						local mult = comp.offsetMultiplier or 1
-						-- +0.5 round-half-up (matches sprite.x below); plain floor()
-						-- biases toward -inf and flickers 1px near a zero-crossing (noon).
-						local ox = math.floor(sun.offsetX * mult + 0.5)
-						local oy = math.floor(sun.offsetY * mult + 0.5)
-						local cx = math.floor(sprite.x + 0.5) + ox + (comp.offsetX or 0) + camX
-						local cy = math.floor(sprite.y + 0.5) + oy + (comp.offsetY or 0) + camY
-						local w = math.floor(comp.width * widthMult + 0.5)
+						-- Shadow is anchored on the character (no sun translation), so
+						-- the near edge stays at its rest position and the stretch never
+						-- slides the shadow onto the character's center.
+						local ccx = math.floor(sprite.x + 0.5) + (comp.offsetX or 0) + camX
+						local ccy = math.floor(sprite.y + 0.5) + (comp.offsetY or 0) + camY
+						local halfW = math.floor(comp.width / 2 + 0.5)
+						local w = comp.width + extraPx
 						local h = comp.height
-						-- Anchor the near edge and grow only the far edge so the shadow
-						-- stretches AWAY from the sprite. Pivot on the RAW eased offsetX
-						-- sign (not the rounded `ox`): rounding flipped the anchor at
-						-- offsetX=-0.5 while extra was still >0, jumping the shadow 2px
-						-- (the sunset snap). Raw sign flips exactly at offsetX=0 where
-						-- extra=0, so it shrinks to normal width with no jump.
-						local baseLeft = cx - math.floor(comp.width / 2 + 0.5)
-						local extra = w - comp.width
-						local x = sun.offsetX < 0 and (baseLeft - extra) or baseLeft
-						local y = cy - math.floor(h / 2)
+						-- Pivot on the RAW eased offsetX sign (not a rounded value) so the
+						-- flip happens exactly at offsetX=0 where extraPx=0, with no 2px
+						-- sunset snap.
+						local x = sun.offsetX < 0 and (ccx + halfW - w) or (ccx - halfW)
+						local y = ccy - math.floor(h / 2)
 						if w > 0 and h > 0 then
 							if w <= 2 or h <= 2 then
 								shadowBatch:add(x, y, 0, w, h)

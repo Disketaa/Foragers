@@ -34,7 +34,7 @@ end
 --- RIGHT; at sunset it stretches to the LEFT. The stretch window is CENTERED on
 --- each horizon and eases to 0 on both sides, so the peak sits exactly at
 --- sunrise/sunset with no hard cut at the day/night boundary (which snapped).
---- `shadowStretchWindow` (fraction of the day) controls the window half-width.
+--- `shadow.stretchWindow` (fraction of the day) controls the window half-width.
 ---@param time number|nil Hour in [0,24); defaults to the current time.
 ---@return table { time, elevation, sunLength, offsetX, offsetY }
 function DayCycle.getSunData(time)
@@ -55,11 +55,11 @@ function DayCycle.getSunData(time)
 	-- exactly at the horizon; this avoids the old sunset snap where the ramp hit
 	-- max at the boundary then cut to 0 (night). Sunrise leans RIGHT (dir=1),
 	-- sunset leans LEFT (dir=-1); Shadow applies it as a pivot-based stretch.
-	local winH = (Data.shadowStretchWindow or 0.15) * dayLen
+	local winH = (Data.shadow.stretchWindow or 0.15) * dayLen
 	-- >1 concentrates the stretch at the horizon (peak-short): tails flatten, change
 	-- is steepest right at sunrise/sunset instead of spreading linearly across the
 	-- whole golden hour. (Smoothstep/InOut would do the opposite — flat at the peak.)
-	local power = Data.shadowStretchPower or 2
+	local power = Data.shadow.stretchPower or 2
 	local stretch, dir = 0, 0
 	local dSr = time - sr
 	if dSr > -winH and dSr < winH then
@@ -79,7 +79,7 @@ function DayCycle.getSunData(time)
 		end
 	end
 	if stretch > 0 then
-		sunLength = Data.maxShadowLen * stretch
+		sunLength = Data.shadow.maxLen * stretch
 		offsetX = dir * sunLength
 	end
 	-- Shadow opacity: full across the day, fades out across the golden hour after

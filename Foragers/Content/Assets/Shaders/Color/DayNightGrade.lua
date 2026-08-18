@@ -15,7 +15,7 @@ return {
 const int KF_COUNT = 7;
 // Warm/golden peaks at the HORIZON (6.0 / 18.0), not an hour after: golden hour is
 // when the sun is lowest, so color and shadow must peak together. Dusk fade begins
-// at 16.5 to match the 1.5h shadow stretch window (shadowStretchWindow=0.125).
+// at 16.5 to match the 1.5h shadow stretch window (shadow.stretchWindow=0.125).
 const float kfHour[KF_COUNT] = float[](0.0, 5.0, 6.0, 8.0, 16.5, 18.0, 19.5);
 	const vec4 kfColorHighlight[KF_COUNT] = vec4[](
 		vec4(0.25, 0.30, 0.45, 1.0),  // midnight (dark gray-blue)
