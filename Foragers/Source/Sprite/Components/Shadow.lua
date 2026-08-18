@@ -1,5 +1,6 @@
 local Canvas = require("Source.Helpers.Graphics.Canvas")
 local DayCycle = require("Source.Helpers.Systems.DayCycle")
+local Data = require("Content.Data.World").dayCycle
 
 ---@class Shadow
 ---@field parent Sprite|nil
@@ -72,23 +73,34 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 			love.graphics.setColor(layerColor[1], layerColor[2], layerColor[3], 1)
 			shadowBatch = ensureBatch()
 			shadowBatch:clear()
-			-- Sun-driven shadow offset is global (same for every sprite this frame);
-			-- compute it once and scale per sprite via offsetMultiplier.
-			local sun = DayCycle.getSunData()
+			-- Sun-driven shadow offset/length is global (same for every sprite this
+			-- frame); compute it once and scale per sprite via offsetMultiplier.
+			-- Read the eased display state, not raw time, so scrubbing eases.
+			local sun = DayCycle.getDisplaySunData()
+			local lengthRatio = Data.maxShadowLen > 0 and (sun.sunLength / Data.maxShadowLen) or 0
+			local widthMult = 1 + ((Data.widthStretchMax or 1) - 1) * lengthRatio
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
 				if sprite and sprite.components then
 					local comps = sprite:getComponentsInto("shadow", hasShadow, shadowScan)
 					for _, comp in ipairs(comps) do
 						local mult = comp.offsetMultiplier or 1
-						local ox = math.floor(sun.offsetX * mult)
-						local oy = math.floor(sun.offsetY * mult)
+						-- +0.5 round-half-up (matches sprite.x below); plain floor()
+						-- biases toward -inf and flickers 1px near a zero-crossing (noon).
+						local ox = math.floor(sun.offsetX * mult + 0.5)
+						local oy = math.floor(sun.offsetY * mult + 0.5)
 						local cx = math.floor(sprite.x + 0.5) + ox + camX
 						local cy = math.floor(sprite.y + 0.5) + oy + camY
-						local x = cx - math.floor(comp.width / 2)
-						local y = cy - math.floor(comp.height / 2)
-						local w = comp.width
+						local w = math.floor(comp.width * widthMult + 0.5)
 						local h = comp.height
+						-- Anchor the near edge (toward the sprite pivot) and grow only the
+						-- far edge, so the shadow stretches AWAY from the sprite instead of
+						-- bulging both ways. ox>=0 leans right (left edge holds, right grows);
+						-- ox<0 leans left (right edge holds, left grows).
+						local baseLeft = cx - math.floor(comp.width / 2 + 0.5)
+						local extra = w - comp.width
+						local x = ox >= 0 and baseLeft or (baseLeft - extra)
+						local y = cy - math.floor(h / 2)
 						if w > 0 and h > 0 then
 							if w <= 2 or h <= 2 then
 								shadowBatch:add(x, y, 0, w, h)

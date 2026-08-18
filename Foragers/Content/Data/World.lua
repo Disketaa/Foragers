@@ -31,5 +31,7 @@ return {
 		sunriseHour = 6,
 		sunsetHour = 18,
 		shadowNorthBias = 0.5,
+		smoothingTau = 0.35,
+		widthStretchMax = 10.6,
 	},
 }
