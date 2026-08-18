@@ -25,6 +25,7 @@ local TweenComponent = Tween.Component
 local Shadow = require("Source.Sprite.Components.Shadow")
 local Sound = require("Source.Sprite.Components.Sound")
 local Mask = require("Source.Helpers.Graphics.Mask")
+local Emissive = require("Source.Helpers.Graphics.Emissive")
 local Events = require("Source.Helpers.Core.Events")
 local PropSpawner = require("Source.World.PropSpawner")
 local PropPicker = require("Source.World.PropPicker")
@@ -516,6 +517,15 @@ function love.draw()
 		-- at low alpha (union, not additive). Drawn AFTER terrain so shadows sit
 		-- on top of tiles, but BEFORE dynamic sprites.
 		Shadow.renderLayer(visible, canvas.width, canvas.height, GameState.camPixelX, GameState.camPixelY)
+
+		-- Emissive mask: record self-lit sprite coverage so DayNightGrade can
+		-- skip the grade on those pixels (still receives Darken/CircleMask/Sat).
+		Emissive.renderLayer(visible, canvas.width, canvas.height, GameState.camPixelX, GameState.camPixelY)
+		local pp = ShaderLoader.getPostProcess()
+		if pp and Emissive.getCanvas() then
+			pp:send("u_emissiveTexture", Emissive.getCanvas())
+			pp:send("u_emissiveSize", { canvas.width, canvas.height })
+		end
 
 		ParticleEmitter.drawBurstsBehind()
 		ParticleEmitter.drawDetachedBehind()
