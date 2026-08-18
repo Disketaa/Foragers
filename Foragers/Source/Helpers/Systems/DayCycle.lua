@@ -90,10 +90,10 @@ function DayCycle.getSunData(time)
 	if time >= sr and time <= ss then
 		alpha = 1
 	else
-		local dSr = time - sr
+		local dSrFade = time - sr
 		local dSs = time - ss
-		if dSr >= -winH and dSr < 0 then
-			alpha = 1 - math.abs(dSr) / winH -- 0 at sr-winH -> 1 at sr
+		if dSrFade >= -winH and dSrFade < 0 then
+			alpha = 1 - math.abs(dSrFade) / winH -- 0 at sr-winH -> 1 at sr
 		elseif dSs > 0 and dSs <= winH then
 			alpha = 1 - math.abs(dSs) / winH -- 1 at ss -> 0 at ss+winH
 		end

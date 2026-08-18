@@ -11,7 +11,7 @@ return {
 		sunriseHour = 6,
 		sunsetHour = 18,
 		smoothness = 0.15,
-		shadow = { maxLen = 4, stretchPx = 8, stretchWindow = 0.125, stretchPower = 4, timeShiftPerPx = 0.001, worldCenterX = 0 },
+		shadow = { maxLen = 4, stretchPx = 8, stretchWindow = 0.125, stretchPower = 4, timeShiftPerPx = 0.01, worldCenterX = 0 },
 	},
 
 	props = {
