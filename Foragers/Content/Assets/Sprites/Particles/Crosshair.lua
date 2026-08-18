@@ -13,7 +13,7 @@ return {
 
 		{
 			component = "emissive",
-			intensity = 0.75,
+			intensity = 1,
 		},
 	},
 }
