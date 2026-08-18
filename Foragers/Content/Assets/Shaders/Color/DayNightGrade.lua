@@ -13,23 +13,26 @@ return {
 // <1 cools/darkens. Applied as a luminance-weighted multiply so highlights stay
 // rich (no white blowout) and blacks stay black.
 const int KF_COUNT = 7;
-const float kfHour[KF_COUNT] = float[](0.0, 6.0, 7.0, 8.0, 18.0, 19.0, 21.0);
+// Warm/golden peaks at the HORIZON (6.0 / 18.0), not an hour after: golden hour is
+// when the sun is lowest, so color and shadow must peak together. Dusk fade begins
+// at 16.5 to match the 1.5h shadow stretch window (shadowStretchWindow=0.125).
+const float kfHour[KF_COUNT] = float[](0.0, 5.0, 6.0, 8.0, 16.5, 18.0, 19.5);
 const vec4 kfColorHighlight[KF_COUNT] = vec4[](
 	vec4(0.45, 0.55, 0.85, 1.0),  // midnight (blue-dark)
 	vec4(0.45, 0.55, 0.85, 1.0),  // pre-dawn
-	vec4(1.25, 1.0, 0.65, 1.0),   // dawn (warm)
+	vec4(1.25, 1.0, 0.65, 1.0),   // dawn (warm) — peaks at horizon 6.0
 	vec4(1.0, 1.0, 1.0, 1.0),     // full day (neutral)
-	vec4(1.0, 1.0, 1.0, 1.0),     // full day
-	vec4(1.25, 1.0, 0.65, 1.0),   // dusk (warm)
+	vec4(1.0, 1.0, 1.0, 1.0),     // full day — dusk fade begins 16.5 (matches shadow window)
+	vec4(1.25, 1.0, 0.65, 1.0),   // dusk (warm) — peaks at horizon 18.0
 	vec4(0.45, 0.55, 0.85, 1.0)   // night (blue-dark)
 );
 const vec4 kfColorShadow[KF_COUNT] = vec4[](
 	vec4(0.3, 0.4, 0.7, 1.0),    // midnight (deep blue)
 	vec4(0.3, 0.4, 0.7, 1.0),    // pre-dawn
-	vec4(0.65, 0.6, 0.95, 1.0),  // dawn (cool shadow)
+	vec4(0.65, 0.6, 0.95, 1.0),  // dawn (cool shadow) — peaks at horizon 6.0
 	vec4(1.0, 1.0, 1.0, 1.0),    // full day
-	vec4(1.0, 1.0, 1.0, 1.0),    // full day
-	vec4(0.65, 0.6, 0.95, 1.0),  // dusk
+	vec4(1.0, 1.0, 1.0, 1.0),    // full day — dusk fade begins 16.5
+	vec4(0.65, 0.6, 0.95, 1.0),  // dusk (cool shadow) — peaks at horizon 18.0
 	vec4(0.3, 0.4, 0.7, 1.0)     // night
 );
 

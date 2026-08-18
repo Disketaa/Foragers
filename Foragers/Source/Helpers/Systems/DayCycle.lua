@@ -14,7 +14,7 @@ local DayCycle = {
 	emitter = EventEmitter.new(),
 	-- Smoothed render target, eased toward getSunData(time) every frame so the
 	-- shadow doesn't teleport on scrub/`time` jumps. Reused table (no per-frame alloc).
-	display = { offsetX = 0, offsetY = 0, sunLength = 0 },
+	display = { offsetX = 0, offsetY = 0, sunLength = 0, isDay = false },
 }
 
 local lastMinute = -1
@@ -27,26 +27,54 @@ local function approach(current, target, dt, tau)
 	return current + (target - current) * (1 - math.exp(-dt / tau))
 end
 
---- Derive sun state for a given hour (0-24). Outside [sunrise, sunset] the sun is
---- below the horizon: no elevation, zero shadow offset/length (shadow collapses
---- under the sprite). During the day the shadow is longest at the horizon and
---- shortest at noon, and sweeps from west (sunrise) to east (sunset).
+--- Derive sun state for a given hour (0-24). Simplified shadow model: the
+--- stretch/offset is concentrated at the horizon (sunrise/sunset) and collapses
+--- to 0 across the rest of the day and all night, so midday and night shadows are
+--- normal (no offset, no extra stretch). At sunrise the shadow stretches to the
+--- RIGHT; at sunset it stretches to the LEFT. The stretch window is CENTERED on
+--- each horizon and eases to 0 on both sides, so the peak sits exactly at
+--- sunrise/sunset with no hard cut at the day/night boundary (which snapped).
+--- `shadowStretchWindow` (fraction of the day) controls the window half-width.
 ---@param time number|nil Hour in [0,24); defaults to the current time.
 ---@return table { time, elevation, sunLength, offsetX, offsetY }
 function DayCycle.getSunData(time)
 	time = time or DayCycle.time
 	local sr, ss = Data.sunriseHour, Data.sunsetHour
+	local dayLen = ss - sr
 	local elevation = 0
 	local sunLength = 0
 	local offsetX = 0
 	local offsetY = 0
+	local isDay = false
 	if time > sr and time < ss then
-		local dayProgress = (time - sr) / (ss - sr) -- 0 at sunrise, 1 at sunset
+		isDay = true
+		local dayProgress = (time - sr) / dayLen -- 0 at sunrise, 1 at sunset
 		elevation = math.sin(dayProgress * math.pi) -- 0 at horizon, 1 at noon
-		sunLength = Data.maxShadowLen * (1 - elevation)
-		local angle = math.pi * (1 - dayProgress) -- pi at sunrise -> 0 at sunset
-		offsetX = sunLength * math.cos(angle)
-		offsetY = -sunLength * math.sin(angle) * (Data.maxShadowNorthBias or 0.5)
+	end
+	-- Stretch window centered on each horizon, easing to 0 on both sides. Peak is
+	-- exactly at the horizon; this avoids the old sunset snap where the ramp hit
+	-- max at the boundary then cut to 0 (night). Sunrise leans RIGHT (dir=1),
+	-- sunset leans LEFT (dir=-1); Shadow applies it as a pivot-based stretch.
+	local winH = (Data.shadowStretchWindow or 0.15) * dayLen
+	-- >1 concentrates the stretch at the horizon (peak-short): tails flatten, change
+	-- is steepest right at sunrise/sunset instead of spreading linearly across the
+	-- whole golden hour. (Smoothstep/InOut would do the opposite — flat at the peak.)
+	local power = Data.shadowStretchPower or 2
+	local stretch, dir = 0, 0
+	local dSr = time - sr
+	if dSr > -winH and dSr < winH then
+		stretch = (1 - math.abs(dSr) / winH) ^ power
+		dir = 1
+	else
+		local dSs = time - ss
+		if dSs > -winH and dSs < winH then
+			stretch = (1 - math.abs(dSs) / winH) ^ power
+			dir = -1
+		end
+	end
+	if stretch > 0 then
+		sunLength = Data.maxShadowLen * stretch
+		offsetX = dir * sunLength
 	end
 	return {
 		time = time,
@@ -54,6 +82,7 @@ function DayCycle.getSunData(time)
 		sunLength = sunLength,
 		offsetX = offsetX,
 		offsetY = offsetY,
+		isDay = isDay,
 	}
 end
 
@@ -70,6 +99,7 @@ function DayCycle._approachDisplay(dt)
 	d.offsetX = approach(d.offsetX, target.offsetX, dt, tau)
 	d.offsetY = approach(d.offsetY, target.offsetY, dt, tau)
 	d.sunLength = approach(d.sunLength, target.sunLength, dt, tau)
+	d.isDay = target.isDay
 end
 
 --- Smoothed sun data for rendering. Shadow reads THIS, not getSunData().

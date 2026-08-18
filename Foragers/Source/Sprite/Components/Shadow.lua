@@ -77,7 +77,10 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 			-- frame); compute it once and scale per sprite via offsetMultiplier.
 			-- Read the eased display state, not raw time, so scrubbing eases.
 			local sun = DayCycle.getDisplaySunData()
-			local lengthRatio = Data.maxShadowLen > 0 and (sun.sunLength / Data.maxShadowLen) or 0
+			-- Derive width from |offsetX| (not sunLength) so width and position stay
+			-- consistent through the pivot flip: both hit 0 together at offsetX=0,
+			-- so extra=w-comp.width collapses to 0 exactly when the anchor flips.
+			local lengthRatio = Data.maxShadowLen > 0 and math.min(1, math.abs(sun.offsetX) / Data.maxShadowLen) or 0
 			local widthMult = 1 + ((Data.maxShadowStretch or 1) - 1) * lengthRatio
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
@@ -93,13 +96,15 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 						local cy = math.floor(sprite.y + 0.5) + oy + camY
 						local w = math.floor(comp.width * widthMult + 0.5)
 						local h = comp.height
-						-- Anchor the near edge (toward the sprite pivot) and grow only the
-						-- far edge, so the shadow stretches AWAY from the sprite instead of
-						-- bulging both ways. ox>=0 leans right (left edge holds, right grows);
-						-- ox<0 leans left (right edge holds, left grows).
+						-- Anchor the near edge and grow only the far edge so the shadow
+						-- stretches AWAY from the sprite. Pivot on the RAW eased offsetX
+						-- sign (not the rounded `ox`): rounding flipped the anchor at
+						-- offsetX=-0.5 while extra was still >0, jumping the shadow 2px
+						-- (the sunset snap). Raw sign flips exactly at offsetX=0 where
+						-- extra=0, so it shrinks to normal width with no jump.
 						local baseLeft = cx - math.floor(comp.width / 2 + 0.5)
 						local extra = w - comp.width
-						local x = ox >= 0 and baseLeft or (baseLeft - extra)
+						local x = sun.offsetX < 0 and (baseLeft - extra) or baseLeft
 						local y = cy - math.floor(h / 2)
 						if w > 0 and h > 0 then
 							if w <= 2 or h <= 2 then
