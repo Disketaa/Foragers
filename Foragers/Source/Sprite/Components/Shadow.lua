@@ -5,6 +5,8 @@ local Data = require("Content.Data.World").dayCycle
 ---@class Shadow
 ---@field parent Sprite|nil
 ---@field offsetMultiplier number Scale applied to the global sun-driven shadow offset (taller sprites can use >1)
+---@field offsetX number Static px added to the shadow position on top of the sun-driven offset (per-object horizontal nudge)
+---@field offsetY number Static px added to the shadow position on top of the sun-driven offset (per-object vertical nudge)
 ---@field width number Shadow width in px
 ---@field height number Shadow height in px
 ---@field type "shadow"
@@ -92,8 +94,8 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 						-- biases toward -inf and flickers 1px near a zero-crossing (noon).
 						local ox = math.floor(sun.offsetX * mult + 0.5)
 						local oy = math.floor(sun.offsetY * mult + 0.5)
-						local cx = math.floor(sprite.x + 0.5) + ox + camX
-						local cy = math.floor(sprite.y + 0.5) + oy + camY
+						local cx = math.floor(sprite.x + 0.5) + ox + (comp.offsetX or 0) + camX
+						local cy = math.floor(sprite.y + 0.5) + oy + (comp.offsetY or 0) + camY
 						local w = math.floor(comp.width * widthMult + 0.5)
 						local h = comp.height
 						-- Anchor the near edge and grow only the far edge so the shadow
@@ -130,13 +132,15 @@ end
 
 ---@param data table
 ---@return Shadow
-function Shadow.new(data)
-	return setmetatable({
-		offsetMultiplier = data.offsetMultiplier or 1,
-		width = math.floor(data.width or 16),
-		height = math.floor(data.height or 8),
-		type = "shadow",
-	}, Shadow)
-end
+	function Shadow.new(data)
+		return setmetatable({
+			offsetMultiplier = data.offsetMultiplier or 1,
+			offsetX = data.offsetX or 0,
+			offsetY = data.offsetY or 0,
+			width = math.floor(data.width or 16),
+			height = math.floor(data.height or 8),
+			type = "shadow",
+		}, Shadow)
+	end
 
 return Shadow
