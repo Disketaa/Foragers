@@ -23,6 +23,22 @@ ARG_RE = re.compile(
     r'(["\'])((?:\\.|[^\n\\])*?)\4'
 )
 
+# A format that is only conversion specs plus units (e.g. "%-30s %8.1fms") is a
+# shared measurement template, not a copy-pasted message; duplicates of it don't
+# drift apart, so they shouldn't trip the rule. Real messages ("Failed to load
+# sound: %s") keep literal words after specs are stripped and still flag.
+# Matches the Lua printf grammar (optional -, width, .precision, conversion char)
+# rather than a loose char blob — note: a dash inside a class forms a range, so it
+# must sit at the class edge (here it's the literal flag, outside any []).
+_SPEC = re.compile(r"%-?\d*\.?\d*[sdfxcge]")
+
+
+def _is_template(fmt: str) -> bool:
+    stripped = _SPEC.sub("", fmt)
+    stripped = re.sub(r"\bms\b", "", stripped, flags=re.IGNORECASE)
+    return not re.search(r"[A-Za-z]{2,}", stripped)
+
+
 _original = ""
 
 
@@ -40,6 +56,8 @@ def check(text, path, config):
         if not mm:
             continue
         tag, fmt = mm.group(3), mm.group(5)
+        if _is_template(fmt):
+            continue
         line = text[:start].count("\n") + 1
         calls.setdefault((tag, fmt), []).append(line)
     violations = []

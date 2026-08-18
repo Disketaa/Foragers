@@ -425,7 +425,7 @@ function initGame()
 		end, 5)
 	end
 
-	Log.write("Loading", "total initGame: %.1fms", (love.timer.getTime() - tLoad) * 1000)
+	Log.write("Loading", "%-30s %8.1fms", "total initGame", (love.timer.getTime() - tLoad) * 1000)
 end
 
 function love.resize(w, h)
