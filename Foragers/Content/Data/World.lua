@@ -6,7 +6,7 @@ return {
 	backgroundColor = { 0.21, 0.65, 0.72 },
 	borderTileOffset = 8,
 	noise = { scale = 0.15, detail = 0.3, density = 0.8 },
-	dayCycle = { dayLengthSec = 30, sunriseHour = 6, sunsetHour = 18, maxShadowLen = 4, maxShadowStretch = 2, shadowStretchWindow = 0.125, shadowStretchPower = 2, smoothness = 0.15 },
+	dayCycle = { dayLengthSec = 60, sunriseHour = 6, sunsetHour = 18, maxShadowLen = 4, maxShadowStretch = 2, shadowStretchWindow = 0.125, shadowStretchPower = 4, smoothness = 0.15 },
 	props = {
 		coverage = 0.33,
 		spawnInterval = 3,
