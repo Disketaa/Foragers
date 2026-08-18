@@ -48,6 +48,7 @@ local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local Lifecycle = require("Source.Helpers.Systems.Lifecycle")
 local Camera = require("Source.Helpers.Graphics.Camera")
 local GameState = require("Source.Helpers.Systems.GameState")
+local DayCycle = require("Source.Helpers.Systems.DayCycle")
 
 local objects = {}
 local staticObjects = {}
@@ -446,6 +447,7 @@ local function commandsCtx()
 	return {
 		stats = function() return playerStats end,
 		seed = function() return WorldGen.getSeed() end,
+		dayCycle = DayCycle,
 		restart = function()
 			Lifecycle.resetGame()
 		end,
@@ -760,6 +762,15 @@ function love.gamepadreleased(_, button)
 	end
 end
 
+function love.wheelmoved(_, dy)
+	if Debug.chatActive() then
+		return
+	end
+	-- TEMP debug: wheel scrubs the day/night clock (1h per notch). Remove with
+	-- the Day&Night debug controls.
+	DayCycle.setTime(DayCycle.time + dy)
+end
+
 function love.quit()
 	DiscordRPC.shutdown()
 end
@@ -859,6 +870,8 @@ function love.update(dt)
 	end -- world destruction/simulation
 
 	ShaderLoader.update(scaledDt)
+	DayCycle.update(dt)
+	PostProcess.updateDayCycle(DayCycle.time)
 	Zoom.update(scaledDt)
 
 	if GameState.zoomRestoreTimer > 0 then

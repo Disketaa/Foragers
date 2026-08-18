@@ -25,4 +25,11 @@ return {
 			{ data = "Content.Assets.Sprites.Props.BirchStump", weight = 5 },
 		},
 	},
+	dayCycle = {
+		maxShadowLen = 4,
+		dayLengthSec = 4,
+		sunriseHour = 6,
+		sunsetHour = 18,
+		shadowNorthBias = 0.5,
+	},
 }

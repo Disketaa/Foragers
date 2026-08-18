@@ -1,9 +1,9 @@
 local Canvas = require("Source.Helpers.Graphics.Canvas")
+local DayCycle = require("Source.Helpers.Systems.DayCycle")
 
 ---@class Shadow
 ---@field parent Sprite|nil
----@field offsetX number Offset (px) of the shadow CENTER from the sprite's pivot point (sprite.x, sprite.y)
----@field offsetY number Offset (px) of the shadow CENTER from the sprite's pivot point (sprite.x, sprite.y)
+---@field offsetMultiplier number Scale applied to the global sun-driven shadow offset (taller sprites can use >1)
 ---@field width number Shadow width in px
 ---@field height number Shadow height in px
 ---@field type "shadow"
@@ -72,13 +72,19 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 			love.graphics.setColor(layerColor[1], layerColor[2], layerColor[3], 1)
 			shadowBatch = ensureBatch()
 			shadowBatch:clear()
+			-- Sun-driven shadow offset is global (same for every sprite this frame);
+			-- compute it once and scale per sprite via offsetMultiplier.
+			local sun = DayCycle.getSunData()
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
 				if sprite and sprite.components then
 					local comps = sprite:getComponentsInto("shadow", hasShadow, shadowScan)
 					for _, comp in ipairs(comps) do
-						local cx = math.floor(sprite.x + 0.5) + comp.offsetX + camX
-						local cy = math.floor(sprite.y + 0.5) + comp.offsetY + camY
+						local mult = comp.offsetMultiplier or 1
+						local ox = math.floor(sun.offsetX * mult)
+						local oy = math.floor(sun.offsetY * mult)
+						local cx = math.floor(sprite.x + 0.5) + ox + camX
+						local cy = math.floor(sprite.y + 0.5) + oy + camY
 						local x = cx - math.floor(comp.width / 2)
 						local y = cy - math.floor(comp.height / 2)
 						local w = comp.width
@@ -109,8 +115,7 @@ end
 ---@return Shadow
 function Shadow.new(data)
 	return setmetatable({
-		offsetX = math.floor(data.offsetX or 0),
-		offsetY = math.floor(data.offsetY or 0),
+		offsetMultiplier = data.offsetMultiplier or 1,
 		width = math.floor(data.width or 16),
 		height = math.floor(data.height or 8),
 		type = "shadow",

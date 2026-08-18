@@ -82,4 +82,11 @@ function PostProcess.updateStartDarken(dt)
 	end
 end
 
+--- Push the current day/night hour into the DayCycle post-process shader. Safe to
+--- call every frame unconditionally: sendUniform no-ops for shaders that don't
+--- declare u_dayTime (precedent: u_noiseTime in ShaderLoader.update).
+function PostProcess.updateDayCycle(time)
+	ShaderLoader.sendUniform("u_dayTime", time)
+end
+
 return PostProcess

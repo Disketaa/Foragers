@@ -281,6 +281,22 @@ Commands.register("seed", function(_, ctx)
 	return "Seed: " .. seed, true
 end, "print the current world seed.")
 
+Commands.register("time", function(args, ctx)
+	local dc = ctx.dayCycle
+	if not dc then
+		return "No day/night system", false
+	end
+	if args == "" then
+		return string.format("Time: %.2f", dc.time), true
+	end
+	local h = tonumber(args)
+	if not h then
+		return "Usage: time | time <0-24>", false
+	end
+	dc.setTime(h % 24)
+	return "Time set to " .. string.format("%.2f", dc.time), true
+end, "show or set the day/night time (0-24).")
+
 local PAGE_SIZE = 10
 
 Commands.register("help", function(args)

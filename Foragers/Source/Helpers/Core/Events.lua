@@ -20,5 +20,6 @@ local Events = {
 	LOW_SATIETY = "low_satiety",
 	DEATH = "death",
 	TARGET_SELECTED = "target_selected",
+	TIME_CHANGED = "time_changed",
 }
 return Events
