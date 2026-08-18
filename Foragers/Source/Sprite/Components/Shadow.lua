@@ -78,7 +78,7 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 			-- Read the eased display state, not raw time, so scrubbing eases.
 			local sun = DayCycle.getDisplaySunData()
 			local lengthRatio = Data.maxShadowLen > 0 and (sun.sunLength / Data.maxShadowLen) or 0
-			local widthMult = 1 + ((Data.widthStretchMax or 1) - 1) * lengthRatio
+			local widthMult = 1 + ((Data.maxShadowStretch or 1) - 1) * lengthRatio
 			for _, entry in ipairs(sprites) do
 				local sprite = entry.instance or entry
 				if sprite and sprite.components then

@@ -1,0 +1,77 @@
+return {
+	name = "DayNightGrade",
+	order = 25,
+	postprocess = true,
+	type = "color",
+	module = true,
+	uniforms = { u_dayTime = 12 },
+	code = [[
+// Day/night grade keyframes: hour -> rgb grade multiplier. Edit here, not in Lua.
+// Two sets: kfColorHighlight (warm grade for lit areas) and kfColorShadow (cool
+// grade for shadowed areas). Split-toning gives golden hour its warm-highlight /
+// cool-shadow read. Values are MULTIPLIERS (1 = no change): >1 warms/boosts,
+// <1 cools/darkens. Applied as a luminance-weighted multiply so highlights stay
+// rich (no white blowout) and blacks stay black.
+const int KF_COUNT = 7;
+const float kfHour[KF_COUNT] = float[](0.0, 6.0, 7.0, 8.0, 18.0, 19.0, 21.0);
+const vec4 kfColorHighlight[KF_COUNT] = vec4[](
+	vec4(0.45, 0.55, 0.85, 1.0),  // midnight (blue-dark)
+	vec4(0.45, 0.55, 0.85, 1.0),  // pre-dawn
+	vec4(1.25, 1.0, 0.65, 1.0),   // dawn (warm)
+	vec4(1.0, 1.0, 1.0, 1.0),     // full day (neutral)
+	vec4(1.0, 1.0, 1.0, 1.0),     // full day
+	vec4(1.25, 1.0, 0.65, 1.0),   // dusk (warm)
+	vec4(0.45, 0.55, 0.85, 1.0)   // night (blue-dark)
+);
+const vec4 kfColorShadow[KF_COUNT] = vec4[](
+	vec4(0.3, 0.4, 0.7, 1.0),    // midnight (deep blue)
+	vec4(0.3, 0.4, 0.7, 1.0),    // pre-dawn
+	vec4(0.65, 0.6, 0.95, 1.0),  // dawn (cool shadow)
+	vec4(1.0, 1.0, 1.0, 1.0),    // full day
+	vec4(1.0, 1.0, 1.0, 1.0),    // full day
+	vec4(0.65, 0.6, 0.95, 1.0),  // dusk
+	vec4(0.3, 0.4, 0.7, 1.0)     // night
+);
+
+// Lerp both keyframe sets to the current hour.
+void DayNightGrade_keys(out vec4 hi, out vec4 sh, float h) {
+	hi = kfColorHighlight[KF_COUNT - 1];
+	sh = kfColorShadow[KF_COUNT - 1];
+	if (h < kfHour[1]) {
+		float t = (h - kfHour[0]) / (kfHour[1] - kfHour[0]);
+		hi = mix(kfColorHighlight[0], kfColorHighlight[1], t);
+		sh = mix(kfColorShadow[0], kfColorShadow[1], t);
+	} else if (h < kfHour[2]) {
+		float t = (h - kfHour[1]) / (kfHour[2] - kfHour[1]);
+		hi = mix(kfColorHighlight[1], kfColorHighlight[2], t);
+		sh = mix(kfColorShadow[1], kfColorShadow[2], t);
+	} else if (h < kfHour[3]) {
+		float t = (h - kfHour[2]) / (kfHour[3] - kfHour[2]);
+		hi = mix(kfColorHighlight[2], kfColorHighlight[3], t);
+		sh = mix(kfColorShadow[2], kfColorShadow[3], t);
+	} else if (h < kfHour[4]) {
+		float t = (h - kfHour[3]) / (kfHour[4] - kfHour[3]);
+		hi = mix(kfColorHighlight[3], kfColorHighlight[4], t);
+		sh = mix(kfColorShadow[3], kfColorShadow[4], t);
+	} else if (h < kfHour[5]) {
+		float t = (h - kfHour[4]) / (kfHour[5] - kfHour[4]);
+		hi = mix(kfColorHighlight[4], kfColorHighlight[5], t);
+		sh = mix(kfColorShadow[4], kfColorShadow[5], t);
+	} else if (h < kfHour[6]) {
+		float t = (h - kfHour[5]) / (kfHour[6] - kfHour[5]);
+		hi = mix(kfColorHighlight[5], kfColorHighlight[6], t);
+		sh = mix(kfColorShadow[5], kfColorShadow[6], t);
+	}
+}
+
+vec4 DayNightGrade_color(vec4 color, vec2 screen_coords) {
+	vec4 hi, sh;
+	DayNightGrade_keys(hi, sh, u_dayTime);
+	float luma = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+	// Split-tone grade: warm on lit pixels, cool on shadowed pixels.
+	vec3 grade = mix(sh.rgb, hi.rgb, luma);
+	vec3 blended = color.rgb * grade;
+	return vec4(blended, color.a);
+}
+]],
+}

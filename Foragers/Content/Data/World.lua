@@ -6,6 +6,7 @@ return {
 	backgroundColor = { 0.21, 0.65, 0.72 },
 	borderTileOffset = 8,
 	noise = { scale = 0.15, detail = 0.3, density = 0.8 },
+	dayCycle = { dayLengthSec = 8, sunriseHour = 6, sunsetHour = 18, maxShadowLen = 4, maxShadowNorthBias = 0.5, maxShadowStretch = 2, smoothness = 0.25 },
 	props = {
 		coverage = 0.33,
 		spawnInterval = 3,
@@ -24,14 +25,5 @@ return {
 			{ data = "Content.Assets.Sprites.Props.OakStump", weight = 5 },
 			{ data = "Content.Assets.Sprites.Props.BirchStump", weight = 5 },
 		},
-	},
-	dayCycle = {
-		maxShadowLen = 4,
-		dayLengthSec = 4,
-		sunriseHour = 6,
-		sunsetHour = 18,
-		shadowNorthBias = 0.5,
-		smoothingTau = 0.35,
-		widthStretchMax = 10.6,
 	},
 }

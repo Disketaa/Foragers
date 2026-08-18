@@ -46,7 +46,7 @@ function DayCycle.getSunData(time)
 		sunLength = Data.maxShadowLen * (1 - elevation)
 		local angle = math.pi * (1 - dayProgress) -- pi at sunrise -> 0 at sunset
 		offsetX = sunLength * math.cos(angle)
-		offsetY = -sunLength * math.sin(angle) * (Data.shadowNorthBias or 0.5)
+		offsetY = -sunLength * math.sin(angle) * (Data.maxShadowNorthBias or 0.5)
 	end
 	return {
 		time = time,
@@ -65,7 +65,7 @@ end
 --- eases instead of snapping.
 function DayCycle._approachDisplay(dt)
 	local target = DayCycle.getSunData(DayCycle.time)
-	local tau = Data.smoothingTau or 0.3
+	local tau = Data.smoothness or 0.3
 	local d = DayCycle.display
 	d.offsetX = approach(d.offsetX, target.offsetX, dt, tau)
 	d.offsetY = approach(d.offsetY, target.offsetY, dt, tau)
@@ -99,7 +99,7 @@ end
 --- Set the clock directly (used by the `time` debug command / wheel scrub).
 --- Snaps the raw clock + force-emits TIME_CHANGED for future listeners (sky/
 --- lighting); the shadow no longer reads raw time, so it eases in over
---- smoothingTau instead of teleporting.
+--- smoothness instead of teleporting.
 ---@param hours number Hour in [0,24).
 function DayCycle.setTime(hours)
 	DayCycle.time = hours % 24
