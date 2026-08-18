@@ -18,22 +18,22 @@ const int KF_COUNT = 7;
 // at 16.5 to match the 1.5h shadow stretch window (shadow.stretchWindow=0.125).
 const float kfHour[KF_COUNT] = float[](0.0, 5.0, 6.0, 8.0, 16.5, 18.0, 19.5);
 	const vec4 kfColorHighlight[KF_COUNT] = vec4[](
-		vec4(0.25, 0.30, 0.45, 1.0),  // midnight (dark gray-blue)
-		vec4(0.25, 0.30, 0.45, 1.0),  // pre-dawn
-		vec4(1.25, 1.0, 0.65, 1.0),   // dawn (warm) — peaks at horizon 6.0
+		vec4(0.20, 0.28, 0.55, 1.0),  // midnight (rich deep blue)
+		vec4(0.20, 0.28, 0.55, 1.0),  // pre-dawn (rich deep blue)
+		vec4(1.50, 0.80, 0.55, 1.0),  // dawn (red-orange) — peaks at horizon 6.0
 		vec4(1.0, 1.0, 1.0, 1.0),     // full day (neutral)
 		vec4(1.0, 1.0, 1.0, 1.0),     // full day — dusk fade begins 16.5 (matches shadow window)
-		vec4(1.25, 1.0, 0.65, 1.0),   // dusk (warm) — peaks at horizon 18.0
-		vec4(0.25, 0.30, 0.45, 1.0)   // night (dark gray-blue)
+		vec4(1.45, 0.70, 1.05, 1.0),  // dusk (pink, saturated) — peaks at horizon 18.0
+		vec4(0.20, 0.28, 0.55, 1.0)   // night (rich deep blue)
 	);
 	const vec4 kfColorShadow[KF_COUNT] = vec4[](
-		vec4(0.15, 0.20, 0.35, 1.0),  // midnight (deep dark gray-blue, close to highlight)
-		vec4(0.15, 0.20, 0.35, 1.0),  // pre-dawn
-		vec4(0.65, 0.6, 0.95, 1.0),   // dawn (cool shadow) — peaks at horizon 6.0
+		vec4(0.12, 0.18, 0.45, 1.0),  // midnight (rich deep blue shadow, close to highlight)
+		vec4(0.12, 0.18, 0.45, 1.0),  // pre-dawn (rich deep blue shadow)
+		vec4(1.00, 0.60, 0.55, 1.0),  // dawn (red-orange shadow) — peaks at horizon 6.0
 		vec4(1.0, 1.0, 1.0, 1.0),     // full day
 		vec4(1.0, 1.0, 1.0, 1.0),     // full day — dusk fade begins 16.5
-		vec4(0.65, 0.6, 0.95, 1.0),  // dusk (cool shadow) — peaks at horizon 18.0
-		vec4(0.15, 0.20, 0.35, 1.0)  // night
+		vec4(0.95, 0.5, 1.05, 1.0),  // dusk (pink shadow, saturated) — peaks at horizon 18.0
+		vec4(0.12, 0.18, 0.45, 1.0)  // night (rich deep blue shadow)
 	);
 
 // Lerp both keyframe sets to the current hour.
