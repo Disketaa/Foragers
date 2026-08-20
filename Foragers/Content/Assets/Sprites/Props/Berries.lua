@@ -1,24 +1,8 @@
 return {
-	extends = "Content.Assets.Sprites.Props.__Props",
-	object = "vegetable",
+	extends = "Content.Assets.Sprites.Props._HostedVegetables",
 	frameWidth = 10,
 	frameHeight = 10,
-	pivotX = "center",
-	pivotY = "center",
-	layer = 0,
 	components = {
-		{
-			component = "spritesheet",
-			animations = {
-				{ row = 1, frames = 4, speed = "4..6" },
-			},
-		},
-
-		{
-			component = "destructible",
-			hp = 10,
-		},
-
 		{
 			component = "drop",
 			drops = {
