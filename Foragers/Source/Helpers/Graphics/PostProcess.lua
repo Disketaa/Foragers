@@ -62,6 +62,7 @@ function PostProcess.updateReveal(dt, canvas)
 		local dtc = math.min((GameState.revealTimer - DEATH_DARKEN_DELAY) / DEATH_DARKEN_DURATION, 1)
 		local de = (Easing[DEATH_DARKEN_CURVE] or Easing.Linear)(dtc)
 		ShaderLoader.sendUniform("u_darken", de)
+		GameState.darkenUniform = de
 	end
 
 	if t >= 1 and GameState.revealTimer >= DEATH_DARKEN_DELAY + DEATH_DARKEN_DURATION then
@@ -77,6 +78,7 @@ function PostProcess.updateStartDarken(dt)
 	local t = math.min(GameState.startDarkenTimer / INTRO_DARKEN_DURATION, 1)
 	local e = (Easing[INTRO_DARKEN_CURVE] or Easing.Linear)(t)
 	ShaderLoader.sendUniform("u_darken", 1 - e)
+	GameState.darkenUniform = 1 - e
 	if t >= 1 then
 		GameState.startDarkenActive = false
 	end

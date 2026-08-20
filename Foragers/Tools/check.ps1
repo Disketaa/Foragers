@@ -26,7 +26,7 @@ function Format-Summary {
 }
 
 Write-Host "`n- Lua Check:" -ForegroundColor Cyan
-$luaCheck = & "$root\luacheck.exe" -q "$gameRoot\Source" "$gameRoot\Content" 2>&1
+$luaCheck = & "$root\luacheck.exe" -q "$gameRoot\Main.lua" "$gameRoot\Source" "$gameRoot\Content" 2>&1
 Format-Summary $luaCheck
 
 Write-Host "`n- Lua Analyzer:" -ForegroundColor Cyan

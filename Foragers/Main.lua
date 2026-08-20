@@ -30,7 +30,6 @@ local Events = require("Source.Helpers.Core.Events")
 local PropSpawner = require("Source.World.PropSpawner")
 local PropPicker = require("Source.World.PropPicker")
 local TextEmitter = require("Source.UI.Components.TextEmitter")
-local UIComponent = require("Source.UI.Components.UI")
 local Layout = require("Source.UI.Layout")
 local TimeScale = require("Source.Helpers.Systems.TimeScale")
 local Reset = require("Source.Helpers.Systems.Reset")
@@ -219,6 +218,7 @@ function initGame()
 	GameState.satUniform = 1
 	GameState.posterizeUniform = 0
 	GameState.noiseUniform = 0
+	GameState.darkenUniform = 0
 	ShaderLoader.sendUniform("u_noise", 0)
 	GameState.revealActive = false
 	GameState.revealTimer = 0
@@ -546,9 +546,9 @@ function love.draw()
 	end, nil, GameState.shakeOffsetX, GameState.shakeOffsetY, GameState.camSubX, GameState.camSubY,
 	ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
-	-- Grade neutral 8-16.5 (DayNightGrade keyframes). Outside that, or
-	-- postProcess disabled, emissive differs from graded world — draw it.
-	if not ShaderLoader.postProcessEnabled or DayCycle.time < 8 or DayCycle.time > 16.5 then
+	-- Draw only when grade chain differs from identity: postProcess active AND
+	-- (darken active OR outside neutral day range 8-16.5).
+	if ShaderLoader.postProcessEnabled and (GameState.darkenUniform > 0 or DayCycle.time < 8 or DayCycle.time > 16.5) then
 		Emissive.drawToScreen(visible, canvas, GameState.camPixelX, GameState.camPixelY,
 			GameState.camSubX, GameState.camSubY, GameState.shakeOffsetX, GameState.shakeOffsetY, zoom, zpx, zpy)
 	end
