@@ -69,7 +69,9 @@ end
 function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 	-- Raw target alpha, not eased display.alpha: exponential smoothing never
 	-- reaches exactly 0, so gate would never fire at night.
-	if DayCycle.getSunData(DayCycle.time).alpha <= 0 then
+	local raw = DayCycle.getSunData(DayCycle.time)
+
+	if raw.alpha <= 0 then
 		return
 	end
 	local display = DayCycle.getDisplaySunData()
@@ -87,8 +89,8 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 				if sprite and sprite.components then
 					local comps = sprite:getComponentsInto("shadow", hasShadow, shadowScan)
 					for _, comp in ipairs(comps) do
-						-- Phase-shift the golden hour per prop so stretch/offset/alpha
-						-- sweep across the island by X instead of all props peaking at once.
+						-- Phase-shift the golden hour per prop so stretch/offset
+						-- sweeps across the island by X instead of all props peaking at once.
 						local sx = math.floor(sprite.x + 0.5)
 						local effTime = (display.time + (sx - worldCenterX) * timeShiftPerPx) % 24
 						local sun = DayCycle.getSunData(effTime)
@@ -109,7 +111,7 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 						local x = sun.offsetX < 0 and (ccx + halfW - w) or (ccx - halfW)
 						local y = ccy - math.floor(h / 2)
 						if w > 0 and h > 0 then
-							shadowBatch:setColor(layerColor[1], layerColor[2], layerColor[3], sun.alpha or 0)
+							shadowBatch:setColor(layerColor[1], layerColor[2], layerColor[3], raw.alpha or 0)
 							if w <= 2 or h <= 2 then
 								shadowBatch:add(x, y, 0, w, h)
 							else

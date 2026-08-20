@@ -3,15 +3,15 @@ return {
 	priority = "background",
 	applies_to = "screen",
 	uniforms = {
-		caustic_color = { 0.26, 0.67, 0.7 },
+		caustic_color = { 0.2, 0.65, 0.9 },
 		speed = 0.2,
 		horizontal_scale = 0.2,
 		vertical_scale = 0.1,
 		threshold = 0.9,
 		sharpness = 0.8,
-		glow_intensity = 0.7,
+		glow_intensity = 0.5,
 		glow_threshold = 0.1,
-		opacity_variation = 0.5,
+		opacity_variation = 0.33,
 	},
 	code = [[
 extern vec3 caustic_color;
