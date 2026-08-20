@@ -159,9 +159,10 @@ def _sort_params(text: str, groups, listed: set | None = None, missing: list | N
 
     sorted_entries = sorted(entries, key=sort_key)
     entry_indent = indent + "\t"
+    sorted_body = f",\n{entry_indent}".join(sorted_entries)
     return (
         text[:m.start()]
-        + f"{indent}return {{\n{entry_indent}{f',\n{entry_indent}'.join(sorted_entries)},\n{indent}}}"
+        + f"{indent}return {{\n{entry_indent}{sorted_body},\n{indent}}}"
         + text[close + 1:]
     )
 
@@ -191,9 +192,10 @@ def _sort_components(text: str, order: list, missing=None) -> str:
 
     entries.sort(key=lambda e: oi.get(component_name(e), len(order)))
     entry_indent = indent + "\t"
+    joined_entries = f",\n\n{entry_indent}".join(entries)
     return (
         text[:m.start()]
-        + f"{indent}components = {{\n{entry_indent}{f',\n\n{entry_indent}'.join(entries)},\n{indent}}}"
+        + f"{indent}components = {{\n{entry_indent}{joined_entries},\n{indent}}}"
         + text[close + 1:]
     )
 
@@ -233,7 +235,8 @@ def _sort_component_params(text: str, groups, listed: set | None = None, missing
 
         sorted_parts = sorted(parts, key=sort_key)
         param_indent = entry_indent + "\t"
-        rebuilt.append(f"{{\n{param_indent}{f',\n{param_indent}'.join(sorted_parts)},\n{entry_indent}}}")
+        joined_parts = f",\n{param_indent}".join(sorted_parts)
+        rebuilt.append(f"{{\n{param_indent}{joined_parts},\n{entry_indent}}}")
     joined = f",\n\n{entry_indent}".join(rebuilt)
     return (
         text[:m.start()]
@@ -271,7 +274,8 @@ def _sort_tween_array(text: str, open_idx: int, close_idx: int, oi: dict, missin
         base_match = re.match(r"[ \t]*", text[line_start:open_idx])
         base_indent = base_match.group() if base_match else ""
         entry_indent = base_indent + "\t"
-        new_inner = f"\n{entry_indent}{f',\n{entry_indent}'.join(sorted_items)},\n{base_indent}"
+        inner_joined = f",\n{entry_indent}".join(sorted_items)
+        new_inner = f"\n{entry_indent}{inner_joined},\n{base_indent}"
     else:
         new_inner = " " + ", ".join(sorted_items) + " "
     return text[:open_idx + 1] + new_inner + text[close_idx:]

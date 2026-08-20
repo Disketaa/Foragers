@@ -71,6 +71,7 @@ def _collapse_tags(text: str) -> str:
 
 def _format_tags(inner: str, indent: str) -> str:
     out = []
+    tab = "\t"
     for entry in split_top_level(inner):
         m = _NAMED_TABLE.match(entry)
         if not m:
@@ -82,7 +83,7 @@ def _format_tags(inner: str, indent: str) -> str:
         if not values:
             out.append(f"{indent}\t{key} = {{}},")
         else:
-            out.append(f"{indent}\t{key} = {_format_value_list(values, indent + '\t')},")
+            out.append(f"{indent}\t{key} = {_format_value_list(values, indent + tab)},")
     return "\n".join(out)
 
 

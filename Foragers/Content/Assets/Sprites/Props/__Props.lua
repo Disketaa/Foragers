@@ -74,12 +74,12 @@ return {
 		},
 
 		{
-			component = "silhouette",
-			mode = "mask",
+			component = "emissive",
 		},
 
-        {
-			component = "emissive",
+		{
+			component = "silhouette",
+			mode = "mask",
 		},
 
 		{

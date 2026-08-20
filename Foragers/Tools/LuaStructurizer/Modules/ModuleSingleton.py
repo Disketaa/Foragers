@@ -38,7 +38,7 @@ def check(text, path, config):
     lines = text.split("\n")
     spans = _function_spans(lines)
 
-    decls = [(idx, NIL_DECL.match(l).group(1)) for idx, l in enumerate(lines) if NIL_DECL.match(l)]
+    decls = [(idx, m.group(1)) for idx, l in enumerate(lines) if (m := NIL_DECL.match(l))]
 
     per_var = {}
     for idx, name in decls:
