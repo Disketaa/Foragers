@@ -69,9 +69,9 @@ return {
 
 		{
 			component = "shake",
+			duration = 0.6,
 			magnitude = 3,
 			decay = true,
-			duration = 0.6,
 			triggerOn = { "death" },
 		},
 
@@ -110,8 +110,8 @@ return {
 			moveX = "-15|15",
 			moveY = -30,
 			gravity = 130,
-			color = { 0.6, 1, 0.6 },
 			duration = 0.7,
+			color = { 0.6, 1, 0.6 },
 			destroy = "scale",
 			destroyCurve = "InCubic",
 		},

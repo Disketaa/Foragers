@@ -15,7 +15,7 @@ Modules.WrapTables.include_folders = ["Content/"]
 # A param lands in the group whose tag shares the most words with its key
 # (camelCase-aware: offsetX -> offset,x); ties go to the earlier group.
 # Unknown keys stay last in file order. Tune tags here.
-param_groups.order = "identity size frame pivot coords motion stats appearance timing content ui sound options"
+param_groups.order = "identity size frame pivot coords motion ambients stats appearance timing content ui sound options"
 param_groups.identity.tags = "mode name extends object order debug snapshot postprocess seed id type module priority appliesTo applies_to host event field maxField sourceType icon label clientId largeImageKey"
 param_groups.size.tags = "width height tileSize chunkSize"
 param_groups.frame.tags = "frameWidth frameHeight collisionWidth collisionHeight columns rows animations chars charSpacing spacing font"
@@ -28,8 +28,9 @@ param_groups.timing.tags = "duration interval stepInterval count hideDelay spawn
 param_groups.content.tags = "props tags tweens particle inheritFlip details largeImageText stateByScene"
 param_groups.ui.tags = "horizontal vertical layer sortOffsetY"
 param_groups.sound.tags = "volume pitch pitchRandomness"
+param_groups.ambients.tags = "despawnOnDay despawnOnNight fadeOutDuration wanderingSpeed"
 param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius restartHoldDuration enabled"
 
-component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop pickup weapon shake tween particle_emitter text_emitter emote sound cursor ui counter emissive silhouette shader"
+component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop pickup weapon shake tween particle_emitter ambient text_emitter emote sound cursor ui counter emissive silhouette shader"
 
 tween_order.order = "x y scale_x scale_y angle brightness tint_mix alpha"

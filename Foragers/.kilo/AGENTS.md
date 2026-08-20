@@ -100,11 +100,11 @@ Foragers/
 │   │   ├── Core/         # EventEmitter, Events, ComponentRegistry, Log, Math, Merge, Path, Pivot, ValueParser
 │   │   ├── Graphics/     # Canvas, DrawOrder, Mask, ShaderLoader, Zoom, Camera, PostProcess
 │   │   ├── Debug/        # ChatHistory, Commands, Debug, Gizmo, Snapshot, Chat
-│   │   └── Systems/      # AttackSystem, Input, ModLoader, Options, Reset, TimeScale, GameState, Lifecycle, Bindings
+│   │   └── Systems/      # AmbientSpawner, AttackSystem, Input, ModLoader, Options, Reset, TimeScale, GameState, Lifecycle, Bindings
 │   ├── Sprite/
 │   │   ├── Sprite.lua
 │   │   ├── SpriteLoader.lua
-│   │   └── Components/   # collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, player_stats, pickup, silhouette, emote
+│   │   └── Components/   # ambient, collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, player_stats, pickup, silhouette, emote
 │   ├── UI/
 │   │   ├── Components/   # TextEmitter, UI
 │   │   ├── Layout.lua
@@ -153,7 +153,7 @@ All Critical Constraints in Section I apply here.
 
 ### Component list
 
-23 core: `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `player_stats`, `pickup`, `silhouette`, `emote`, `cursor`.
+24 core: `ambient`, `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `player_stats`, `pickup`, `silhouette`, `emote`, `cursor`.
 
 ---
 
@@ -175,7 +175,7 @@ Full event table: `.kilo/documentation/events.md`
 
 ## XI. Component Registry
 
-`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 23 core components. Mods register new types:
+`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 24 core components. Mods register new types:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```

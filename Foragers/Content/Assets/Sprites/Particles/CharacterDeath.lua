@@ -13,9 +13,9 @@ return {
 
 		{
 			component = "shake",
+			duration = 0.4,
 			magnitude = 3,
 			decay = true,
-			duration = 0.4,
 		},
 	},
 }

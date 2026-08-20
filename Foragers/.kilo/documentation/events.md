@@ -32,6 +32,7 @@ Source of truth: `Source/Helpers/Core/Events.lua`.
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
 | `PICKUP` | `"pickup"` | main.lua (pendingDestroy) | Tween(10) |
 | `TWEEN_COMPLETED` | `"tween_completed"` | Tween | Sound(15) |
+| `TIME_CHANGED` | `"time_changed"` | DayCycle | Ambient(100) — starts fade-out on day/night transition |
 | `COUNTER_TICK` | `"counter_tick"` | Counter | Tween(10) |
 | `COUNTER_WRAP` | `"counter_wrap"` | Counter | Tween(10), Sound(15) |
 

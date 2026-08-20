@@ -49,6 +49,7 @@ local Lifecycle = require("Source.Helpers.Systems.Lifecycle")
 local Camera = require("Source.Helpers.Graphics.Camera")
 local GameState = require("Source.Helpers.Systems.GameState")
 local DayCycle = require("Source.Helpers.Systems.DayCycle")
+local AmbientSpawner = require("Source.Helpers.Systems.AmbientSpawner")
 
 local objects = {}
 local staticObjects = {}
@@ -296,6 +297,8 @@ function initGame()
 	PropSpawner.init(worldData, World, {
 		playerSprite = GameState.playerSprite,
 	})
+
+	AmbientSpawner.init(World.ambient)
 
 	Camera.update(canvas)
 
@@ -947,6 +950,8 @@ function love.update(dt)
 		GameState.scrollToComp:update(scaledDt)
 	end
 	Camera.update(canvas)
+
+		AmbientSpawner.update(scaledDt, objects, dynamicObjects, GameState.camPixelX, GameState.camPixelY, canvas.width, canvas.height)
 
 	AttackSystem.update(scaledDt, dynamicObjects)
 	end -- world camera/attack

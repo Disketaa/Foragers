@@ -14,6 +14,26 @@ return {
 		shadow = { maxLen = 4, stretchPx = 8, stretchWindow = 0.125, stretchPower = 4, timeShiftPerPx = 0.01, worldCenterX = 0 },
 	},
 
+	ambient = {
+		butterflies = {
+			maxCount = 8,
+			spawnInterval = 2,
+			spawnMargin = 40,
+			despawnMargin = 80,
+			spawnAtNight = false,
+			types = { "Content.Assets.Sprites.Ambient.BirdwingButterfly", "Content.Assets.Sprites.Ambient.MonarchButterfly", "Content.Assets.Sprites.Ambient.MorphoButterfly" },
+		},
+
+		fireflies = {
+			maxCount = 6,
+			spawnInterval = 3,
+			spawnMargin = 40,
+			despawnMargin = 80,
+			spawnAtNight = true,
+			types = { "Content.Assets.Sprites.Ambient.Firefly" },
+		},
+	},
+
 	props = {
 		coverage = 0.33,
 		spawnInterval = 3,
