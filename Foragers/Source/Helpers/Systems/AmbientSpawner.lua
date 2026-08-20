@@ -8,20 +8,67 @@ local ValueParser = require("Source.Helpers.Core.ValueParser")
 
 local AmbientSpawner = {
 	groups = {},
+	_activeTiles = {},
+	_tileSize = 8,
+	_SPAWN_MARGIN = 40,
 }
 
----@param ambientConfig table Ambient config table from World.lua (whole `ambient` section)
-function AmbientSpawner.init(ambientConfig)
+--- Group name → phase gate. "night" spawns at night, everything else during day.
+local function groupIsNight(name)
+	return name == "night"
+end
+
+---@param ambientConfig table Ambient config from World.lua (whole `ambient` section)
+---@param worldData table 2D grid from WorldGen (worldData[y][x] with tile.active, tile.x, tile.y)
+---@param worldConfig table Content/Data/World.lua
+function AmbientSpawner.init(ambientConfig, worldData, worldConfig)
 	AmbientSpawner.groups = {}
+	AmbientSpawner._activeTiles = {}
 	if not ambientConfig then
 		return
 	end
+
+	local width = worldConfig.width or 20
+	local height = worldConfig.height or 20
+
+	AmbientSpawner._tileSize = worldConfig.tileSize or 8
+
+	-- Build active (land) tiles list — same pattern as PropSpawner
+	for y = 0, height - 1 do
+		for x = 0, width - 1 do
+			local tile = worldData[y][x]
+			if tile.active then
+				table.insert(AmbientSpawner._activeTiles, {
+					x = tile.x,
+					y = tile.y,
+				})
+			end
+		end
+	end
+
+	-- Cap based on density × active land tiles (not total world area)
+	local density = ambientConfig.density or 0.02
+	local totalCap = math.max(1, math.floor(#AmbientSpawner._activeTiles * density))
+
+	-- Split cap evenly across groups
+	local groupNames = {}
 	for name, cfg in pairs(ambientConfig) do
-		AmbientSpawner.groups[name] = {
-			config = cfg,
-			sprites = {},
-			cooldown = 0,
-		}
+		if type(cfg) == "table" and cfg.types then
+			groupNames[#groupNames + 1] = name
+		end
+	end
+	local perGroup = math.max(1, math.floor(totalCap / math.max(1, #groupNames)))
+
+	for name, cfg in pairs(ambientConfig) do
+		if type(cfg) == "table" and cfg.types then
+			AmbientSpawner.groups[name] = {
+				config = cfg,
+				name = name,
+				maxCount = perGroup,
+				sprites = {},
+				cooldown = 0,
+			}
+		end
 	end
 end
 
@@ -47,6 +94,7 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 	local cfg = group.config
 	local list = group.sprites
 
+	-- Despawn finished or out-of-range ambient sprites
 	for i = #list, 1, -1 do
 		local entry = list[i]
 		local ambient = entry.instance:findComponent("ambient")
@@ -73,9 +121,11 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 	if GameState.state ~= "game" then
 		return
 	end
+
+	-- Phase gate: group name determines day/night. "night" group spawns at night, everything else spawns during day.
+	local isNight = groupIsNight(group.name)
 	local isDay = sunData.isDay
-	local spawnAtNight = cfg.spawnAtNight or false
-	if (spawnAtNight and isDay) or (not spawnAtNight and not isDay) then
+	if (isNight and isDay) or (not isNight and not isDay) then
 		return
 	end
 
@@ -85,20 +135,30 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 	end
 	group.cooldown = cfg.spawnInterval or 2
 
-	if #list >= (cfg.maxCount or 8) then
+	if #list >= group.maxCount then
 		return
 	end
 
 	local typePath = cfg.types[love.math.random(1, #cfg.types)]
 
-	local margin = cfg.spawnMargin or 40
-	local wx = -camPixelX - margin + love.math.random() * (canvasWidth + margin * 2)
-	local wy = -camPixelY - margin + love.math.random() * (canvasHeight + margin * 2)
-
-	local worldW = GameState.worldPixelWidth or 10000
-	local worldH = GameState.worldPixelHeight or 10000
-	wx = math.max(0, math.min(worldW, wx))
-	wy = math.max(0, math.min(worldH, wy))
+	-- Pick random active (land) tile within camera view + margin, then jitter within tile
+	local margin = AmbientSpawner._SPAWN_MARGIN
+	local vx = -camPixelX - margin
+	local vy = -camPixelY - margin
+	local vw = canvasWidth + margin * 2
+	local vh = canvasHeight + margin * 2
+	local nearTiles = {}
+	for _, tile in ipairs(AmbientSpawner._activeTiles) do
+		if tile.x >= vx and tile.x <= vx + vw and tile.y >= vy and tile.y <= vy + vh then
+			nearTiles[#nearTiles + 1] = tile
+		end
+	end
+	if #nearTiles == 0 then
+		return
+	end
+	local chosen = nearTiles[love.math.random(1, #nearTiles)]
+	local wx = chosen.x + love.math.random() * AmbientSpawner._tileSize
+	local wy = chosen.y + love.math.random() * AmbientSpawner._tileSize
 
 	local luaPath = Path.lua(typePath)
 	local ok, data = pcall(require, luaPath)
@@ -114,10 +174,10 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 		return
 	end
 
-	-- Re-roll interval on spawn so each firefly/butterfly has fresh timings
+	-- Re-roll interval on spawn so each ambient sprite has fresh timings
 	local ambient = sprite:findComponent("ambient")
-	if ambient and ambient.__raw and ambient.__raw.interval then
-		ambient.interval = ValueParser.value(ambient.__raw.interval)
+	if ambient and ambient.__raw and ambient.__raw.changeDirectionInterval then
+		ambient.changeDirectionInterval = ValueParser.value(ambient.__raw.changeDirectionInterval)
 		ambient._dirTimer = 0
 	end
 

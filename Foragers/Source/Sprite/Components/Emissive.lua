@@ -39,6 +39,9 @@ function Emissive.drawToScreen(entries, canvas, camPixelX, camPixelY, camSubX, c
 			if sprite and sprite.components then
 				local emComp = sprite:findComponent("emissive", function(c) return not c._broken end)
 				if emComp then
+					local alpha = sprite.alpha or 1
+					love.graphics.setColor(1, 1, 1, alpha)
+
 					local rot = 0
 					local t = sprite.tweens
 					if t then

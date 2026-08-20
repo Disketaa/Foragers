@@ -6,18 +6,14 @@ return {
 		{
 			component = "spritesheet",
 			animations = {
-				{ row = 1, frames = 4, speed = "8..12", loop = true },
+				{ row = 1, frames = 4, speed = "4..8", loop = true },
 			},
 		},
 
 		{
 			component = "ambient",
-			despawnOnDay = true,
-			despawnOnNight = false,
-			duration = 15,
-			fadeOutDuration = 1.5,
-			wanderingSpeed = 8,
-			interval = "2..4",
+			mode = "night",
+			wanderingSpeed = 2,
 		},
 
 		{

@@ -7,6 +7,13 @@ return {
 	layer = 3,
 	components = {
 		{
+			component = "spritesheet",
+			animations = {
+				{ row = 1, frames = 4, speed = "12..20", loop = true },
+			},
+		},
+
+		{
 			component = "shadow",
 			width = 3,
 			height = 1,
@@ -16,11 +23,12 @@ return {
 
 		{
 			component = "ambient",
-			despawnOnNight = true,
-			duration = 2,
+			mode = "day",
+			duration = "5..20",
+			fadeInDuration = 2,
 			fadeOutDuration = 0.5,
-			wanderingSpeed = 10,
-			interval = "1.5..3",
+			wanderingSpeed = 5,
+			changeDirectionInterval = "3..6",
 		},
 	},
 }

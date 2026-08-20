@@ -5,15 +5,18 @@ local Ambient = {}
 Ambient.__index = Ambient
 
 function Ambient.new(data)
+	local mode = data.mode or "day"
 	local self = setmetatable({
-		despawnOnDay = data.despawnOnDay or false,
-		despawnOnNight = data.despawnOnNight ~= false,
+		mode = mode,
 		duration = data.duration or 20,
+		fadeInDuration = data.fadeInDuration or 0.5,
 		fadeOutDuration = data.fadeOutDuration or 1.5,
-		interval = data.interval or 3,
+		changeDirectionInterval = data.changeDirectionInterval or 3,
 		wanderingSpeed = data.wanderingSpeed or 10,
 		_despawn = false,
+		_entering = true,
 		_fading = false,
+		_fadeInTimer = 0,
 		_fadeTimer = 0,
 		_age = 0,
 		_velocityX = 0,
@@ -39,18 +42,17 @@ end
 function Ambient:attach()
 	self:_pickDirection()
 
-	if self._hasRaw and self.__raw.interval then
-		self.interval = ValueParser.value(self.__raw.interval)
+	if self._hasRaw and self.__raw.changeDirectionInterval then
+		self.changeDirectionInterval = ValueParser.value(self.__raw.changeDirectionInterval)
 	end
 
-	if self.despawnOnNight or self.despawnOnDay then
+	-- Start invisible, fade in
+	self.parent.alpha = 0
+
+	if self.mode == "night" then
 		local DayCycle = require("Source.Helpers.Systems.DayCycle")
 		local sunData = DayCycle.getSunData()
-		if self.despawnOnNight and not sunData.isDay then
-			self._fading = true
-			self._fadeTimer = 0
-		end
-		if self.despawnOnDay and sunData.isDay then
+		if sunData.isDay then
 			self._fading = true
 			self._fadeTimer = 0
 		end
@@ -58,7 +60,23 @@ function Ambient:attach()
 			if self._despawn or not self.parent then
 				return
 			end
-			if (self.despawnOnNight and not data.isDay) or (self.despawnOnDay and data.isDay) then
+			if data.isDay then
+				self._fading = true
+				self._fadeTimer = 0
+			end
+		end)
+	else
+		local DayCycle = require("Source.Helpers.Systems.DayCycle")
+		local sunData = DayCycle.getSunData()
+		if not sunData.isDay then
+			self._fading = true
+			self._fadeTimer = 0
+		end
+		DayCycle.emitter:on(Events.TIME_CHANGED, function(data)
+			if self._despawn or not self.parent then
+				return
+			end
+			if not data.isDay then
 				self._fading = true
 				self._fadeTimer = 0
 			end
@@ -81,6 +99,17 @@ function Ambient:update(dt)
 		return
 	end
 
+	-- Fade in phase
+	if self._entering then
+		self._fadeInTimer = self._fadeInTimer + dt
+		local progress = math.min(1, self._fadeInTimer / self.fadeInDuration)
+		self.parent.alpha = progress
+		if progress >= 1 then
+			self._entering = false
+			self.parent.alpha = 1
+		end
+	end
+
 	self._age = self._age + dt
 
 	if self._age >= self.duration and not self._fading then
@@ -98,10 +127,10 @@ function Ambient:update(dt)
 	end
 
 	self._dirTimer = self._dirTimer + dt
-	if self._dirTimer >= self.interval then
+	if self._dirTimer >= self.changeDirectionInterval then
 		self._dirTimer = 0
-		if self._hasRaw and self.__raw.interval then
-			self.interval = ValueParser.value(self.__raw.interval)
+		if self._hasRaw and self.__raw.changeDirectionInterval then
+			self.changeDirectionInterval = ValueParser.value(self.__raw.changeDirectionInterval)
 		end
 		self:_pickDirection()
 	end

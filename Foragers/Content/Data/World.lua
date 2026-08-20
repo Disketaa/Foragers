@@ -15,21 +15,14 @@ return {
 	},
 
 	ambient = {
-		butterflies = {
-			maxCount = 8,
-			spawnInterval = 2,
-			spawnMargin = 40,
-			despawnMargin = 80,
-			spawnAtNight = false,
+		density = 0.1,
+		day = {
+			spawnInterval = 0.001,
 			types = { "Content/Assets/Sprites/Ambient/BirdwingButterfly", "Content/Assets/Sprites/Ambient/MonarchButterfly", "Content/Assets/Sprites/Ambient/MorphoButterfly" },
 		},
 
-		fireflies = {
-			maxCount = 6,
+		night = {
 			spawnInterval = 3,
-			spawnMargin = 40,
-			despawnMargin = 80,
-			spawnAtNight = true,
 			types = { "Content/Assets/Sprites/Ambient/Firefly" },
 		},
 	},

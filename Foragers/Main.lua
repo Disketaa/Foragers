@@ -298,7 +298,7 @@ function initGame()
 		playerSprite = GameState.playerSprite,
 	})
 
-	AmbientSpawner.init(World.ambient)
+	AmbientSpawner.init(World.ambient, worldData, World)
 
 	Camera.update(canvas)
 
