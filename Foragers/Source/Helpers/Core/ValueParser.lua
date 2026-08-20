@@ -74,6 +74,19 @@ function ValueParser.range(value)
 	return r.min, r.max
 end
 
+--- Parse "7>17" -> 7, 17. Default "0>24" (always valid). Handles optional whitespace.
+---@param raw string|nil
+---@return number, number
+function ValueParser.parseSpawnTime(raw)
+	if raw then
+		local a, b = raw:match("^%s*(%d+)%s*>%s*(%d+)%s*$")
+		if a and b then
+			return tonumber(a), tonumber(b)
+		end
+	end
+	return 0, 24
+end
+
 --- Re-rolls range from __raw, otherwise returns resolved range.
 ---@param tbl table
 ---@param field string

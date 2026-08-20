@@ -12,8 +12,7 @@ return {
 
 		{
 			component = "ambient",
-			mode = "night",
-			wanderingSpeed = 2,
+			wanderingSpeed = 0.5,
 		},
 
 		{

@@ -1,18 +1,20 @@
 local Events = require("Source.Helpers.Core.Events")
 local ValueParser = require("Source.Helpers.Core.ValueParser")
+local DayCycle = require("Source.Helpers.Systems.DayCycle")
 
 local Ambient = {}
 Ambient.__index = Ambient
 
 function Ambient.new(data)
-	local mode = data.mode or "day"
+	local winStart, winEnd = ValueParser.parseSpawnTime(data.spawnTime)
 	local self = setmetatable({
-		mode = mode,
 		duration = data.duration or 20,
 		fadeInDuration = data.fadeInDuration or 0.5,
 		fadeOutDuration = data.fadeOutDuration or 1.5,
 		changeDirectionInterval = data.changeDirectionInterval or 3,
 		wanderingSpeed = data.wanderingSpeed or 10,
+		spawnStart = winStart,
+		spawnEnd = winEnd,
 		_despawn = false,
 		_entering = true,
 		_fading = false,
@@ -46,41 +48,35 @@ function Ambient:attach()
 		self.changeDirectionInterval = ValueParser.value(self.__raw.changeDirectionInterval)
 	end
 
-	-- Start invisible, fade in
 	self.parent.alpha = 0
 
-	if self.mode == "night" then
-		local DayCycle = require("Source.Helpers.Systems.DayCycle")
-		local sunData = DayCycle.getSunData()
-		if sunData.isDay then
-			self._fading = true
-			self._fadeTimer = 0
+	self:_checkTime(DayCycle.getSunData())
+
+	DayCycle.emitter:on(Events.TIME_CHANGED, function(data)
+		if self._despawn or not self.parent then
+			return
 		end
-		DayCycle.emitter:on(Events.TIME_CHANGED, function(data)
-			if self._despawn or not self.parent then
-				return
-			end
-			if data.isDay then
-				self._fading = true
-				self._fadeTimer = 0
-			end
-		end)
+		self:_checkTime(data)
+	end)
+end
+
+--- Start fade-out if current time is outside the active window.
+function Ambient:_checkTime(sunData)
+	if self._despawn then
+		return
+	end
+	local t = sunData.time
+	local winStart, winEnd = self.spawnStart, self.spawnEnd
+	local inside
+	if winStart < winEnd then
+		inside = t >= winStart and t < winEnd
 	else
-		local DayCycle = require("Source.Helpers.Systems.DayCycle")
-		local sunData = DayCycle.getSunData()
-		if not sunData.isDay then
-			self._fading = true
-			self._fadeTimer = 0
-		end
-		DayCycle.emitter:on(Events.TIME_CHANGED, function(data)
-			if self._despawn or not self.parent then
-				return
-			end
-			if not data.isDay then
-				self._fading = true
-				self._fadeTimer = 0
-			end
-		end)
+		inside = t >= winStart or t < winEnd
+	end
+	if not inside and not self._fading then
+		self._entering = false
+		self._fading = true
+		self._fadeTimer = 0
 	end
 end
 
@@ -99,7 +95,8 @@ function Ambient:update(dt)
 		return
 	end
 
-	-- Fade in phase
+	self:_checkTime(DayCycle.getSunData())
+
 	if self._entering then
 		self._fadeInTimer = self._fadeInTimer + dt
 		local progress = math.min(1, self._fadeInTimer / self.fadeInDuration)

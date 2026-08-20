@@ -18,17 +18,16 @@ return {
 			width = 3,
 			height = 1,
 			offsetX = 1,
-			offsetY = 8,
+			offsetY = 12,
 		},
 
 		{
 			component = "ambient",
-			mode = "day",
-			duration = "5..20",
-			fadeInDuration = 2,
-			fadeOutDuration = 0.5,
+			duration = "10..20",
+			fadeInDuration = 1,
+			fadeOutDuration = 1,
 			wanderingSpeed = 5,
-			changeDirectionInterval = "3..6",
+			changeDirectionInterval = "5..15",
 		},
 	},
 }

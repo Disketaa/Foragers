@@ -17,12 +17,14 @@ return {
 	ambient = {
 		density = 0.1,
 		day = {
-			spawnInterval = 0.001,
+			spawnInterval = 6,
+			spawnTime = "7>17",
 			types = { "Content/Assets/Sprites/Ambient/BirdwingButterfly", "Content/Assets/Sprites/Ambient/MonarchButterfly", "Content/Assets/Sprites/Ambient/MorphoButterfly" },
 		},
 
 		night = {
-			spawnInterval = 3,
+			spawnInterval = 4,
+			spawnTime = "19>5",
 			types = { "Content/Assets/Sprites/Ambient/Firefly" },
 		},
 	},

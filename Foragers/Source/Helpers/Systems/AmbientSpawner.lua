@@ -13,9 +13,17 @@ local AmbientSpawner = {
 	_SPAWN_MARGIN = 40,
 }
 
---- Group name → phase gate. "night" spawns at night, everything else during day.
-local function groupIsNight(name)
-	return name == "night"
+--- Check if current time is inside the group's active window.
+---@param cfg table Group config (may have spawnTime)
+---@param sunData table {time}
+---@return boolean
+local function isInsideWindow(cfg, sunData)
+	local winStart, winEnd = ValueParser.parseSpawnTime(cfg.spawnTime)
+	local t = sunData.time
+	if winStart < winEnd then
+		return t >= winStart and t < winEnd
+	end
+	return t >= winStart or t < winEnd
 end
 
 ---@param ambientConfig table Ambient config from World.lua (whole `ambient` section)
@@ -50,7 +58,6 @@ function AmbientSpawner.init(ambientConfig, worldData, worldConfig)
 	local density = ambientConfig.density or 0.02
 	local totalCap = math.max(1, math.floor(#AmbientSpawner._activeTiles * density))
 
-	-- Split cap evenly across groups
 	local groupNames = {}
 	for name, cfg in pairs(ambientConfig) do
 		if type(cfg) == "table" and cfg.types then
@@ -94,7 +101,6 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 	local cfg = group.config
 	local list = group.sprites
 
-	-- Despawn finished or out-of-range ambient sprites
 	for i = #list, 1, -1 do
 		local entry = list[i]
 		local ambient = entry.instance:findComponent("ambient")
@@ -122,10 +128,7 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 		return
 	end
 
-	-- Phase gate: group name determines day/night. "night" group spawns at night, everything else spawns during day.
-	local isNight = groupIsNight(group.name)
-	local isDay = sunData.isDay
-	if (isNight and isDay) or (not isNight and not isDay) then
+	if not isInsideWindow(cfg, sunData) then
 		return
 	end
 
@@ -141,7 +144,6 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 
 	local typePath = cfg.types[love.math.random(1, #cfg.types)]
 
-	-- Pick random active (land) tile within camera view + margin, then jitter within tile
 	local margin = AmbientSpawner._SPAWN_MARGIN
 	local vx = -camPixelX - margin
 	local vy = -camPixelY - margin
