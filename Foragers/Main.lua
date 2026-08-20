@@ -546,10 +546,12 @@ function love.draw()
 	end, nil, GameState.shakeOffsetX, GameState.shakeOffsetY, GameState.camSubX, GameState.camSubY,
 	ShaderLoader.getPostProcess(), zoom, zpx, zpy)
 
-	-- Emissive glow drawn directly to screen after post-process blit.
-	-- No separate canvas, no UV sampling — same transform, pixel-perfect.
-	Emissive.drawToScreen(visible, canvas, GameState.camPixelX, GameState.camPixelY,
-		GameState.camSubX, GameState.camSubY, GameState.shakeOffsetX, GameState.shakeOffsetY, zoom, zpx, zpy)
+	-- Grade neutral 8-16.5 (DayNightGrade keyframes). Outside that, or
+	-- postProcess disabled, emissive differs from graded world — draw it.
+	if not ShaderLoader.postProcessEnabled or DayCycle.time < 8 or DayCycle.time > 16.5 then
+		Emissive.drawToScreen(visible, canvas, GameState.camPixelX, GameState.camPixelY,
+			GameState.camSubX, GameState.camSubY, GameState.shakeOffsetX, GameState.shakeOffsetY, zoom, zpx, zpy)
+	end
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
 	-- its outline. Rects + fills are tagged by group so Gizmo can style each.
