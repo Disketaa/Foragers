@@ -41,6 +41,7 @@ local UI = require("Source.UI.Components.UI")
 local PlayerStats = require("Source.Sprite.Components.PlayerStats")
 local Pickup = require("Source.Sprite.Components.Pickup")
 local Silhouette = require("Source.Sprite.Components.Silhouette")
+local Emissive = require("Source.Sprite.Components.Emissive")
 local Emote = require("Source.Sprite.Components.Emote")
 local Cursor = require("Source.Sprite.Components.Cursor")
 
@@ -66,6 +67,7 @@ local registry = {
 	player_stats = PlayerStats,
 	pickup = Pickup,
 	silhouette = Silhouette,
+	emissive = Emissive,
 	emote = Emote,
 	cursor = Cursor,
 }

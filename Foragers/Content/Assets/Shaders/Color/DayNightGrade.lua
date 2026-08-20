@@ -4,7 +4,12 @@ return {
 	postprocess = true,
 	type = "color",
 	module = true,
-	uniforms = { u_dayTime = 12 },
+	uniforms = {
+		u_dayTime = 12,
+		u_canvasScale = 1,
+		u_canvasOrigin = { 0, 0 },
+		u_canvasSize = { 1, 1 },
+	},
 	code = [[
 // Day/night grade keyframes: hour -> rgb grade multiplier. Edit here, not in Lua.
 // Two sets: kfColorHighlight (warm grade for lit areas) and kfColorShadow (cool
@@ -67,6 +72,8 @@ void DayNightGrade_keys(out vec4 hi, out vec4 sh, float h) {
 	}
 }
 
+extern Image u_emissiveMask;
+
 vec4 DayNightGrade_color(vec4 color, vec2 screen_coords) {
 	vec4 hi, sh;
 	DayNightGrade_keys(hi, sh, u_dayTime);
@@ -74,6 +81,12 @@ vec4 DayNightGrade_color(vec4 color, vec2 screen_coords) {
 	// Split-tone grade: warm on lit pixels, cool on shadowed pixels.
 	vec3 grade = mix(sh.rgb, hi.rgb, luma);
 	vec3 blended = color.rgb * grade;
+
+	vec2 px = floor((screen_coords - u_canvasOrigin) / u_canvasScale) + 0.5;
+	vec2 uv = px / u_canvasSize;
+	float glow = Texel(u_emissiveMask, uv).a;
+	blended = mix(blended, color.rgb, glow);
+
 	return vec4(blended, color.a);
 }
 ]],

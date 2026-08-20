@@ -25,6 +25,7 @@ local TweenComponent = Tween.Component
 local Shadow = require("Source.Sprite.Components.Shadow")
 local Sound = require("Source.Sprite.Components.Sound")
 local Mask = require("Source.Helpers.Graphics.Mask")
+local Emissive = require("Source.Sprite.Components.Emissive")
 local Events = require("Source.Helpers.Core.Events")
 local PropSpawner = require("Source.World.PropSpawner")
 local PropPicker = require("Source.World.PropPicker")
@@ -471,7 +472,7 @@ function love.draw()
 	-- CircleMask maps window px back to canvas px; needs the blit transform
 	-- (scale x zoom about the pivot), which changes every frame.
 	local bx, by = Camera.canvasBlitOrigin(canvas)
-	ShaderLoader.setScreenTransform(canvas.scale * zoom, zpx + (bx - zpx) * zoom, zpy + (by - zpy) * zoom)
+	ShaderLoader.setScreenTransform(canvas.scale * zoom, zpx + (bx - zpx) * zoom, zpy + (by - zpy) * zoom, canvas.width, canvas.height)
 
 	-- The world render must not inherit the color the HUD/Debug left on the
 	-- previous frame (setColor persists). Reset to neutral before the canvases.
@@ -512,6 +513,8 @@ function love.draw()
 
 		Mask.renderSilhouette(visible, canvas.width, canvas.height, GameState.camPixelX, GameState.camPixelY)
 
+		Emissive.renderLayer(visible, canvas.width, canvas.height, GameState.camPixelX, GameState.camPixelY)
+
 		-- Shadow layer: all shadows drawn opaque onto one layer, composited once
 		-- at low alpha (union, not additive). Drawn AFTER terrain so shadows sit
 		-- on top of tiles, but BEFORE dynamic sprites.
@@ -529,6 +532,14 @@ function love.draw()
 				if sprite.shader and sprite.shader:hasUniform("u_silhouetteTexture") then
 					sprite.shader:send("u_silhouetteTexture", silCanvas)
 				end
+			end
+		end
+
+		local emCanvas = Emissive.getCanvas()
+		if emCanvas then
+			local postShader = ShaderLoader.getPostProcess()
+			if postShader and postShader:hasUniform("u_emissiveMask") then
+				postShader:send("u_emissiveMask", emCanvas)
 			end
 		end
 

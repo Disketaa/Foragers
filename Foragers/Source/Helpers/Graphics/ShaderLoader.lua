@@ -10,6 +10,7 @@ local ShaderLoader = {
 	postProcessEnabled = true,
 }
 local screenOrigin = { 0, 0 }
+local screenSize = { 0, 0 }
 
 function ShaderLoader.loadAll(basePath)
 	ShaderLoader.shaders = {}
@@ -237,11 +238,14 @@ end
 --- origin) with every screen effect that declares u_canvasScale/u_canvasOrigin.
 --- Main calls this once per frame; effects sampling in canvas pixels need it.
 --- The origin table is reused, not allocated per frame.
-function ShaderLoader.setScreenTransform(scale, originX, originY)
+function ShaderLoader.setScreenTransform(scale, originX, originY, canvasWidth, canvasHeight)
 	screenOrigin[1] = originX
 	screenOrigin[2] = originY
+	screenSize[1] = canvasWidth or 1
+	screenSize[2] = canvasHeight or 1
 	ShaderLoader.sendUniform("u_canvasScale", scale)
 	ShaderLoader.sendUniform("u_canvasOrigin", screenOrigin)
+	ShaderLoader.sendUniform("u_canvasSize", screenSize)
 end
 
 function ShaderLoader.drawBackground(canvasWidth, canvasHeight)

@@ -78,6 +78,10 @@ return {
 			mode = "mask",
 		},
 
+        {
+			component = "emissive",
+		},
+
 		{
 			component = "shader",
 			shaders = {
