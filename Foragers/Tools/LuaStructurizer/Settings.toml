@@ -56,3 +56,7 @@ severity = "warn"
 [Rules.TypeFieldPlacement]
 enabled = true
 severity = "warn"
+
+[Rules.FilePathSlash]
+enabled = true
+severity = "error"
