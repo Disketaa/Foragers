@@ -21,7 +21,7 @@ return {
 			spawnMargin = 40,
 			despawnMargin = 80,
 			spawnAtNight = false,
-			types = { "Content.Assets.Sprites.Ambient.BirdwingButterfly", "Content.Assets.Sprites.Ambient.MonarchButterfly", "Content.Assets.Sprites.Ambient.MorphoButterfly" },
+			types = { "Content/Assets/Sprites/Ambient/BirdwingButterfly", "Content/Assets/Sprites/Ambient/MonarchButterfly", "Content/Assets/Sprites/Ambient/MorphoButterfly" },
 		},
 
 		fireflies = {
@@ -30,7 +30,7 @@ return {
 			spawnMargin = 40,
 			despawnMargin = 80,
 			spawnAtNight = true,
-			types = { "Content.Assets.Sprites.Ambient.Firefly" },
+			types = { "Content/Assets/Sprites/Ambient/Firefly" },
 		},
 	},
 

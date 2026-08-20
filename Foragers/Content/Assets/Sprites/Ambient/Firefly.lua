@@ -19,5 +19,9 @@ return {
 			wanderingSpeed = 8,
 			interval = "2..4",
 		},
+
+		{
+			component = "emissive",
+		},
 	},
 }
