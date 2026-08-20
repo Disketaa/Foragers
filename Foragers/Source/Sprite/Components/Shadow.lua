@@ -67,8 +67,13 @@ end
 ---@param camX number Camera pixel offset X (float for smooth scrolling)
 ---@param camY number Camera pixel offset Y (float for smooth scrolling)
 function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
-	shadowCanvas = ensureCanvas(viewW, viewH)
+	-- Raw target alpha, not eased display.alpha: exponential smoothing never
+	-- reaches exactly 0, so gate would never fire at night.
+	if DayCycle.getSunData(DayCycle.time).alpha <= 0 then
+		return
+	end
 	local display = DayCycle.getDisplaySunData()
+	shadowCanvas = ensureCanvas(viewW, viewH)
 	local timeShiftPerPx = Data.shadow.timeShiftPerPx or 0
 	local worldCenterX = Data.shadow.worldCenterX or 0
 
