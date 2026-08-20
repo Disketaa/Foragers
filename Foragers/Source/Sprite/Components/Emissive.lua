@@ -62,27 +62,34 @@ function Emissive.drawToScreen(entries, canvas, camPixelX, camPixelY, camSubX, c
 					rot = math.rad(sprite.angle)
 				end
 
+				local scaleX, scaleY = 1, 1
+				if t then
+					if t.scale_x then
+						scaleX = t.scale_x:getValue()
+					end
+					if t.scale_y then
+						scaleY = t.scale_y:getValue()
+					end
+				end
+
 				local spritesheet = sprite:findComponent("spritesheet", function(c) return not c._broken end)
 				if spritesheet then
-					spritesheet:drawCurrentFrame(sprite.x, sprite.y, rot)
+					love.graphics.push()
+					love.graphics.translate(sprite.x, sprite.y)
+					-- drawCurrentFrame handles flipX+sx/sy internally, so only pass tween scale
+					love.graphics.scale(scaleX, scaleY)
+					love.graphics.rotate(rot)
+					spritesheet:drawCurrentFrame(0, 0, 0)
+					love.graphics.pop()
 				elseif sprite.image then
-					local sx, sy = 1, 1
-					if t then
-						if t.scale_x then
-							sx = t.scale_x:getValue()
-						end
-						if t.scale_y then
-							sy = t.scale_y:getValue()
-						end
-					end
 					if sprite.flipX then
-						sx = -sx
+						scaleX = -scaleX
 					end
 					local w = sprite.frameWidth or sprite.image:getWidth()
 					local h = sprite.frameHeight or sprite.image:getHeight()
 					local ox = Pivot.px(sprite.pivotX, w, 0)
 					local oy = Pivot.px(sprite.pivotY, h, 0)
-					love.graphics.draw(sprite.image, sprite.x, sprite.y, rot, sx, sy, ox, oy)
+					love.graphics.draw(sprite.image, sprite.x, sprite.y, rot, scaleX, scaleY, ox, oy)
 				end
 			end
 		end
