@@ -17,6 +17,8 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 	silCanvas = ensureCanvas(viewW, viewH)
 
 	Canvas.drawTo(silCanvas, function()
+		love.graphics.push()
+		love.graphics.translate(camX, camY)
 		for _, entry in ipairs(entries) do
 			local sprite = entry.instance or entry
 			if sprite and sprite.components then
@@ -38,12 +40,8 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 
 					local spritesheet = sprite:findComponent("spritesheet", function(c) return not c._broken end)
 					if spritesheet then
-						local px = math.floor(sprite.x + 0.5) + camX
-						local py = math.floor(sprite.y + 0.5) + camY
-						spritesheet:drawCurrentFrame(px, py, rot)
+						spritesheet:drawCurrentFrame(sprite.x, sprite.y, rot)
 					elseif sprite.image then
-						local px = math.floor(sprite.x + 0.5) + camX
-						local py = math.floor(sprite.y + 0.5) + camY
 						local sx, sy = 1, 1
 						if t then
 							if t.scale_x then
@@ -60,11 +58,12 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 						local h = sprite.frameHeight or sprite.image:getHeight()
 						local ox = Pivot.px(sprite.pivotX, w, 0)
 						local oy = Pivot.px(sprite.pivotY, h, 0)
-						love.graphics.draw(sprite.image, px, py, rot, sx, sy, ox, oy)
+						love.graphics.draw(sprite.image, sprite.x, sprite.y, rot, sx, sy, ox, oy)
 					end
 				end
 			end
 		end
+		love.graphics.pop()
 	end, { 0, 0, 0, 0 })
 end
 

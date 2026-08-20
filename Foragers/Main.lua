@@ -513,8 +513,6 @@ function love.draw()
 
 		Mask.renderSilhouette(visible, canvas.width, canvas.height, GameState.camPixelX, GameState.camPixelY)
 
-		Emissive.renderLayer(visible, canvas.width, canvas.height, GameState.camPixelX, GameState.camPixelY)
-
 		-- Shadow layer: all shadows drawn opaque onto one layer, composited once
 		-- at low alpha (union, not additive). Drawn AFTER terrain so shadows sit
 		-- on top of tiles, but BEFORE dynamic sprites.
@@ -535,14 +533,6 @@ function love.draw()
 			end
 		end
 
-		local emCanvas = Emissive.getCanvas()
-		if emCanvas then
-			local postShader = ShaderLoader.getPostProcess()
-			if postShader and postShader:hasUniform("u_emissiveMask") then
-				postShader:send("u_emissiveMask", emCanvas)
-			end
-		end
-
 		for _, sprite in ipairs(sorted) do
 			sprite:draw()
 		end
@@ -555,6 +545,11 @@ function love.draw()
 		love.graphics.pop() -- world layer end
 	end, nil, GameState.shakeOffsetX, GameState.shakeOffsetY, GameState.camSubX, GameState.camSubY,
 	ShaderLoader.getPostProcess(), zoom, zpx, zpy)
+
+	-- Emissive glow drawn directly to screen after post-process blit.
+	-- No separate canvas, no UV sampling — same transform, pixel-perfect.
+	Emissive.drawToScreen(visible, canvas, GameState.camPixelX, GameState.camPixelY,
+		GameState.camSubX, GameState.camSubY, GameState.shakeOffsetX, GameState.shakeOffsetY, zoom, zpx, zpy)
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
 	-- its outline. Rects + fills are tagged by group so Gizmo can style each.
