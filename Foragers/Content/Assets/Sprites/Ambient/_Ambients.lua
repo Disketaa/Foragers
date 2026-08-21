@@ -26,7 +26,7 @@ return {
 			duration = "10..20",
 			fadeInDuration = 1,
 			fadeOutDuration = 1,
-			wanderingSpeed = 5,
+			wanderingSpeed = 2,
 			changeDirectionInterval = "5..15",
 		},
 	},
