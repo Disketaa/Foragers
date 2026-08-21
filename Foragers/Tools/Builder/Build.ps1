@@ -153,9 +153,17 @@ Write-Host "Fuse verified: $actualSize bytes, PK at $HostSize." -ForegroundColor
 
 # --- Phase 5: bundle LÖVE runtime DLLs + license (required to run on clean machines) ---
 # The fused exe is still love.exe under the hood and dynamically loads these at runtime.
+# Explicit required-DLL list: fail loud if source folder is missing one (catches partial
+# installer upgrades / stale LOVE dirs before shipping a broken zip).
+$RequiredDlls = @("love.dll","lua51.dll","mpg123.dll","msvcp120.dll","msvcr120.dll","OpenAL32.dll","SDL2.dll")
 $LoveDir = Split-Path -Parent $LoveExePath
-foreach ($dll in Get-ChildItem -Path $LoveDir -Filter "*.dll" -File) {
-    Copy-Item -Path $dll.FullName -Destination $BuildDir -Force
+foreach ($name in $RequiredDlls) {
+    $src = Join-Path $LoveDir $name
+    if (-not (Test-Path $src)) {
+        Write-Error "Required DLL missing from LOVE dir: $name (source install may be corrupt/partial)"
+        exit 1
+    }
+    Copy-Item $src -Destination $BuildDir -Force
 }
 $license = Join-Path $LoveDir "LICENSE.txt"
 if (Test-Path $license) {

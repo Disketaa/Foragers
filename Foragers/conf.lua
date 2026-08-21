@@ -1,4 +1,5 @@
 function love.conf(t)
+	t.version = "11.5"
 	t.console = false
 	t.identity = "Foragers"
 	t.window.title = "Foragers"
