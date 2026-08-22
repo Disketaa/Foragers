@@ -1,19 +1,17 @@
-local Path = require("Source.Helpers.Core.Path")
-local SpriteFont = require("Source.Sprite.Components.SpriteFont")
-local Pivot = require("Source.Helpers.Core.Pivot")
+local Font = require("Source.Sprite.Components.Font")
 
---- Static text label rendered with an external sprite-font atlas (not the
---- parent's own spritesheet). Draws on top of the host sprite; offsets are in
---- canvas pixels from the sprite CENTRE (sprite.x/y is the centre for
---- centre-pivoted sprites). By default the label is baked into a card-sized
---- canvas and drawn through the parent's skew shader, so it warps with the
---- EXACT same perspective as the card: one skew source of truth, no separate
---- affine shear that can drift from / rotate against the card.
+--- Static text label rendered with a TTF font. Draws on top of the host
+--- sprite; offsets are in canvas pixels from the sprite CENTRE (sprite.x/y is
+--- the centre for centre-pivoted sprites). By default the label is baked into a
+--- card-sized canvas and drawn through the parent's skew shader, so it warps
+--- with the EXACT same perspective as the card: one skew source of truth, no
+--- separate affine shear that can drift from / rotate against the card.
 ---@class Label
 ---@field parent Sprite|nil
 ---@field type "text"
 ---@field text string
 ---@field font string
+---@field fontSize number
 ---@field color table
 ---@field charSpacing number|nil
 ---@field offsetX number
@@ -27,13 +25,14 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 local Label = {}
 Label.__index = Label
 
----@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadow, dropshadowColor}
+---@param data table {text, font, fontSize, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadow, dropshadowColor}
 ---@return Label
 function Label.new(data)
 	return setmetatable({
 		type = "text",
 		text = data.text or "",
-		font = data.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
+		font = data.font or "Content/Assets/Sprites/UI/Fonts/Tinylorder.ttf",
+		fontSize = data.fontSize or Font.DEFAULT_SIZE,
 		color = data.color and { unpack(data.color) } or { 1, 1, 1, 1 },
 		charSpacing = data.charSpacing,
 		offsetX = data.offsetX or 0,
@@ -48,31 +47,7 @@ function Label.new(data)
 end
 
 function Label:attach()
-	local luaPath = Path.moduleToPath(self.font)
-	local pngPath = luaPath .. ".png"
-	local ok, fontData = pcall(require, self.font)
-	if not ok or not fontData then
-		return
-	end
-	local SpriteLoader = require("Source.Sprite.SpriteLoader")
-	local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
-	if not sprite then
-		return
-	end
-	local ss = sprite:findComponent("spritesheet")
-	local sf = sprite:findComponent("spritefont")
-	if not ss or not sf then
-		return
-	end
-	self._image = ss.image
-	self._quads = ss.quads
-	self._charIndex = sf._charIndex
-	self._charWidth = sf._charWidth
-	self._charSpacing = self.charSpacing or sf.charSpacing
-	self._frameW = ss.frameWidth
-	self._frameH = ss.frameHeight
-	self._pivotX = ss.pivotX or "center"
-	self._pivotY = ss.pivotY or "center"
+	self._font = Font.load(self.font, self.fontSize)
 end
 
 ---@param text string
@@ -87,7 +62,7 @@ end
 --@param fh number card frame height
 --@return love.Canvas|nil
 function Label:buildCanvas(cx, cy, fw, fh)
-	if not (self._image and self._quads and self._charIndex) then
+	if not self._font then
 		return nil
 	end
 	local canvas = love.graphics.newCanvas(fw, fh)
@@ -100,18 +75,7 @@ function Label:buildCanvas(cx, cy, fw, fh)
 	love.graphics.translate(-(cx - fw * 0.5), -(cy - fh * 0.5))
 	local anchorX = math.floor(cx + self.offsetX + 0.5)
 	local anchorY = math.floor(cy + self.offsetY + 0.5)
-	local ox = Pivot.px(self._pivotX, self._frameW, "center")
-	local ref = {
-		image = self._image,
-		quads = self._quads,
-		charIndex = self._charIndex,
-		charWidth = self._charWidth,
-		charSpacing = self._charSpacing,
-		frameW = self._frameW,
-		frameH = self._frameH,
-		pivotX = self._pivotX,
-		pivotY = self._pivotY,
-	}
+	local ref = { font = self._font, charSpacing = self.charSpacing or 0 }
 	local opts = {
 		color = self.color,
 		horizontalAlign = self.horizontalAlign,
@@ -119,29 +83,29 @@ function Label:buildCanvas(cx, cy, fw, fh)
 		scale = self.scale,
 	}
 	if self.dropshadow then
-		SpriteFont.drawText(ref, self.text, anchorX + ox + 1, anchorY + 1, {
+		Font.drawText(ref, self.text, anchorX + 1, anchorY + 1, {
 			color = self.dropshadowColor,
 			horizontalAlign = self.horizontalAlign,
 			verticalAlign = self.verticalAlign,
 			scale = self.scale,
 		})
 	end
-	SpriteFont.drawText(ref, self.text, anchorX + ox, anchorY, opts)
+	Font.drawText(ref, self.text, anchorX, anchorY, opts)
 	love.graphics.pop()
 	love.graphics.setCanvas(prev)
 	return canvas
 end
 
 function Label:draw(x, y)
-	if not self._image or not self._quads or not self._charIndex then
+	if not self._font then
 		return
 	end
 	if #self.text == 0 then
 		return
 	end
 
-	local fw = self.parent and self.parent.frameWidth or self._frameW or 64
-	local fh = self.parent and self.parent.frameHeight or self._frameH or 104
+	local fw = self.parent and self.parent.frameWidth or 64
+	local fh = self.parent and self.parent.frameHeight or 104
 
 	if not self._canvas then
 		self._canvas = self:buildCanvas(math.floor(x + 0.5), math.floor(y + 0.5), fw, fh)

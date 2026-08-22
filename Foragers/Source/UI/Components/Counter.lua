@@ -1,6 +1,6 @@
 local Events = require("Source.Helpers.Core.Events")
 local Easing = require("Source.Sprite.Components.Tween").Easing
-local SpriteFont = require("Source.Sprite.Components.SpriteFont")
+local Font = require("Source.Sprite.Components.Font")
 local Pivot = require("Source.Helpers.Core.Pivot")
 
 --- Read a source field, resolving it through the component's curve resolver if
@@ -14,7 +14,7 @@ local function readStat(comp, field)
 end
 
 --- Maps source component value to spritesheet frame. Event-driven, opt-in smooth tween.
---- Optional `label` block renders a text overlay (e.g. level number) via font spritesheet.
+--- Optional `label` block renders a text overlay (e.g. level number) via TTF font.
 local Counter = {}
 Counter.__index = Counter
 
@@ -38,7 +38,8 @@ function Counter.new(data)
 	}, Counter)
 
 	if data.label then
-		self._labelFont = data.label.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder"
+		self._labelFont = data.label.font or "Content/Assets/Sprites/UI/Fonts/Tinylorder.ttf"
+		self._labelFontSize = data.label.fontSize or Font.DEFAULT_SIZE
 		self._labelColor = data.label.color and { unpack(data.label.color) } or { 1, 1, 1 }
 		self._labelCharSpacing = data.label.charSpacing
 		self._labelOffsetX = data.label.offsetX or 0
@@ -58,41 +59,16 @@ function Counter.new(data)
 end
 
 function Counter:attach()
-	local Path = require("Source.Helpers.Core.Path")
-	local SpriteLoader = require("Source.Sprite.SpriteLoader")
-
 	if self._labelFont then
-		local luaPath = Path.moduleToPath(self._labelFont)
-		local pngPath = luaPath .. ".png"
-		local ok, fontData = pcall(require, self._labelFont)
-		if ok and fontData then
-			local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
-			if sprite then
-				local ss = sprite:findComponent("spritesheet")
-				if ss then
-					self._labelImage = ss.image
-					self._labelQuads = ss.quads
-					self._labelFrameW = ss.frameWidth
-					self._labelFrameH = ss.frameHeight
-					self._labelPivotX = ss.pivotX or "center"
-					self._labelPivotY = ss.pivotY or "center"
-				end
-				local sf = sprite:findComponent("spritefont")
-				if sf then
-					self._labelCharIndex = sf._charIndex
-					self._labelCharWidth = sf._charWidth
-					if self._labelCharSpacing == nil then
-						self._labelCharSpacing = sf.charSpacing
-					end
-				end
-			end
-		end
-		if not self._labelImage or not self._labelCharIndex then
+		self._labelFontObj = Font.load(self._labelFont, self._labelFontSize)
+		if not self._labelFontObj then
 			self._labelFont = nil
 		end
 	end
 
 	if self._iconSprite then
+		local Path = require("Source.Helpers.Core.Path")
+		local SpriteLoader = require("Source.Sprite.SpriteLoader")
 		local luaPath = Path.moduleToPath(self._iconSprite)
 		local pngPath = luaPath .. ".png"
 		local ok, iconData = pcall(require, self._iconSprite)
@@ -235,7 +211,7 @@ function Counter:draw(x, y)
 		end
 	end
 
-	if not self._labelFont or not self._labelImage or not self._labelQuads or not self._labelCharSpacing then
+	if not self._labelFont or not self._labelFontObj then
 		return
 	end
 	local text = self._labelText
@@ -243,21 +219,10 @@ function Counter:draw(x, y)
 		return
 	end
 
-	local ox = Pivot.px(self._labelPivotX, self._labelFrameW, "center")
-	SpriteFont.drawText(
-		{
-			image = self._labelImage,
-			quads = self._labelQuads,
-			charIndex = self._labelCharIndex,
-			charWidth = self._labelCharWidth,
-			charSpacing = self._labelCharSpacing,
-			frameW = self._labelFrameW,
-			frameH = self._labelFrameH,
-			pivotX = self._labelPivotX,
-			pivotY = self._labelPivotY,
-		},
+	Font.drawText(
+		{ font = self._labelFontObj, charSpacing = self._labelCharSpacing or 0 },
 		text,
-		x + self._labelOffsetX + ox,
+		x + self._labelOffsetX,
 		y + self._labelOffsetY,
 		{
 			color = self._labelColor,

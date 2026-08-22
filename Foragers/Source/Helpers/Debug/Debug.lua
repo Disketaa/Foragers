@@ -6,6 +6,7 @@ local Input = require("Source.Helpers.Systems.Input")
 local ChatHistory = require("Source.Helpers.Debug.ChatHistory")
 
 local Sprite = require("Source.Sprite.Sprite")
+local Font = require("Source.Sprite.Components.Font")
 
 -- Auto-profiler. Patches Sprite.addComponent + global system updates on load so
 -- every scope's per-frame CPU cost is measured without any other file importing
@@ -190,31 +191,18 @@ local chatOutputSuccess = false
 local chatOutputTimer = 0
 local chatBlink = 0
 
--- Cache key "path@size": the same font file at different sizes is a distinct entry.
-local fontCache = {}
-
 ---@alias Font love.Font
---- Load a font (optional path via love.filesystem), cached by path+size. On
---- failure (missing/corrupt file) fall back to LÖVE's default font so the HUD
+--- Fall back to LÖVE's default font on load failure / missing path so the HUD
 --- never crashes.
 ---@param path string|nil
 ---@param size number
 ---@return Font
 local function getFont(path, size)
-	local key = (path or "") .. "@" .. size
-	local f = fontCache[key]
+	local f = path and Font.load(path, size)
 	if f then
 		return f
 	end
-	local ok = false
-	if path then
-		ok, f = pcall(love.graphics.newFont, path, size)
-	end
-	if not ok then
-		f = love.graphics.newFont(size)
-	end
-	fontCache[key] = f
-	return f
+	return love.graphics.newFont(size)
 end
 
 --- Resolve the `hud` group's fonts at a given scale. Shared by the top-left

@@ -13,7 +13,7 @@ description: Quick reference for all components — purpose, config fields, even
 | **collision** | AABB collision, terrain/solid registries, grounded detection. Debug box overlay publishes rects to `Gizmo` gated by the `collisions` group in `Content/Data/Debug.lua` (see *Debug gizmo* below) | `mode`, `collisionWidth`, `collisionHeight`, `offsetX`, `offsetY`, `slowdown` | — | GROUNDED_CHANGED, SLOWDOWN_CHANGED, SLOWDOWN_ENTER, SLOWDOWN_EXIT |
 | **follow** | Follow-target smoothing + deployTo/recall (tools) | `offsetX`, `offsetY`, `smoothness`, `smoothnessX`, `smoothnessY`, `followRadius`, `followDelay`, `leanAngle`, `leanThreshold`, `arrivedThreshold` | — | FOLLOW_ARRIVED |
 | **scroll_to** | Smooth camera follow (centers camera on target via expSmooth) | `smoothness`, `offsetX`, `offsetY`, `chunkSize` | — | — |
-| **spritefont** | Text rendering using parent spritesheet quads | `chars`, `spacing`, `charSpacing`, `color` (set per-instance via Text) | — | — |
+| **spritefont** | *(removed)* Text now renders via TTF — see `Source/Sprite/Components/Font.lua`. The old spritesheet-quad spritefont component no longer exists. | — | — | — |
 
 ## Effects
 
@@ -80,7 +80,7 @@ it is a one-shot, played only by its event (e.g. `death`, `hunger`) or a single
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `font` | string | `Content.Assets.Sprites.UI.SpriteFonts.Tinylorder` | Module path to a font data file (spritesheet + spritefont) |
+| `font` | string | `Content/Assets/Sprites/UI/Fonts/Tinylorder.ttf` | File path to a TTF font |
 | `text` | string | nil | Fixed text. If nil, the emitted event payload (e.g. damage number) is used as the text |
 | `event` | string | `"prop_hit"` | Event the emitter listens to |
 | `color` | table | `{1,1,1}` | RGB tint (0–1) |
@@ -93,7 +93,7 @@ it is a one-shot, played only by its event (e.g. `death`, `hunger`) or a single
 | `destroy` | `"fade"`/`"scale"`/`"instant"` | `"fade"` | Animated property: `fade`→alpha 1→0, `scale`→scale 1→0, `instant`→stays 1 |
 | `destroyCurve` | string | `"Linear"` | Easing name from `Tween.Easing` shaping the destroy animation |
 
-Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text is drawn with the **font's** pivot as the glyph origin (Tinylorder uses `pivotX=0, pivotY=0`, so text is top-left anchored at the base). Random fields (`moveX/moveY/gravity/duration/offsetX/offsetY`) are resolved via `ValueParser.call(self, "field")` **inside the event handler**, not in `new`, so each emit re-rolls choice/range strings. `drawAll` saves/restores the active shader so text is never tinted by a sprite shader.
+Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text is drawn with a TTF font (baseline origin, `love.graphics.print`). Random fields (`moveX/moveY/gravity/duration/offsetX/offsetY`) are resolved via `ValueParser.call(self, "field")` **inside the event handler**, not in `new`, so each emit re-rolls choice/range strings. `drawAll` saves/restores the active shader so text is never tinted by a sprite shader.
 
 ### counter config
 
@@ -112,7 +112,7 @@ Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `font` | string | `"Content.Assets.Sprites.UI.SpriteFonts.Tinylorder"` | Font data module path for the text spritesheet. |
+| `font` | string | `"Content/Assets/Sprites/UI/Fonts/Tinylorder.ttf"` | File path to a TTF font. |
 | `charSpacing` | number | font's charSpacing | Pixel spacing between characters. Overrides the font data default. |
 | `color` | table | `{1,1,1}` | RGBA tint (0–1). |
 | `offsetX` | number | `0` | X offset from parent's draw origin (top-left of sprite). |
@@ -354,30 +354,24 @@ tags = {
 },
 ```
 
-## chars field (spritefont)
+## Text rendering (TTF)
 
-The `chars` string defines the character set. Each **visual character's** position in the string maps 1:1 to the spritesheet quad index (1‑based). The index is built by iterating UTF-8 by visual char (not byte), so multi-byte glyphs (Cyrillic, etc.) land on the correct cell — a 2-byte char does NOT consume two cells. Only characters present in `chars` can be rendered; unknown chars are skipped with a gap of `frameWidth + charSpacing`.
+Spritefont (spritesheet-quad) rendering was replaced by TTF rendering in
+`Source/Sprite/Components/Font.lua`. There is no `chars`/`spacing`/`color`
+spritefont data anymore — text is drawn with `love.graphics.print` against a
+cached `love.Font` (loaded via `Font.load(path, size)`, `setFilter("nearest")`
+for pixel-retro crispness). Alignment is `font:getWidth`/`getHeight` based;
+`charSpacing` (optional, default 0) is extra tracking between characters.
 
-## spacing field (spritefont)
+- `Font.load(path, size)` — cached TTF loader (keyed by path+size)
+- `Font.drawText(ref, text, x, y, opts)` — `ref = { font, charSpacing }`,
+  `opts = { color, alpha, scale, horizontalAlign, verticalAlign }`
+- Default font: `Content/Assets/Sprites/UI/Fonts/Tinylorder.ttf`
+- Default size: `Font.DEFAULT_SIZE` (8px, matches the old 8×8 spritefont cell)
 
-Per‑character width overrides, specified as an array of `{ width, chars }` pairs:
-```lua
-{ { 9, "Mmw" }, { 7, "+>" }, { 5, ".li-" } }
-```
-Characters not listed use `frameWidth` as their advance width. Spaces always advance by `frameWidth + charSpacing`.
+## Text object
 
-## color field (spritefont)
-
-Color is **per-instance**, not baked into font data. Set it via `Text.new({ color = {r,g,b,a} })` or `text:setColor(color)`. Default in component constructor is `{0,0,0,1}` (black) — the component always receives a color; font data files should omit this field to avoid confusing a font default with a text instance override.
-
-## Text object (Source/UI/Text.lua)
-
-`Text` creates a Sprite with `spritesheet` + `spritefont` components via `SpriteLoader.instantiate()` and provides a simple API:
-
-- `Text.new(opts)` / `Text.new(text, x, y, fontPath)` — constructs a text sprite
-- `text:setText(str)`
-- `text:setColor({r,g,b,a})`
-- `text:setPosition(x, y)`
-- `text:draw()` — delegates to the internal sprite draw
-
-Default font path: `Content.Assets.Sprites.UI.SpriteFonts.Tinylorder` (8×8, 16 columns). The font PNG must have white characters on transparent background so `setColor` tints correctly.
+There is no standalone `Text` module — it was a spritefont-era wrapper and is
+now dead code (removed). Text is rendered either via `Font.drawText` directly
+(Label/Counter/TextEmitter) or through the `text` component (Label), which
+bakes to a canvas + skew shader.
