@@ -22,8 +22,7 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 ---@field verticalAlign string
 ---@field scale number
 ---@field skewWithParent boolean
----@field dropshadow boolean
----@field dropshadowColor table
+---@field dropshadowColor table|nil @ dropshadow renders only when this is set
 ---@field maxWidth number|nil @ nil disables clip/scroll
 ---@field scrollSpeed number @ px/sec text travels while scrolling
 ---@field scrollPause number @ sec dwell at each scroll end
@@ -37,7 +36,7 @@ Label.__index = Label
 Label.SCROLL_SPEED = 30 -- px/sec the text travels
 Label.SCROLL_PAUSE = 0.6 -- sec dwell at each scroll end
 
----@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadow, dropshadowColor}
+---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadowColor}
 ---@return Label
 function Label.new(data)
 	return setmetatable({
@@ -51,8 +50,7 @@ function Label.new(data)
 		horizontalAlign = data.horizontalAlign or "center",
 		verticalAlign = data.verticalAlign or "center",
 		scale = data.scale or 1,
-		dropshadow = data.dropshadow or false,
-		dropshadowColor = data.dropshadowColor and { unpack(data.dropshadowColor) } or { 0, 0, 0, 0.5 },
+		dropshadowColor = data.dropshadowColor and { unpack(data.dropshadowColor) } or nil,
 		skewWithParent = data.skewWithParent ~= false,
 		maxWidth = data.maxWidth,
 		scrollSpeed = data.scrollSpeed or Label.SCROLL_SPEED,
@@ -191,7 +189,7 @@ function Label:buildCanvas(cx, cy, fw, fh)
 		verticalAlign = self.verticalAlign,
 		scale = self.scale,
 	}
-	if self.dropshadow then
+	if self.dropshadowColor then
 		SpriteFont.drawText(ref, self.text, drawX + 1, anchorY + 1, {
 			color = self.dropshadowColor,
 			horizontalAlign = drawAlign,

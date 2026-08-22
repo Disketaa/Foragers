@@ -15,7 +15,7 @@ return {
 			charSpacing = -3,
 			spacing = {
 				{ 9, "Mmw" },
-				{ 7, "+>" },
+				{ 7, "т+>" },
 				{ 5, ".li-" },
 			},
 		},
