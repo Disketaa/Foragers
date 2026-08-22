@@ -2,9 +2,9 @@
 --- Baked into a card-sized canvas and drawn through the parent's skew shader, so
 --- it warps with the EXACT same perspective as the card (one skew source of
 --- truth, matching the Label component) instead of skewing around its own centre.
----@class Icon
+---@class Image
 ---@field parent Sprite|nil
----@field type "icon"
+---@field type "image"
 ---@field image string|nil
 ---@field offsetX number
 ---@field offsetY number
@@ -13,15 +13,15 @@
 ---@field parallax number|nil px the image slides toward the cursor at full deflection (parallax depth cue)
 ---@field parallaxSmoothing number easing rate of the parallax offset (higher = snappier)
 ---@field bob number|nil px amplitude of the time-driven vertical bob (read from a tween)
----@field bobTween string|nil parent.tweens key the bob reads (default "iconBobY")
-local Icon = {}
-Icon.__index = Icon
+---@field bobTween string|nil parent.tweens key the bob reads (default "imageBobY")
+local Image = {}
+Image.__index = Image
 
 ---@param data table {image, offsetX, offsetY, scale, skewWithParent, parallax, parallaxSmoothing, bob, bobTween}
----@return Icon
-function Icon.new(data)
+---@return Image
+function Image.new(data)
 	return setmetatable({
-		type = "icon",
+		type = "image",
 		image = data.image,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
@@ -30,11 +30,11 @@ function Icon.new(data)
 		parallax = data.parallax,
 		parallaxSmoothing = data.parallaxSmoothing or 10,
 		bob = data.bob,
-		bobTween = data.bobTween or "iconBobY",
-	}, Icon)
+		bobTween = data.bobTween or "imageBobY",
+	}, Image)
 end
 
-function Icon:update(dt)
+function Image:update(dt)
 	-- Advance the source sprite's own animation via its public update(); the
 	-- spritesheet component then cycles frames, which draw() re-bakes.
 	if self._animated and self._sprite then
@@ -52,7 +52,7 @@ function Icon:update(dt)
 	self._parY = (self._parY or 0) + (ty - (self._parY or 0)) * k
 end
 
-function Icon:attach()
+function Image:attach()
 	if not self.image then
 		return
 	end
@@ -76,7 +76,7 @@ function Icon:attach()
 	self._frameW = ss.frameWidth
 	self._frameH = ss.frameHeight
 	self._animated = not not ss.animations
-	-- Owned source instance, driven via its public update() so an animated icon
+	-- Owned source instance, driven via its public update() so an animated image
 	-- actually cycles frames (no cross-component field reads).
 	if self._animated then
 		self._sprite = sprite
@@ -88,7 +88,7 @@ end
 ---@param fw number card frame width
 ---@param fh number card frame height
 ---@return love.Canvas|nil
-function Icon:buildCanvas(cx, cy, fw, fh)
+function Image:buildCanvas(cx, cy, fw, fh)
 	if not self._image or not self._ss then
 		return nil
 	end
@@ -102,12 +102,11 @@ function Icon:buildCanvas(cx, cy, fw, fh)
 	love.graphics.push()
 	love.graphics.origin()
 	love.graphics.clear(0, 0, 0, 0)
-	-- Canvas top-left maps to card top-left, so the icon lands at the same
+	-- Canvas top-left maps to card top-left, so the image lands at the same
 	-- centre-relative offset it would occupy live — only the skew is unified.
 	love.graphics.translate(-(cx - fw * 0.5), -(cy - fh * 0.5))
 	local dx = math.floor(cx + self.offsetX + 0.5)
 	local dy = math.floor(cy + self.offsetY + 0.5)
-	-- Draw only the current frame quad (animated icons cycle; static uses frame 1).
 	local quad = self._ss:_getQuad()
 	if quad then
 		love.graphics.draw(self._image, quad, dx, dy, 0, self.scale, self.scale, self._frameW * 0.5, self._frameH * 0.5)
@@ -119,7 +118,7 @@ function Icon:buildCanvas(cx, cy, fw, fh)
 	return canvas
 end
 
-function Icon:draw(x, y)
+function Image:draw(x, y)
 	if not self._image or not self._ss then
 		return
 	end
@@ -129,7 +128,7 @@ function Icon:draw(x, y)
 	local by = math.floor(y + 0.5)
 	local fw = self.parent and self.parent.frameWidth or 64
 	local fh = self.parent and self.parent.frameHeight or 104
-	-- Re-bake only when the source frame changes (animated icons) or first draw.
+	-- Re-bake only when the source frame changes (animated images) or first draw.
 	local frame = self._animated and (self._ss:getAnimFrameIndex() or 1) or 1
 	if not self._canvas or self._bakedFrame ~= frame then
 		self._canvas = self:buildCanvas(bx, by, fw, fh)
@@ -162,4 +161,4 @@ function Icon:draw(x, y)
 	love.graphics.setColor(r, g, b, a)
 end
 
-return Icon
+return Image

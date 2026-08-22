@@ -13,7 +13,7 @@ return {
 		{
 			component = "tween",
 			tweens = {
-				{ target = "iconBobY", from = -1, to = 1, duration = 2, curve = "InOutSine", loop = true, pingPong = true },
+				{ target = "imageBobY", from = -1, to = 1, duration = 2, curve = "InOutSine", loop = true, pingPong = true },
 			},
 		},
 
@@ -25,23 +25,31 @@ return {
 			verticalAlign = "center",
 		},
 
+{
+			component = "image",
+			image = "Content/Assets/Sprites/UI/CardBackgrounds/Cavern",
+			scale = 1,
+			offsetX = 0,
+			offsetY = -16,
+			parallax = -0.5,
+		},
+
 		{
-			component = "icon",
+			component = "image",
 			image = "Content/Assets/Sprites/UI/RayLightsOverlay",
 			scale = 1,
 			offsetX = 0,
 			offsetY = -16,
-			parallax = 2,
 		},
 
 		{
-			component = "icon",
-			image = "Content/Assets/Sprites/UI/Icons/BronzePickaxe",
+			component = "image",
+			image = "Content/Assets/Sprites/UI/Images/BronzePickaxe",
 			scale = 1,
 			offsetX = 0,
 			offsetY = -17,
 			bob = 1,
-			parallax = 1,
+			parallax = -1,
 		},
 
 		{
