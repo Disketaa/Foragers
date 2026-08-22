@@ -27,6 +27,15 @@ return {
 
 		{
 			component = "icon",
+			image = "Content/Assets/Sprites/UI/RayLightsOverlay",
+			scale = 1,
+			offsetX = 0,
+			offsetY = -16,
+			parallax = 2,
+		},
+
+		{
+			component = "icon",
 			image = "Content/Assets/Sprites/UI/Icons/BronzePickaxe",
 			scale = 1,
 			offsetX = 0,

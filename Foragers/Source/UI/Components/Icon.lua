@@ -1,4 +1,4 @@
---- Static image drawn on top of the host sprite at a centre-relative offset.
+--- Image (optionally animated) drawn on top of the host sprite at a centre-relative offset.
 --- Baked into a card-sized canvas and drawn through the parent's skew shader, so
 --- it warps with the EXACT same perspective as the card (one skew source of
 --- truth, matching the Label component) instead of skewing around its own centre.
@@ -35,6 +35,11 @@ function Icon.new(data)
 end
 
 function Icon:update(dt)
+	-- Advance the source sprite's own animation via its public update(); the
+	-- spritesheet component then cycles frames, which draw() re-bakes.
+	if self._animated and self._sprite then
+		self._sprite:update(dt)
+	end
 	if not self.parallax or not self.parent or not self.parent.shaderData then
 		return
 	end
@@ -66,9 +71,16 @@ function Icon:attach()
 	if not ss or not ss.image then
 		return
 	end
+	self._ss = ss
 	self._image = ss.image
 	self._frameW = ss.frameWidth
 	self._frameH = ss.frameHeight
+	self._animated = not not ss.animations
+	-- Owned source instance, driven via its public update() so an animated icon
+	-- actually cycles frames (no cross-component field reads).
+	if self._animated then
+		self._sprite = sprite
+	end
 end
 
 ---@param cx number card centre x (screen)
@@ -77,11 +89,14 @@ end
 ---@param fh number card frame height
 ---@return love.Canvas|nil
 function Icon:buildCanvas(cx, cy, fw, fh)
-	if not self._image then
+	if not self._image or not self._ss then
 		return nil
 	end
-	local canvas = love.graphics.newCanvas(fw, fh)
-	canvas:setFilter("nearest", "nearest") -- match pixel-retro card sampling
+	local canvas = self._canvas
+	if not canvas then
+		canvas = love.graphics.newCanvas(fw, fh)
+		canvas:setFilter("nearest", "nearest") -- match pixel-retro card sampling
+	end
 	local prev = love.graphics.getCanvas()
 	love.graphics.setCanvas(canvas)
 	love.graphics.push()
@@ -92,14 +107,20 @@ function Icon:buildCanvas(cx, cy, fw, fh)
 	love.graphics.translate(-(cx - fw * 0.5), -(cy - fh * 0.5))
 	local dx = math.floor(cx + self.offsetX + 0.5)
 	local dy = math.floor(cy + self.offsetY + 0.5)
-	love.graphics.draw(self._image, dx, dy, 0, self.scale, self.scale, self._frameW * 0.5, self._frameH * 0.5)
+	-- Draw only the current frame quad (animated icons cycle; static uses frame 1).
+	local quad = self._ss:_getQuad()
+	if quad then
+		love.graphics.draw(self._image, quad, dx, dy, 0, self.scale, self.scale, self._frameW * 0.5, self._frameH * 0.5)
+	else
+		love.graphics.draw(self._image, dx, dy, 0, self.scale, self.scale, self._frameW * 0.5, self._frameH * 0.5)
+	end
 	love.graphics.pop()
 	love.graphics.setCanvas(prev)
 	return canvas
 end
 
 function Icon:draw(x, y)
-	if not self._image then
+	if not self._image or not self._ss then
 		return
 	end
 	-- Base anchor stays pixel-perfect (card is pixel-art); only the parallax
@@ -108,8 +129,11 @@ function Icon:draw(x, y)
 	local by = math.floor(y + 0.5)
 	local fw = self.parent and self.parent.frameWidth or 64
 	local fh = self.parent and self.parent.frameHeight or 104
-	if not self._canvas then
+	-- Re-bake only when the source frame changes (animated icons) or first draw.
+	local frame = self._animated and (self._ss:getAnimFrameIndex() or 1) or 1
+	if not self._canvas or self._bakedFrame ~= frame then
 		self._canvas = self:buildCanvas(bx, by, fw, fh)
+		self._bakedFrame = frame
 	end
 	if not self._canvas then
 		return
