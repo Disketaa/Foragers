@@ -25,7 +25,7 @@ return {
 			verticalAlign = "center",
 		},
 
-{
+		{
 			component = "image",
 			image = "Content/Assets/Sprites/UI/CardBackgrounds/Cavern",
 			scale = 1,
@@ -55,7 +55,9 @@ return {
 		{
 			component = "text",
 			offsetX = 0,
-			offsetY = -39,
+			offsetY = -40,
+			dropshadowColor = { 0, 0, 0, 0.5 },
+			dropshadow = true,
 			text = "Sturdy",
 			horizontalAlign = "center",
 			verticalAlign = "center",
