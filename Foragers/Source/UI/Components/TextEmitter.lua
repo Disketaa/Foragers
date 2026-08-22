@@ -1,13 +1,60 @@
+local Path = require("Source.Helpers.Core.Path")
 local Log = require("Source.Helpers.Core.Log")
 local ValueParser = require("Source.Helpers.Core.ValueParser")
 local Easing = require("Source.Sprite.Components.Tween").Easing
-local Font = require("Source.Sprite.Components.Font")
+local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 
 local activeTexts = {}
+local fontCache = {}
+
+local function loadFont(fontPath)
+	if fontCache[fontPath] ~= nil then
+		return fontCache[fontPath]
+	end
+
+	local SpriteLoader = require("Source.Sprite.SpriteLoader")
+	local fsPath = Path.moduleToPath(fontPath)
+	local pngPath = fsPath .. ".png"
+
+	local ok, fontData = pcall(require, fontPath)
+	if not ok or not fontData then
+		Log.error("TextEmitter", "font require failed: %s err=%s", tostring(fontPath), tostring(fontData))
+		fontCache[fontPath] = false
+		return nil
+	end
+
+	local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
+	if not sprite then
+		Log.error("TextEmitter", "font instantiate failed: %s", tostring(fontPath))
+		fontCache[fontPath] = false
+		return nil
+	end
+
+	local spriteFont = sprite:findComponent("spritefont")
+	local spritesheet = sprite:findComponent("spritesheet")
+
+	if not spriteFont or not spritesheet then
+		fontCache[fontPath] = false
+		return nil
+	end
+
+	local ref = {
+		image = spritesheet.image,
+		quads = spritesheet.quads,
+		charIndex = spriteFont._charIndex,
+		charWidth = spriteFont._charWidth,
+		charSpacing = spriteFont.charSpacing,
+		frameW = spritesheet.frameWidth,
+		frameH = spritesheet.frameHeight,
+		pivotX = spritesheet.pivotX or "center",
+		pivotY = spritesheet.pivotY or "center",
+	}
+	fontCache[fontPath] = ref
+	return ref
+end
 
 ---@class TextEmitter
 ---@field font string
----@field fontSize number
 ---@field text string|nil
 ---@field event string
 ---@field color table
@@ -24,14 +71,13 @@ local activeTexts = {}
 local TextEmitter = {}
 TextEmitter.__index = TextEmitter
 
----@param data table Component config: font, fontSize, text, event, color, motion (moveX/moveY/gravity/duration/offsetX/offsetY), destruction (destroy/destroyCurve).
+---@param data table Component config: font, text, event, color, motion (moveX/moveY/gravity/duration/offsetX/offsetY), destruction (destroy/destroyCurve).
 --- Motion fields may be range ("-6..-8") or choice ("-10|10") strings. ValueParser.table resolves them and stores
 --- originals in t.__raw so ValueParser.call re-rolls per emit; without it the raw strings leak into arithmetic in the handler.
 ---@return TextEmitter
 function TextEmitter.new(data)
 	local t = {
-		font = data.font or "Content/Assets/Sprites/UI/Fonts/Tinylorder.ttf",
-		fontSize = data.fontSize or Font.DEFAULT_SIZE,
+		font = data.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 		text = data.text,
 		event = data.event or "prop_hit",
 
@@ -57,11 +103,10 @@ function TextEmitter.new(data)
 end
 
 function TextEmitter:attach()
-	local fontObj = Font.load(self.font, self.fontSize)
-	if not fontObj then
+	local ref = loadFont(self.font)
+	if not ref then
 		return
 	end
-	self._fontObj = fontObj
 
 	self.parent:on(self.event, function(eventText)
 		local value = eventText
@@ -100,7 +145,7 @@ function TextEmitter:attach()
 			destroy = self.destroy,
 			destroyCurve = self.destroyCurve,
 			color = self.color,
-			fontRef = self._fontObj,
+			fontRef = ref,
 		}
 		table.insert(activeTexts, num)
 	end, 5)
@@ -151,10 +196,10 @@ function TextEmitter.drawAll()
 	love.graphics.setShader()
 
 	for _, t in ipairs(activeTexts) do
-		local fontObj = t.fontRef
-		if fontObj then
+		local ref = t.fontRef
+		if ref then
 			local alpha = math.max(0, math.min(1, t.alpha))
-			Font.drawText({ font = fontObj, charSpacing = 0 }, t.text, t.x, t.y, {
+			SpriteFont.drawText(ref, t.text, t.x, t.y, {
 				color = t.color,
 				alpha = alpha,
 				scale = t.scale,

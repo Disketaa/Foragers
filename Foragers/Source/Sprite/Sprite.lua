@@ -215,7 +215,7 @@ function Sprite:draw()
 	end
 
 	-- Component draws: shader is managed by SpriteSheet, not here.
-	-- This ensures text overlays (counter label, ttf font, text_emitter)
+	-- This ensures text overlays (counter label, spritefont, text_emitter)
 	-- draw without the sprite's tint shader.
 	drawComponents(self, function(c) return c.drawBehind end)
 
