@@ -56,7 +56,7 @@ return {
 			component = "text",
 			offsetX = 0,
 			offsetY = -40,
-			dropshadowColor = { 0, 0, 0, 0.5 },
+			dropshadowColor = { 0, 0, 0, 0.25 },
 			dropshadow = true,
 			text = "Sturdy",
 			horizontalAlign = "center",
