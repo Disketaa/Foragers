@@ -38,7 +38,7 @@ return {
 	},
 
 	hud = {
-		enabled = true,
+		enabled = false,
 		size = 4,
 		padding = 2,
 		gap = 0,
