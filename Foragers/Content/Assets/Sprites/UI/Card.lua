@@ -1,6 +1,6 @@
 return {
 	frameWidth = 64,
-	frameHeight = 88,
+	frameHeight = 104,
 	pivotX = "center",
 	pivotY = "center",
 	layer = 0,
@@ -16,6 +16,13 @@ return {
 			offsetY = 0,
 			horizontal = "center",
 			vertical = "center",
+		},
+
+		{
+			component = "shader",
+			shaders = {
+				{ CursorSkew = { u_amount = 0.1, u_radius = 300 } },
+			},
 		},
 	},
 }

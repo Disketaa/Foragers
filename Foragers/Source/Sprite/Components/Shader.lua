@@ -105,6 +105,23 @@ function ShaderComponent:update()
 		self:_setUniform("u_time", ShaderLoader.time)
 	end
 
+	-- u_cursor: -1..1 with hover falloff baked in here (not in the shader), so
+	-- CursorSkew can lean the sprite. Mouse->canvas uses the shared blit transform.
+	if self._uniformWhitelist.u_cursor then
+		local scale, ox, oy = ShaderLoader.getScreenTransform()
+		local mx, my = love.mouse.getPosition()
+		local cx, cy = (mx - ox) / scale, (my - oy) / scale
+		local hw = (self.parent.frameWidth or 64) * 0.5
+		local hh = (self.parent.frameHeight or 88) * 0.5
+		local dx, dy = cx - self.parent.x, cy - self.parent.y
+		local radius = self.u_radius or 80
+		local dist = math.sqrt(dx * dx + dy * dy)
+		local fade = 1 - math.min(dist / radius, 1)
+		local nx = math.max(-1, math.min(1, dx / hw)) * fade
+		local ny = math.max(-1, math.min(1, dy / hh)) * fade
+		self:_setUniform("u_cursor", { nx, ny })
+	end
+
 	if self._uniformWhitelist then
 		for uniformName in pairs(self._uniformWhitelist) do
 			if uniformName ~= "u_time" then

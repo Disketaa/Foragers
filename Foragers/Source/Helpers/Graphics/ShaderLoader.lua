@@ -11,6 +11,7 @@ local ShaderLoader = {
 }
 local screenOrigin = { 0, 0 }
 local screenSize = { 0, 0 }
+local screenScale = 1
 
 function ShaderLoader.loadAll(basePath)
 	ShaderLoader.shaders = {}
@@ -243,6 +244,7 @@ end
 --- Main calls this once per frame; effects sampling in canvas pixels need it.
 --- The origin table is reused, not allocated per frame.
 function ShaderLoader.setScreenTransform(scale, originX, originY, canvasWidth, canvasHeight)
+	screenScale = scale
 	screenOrigin[1] = originX
 	screenOrigin[2] = originY
 	screenSize[1] = canvasWidth or 1
@@ -250,6 +252,12 @@ function ShaderLoader.setScreenTransform(scale, originX, originY, canvasWidth, c
 	ShaderLoader.sendUniform("u_canvasScale", scale)
 	ShaderLoader.sendUniform("u_canvasOrigin", screenOrigin)
 	ShaderLoader.sendUniform("u_canvasSize", screenSize)
+end
+
+--- Shared canvas->screen blit transform so components map love.mouse.getPosition()
+--- into canvas space (same mapping as Cursor.lua).
+function ShaderLoader.getScreenTransform()
+	return screenScale, screenOrigin[1], screenOrigin[2]
 end
 
 function ShaderLoader.drawBackground(canvasWidth, canvasHeight)
