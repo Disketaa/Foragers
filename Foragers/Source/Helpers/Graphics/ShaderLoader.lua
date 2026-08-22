@@ -18,6 +18,10 @@ function ShaderLoader.loadAll(basePath)
 	local postprocess = {}
 	Path.scanDirectory(basePath, function(fullPath)
 		local luaPath = Path.lua(fullPath)
+		-- Drop any cached module so edits to shader data files are picked up on
+		-- every loadAll (e.g. on restart). require() would otherwise return the
+		-- stale package.loaded entry and never re-read the file.
+		package.loaded[luaPath] = nil
 		local success, data = pcall(require, luaPath)
 		if success and type(data) == "table" and data.name then
 			if data.module then

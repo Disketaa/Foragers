@@ -3,7 +3,7 @@ return {
 	width = 15,
 	height = 15,
 	tileSize = 8,
-	backgroundColor = { 0.25, 0.75, 0.7 },
+	backgroundColor = { 0.15, 0.625, 0.8 },
 	borderTileOffset = 8,
 	noise = { scale = 0.15, detail = 0.3, density = 0.8 },
 	dayCycle = {

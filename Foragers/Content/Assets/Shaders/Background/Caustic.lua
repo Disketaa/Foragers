@@ -3,15 +3,16 @@ return {
 	priority = "background",
 	applies_to = "screen",
 	uniforms = {
-		caustic_color = { 0.25, 0.65, 0.9 },
+		caustic_color = { 0.2, 0.65, 0.85 },
 		speed = 0.2,
 		horizontal_scale = 0.2,
 		vertical_scale = 0.1,
 		threshold = 0.9,
-		sharpness = 0.9,
-		glow_intensity = 0.9,
-		glow_threshold = 0.1,
-		opacity_variation = 0.33,
+		sharpness = 0.85,
+		glow_intensity = 0.075,
+		glow_threshold = 0.45,
+		glow_sharpness = 0.65,
+		opacity_variation = 1,
 	},
 	code = [[
 extern vec3 caustic_color;
@@ -22,6 +23,7 @@ extern float threshold;
 extern float sharpness;
 extern float glow_intensity;
 extern float glow_threshold;
+extern float glow_sharpness;
 extern float opacity_variation;
 extern float time;
 extern float camera_x;
@@ -82,10 +84,20 @@ vec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {
     if (sharpness > 0) {
         float cutoff = 0.5 + sharpness * 0.5;
         base = mix(base, step(cutoff, base), sharpness);
-        glow = mix(glow, step(cutoff, glow), sharpness);
     }
 
-    float alpha = base;
+    // Glow hardness is independent of the caustic-line sharpness. The cutoff is
+    // scaled to the glow's own range [0, glow_intensity] so it hardens the halo
+    // without the cliff the absolute 0.975 cutoff caused. The hardened mask is
+    // multiplied back by glow_intensity so the halo keeps its brightness instead
+    // of snapping to full white.
+    if (glow_sharpness > 0) {
+        float gcutoff = glow_intensity * (0.5 + glow_sharpness * 0.5);
+        float gmask = step(gcutoff, glow);
+        glow = mix(glow, gmask * glow_intensity, glow_sharpness);
+    }
+
+    float alpha = clamp(base + glow, 0.0, 1.0);
 
     if (opacity_variation > 0) {
         float scale = max(horizontal_scale, vertical_scale);
