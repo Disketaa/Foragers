@@ -77,8 +77,6 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 	end
 	local display = DayCycle.getDisplaySunData()
 	shadowCanvas = ensureCanvas(viewW, viewH)
-	local timeShiftPerPx = Data.shadow.timeShiftPerPx or 0
-	local worldCenterX = Data.shadow.worldCenterX or 0
 
 	Canvas.drawTo(
 		shadowCanvas,
@@ -90,14 +88,13 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 				if sprite and sprite.components then
 					local comps = sprite:getComponentsInto("shadow", hasShadow, shadowScan)
 					for _, comp in ipairs(comps) do
-						-- Phase-shift the golden hour per prop so stretch/offset
-						-- sweeps across the island by X instead of all props peaking at once.
 						local sx = math.floor(sprite.x + 0.5)
-						local effTime = (display.time + (sx - worldCenterX) * timeShiftPerPx) % 24
-						local sun = DayCycle.getSunData(effTime)
+						-- Global sun, not per-prop: a position-based phase shift made
+						-- far shadows shrink, so length is driven by the world clock only.
+						local sun = DayCycle.getSunData(display.time)
 
 						-- Derive extraPx from |offsetX| so width and the pivot flip stay
-						-- consistent: both hit 0 at offsetX=0 (phase-shifted horizon).
+						-- consistent: both hit 0 at offsetX=0 (horizon).
 						local lengthRatio = Data.shadow.maxLen > 0 and math.min(1, math.abs(sun.offsetX) / Data.shadow.maxLen) or 0
 						local extraPx = math.floor((Data.shadow.stretchPx or 0) * lengthRatio + 0.5)
 
