@@ -59,11 +59,9 @@ return {
 			dropshadowColor = { 0, 0, 0, 0.25 },
 			dropshadow = true,
 			text = "Sturdy",
+			maxWidth = 40,
 			horizontalAlign = "center",
 			verticalAlign = "center",
-			maxWidth = 40,
-			scrollSpeed = 30,
-			scrollPause = 0.6,
 		},
 
 		{

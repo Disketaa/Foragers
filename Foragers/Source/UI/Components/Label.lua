@@ -33,6 +33,10 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 local Label = {}
 Label.__index = Label
 
+--- Default scroll tuning shared by every scrolling label.
+Label.SCROLL_SPEED = 30 -- px/sec the text travels
+Label.SCROLL_PAUSE = 0.6 -- sec dwell at each scroll end
+
 ---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadow, dropshadowColor}
 ---@return Label
 function Label.new(data)
@@ -51,8 +55,8 @@ function Label.new(data)
 		dropshadowColor = data.dropshadowColor and { unpack(data.dropshadowColor) } or { 0, 0, 0, 0.5 },
 		skewWithParent = data.skewWithParent ~= false,
 		maxWidth = data.maxWidth,
-		scrollSpeed = data.scrollSpeed or 30,
-		scrollPause = data.scrollPause or 0.6,
+		scrollSpeed = data.scrollSpeed or Label.SCROLL_SPEED,
+		scrollPause = data.scrollPause or Label.SCROLL_PAUSE,
 		scrollEdgePad = data.scrollEdgePad or 1,
 		_scrollT = 0,
 		_textW = nil,
