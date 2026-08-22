@@ -8,7 +8,6 @@
 local Cursor = {}
 Cursor.__index = Cursor
 
--- PNG per visual kind, loaded once and swapped on the parent sprite.
 local CURSOR_IMAGES = {
 	arrow = "Content/Assets/Sprites/UI/Cursors/Arrow.png",
 	hand = "Content/Assets/Sprites/UI/Cursors/Hand.png",
@@ -47,7 +46,6 @@ end
 function Cursor:update(dt)
 	local mx, my = love.mouse.getPosition()
 
-	-- Swap the rendered image to match the active cursor kind.
 	local img = self._images[self.cursorType]
 	if img then
 		self.parent.image = img
