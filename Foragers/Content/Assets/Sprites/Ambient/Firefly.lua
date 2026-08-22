@@ -11,6 +11,11 @@ return {
 		},
 
 		{
+			component = "shadow",
+			width = 1,
+		},
+
+		{
 			component = "ambient",
 			wanderingSpeed = 0.5,
 		},
