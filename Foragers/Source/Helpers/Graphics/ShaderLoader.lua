@@ -32,7 +32,6 @@ function ShaderLoader.loadAll(basePath)
 					table.insert(postprocess, { name = data.name, order = data.order or 0 })
 				end
 			elseif data.code then
-				-- legacy standalone shader
 				local ok, shader = pcall(love.graphics.newShader, data.code)
 				if ok then
 					-- Push data-file uniform defaults at creation so the GPU state
@@ -76,7 +75,6 @@ function ShaderLoader.loadAll(basePath)
 	end
 end
 
--- Build a composed shader from a list of module names. Cached by joined name.
 function ShaderLoader.compose(names)
 	local key = "prog_" .. table.concat(names, "_")
 	for _, s in ipairs(ShaderLoader.shaders) do
