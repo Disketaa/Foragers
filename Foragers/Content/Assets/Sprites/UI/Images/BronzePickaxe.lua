@@ -1,6 +1,6 @@
 return {
-	frameWidth = 16,
-	frameHeight = 16,
+	frameWidth = 18,
+	frameHeight = 18,
 	pivotX = "center",
 	pivotY = "center",
 	components = {
