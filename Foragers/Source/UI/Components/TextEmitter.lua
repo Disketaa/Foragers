@@ -53,6 +53,21 @@ local function loadFont(fontPath)
 	return ref
 end
 
+---@class TextEmitter
+---@field font string
+---@field text string|nil
+---@field event string
+---@field color table
+---@field moveX number
+---@field moveY number
+---@field gravity number
+---@field duration number
+---@field offsetX number
+---@field offsetY number
+---@field destroy string
+---@field destroyCurve string
+---@field type string
+---@field parent Sprite
 local TextEmitter = {}
 TextEmitter.__index = TextEmitter
 

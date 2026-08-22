@@ -81,7 +81,7 @@ function ValueParser.parseSpawnTime(raw)
 	if raw then
 		local a, b = raw:match("^%s*(%d+)%s*>%s*(%d+)%s*$")
 		if a and b then
-			return tonumber(a), tonumber(b)
+			return assert(tonumber(a)), assert(tonumber(b))
 		end
 	end
 	return 0, 24
