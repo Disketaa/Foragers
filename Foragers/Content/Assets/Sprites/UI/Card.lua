@@ -11,11 +11,28 @@ return {
 		},
 
 		{
+			component = "tween",
+			tweens = {
+				{ target = "iconBobY", from = -1, to = 1, duration = 2, curve = "InOutSine", loop = true, pingPong = true },
+			},
+		},
+
+		{
 			component = "ui",
 			offsetX = 0,
 			offsetY = 0,
 			horizontalAlign = "center",
 			verticalAlign = "center",
+		},
+
+		{
+			component = "icon",
+			image = "Content/Assets/Sprites/UI/Icons/BronzePickaxe",
+			scale = 1,
+			offsetX = 0,
+			offsetY = -17,
+			bob = 1,
+			parallax = 1,
 		},
 
 		{

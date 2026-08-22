@@ -10,6 +10,18 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 --- EXACT same perspective as the card: one skew source of truth, no separate
 --- affine shear that can drift from / rotate against the card.
 ---@class Label
+---@field parent Sprite|nil
+---@field type "text"
+---@field text string
+---@field font string
+---@field color table
+---@field charSpacing number|nil
+---@field offsetX number
+---@field offsetY number
+---@field horizontalAlign string
+---@field verticalAlign string
+---@field scale number
+---@field skewWithParent boolean
 local Label = {}
 Label.__index = Label
 
@@ -75,7 +87,7 @@ end
 --@param cy number card centre y (screen)
 --@param fw number card frame width
 --@param fh number card frame height
---@return Canvas|nil
+--@return love.Canvas|nil
 function Label:buildCanvas(cx, cy, fw, fh)
 	if not (self._image and self._quads and self._charIndex) then
 		return nil
