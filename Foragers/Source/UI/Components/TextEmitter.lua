@@ -56,8 +56,12 @@ end
 local TextEmitter = {}
 TextEmitter.__index = TextEmitter
 
+---@param data table Component config: font, text, event, color, motion (moveX/moveY/gravity/duration/offsetX/offsetY), destruction (destroy/destroyCurve).
+--- Motion fields may be range ("-6..-8") or choice ("-10|10") strings. ValueParser.table resolves them and stores
+--- originals in t.__raw so ValueParser.call re-rolls per emit; without it the raw strings leak into arithmetic in the handler.
+---@return TextEmitter
 function TextEmitter.new(data)
-	return setmetatable({
+	local t = {
 		font = data.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 		text = data.text,
 		event = data.event or "prop_hit",
@@ -78,7 +82,9 @@ function TextEmitter.new(data)
 		destroyCurve = data.destroyCurve or "Linear",
 
 		type = "text_emitter",
-	}, TextEmitter)
+	}
+	ValueParser.table(t)
+	return setmetatable(t, TextEmitter)
 end
 
 function TextEmitter:attach()

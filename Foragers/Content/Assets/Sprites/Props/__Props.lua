@@ -51,7 +51,7 @@ return {
 			font = "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 			offsetX = 0,
 			offsetY = "-6..-8",
-			moveX = "-10|10",
+			moveX = "-10..10",
 			moveY = -50,
 			gravity = 200,
 			duration = 0.8,
