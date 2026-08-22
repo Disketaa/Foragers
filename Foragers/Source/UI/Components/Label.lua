@@ -22,10 +22,12 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 ---@field verticalAlign string
 ---@field scale number
 ---@field skewWithParent boolean
+---@field dropshadow boolean
+---@field dropshadowColor table
 local Label = {}
 Label.__index = Label
 
----@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale}
+---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadow, dropshadowColor}
 ---@return Label
 function Label.new(data)
 	return setmetatable({
@@ -39,8 +41,8 @@ function Label.new(data)
 		horizontalAlign = data.horizontalAlign or "center",
 		verticalAlign = data.verticalAlign or "center",
 		scale = data.scale or 1,
-		-- Warp the label with the parent's perspective skew shader (e.g.
-		-- CursorSkew) so it tilts with the card instead of staying flat.
+		dropshadow = data.dropshadow or false,
+		dropshadowColor = data.dropshadowColor and { unpack(data.dropshadowColor) } or { 0, 0, 0, 0.5 },
 		skewWithParent = data.skewWithParent ~= false,
 	}, Label)
 end
@@ -79,10 +81,6 @@ function Label:setText(text)
 	self._canvas = nil
 end
 
--- Bake the label into a card-sized canvas so it shares the card's UV space
--- (and therefore the card's skew shader) exactly. Canvas top-left maps to the
--- card's top-left; text is drawn at the same centre-relative coords it would
--- occupy live, so position is unchanged — only the skew mechanism is unified.
 --@param cx number card centre x (screen)
 --@param cy number card centre y (screen)
 --@param fw number card frame width
@@ -99,33 +97,36 @@ function Label:buildCanvas(cx, cy, fw, fh)
 	love.graphics.push()
 	love.graphics.origin()
 	love.graphics.clear(0, 0, 0, 0)
-	-- Shift screen-space anchor into canvas space (canvas top-left == card top-left).
 	love.graphics.translate(-(cx - fw * 0.5), -(cy - fh * 0.5))
 	local anchorX = math.floor(cx + self.offsetX + 0.5)
 	local anchorY = math.floor(cy + self.offsetY + 0.5)
 	local ox = Pivot.px(self._pivotX, self._frameW, "center")
-	SpriteFont.drawText(
-		{
-			image = self._image,
-			quads = self._quads,
-			charIndex = self._charIndex,
-			charWidth = self._charWidth,
-			charSpacing = self._charSpacing,
-			frameW = self._frameW,
-			frameH = self._frameH,
-			pivotX = self._pivotX,
-			pivotY = self._pivotY,
-		},
-		self.text,
-		anchorX + ox,
-		anchorY,
-		{
-			color = self.color,
+	local ref = {
+		image = self._image,
+		quads = self._quads,
+		charIndex = self._charIndex,
+		charWidth = self._charWidth,
+		charSpacing = self._charSpacing,
+		frameW = self._frameW,
+		frameH = self._frameH,
+		pivotX = self._pivotX,
+		pivotY = self._pivotY,
+	}
+	local opts = {
+		color = self.color,
+		horizontalAlign = self.horizontalAlign,
+		verticalAlign = self.verticalAlign,
+		scale = self.scale,
+	}
+	if self.dropshadow then
+		SpriteFont.drawText(ref, self.text, anchorX + ox + 1, anchorY + 1, {
+			color = self.dropshadowColor,
 			horizontalAlign = self.horizontalAlign,
 			verticalAlign = self.verticalAlign,
 			scale = self.scale,
-		}
-	)
+		})
+	end
+	SpriteFont.drawText(ref, self.text, anchorX + ox, anchorY, opts)
 	love.graphics.pop()
 	love.graphics.setCanvas(prev)
 	return canvas
@@ -149,8 +150,6 @@ function Label:draw(x, y)
 		return
 	end
 
-	-- Draw exactly like the card: centred at (x,y) with the same pivot, through
-	-- the same skew shader. uv 0.5 == card centre for both, so they warp as one.
 	local shader = (self.skewWithParent and self.parent and self.parent.shader) or nil
 	local r, g, b, a = love.graphics.getColor()
 	love.graphics.setColor(1, 1, 1, 1)
