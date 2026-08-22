@@ -112,7 +112,10 @@ function ValueParser.table(tbl)
 	end
 	for k, v in pairs(tbl) do
 		local kstr = type(k) == "string" and k or nil
-		if not (kstr and kstr:sub(1, 2) == "__") then
+		-- Never coerce display text: a numeric-looking string like "1" must stay
+		-- a string, or glyph rendering breaks (Label/TextEmitter iterate text as
+		-- a byte string for UTF-8; a number here makes `#text`/`:byte` fail).
+		if not (kstr and (kstr:sub(1, 2) == "__" or kstr == "text")) then
 			if type(v) == "string" then
 				local resolved = ValueParser.value(v)
 				if resolved ~= v then

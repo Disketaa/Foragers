@@ -77,12 +77,17 @@ end
 function SpriteFont.measureText(ref, text, charSpacing)
 	charSpacing = charSpacing or ref.charSpacing or 0
 	local w = 0
-	for i = 1, #text do
-		local c = text:sub(i, i)
+	local i = 1
+	local n = #text
+	local first = true
+	while i <= n do
+		local nextI, c = utf8Next(text, i)
 		w = w + (c == " " and ref.frameW or (ref.charWidth[c] or ref.frameW))
-		if i < #text then
+		if not first then
 			w = w + charSpacing
 		end
+		first = false
+		i = nextI
 	end
 	return w
 end
@@ -136,8 +141,10 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 		love.graphics.setColor(r, g, b, a)
 	end
 
-	for i = 1, #text do
-		local c = text:sub(i, i)
+	local i = 1
+	local n = #text
+	while i <= n do
+		local nextI, c = utf8Next(text, i)
 		if c == " " then
 			cx = cx + frameW + charSpacing
 		else
@@ -150,6 +157,7 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 			end
 			cx = cx + (ref.charWidth[c] or frameW) + charSpacing
 		end
+		i = nextI
 	end
 
 	if opts.color or opts.alpha then
