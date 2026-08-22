@@ -3,7 +3,6 @@ return {
 	frameHeight = 104,
 	pivotX = "center",
 	pivotY = "center",
-	layer = 0,
 	components = {
 		{
 			component = "spritesheet",

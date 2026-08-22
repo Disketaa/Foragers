@@ -413,6 +413,12 @@ entire data tree. These fields are safe to randomize:
 | `font` (module path) | Must resolve to a valid require — pass through |
 | `sprite` (particle/drop asset path) | Must resolve to a valid require — pass through |
 
+## Cursor / Hover (Source/Sprite/Components/Cursor.lua, Hover.lua)
+
+- **`Cursor.active` is a module-level singleton, NOT an event.** `main.lua` assigns the live cursor instance to `Cursor.active` after creating it. `Hover` reads this handle directly (calls `Cursor:setType` / sets `cursor._hoverClaimed`) instead of going through the event bus — there is no hover event. If `Cursor.active` is nil (cursor not yet wired), `Hover.update` early-returns, so a hover component with no live cursor is a silent no-op.
+- **`_hoverClaimed` is a one-frame claim cleared by `Cursor.update`.** `Hover.update` (runs in the sprite loop) sets `cursor._hoverClaimed = true` when the pointer is over its parent; `Cursor.update` (runs later, in the `love.draw` guard) restores `cursorType` to `defaultType` UNLESS a hover claimed it, then clears the flag. Ordering is load-bearing: `Cursor.update` must run AFTER all `Hover.update` calls in a frame, or the claim is cleared before it's read and the cursor never switches. Don't move cursor update before the sprite loop.
+- **`Cursor:setType(kind)` ignores unknown kinds.** It only switches if `kind` is a key in `_images` (loaded from `CURSOR_IMAGES`). `"hand"`/`"arrow"` work; anything else is a silent no-op, so callers may pass any string safely.
+
 ## Log / save directory (Source/Helpers/Core/Log.lua, conf.lua)
 
 - **`Log.lua` patches global `print` at require time.** Every module's `print()` routes through the log sink automatically — no caller opts in. `originalPrint` must be captured before the patch, or `print` recurses infinitely. Because the patch runs at `require`, any module loaded before `Log` (before the patch) calling `print` still uses the real one.

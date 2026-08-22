@@ -153,7 +153,7 @@ All Critical Constraints in Section I apply here.
 
 ### Component list
 
-24 core: `ambient`, `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `player_stats`, `pickup`, `silhouette`, `emote`, `cursor`.
+25 core: `ambient`, `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `player_stats`, `pickup`, `silhouette`, `emote`, `cursor`, `hover`.
 
 ---
 
@@ -175,7 +175,7 @@ Full event table: `.kilo/documentation/events.md`
 
 ## XI. Component Registry
 
-`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 24 core components. Mods register new types:
+`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 25 core components. Mods register new types:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```
