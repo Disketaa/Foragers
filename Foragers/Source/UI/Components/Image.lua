@@ -13,12 +13,11 @@
 ---@field drawBehind boolean @ drawn in the sprite's first component pass, behind normal/onTop components
 ---@field parallax number|nil px the image slides toward the cursor at full deflection (parallax depth cue)
 ---@field parallaxSmoothing number easing rate of the parallax offset (higher = snappier)
----@field bob number|nil px amplitude of the time-driven vertical bob (read from a tween)
----@field bobTween string|nil parent.tweens key the bob reads (default "imageBobY")
+---@field bob number|nil px amplitude of the vertical bob
 local Image = {}
 Image.__index = Image
 
----@param data table {image, offsetX, offsetY, scale, skewWithParent, parallax, parallaxSmoothing, bob, bobTween}
+---@param data table {image, offsetX, offsetY, scale, skewWithParent, parallax, parallaxSmoothing, bob}
 ---@return Image
 function Image.new(data)
 	return setmetatable({
@@ -32,7 +31,7 @@ function Image.new(data)
 		parallax = data.parallax,
 		parallaxSmoothing = data.parallaxSmoothing or 10,
 		bob = data.bob,
-		bobTween = data.bobTween or "imageBobY",
+		_bobT = 0,
 	}, Image)
 end
 
@@ -41,6 +40,9 @@ function Image:update(dt)
 	-- spritesheet component then cycles frames, which draw() re-bakes.
 	if self._animated and self._sprite then
 		self._sprite:update(dt)
+	end
+	if self.bob then
+		self._bobT = self._bobT + dt
 	end
 	if not self.parallax or not self.parent or not self.parent.shaderData then
 		return
@@ -139,14 +141,10 @@ function Image:draw(x, y)
 	if not self._canvas then
 		return
 	end
-	-- Time-driven bob (tween) stacks with the cursor parallax; both are just
-	-- additive draw offsets, so they never fight or cancel each other.
+	-- Bob and parallax are additive draw offsets, so they never fight or cancel.
 	local bobY = 0
-	if self.bob and self.parent and self.parent.tweens then
-		local t = self.parent.tweens[self.bobTween]
-		if t then
-			bobY = t:getValue() * self.bob
-		end
+	if self.bob then
+		bobY = -math.cos(self._bobT * (math.pi * 0.5)) * self.bob
 	end
 	local dx = bx + (self._parX or 0)
 	local dy = by + (self._parY or 0) + bobY

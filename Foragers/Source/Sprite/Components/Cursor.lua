@@ -4,16 +4,30 @@
 ---@field hideDelay number Seconds of no mouse movement before hiding
 ---@field moveThreshold number Pixel-distance threshold to count as movement
 ---@field type "cursor"
+---@field cursorType string Visual cursor kind: "arrow" | "hand"
 local Cursor = {}
 Cursor.__index = Cursor
+
+-- PNG per visual kind, loaded once and swapped on the parent sprite.
+local CURSOR_IMAGES = {
+	arrow = "Content/Assets/Sprites/UI/Cursors/Arrow.png",
+	hand = "Content/Assets/Sprites/UI/Cursors/Hand.png",
+}
 
 ---@param data table
 ---@return Cursor
 function Cursor.new(data)
+	local images = {}
+	for kind, path in pairs(CURSOR_IMAGES) do
+		local ok, img = pcall(love.graphics.newImage, path)
+		if ok then images[kind] = img end
+	end
 	return setmetatable({
 		canvas = nil,
 		hideDelay = data.hideDelay or 5.5,
 		moveThreshold = data.moveThreshold or 1.5,
+		cursorType = data.type or "arrow",
+		_images = images,
 		_state = "visible",
 		_idleTimer = 0,
 		_lastX = nil,
@@ -22,8 +36,23 @@ function Cursor.new(data)
 	}, Cursor)
 end
 
+--- Switch the rendered cursor kind ("arrow" | "hand"). No-op for unknown kinds.
+---@param kind string
+function Cursor:setType(kind)
+	if self._images[kind] then
+		self.cursorType = kind
+	end
+end
+
 function Cursor:update(dt)
 	local mx, my = love.mouse.getPosition()
+
+	-- Swap the rendered image to match the active cursor kind.
+	local img = self._images[self.cursorType]
+	if img then
+		self.parent.image = img
+	end
+
 	if self.canvas then
 		self.parent.x = (mx - self.canvas.offsetX) / self.canvas.scale
 		self.parent.y = (my - self.canvas.offsetY) / self.canvas.scale

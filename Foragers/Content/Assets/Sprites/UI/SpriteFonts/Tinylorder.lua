@@ -14,9 +14,11 @@ return {
 			chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя1234567890!\"#$%&'()*+,-./:;<=>",
 			charSpacing = -3,
 			spacing = {
-				{ 9, "Mmw" },
-				{ 7, "т+>" },
+				{ 9, "Mmwм" },
+				{ 7, "т>" },
+				{ 6, "+"},
 				{ 5, ".li-" },
+				{ 5, " " },
 			},
 		},
 	},

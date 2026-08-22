@@ -82,7 +82,7 @@ function SpriteFont.measureText(ref, text, charSpacing)
 	local first = true
 	while i <= n do
 		local nextI, c = utf8Next(text, i)
-		w = w + (c == " " and ref.frameW or (ref.charWidth[c] or ref.frameW))
+		w = w + (ref.charWidth[c] or ref.frameW)
 		if not first then
 			w = w + charSpacing
 		end
@@ -145,9 +145,7 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 	local n = #text
 	while i <= n do
 		local nextI, c = utf8Next(text, i)
-		if c == " " then
-			cx = cx + frameW + charSpacing
-		else
+		if c ~= " " then
 			local idx = ref.charIndex[c]
 			if idx then
 				local quad = ref.quads[idx]
@@ -155,8 +153,8 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 					love.graphics.draw(image, quad, math.floor(cx + 0.5), math.floor(cy + 0.5), 0, scale, scale, ox, oy)
 				end
 			end
-			cx = cx + (ref.charWidth[c] or frameW) + charSpacing
 		end
+		cx = cx + (ref.charWidth[c] or frameW) + charSpacing
 		i = nextI
 	end
 

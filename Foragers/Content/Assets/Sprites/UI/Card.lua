@@ -11,13 +11,6 @@ return {
 		},
 
 		{
-			component = "tween",
-			tweens = {
-				{ target = "imageBobY", from = -1, to = 1, duration = 2, curve = "InOutSine", loop = true, pingPong = true },
-			},
-		},
-
-		{
 			component = "ui",
 			offsetX = 0,
 			offsetY = 0,
@@ -65,6 +58,17 @@ return {
 
 		{
 			component = "text",
+			offsetX = 0,
+			offsetY = -40,
+			dropshadowColor = { 0.56, 0.32, 0.73, 1 },
+			text = "Прочность",
+			maxWidth = 40,
+			horizontalAlign = "center",
+			verticalAlign = "center",
+		},
+
+		{
+			component = "text",
 			offsetX = 1,
 			offsetY = 0,
 			color = { 0.93, 0.7, 0.61 },
@@ -77,10 +81,23 @@ return {
 		{
 			component = "text",
 			offsetX = 0,
-			offsetY = -40,
-			dropshadowColor = { 0.56, 0.32, 0.73, 1 },
-			text = "Прочность",
-			maxWidth = 40,
+			offsetY = 16,
+			color = { 0.41, 0.35, 0.34 },
+			dropshadowColor = { 0.09, 0.08, 0.08, 1 },
+			text = "+2 урон",
+			maxWidth = 46,
+			horizontalAlign = "center",
+			verticalAlign = "center",
+		},
+
+		{
+			component = "text",
+			offsetX = 0,
+			offsetY = 25,
+			color = { 0.41, 0.35, 0.34 },
+			dropshadowColor = { 0.09, 0.08, 0.08, 1 },
+			text = "+1 темп",
+			maxWidth = 46,
 			horizontalAlign = "center",
 			verticalAlign = "center",
 		},

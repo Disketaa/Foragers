@@ -14,6 +14,7 @@ return {
 
 		{
 			component = "cursor",
+			type = "arrow",
 			moveThreshold = 0.5,
 			hideDelay = 3,
 		},
