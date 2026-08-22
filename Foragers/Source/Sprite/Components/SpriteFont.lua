@@ -69,8 +69,26 @@ function SpriteFont.new(data)
 	return self
 end
 
---- Shared char-by-char text renderer.
---- Built from the same pattern in SpriteFont, Counter, and TextEmitter.
+--- Measure rendered width of text (chars + spacing), no draw.
+---@param ref table {frameW, charWidth, charSpacing}
+---@param text string
+---@param charSpacing number|nil
+---@return number width in font frame units (unscaled)
+function SpriteFont.measureText(ref, text, charSpacing)
+	charSpacing = charSpacing or ref.charSpacing or 0
+	local w = 0
+	for i = 1, #text do
+		local c = text:sub(i, i)
+		w = w + (c == " " and ref.frameW or (ref.charWidth[c] or ref.frameW))
+		if i < #text then
+			w = w + charSpacing
+		end
+	end
+	return w
+end
+
+--- Single shared text renderer for SpriteFont, Counter, and TextEmitter so
+--- glyph alignment and styling stay consistent across all three.
 ---@param ref table {image, quads, charIndex, charWidth, charSpacing, frameW, frameH, pivotX, pivotY}
 ---@param text string
 ---@param x number
@@ -88,14 +106,7 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 
 	local totalW
 	if opts.horizontalAlign then
-		totalW = 0
-		for i = 1, #text do
-			local c = text:sub(i, i)
-			totalW = totalW + (c == " " and frameW or (ref.charWidth[c] or frameW))
-			if i < #text then
-				totalW = totalW + charSpacing
-			end
-		end
+		totalW = SpriteFont.measureText(ref, text, charSpacing)
 	end
 
 	local cx = x

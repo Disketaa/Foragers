@@ -24,6 +24,12 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 ---@field skewWithParent boolean
 ---@field dropshadow boolean
 ---@field dropshadowColor table
+---@field maxWidth number|nil @ nil disables clip/scroll
+---@field scrollSpeed number @ px/sec text travels while scrolling
+---@field scrollPause number @ sec dwell at each scroll end
+---@field scrollEdgePad number @ px overshoot so glyph ink reaches window edge
+---@field _scrollT number @ accumulated scroll time
+---@field _textW number|nil @ cached rendered width for overflow check
 local Label = {}
 Label.__index = Label
 
@@ -44,7 +50,43 @@ function Label.new(data)
 		dropshadow = data.dropshadow or false,
 		dropshadowColor = data.dropshadowColor and { unpack(data.dropshadowColor) } or { 0, 0, 0, 0.5 },
 		skewWithParent = data.skewWithParent ~= false,
+		maxWidth = data.maxWidth,
+		scrollSpeed = data.scrollSpeed or 30,
+		scrollPause = data.scrollPause or 0.6,
+		scrollEdgePad = data.scrollEdgePad or 1,
+		_scrollT = 0,
+		_textW = nil,
 	}, Label)
+end
+
+---@param dt number
+function Label:update(dt)
+	if self.maxWidth and self._textW and self._textW > self.maxWidth then
+		self._scrollT = self._scrollT + dt
+	end
+end
+
+--- Scroll position ping-pongs 0..range with a dwell at each end.
+---@param range number total travel distance in rendered px
+---@return number offset in rendered px (0..range)
+function Label:scrollOffset(range)
+	if range <= 0 then
+		return 0
+	end
+	local moveDur = range / self.scrollSpeed
+	local pause = self.scrollPause
+	local cycle = (moveDur + pause) * 2
+	local t = self._scrollT % cycle
+	if t < pause then
+		return 0
+	elseif t < pause + moveDur then
+		return (t - pause) / moveDur * range
+	elseif t < pause + moveDur + pause then
+		return range
+	else
+		local t2 = t - (pause * 2 + moveDur)
+		return range - (t2 / moveDur) * range
+	end
 end
 
 function Label:attach()
@@ -81,11 +123,11 @@ function Label:setText(text)
 	self._canvas = nil
 end
 
---@param cx number card centre x (screen)
---@param cy number card centre y (screen)
---@param fw number card frame width
---@param fh number card frame height
---@return love.Canvas|nil
+---@param cx number card centre x (screen)
+---@param cy number card centre y (screen)
+---@param fw number card frame width
+---@param fh number card frame height
+---@return love.Canvas|nil
 function Label:buildCanvas(cx, cy, fw, fh)
 	if not (self._image and self._quads and self._charIndex) then
 		return nil
@@ -112,21 +154,52 @@ function Label:buildCanvas(cx, cy, fw, fh)
 		pivotX = self._pivotX,
 		pivotY = self._pivotY,
 	}
+
+	local baseX = anchorX + ox
+	local textW = SpriteFont.measureText(ref, self.text, self._charSpacing)
+	local renderedW = textW * self.scale
+	self._textW = renderedW
+
+	local drawAlign = self.horizontalAlign
+	local drawX = baseX
+	local clip = self.maxWidth and renderedW > self.maxWidth
+	if clip then
+		-- Clip window is centred on the label's natural centre (anchorX),
+		-- so a scrolling label lines up with a non-scrolling one. Glyphs
+		-- draw pivot-centred, so the visual box is offset by ox from drawX;
+		-- shift the text (not the window) to sweep it through. A small
+		-- overshoot (scrollEdgePad) lets glyph ink reach the window edge
+		-- instead of leaving the frame's transparent padding as a gap.
+		local range = renderedW - self.maxWidth
+		local pad = self.scrollEdgePad
+		local f = range > 0 and (self:scrollOffset(range) / range) or 0
+		local scrollShift = (range * 0.5 - pad) - f * (range - 2 * pad)
+		drawX = baseX + scrollShift
+		-- Scissor is raw canvas pixels (unaffected by the translate above).
+		local winLeft = anchorX - self.maxWidth * 0.5
+		local canvasWinX = math.floor(winLeft - (cx - fw * 0.5) + 0.5)
+		love.graphics.setScissor(canvasWinX, 0, math.ceil(self.maxWidth), fh)
+	end
+
 	local opts = {
 		color = self.color,
-		horizontalAlign = self.horizontalAlign,
+		horizontalAlign = drawAlign,
 		verticalAlign = self.verticalAlign,
 		scale = self.scale,
 	}
 	if self.dropshadow then
-		SpriteFont.drawText(ref, self.text, anchorX + ox + 1, anchorY + 1, {
+		SpriteFont.drawText(ref, self.text, drawX + 1, anchorY + 1, {
 			color = self.dropshadowColor,
-			horizontalAlign = self.horizontalAlign,
+			horizontalAlign = drawAlign,
 			verticalAlign = self.verticalAlign,
 			scale = self.scale,
 		})
 	end
-	SpriteFont.drawText(ref, self.text, anchorX + ox, anchorY, opts)
+	SpriteFont.drawText(ref, self.text, drawX, anchorY, opts)
+
+	if clip then
+		love.graphics.setScissor()
+	end
 	love.graphics.pop()
 	love.graphics.setCanvas(prev)
 	return canvas
@@ -143,7 +216,8 @@ function Label:draw(x, y)
 	local fw = self.parent and self.parent.frameWidth or self._frameW or 64
 	local fh = self.parent and self.parent.frameHeight or self._frameH or 104
 
-	if not self._canvas then
+	local scrolling = self.maxWidth and self._textW and self._textW > self.maxWidth
+	if not self._canvas or scrolling then
 		self._canvas = self:buildCanvas(math.floor(x + 0.5), math.floor(y + 0.5), fw, fh)
 	end
 	if not self._canvas then

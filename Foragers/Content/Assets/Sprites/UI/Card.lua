@@ -61,6 +61,9 @@ return {
 			text = "Sturdy",
 			horizontalAlign = "center",
 			verticalAlign = "center",
+			maxWidth = 40,
+			scrollSpeed = 30,
+			scrollPause = 0.6,
 		},
 
 		{
