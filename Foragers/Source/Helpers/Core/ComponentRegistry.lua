@@ -46,6 +46,7 @@ local Silhouette = require("Source.Sprite.Components.Silhouette")
 local Emissive = require("Source.Sprite.Components.Emissive")
 local Emote = require("Source.Sprite.Components.Emote")
 local Cursor = require("Source.Sprite.Components.Cursor")
+local Hover = require("Source.Sprite.Components.Hover")
 local Ambient = require("Source.Sprite.Components.Ambient")
 
 local registry = {
@@ -75,6 +76,7 @@ local registry = {
 	emissive = Emissive,
 	emote = Emote,
 	cursor = Cursor,
+	hover = Hover,
 	ambient = Ambient,
 }
 for name, module in pairs(registry) do

@@ -5,8 +5,15 @@
 ---@field moveThreshold number Pixel-distance threshold to count as movement
 ---@field type "cursor"
 ---@field cursorType string Visual cursor kind: "arrow" | "hand"
+---@field defaultType string Base kind restored when nothing is hovered
+---@field _images table<string, love.Image> Loaded cursor sprites keyed by kind
+---@field _hoverClaimed boolean Raised by Hover on the frame the pointer is over a target
 local Cursor = {}
 Cursor.__index = Cursor
+
+-- Live cursor instance, assigned by Main on the real cursor so hover-driven
+-- components can switch its kind without depending on Main's locals.
+Cursor.active = nil
 
 local CURSOR_IMAGES = {
 	arrow = "Content/Assets/Sprites/UI/Cursors/Arrow.png",
@@ -26,16 +33,18 @@ function Cursor.new(data)
 		hideDelay = data.hideDelay or 5.5,
 		moveThreshold = data.moveThreshold or 1.5,
 		cursorType = data.type or "arrow",
+		defaultType = data.type or "arrow",
 		_images = images,
 		_state = "visible",
 		_idleTimer = 0,
 		_lastX = nil,
 		_lastY = nil,
 		type = "cursor",
+		_hoverClaimed = false,
 	}, Cursor)
 end
 
---- Switch the rendered cursor kind ("arrow" | "hand"). No-op for unknown kinds.
+--- Unknown kinds are ignored, so callers may pass any string safely.
 ---@param kind string
 function Cursor:setType(kind)
 	if self._images[kind] then
@@ -45,6 +54,13 @@ end
 
 function Cursor:update(dt)
 	local mx, my = love.mouse.getPosition()
+
+	-- Restore the base kind unless a Hover claimed the pointer this
+	-- frame; claims are raised during sprite updates and cleared here.
+	if not self._hoverClaimed then
+		self.cursorType = self.defaultType
+	end
+	self._hoverClaimed = false
 
 	local img = self._images[self.cursorType]
 	if img then

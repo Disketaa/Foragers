@@ -26,6 +26,7 @@ local Shadow = require("Source.Sprite.Components.Shadow")
 local Sound = require("Source.Sprite.Components.Sound")
 local Mask = require("Source.Helpers.Graphics.Mask")
 local Emissive = require("Source.Sprite.Components.Emissive")
+local Cursor = require("Source.Sprite.Components.Cursor")
 local Events = require("Source.Helpers.Core.Events")
 local PropSpawner = require("Source.World.PropSpawner")
 local PropPicker = require("Source.World.PropPicker")
@@ -311,6 +312,7 @@ function initGame()
 		local cursorComp = cursorObj:findComponent("cursor")
 		if cursorComp then
 			cursorComp.canvas = canvas
+			Cursor.active = cursorComp
 		end
 		cursorSprite = { instance = cursorObj, data = cursorData }
 		love.mouse.setVisible(false)

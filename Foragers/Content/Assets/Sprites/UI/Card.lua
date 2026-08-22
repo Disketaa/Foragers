@@ -11,6 +11,11 @@ return {
 		},
 
 		{
+			component = "hover",
+			type = "hand",
+		},
+
+		{
 			component = "ui",
 			offsetX = 0,
 			offsetY = 0,
