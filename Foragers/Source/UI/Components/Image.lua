@@ -10,6 +10,7 @@
 ---@field offsetY number
 ---@field scale number
 ---@field skewWithParent boolean
+---@field drawBehind boolean @ drawn in the sprite's first component pass, behind normal/onTop components
 ---@field parallax number|nil px the image slides toward the cursor at full deflection (parallax depth cue)
 ---@field parallaxSmoothing number easing rate of the parallax offset (higher = snappier)
 ---@field bob number|nil px amplitude of the time-driven vertical bob (read from a tween)
@@ -27,6 +28,7 @@ function Image.new(data)
 		offsetY = data.offsetY or 0,
 		scale = data.scale or 1,
 		skewWithParent = data.skewWithParent ~= false,
+		drawBehind = data.layer == "below",
 		parallax = data.parallax,
 		parallaxSmoothing = data.parallaxSmoothing or 10,
 		bob = data.bob,

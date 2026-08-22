@@ -32,6 +32,7 @@ return {
 			offsetX = 0,
 			offsetY = -16,
 			parallax = -0.5,
+			layer = "below",
 		},
 
 		{
@@ -40,16 +41,39 @@ return {
 			scale = 1,
 			offsetX = 0,
 			offsetY = -16,
+			layer = "below",
 		},
 
 		{
 			component = "image",
-			image = "Content/Assets/Sprites/UI/Images/BronzePickaxe",
+			image = "Content/Assets/Sprites/UI/CopperLabel",
+			scale = 1,
+			offsetX = 0,
+			offsetY = -3,
+			parallax = 0.25,
+		},
+
+		{
+			component = "image",
+			image = "Content/Assets/Sprites/UI/Icons/BronzePickaxe",
 			scale = 1,
 			offsetX = 0,
 			offsetY = -17,
 			bob = 1,
 			parallax = -1,
+		},
+
+		{
+			component = "text",
+			offsetX = 1,
+			offsetY = -4,
+			parallax = 0.25,
+			color = { 0.98, 0.64, 0.43 },
+			dropshadowColor = { 0, 0, 0, 0.25 },
+			dropshadow = true,
+			text = "I",
+			horizontalAlign = "center",
+			verticalAlign = "center",
 		},
 
 		{
