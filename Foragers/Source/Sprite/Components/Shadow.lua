@@ -13,8 +13,9 @@ local Data = require("Content.Data.World").dayCycle
 local Shadow = {}
 Shadow.__index = Shadow
 
--- All shadows drawn 100% opaque to one canvas, then composited once at
--- layerAlpha: overlaps union (no additive darkening), blend touched once/frame.
+-- Shadows drawn opaque to one canvas, composited once at layerAlpha*raw.alpha.
+-- Opaque-on-canvas keeps overlaps a union (no stacked alpha darkening); the
+-- night fade lives only in the single composite pass, so the whole layer fades.
 local layerAlpha = 0.3
 local layerColor = { 0, 0, 0.2 }
 
@@ -111,7 +112,8 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 						local x = sun.offsetX < 0 and (ccx + halfW - w) or (ccx - halfW)
 						local y = ccy - math.floor(h / 2)
 						if w > 0 and h > 0 then
-							shadowBatch:setColor(layerColor[1], layerColor[2], layerColor[3], raw.alpha or 0)
+							-- alpha 1: union on canvas, fade applied at composite
+							shadowBatch:setColor(layerColor[1], layerColor[2], layerColor[3], 1)
 							if w <= 2 or h <= 2 then
 								shadowBatch:add(x, y, 0, w, h)
 							else
@@ -127,7 +129,8 @@ function Shadow.renderLayer(sprites, viewW, viewH, camX, camY)
 		end,
 		nil,
 		function()
-			love.graphics.setColor(1, 1, 1, layerAlpha)
+			-- fade only here: one blend pass, overlaps stay uniform
+			love.graphics.setColor(1, 1, 1, layerAlpha * (raw.alpha or 0))
 			love.graphics.draw(shadowCanvas, 0, 0)
 		end
 	)
