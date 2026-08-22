@@ -657,11 +657,10 @@ function love.keypressed(key, _, _)
 			if text ~= "" then
 			local message, success, hold = Commands.execute(text, commandsCtx())
 			Debug.setChatOutput(message, success, hold)
-			local marker = success and "✅" or "⚠️"
-			local output = Debug.chatOutput()
-			local function logChat(detail)
-				Log.write("Chat", "%s %s — %s", marker, text, detail)
-			end
+		local output = Debug.chatOutput()
+		local function logChat(detail)
+			Log.write("Chat", "%s — %s", text, detail)
+		end
 			if output:find("\n") then
 				-- Multi-line output: one marker per rendered line, like the screen.
 				for line in output:gmatch("[^\n]+") do
