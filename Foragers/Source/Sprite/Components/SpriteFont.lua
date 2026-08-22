@@ -75,7 +75,7 @@ end
 ---@param text string
 ---@param x number
 ---@param y number
----@param opts table|nil {color=rgba, alpha, scale, hAlign, vAlign}
+---@param opts table|nil {color=rgba, alpha, scale, horizontalAlign, verticalAlign}
 function SpriteFont.drawText(ref, text, x, y, opts)
 	opts = opts or {}
 	local image = ref.image
@@ -87,7 +87,7 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 	local scale = opts.scale or 1
 
 	local totalW
-	if opts.hAlign then
+	if opts.horizontalAlign then
 		totalW = 0
 		for i = 1, #text do
 			local c = text:sub(i, i)
@@ -100,14 +100,14 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 
 	local cx = x
 	local cy = y
-	if opts.hAlign == "center" then
+	if opts.horizontalAlign == "center" then
 		cx = cx - totalW / 2
-	elseif opts.hAlign == "right" then
+	elseif opts.horizontalAlign == "right" then
 		cx = cx - totalW
 	end
-	if opts.vAlign == "top" then
+	if opts.verticalAlign == "top" then
 		cy = cy + oy
-	elseif opts.vAlign == "bottom" then
+	elseif opts.verticalAlign == "bottom" then
 		cy = cy - (frameH - oy)
 	end
 

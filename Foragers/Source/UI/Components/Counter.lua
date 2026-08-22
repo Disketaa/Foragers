@@ -43,8 +43,8 @@ function Counter.new(data)
 		self._labelCharSpacing = data.label.charSpacing
 		self._labelOffsetX = data.label.offsetX or 0
 		self._labelOffsetY = data.label.offsetY or 0
-		self._labelHAlign = data.label.hAlign or "center"
-		self._labelVAlign = data.label.vAlign or "center"
+		self._labelHorizontalAlign = data.label.horizontalAlign or "center"
+		self._labelVerticalAlign = data.label.verticalAlign or "center"
 	end
 
 	if data.icon then
@@ -261,8 +261,8 @@ function Counter:draw(x, y)
 		y + self._labelOffsetY,
 		{
 			color = self._labelColor,
-			hAlign = self._labelHAlign,
-			vAlign = self._labelVAlign,
+			horizontalAlign = self._labelHorizontalAlign,
+			verticalAlign = self._labelVerticalAlign,
 		}
 	)
 end

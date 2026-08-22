@@ -13,7 +13,7 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 local Label = {}
 Label.__index = Label
 
----@param data table {text, font, color, charSpacing, offsetX, offsetY, hAlign, vAlign, scale}
+---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale}
 ---@return Label
 function Label.new(data)
 	return setmetatable({
@@ -24,8 +24,8 @@ function Label.new(data)
 		charSpacing = data.charSpacing,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
-		hAlign = data.hAlign or "center",
-		vAlign = data.vAlign or "center",
+		horizontalAlign = data.horizontalAlign or "center",
+		verticalAlign = data.verticalAlign or "center",
 		scale = data.scale or 1,
 		-- Warp the label with the parent's perspective skew shader (e.g.
 		-- CursorSkew) so it tilts with the card instead of staying flat.
@@ -109,8 +109,8 @@ function Label:buildCanvas(cx, cy, fw, fh)
 		anchorY,
 		{
 			color = self.color,
-			hAlign = self.hAlign,
-			vAlign = self.vAlign,
+			horizontalAlign = self.horizontalAlign,
+			verticalAlign = self.verticalAlign,
 			scale = self.scale,
 		}
 	)

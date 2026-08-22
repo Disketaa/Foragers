@@ -14,8 +14,8 @@ return {
 			component = "ui",
 			offsetX = 0,
 			offsetY = 0,
-			horizontal = "center",
-			vertical = "center",
+			horizontalAlign = "center",
+			verticalAlign = "center",
 		},
 
 		{
@@ -23,8 +23,8 @@ return {
 			offsetX = 0,
 			offsetY = -39,
 			text = "Sturdy",
-			hAlign = "center",
-			vAlign = "center",
+			horizontalAlign = "center",
+			verticalAlign = "center",
 		},
 
 		{

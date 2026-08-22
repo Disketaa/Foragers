@@ -35,8 +35,8 @@ return {
 			component = "ui",
 			offsetX = 0,
 			offsetY = 0,
-			horizontal = "center",
-			vertical = "center",
+			horizontalAlign = "center",
+			verticalAlign = "center",
 		},
 	},
 }
