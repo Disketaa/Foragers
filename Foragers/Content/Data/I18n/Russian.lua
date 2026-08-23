@@ -1,3 +1,5 @@
 return {
-	card = { durability = "Прочность", bonusDamage = "+{n} урон", bonusTempo = "+{n} темп" },
+	["card.durability"] = "Прочность",
+	["card.bonusDamage"] = "+{n} урон",
+	["card.bonusTempo"] = "+{n} темп",
 }

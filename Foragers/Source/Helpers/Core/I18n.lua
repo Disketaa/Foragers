@@ -86,17 +86,13 @@ function I18n.getLanguage()
 	return I18n._current
 end
 
---- Walk a dotted key ("card.durability") inside a language table.
+--- Flat language tables use the full dotted key ("card.durability") as the
+--- table key, so lookup is a direct index (Minecraft-style lang files).
 ---@param tbl table
 ---@param key string
 ---@return any
 local function lookup(tbl, key)
-	local node = tbl
-	for seg in key:gmatch("[^.]+") do
-		if type(node) ~= "table" then return nil end
-		node = node[seg]
-	end
-	return node
+	return tbl[key]
 end
 
 --- Integers render without a decimal; non-integers keep up to 2 decimals with
