@@ -38,10 +38,10 @@ end
 function Options.serialize()
 	local lines = { "# Foragers options" }
 	for k, v in pairs(Options) do
-		if k == "_debug" or k == "keybinds" then
-			-- serialized below / handled separately
-		elseif type(v) == "boolean" or type(v) == "number" or type(v) == "string" then
-			lines[#lines + 1] = k .. "=" .. toText(v)
+		if k ~= "_debug" and k ~= "keybinds" then
+			if type(v) == "boolean" or type(v) == "number" or type(v) == "string" then
+				lines[#lines + 1] = k .. "=" .. toText(v)
+			end
 		end
 	end
 	for name, kb in pairs(Options.keybinds) do
