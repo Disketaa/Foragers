@@ -168,6 +168,11 @@ end
 local initGame
 function love.load()
 	Log.init()
+	-- Wire the generic ValueParser to the localization handler without coupling
+	-- the parser to I18n/TextParser (handler injected at boot, before any
+	-- ValueParser.table call during sprite loading).
+	require("Source.Helpers.Core.ValueParser").registerKeyHandler(
+		"text", require("Source.Helpers.Core.TextParser").resolve)
 	-- GC pacing: trigger sooner (default pause 200) and work harder per KB
 	-- (default stepmul 200) so collection is spread instead of one big stall.
 	collectgarbage("setpause", 100)

@@ -1,10 +1,32 @@
--- Load-time: ValueParser.table(tbl) resolves all strings, stores originals in tbl.__raw.
--- Per-event: ValueParser.call(tbl, field) re-rolls if __raw exists, else returns resolved.
--- Single:    ValueParser.value(str) | ValueParser.range(str) -> (min,max)
+-- Key handlers (e.g. "text" -> localization) are injected at boot via
+-- registerKeyHandler so this generic parser stays decoupled from any specific
+-- subsystem. Without a registered handler a key is parsed normally.
+--
+-- BOOT-ORDER CONTRACT: handlers must be registered before the first
+-- ValueParser.table call. Register in love.load (see Main.lua) before
+-- initGame/sprite loading; the registry is singleton state on this module, so
+-- a single early registration covers every later parse. A "text" key parsed
+-- before its handler is registered degrades silently (the raw string is kept
+-- untouched), so never call ValueParser.table at module top-level scope.
 
-local TextParser = require("Source.Helpers.Core.TextParser")
+local Log = require("Source.Helpers.Core.Log")
 
 local ValueParser = {}
+
+-- Injected handlers keyed by string field name. Populated at boot; see Main.lua.
+ValueParser._keyHandlers = {}
+
+--- When ValueParser.table meets this key it routes the value through `fn`
+--- instead of the default string/table parse. Used to wire localization (text)
+--- without coupling this module to I18n/TextParser.
+---@param key string
+---@param fn fun(value: any): any
+function ValueParser.registerKeyHandler(key, fn)
+	if ValueParser._keyHandlers[key] and ValueParser._keyHandlers[key] ~= fn then
+		Log.write("ValueParser", "key handler '" .. key .. "' overwritten")
+	end
+	ValueParser._keyHandlers[key] = fn
+end
 
 local function pickChoice(value)
 	local parts = {}
@@ -123,30 +145,29 @@ function ValueParser.table(tbl, seen)
 		local kstr = type(k) == "string" and k or nil
 		-- __-prefixed keys are internal bookkeeping; never parse them.
 		if not (kstr and kstr:sub(1, 2) == "__") then
-			if kstr == "text" then
-				-- TextParser.resolve passes literal strings (e.g. "1") and dynamic
-				-- values through unchanged so glyph rendering stays intact; only
-				-- "@key" / {key=...} forms get translated. We don't recurse into a
-				-- {key=...} table (ValueParser.value would mangle the key). When the
-				-- form was translatable we keep the original in __raw.text so a live
+			local handler = kstr and ValueParser._keyHandlers[kstr]
+			if handler then
+				-- Injected handler (e.g. text -> localization). It passes literal
+				-- strings and dynamic values through unchanged so glyph rendering
+				-- stays intact; only translatable forms get transformed. We don't
+				-- recurse into a {key=...} table (ValueParser.value would mangle the
+				-- key). When the form changed we keep the original in __raw so a live
 				-- language switch can re-resolve it.
-				local resolved = TextParser.resolve(v)
+				local resolved = handler(v)
 				if resolved ~= v then
 					tbl.__raw = tbl.__raw or {}
 					tbl.__raw[k] = v
 				end
 				tbl[k] = resolved
-			else
-				if type(v) == "string" then
-					local resolved = ValueParser.value(v)
-					if resolved ~= v then
-						tbl.__raw = tbl.__raw or {}
-						tbl.__raw[k] = v
-					end
-					tbl[k] = resolved
-				elseif type(v) == "table" then
-					ValueParser.table(v, seen)
+			elseif type(v) == "string" then
+				local resolved = ValueParser.value(v)
+				if resolved ~= v then
+					tbl.__raw = tbl.__raw or {}
+					tbl.__raw[k] = v
 				end
+				tbl[k] = resolved
+			elseif type(v) == "table" then
+				ValueParser.table(v, seen)
 			end
 		end
 	end
