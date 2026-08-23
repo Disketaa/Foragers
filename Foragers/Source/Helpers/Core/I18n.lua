@@ -1,5 +1,6 @@
 -- Missing translations return the raw key so gaps stay visible during development.
 local Path = require("Source.Helpers.Core.Path")
+local Log = require("Source.Helpers.Core.Log")
 
 local I18n = {}
 
@@ -29,7 +30,7 @@ function I18n.load()
 		elseif not ok then
 			-- Syntax/require error in a language file: surface it, don't silently
 			-- drop the table (a broken English.lua would degrade every key to raw).
-			print("[I18n] failed to load language '" .. code .. "': " .. tostring(data))
+			Log.error("I18n", "failed to load language '" .. code .. "': " .. tostring(data))
 		end
 	end)
 	if not I18n._langs[I18n.DEFAULT_LANG] then
@@ -43,7 +44,7 @@ function I18n.load()
 	if ok and Options and Options.language then
 		I18n.setLanguage(Options.language)
 	elseif not ok then
-		print("[I18n] Options load failed (language defaulted to '" .. I18n._current .. "'): " .. tostring(Options))
+		Log.error("I18n", "Options load failed (language defaulted to '" .. I18n._current .. "'): " .. tostring(Options))
 	end
 	-- An explicit setLanguage() issued before langs were ready takes precedence
 	-- over the Options default (explicit runtime override wins).
@@ -76,7 +77,7 @@ function I18n.setLanguage(code)
 	else
 		if not _warned["lang:" .. code] then
 			_warned["lang:" .. code] = true
-			print("[I18n] unknown language '" .. code .. "'; using '" .. I18n._current .. "'")
+			Log.write("I18n", "unknown language '" .. code .. "'; using '" .. I18n._current .. "'")
 		end
 	end
 end
@@ -142,7 +143,7 @@ function I18n.t(key, params)
 	if str == nil then
 		if not _warned[key] then
 			_warned[key] = true
-			print("[I18n] missing key '" .. key .. "' in '" .. I18n._current .. "' and '" .. I18n.DEFAULT_LANG .. "'")
+			Log.write("I18n", "missing key '" .. key .. "' in '" .. I18n._current .. "' and '" .. I18n.DEFAULT_LANG .. "'")
 		end
 		return key
 	end

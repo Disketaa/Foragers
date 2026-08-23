@@ -12,7 +12,7 @@ local TextParser = {}
 local KEY_PREFIX = "@"
 
 ---@param field string|table|number|nil
----@return string|number|nil
+---@return string|number|table|nil
 function TextParser.resolve(field)
 	if type(field) == "table" and field.key ~= nil then
 		return I18n.t(tostring(field.key), field.params)
