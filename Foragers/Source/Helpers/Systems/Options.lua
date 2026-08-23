@@ -31,16 +31,19 @@ local function toText(v)
 	return tostring(v)
 end
 
---- Serialize the current options to `key=value` lines (booleans, numbers and
---- keybind keyboard arrays). Returns the text, does not write.
+--- Serialize the current options to `key=value` lines. Top-level scalars
+--- (boolean/number/string, e.g. `language`) serialize directly so any new
+--- option persists without touching this function; `keybinds` and debug flags
+--- keep their special formats. Returns the text, does not write.
 function Options.serialize()
 	local lines = { "# Foragers options" }
-	lines[#lines + 1] = "fullscreen=" .. toText(Options.fullscreen)
-	lines[#lines + 1] = "vsync=" .. toText(Options.vsync)
-	lines[#lines + 1] = "maxFps=" .. toText(Options.maxFps)
-	lines[#lines + 1] = "gamepadDeadzone=" .. toText(Options.gamepadDeadzone)
-	lines[#lines + 1] = "mouseSlowdownRadius=" .. toText(Options.mouseSlowdownRadius)
-	lines[#lines + 1] = "restartHoldDuration=" .. toText(Options.restartHoldDuration)
+	for k, v in pairs(Options) do
+		if k == "_debug" or k == "keybinds" then
+			-- serialized below / handled separately
+		elseif type(v) == "boolean" or type(v) == "number" or type(v) == "string" then
+			lines[#lines + 1] = k .. "=" .. toText(v)
+		end
+	end
 	for name, kb in pairs(Options.keybinds) do
 		if kb.keyboard then
 			lines[#lines + 1] = "keybind." .. name .. "=" .. table.concat(kb.keyboard, ",")
@@ -52,21 +55,19 @@ function Options.serialize()
 	return table.concat(lines, "\n") .. "\n"
 end
 
+--- Coerce a saved string back to its Lua type: boolean for "true"/"false",
+--- number when numeric, otherwise the raw string (e.g. language names).
+local function parseValue(s)
+	if s == "true" then return true end
+	if s == "false" then return false end
+	local n = tonumber(s)
+	if n then return n end
+	return s
+end
+
 --- Apply one parsed `key=value` line onto the live options table.
 local function apply(key, value)
-	if key == "fullscreen" then
-		Options.fullscreen = value == "true"
-	elseif key == "vsync" then
-		Options.vsync = value == "true"
-	elseif key == "maxFps" then
-		Options.maxFps = tonumber(value) or Options.maxFps
-	elseif key == "gamepadDeadzone" then
-		Options.gamepadDeadzone = tonumber(value) or Options.gamepadDeadzone
-	elseif key == "mouseSlowdownRadius" then
-		Options.mouseSlowdownRadius = tonumber(value) or Options.mouseSlowdownRadius
-	elseif key == "restartHoldDuration" then
-		Options.restartHoldDuration = tonumber(value) or Options.restartHoldDuration
-	elseif key:match("^keybind%.") then
+	if key:match("^keybind%.") then
 		local name = key:sub(9)
 		local kb = Options.keybinds[name]
 		if kb then
@@ -77,6 +78,9 @@ local function apply(key, value)
 		end
 	elseif key:match("^debug%.") then
 		Options._debug[key:sub(7)] = value == "true"
+	elseif Options[key] ~= nil then
+		-- Known scalar option (fullscreen, maxFps, language, ...): coerce and set.
+		Options[key] = parseValue(value)
 	end
 end
 
