@@ -7,13 +7,11 @@ import re
 # The project guards either with the negative form (`if not ok then ...`) OR the
 # positive short-circuit form (`if ok and data then ...` — a failed require
 # short-circuits and the data is simply skipped). Both consume the `ok` flag, so
-# we treat "ok referenced again within 30 lines" as guarded.
-#
-# Debug-only files (anything under a "Debug" directory, or listed in allow_files)
-# are skipped, mirroring PrintVsLog.
+# we treat "ok referenced again anywhere below the pcall" as guarded. Scanning
+# the whole file (no fixed window) avoids false positives when the check sits
+# far below the require in a long init module.
 
 PCALL_REQ = re.compile(r"local\s+(\w+)\s*,\s*(\w+)\s*=\s*pcall\(\s*require\s*,")
-GUARD_WINDOW = 30  # lines after the pcall to look for an `ok` re-reference
 
 
 def check(text, path, config):
@@ -31,10 +29,7 @@ def check(text, path, config):
         ok_var = m.group(1)
         pcall_line = text[: m.start()].count("\n")
         guarded = False
-        for off in range(1, GUARD_WINDOW + 1):
-            idx = pcall_line + off
-            if idx >= len(lines):
-                break
+        for idx in range(pcall_line + 1, len(lines)):
             # Negative lookbehind for . and : so `self.ok` / `data.ok` field
             # accesses don't satisfy the guard (they aren't checking the pcall
             # result). The harness already strips comments/strings, so a
@@ -46,7 +41,7 @@ def check(text, path, config):
             violations.append((
                 pcall_line + 1,
                 f"pcall(require, ...) success flag '{ok_var}' is never checked "
-                f"(within {GUARD_WINDOW} lines) — a failed require fails silently",
+                f"— a failed require fails silently",
                 "warn",
             ))
     return violations

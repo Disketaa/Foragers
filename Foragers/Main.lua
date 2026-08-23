@@ -143,6 +143,10 @@ local lastFrameTime = 0
 -- GC pacing: LuaJIT has no "incremental" mode, so spread collection via a per-
 -- frame manual step; GC_STEP is the KB budget per frame. Tune up until spikes vanish.
 local GC_STEP = 2
+-- Dedupe guards so morph-collision warnings/errors fire once per session
+-- instead of spamming every frame a morph sprite is processed.
+local _warnedMorphCollisionDynamic = false
+local _warnedMorphCollisionUnknown = false
 -- Initial terrain + props stream in over frames (not one blocking load), within
 -- a ~2ms wall-clock budget per frame so large worlds never stall the frame loop.
 local PROP_SPAWN_TIME_BUDGET = 0.002
@@ -848,9 +852,15 @@ function love.update(dt)
 				elseif col.mode == "solid" then
 					col:registerAsSolid()
 				elseif col.mode == "detect" or col.mode == "solid_and_detect" then
-					Log.write("Collision", "morph sprite uses dynamic-only collision mode '%s'; not baking a static collider", tostring(col.mode))
+					if not _warnedMorphCollisionDynamic then
+						_warnedMorphCollisionDynamic = true
+						Log.write("Collision", "morph sprite uses dynamic-only collision mode '%s'; not baking a static collider", tostring(col.mode))
+					end
 				else
-					Log.error("Collision", "morph sprite has unknown collision mode '%s'; not baking a static collider", tostring(col.mode))
+					if not _warnedMorphCollisionUnknown then
+						_warnedMorphCollisionUnknown = true
+						Log.error("Collision", "morph sprite has unknown collision mode '%s'; not baking a static collider", tostring(col.mode))
+					end
 				end
 				end
 
