@@ -68,3 +68,11 @@ severity = "error"
 [Rules.UnguardedPcallRequire]
 enabled = true
 severity = "warn"
+
+[Rules.I18nKeyExists]
+enabled = true
+severity = "error"
+
+[Rules.LogSpamGuard]
+enabled = true
+severity = "warn"
