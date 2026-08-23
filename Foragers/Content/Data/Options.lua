@@ -5,6 +5,7 @@ return {
 	gamepadDeadzone = 0.5,
 	mouseSlowdownRadius = 15,
 	restartHoldDuration = 0.25,
+	language = "English",
 	keybinds = {
 		up = {
 			keyboard = { "w", "up" },

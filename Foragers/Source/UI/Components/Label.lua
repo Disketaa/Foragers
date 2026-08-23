@@ -1,6 +1,24 @@
 local Path = require("Source.Helpers.Core.Path")
 local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 local Pivot = require("Source.Helpers.Core.Pivot")
+local TextParser = require("Source.Helpers.Core.TextParser")
+local I18n = require("Source.Helpers.Core.I18n")
+
+-- Active labels, for live language switching. Weak-KEYED so GC'd labels don't
+-- accumulate. A single I18n listener re-resolves every live label on change.
+local instances = setmetatable({}, { __mode = "k" })
+local _listenerReady = false
+local function ensureLanguageListener()
+	if _listenerReady then return end
+	_listenerReady = true
+	I18n.onLanguageChange(function()
+		for lbl in pairs(instances) do
+			if lbl._rawText ~= nil then
+				lbl:setText(TextParser.resolve(lbl._rawText))
+			end
+		end
+	end)
+end
 
 --- Static text label rendered with an external sprite-font atlas (not the
 --- parent's own spritesheet). Draws on top of the host sprite; offsets are in
@@ -39,8 +57,11 @@ Label.SCROLL_PAUSE = 0.6 -- sec dwell at each scroll end
 ---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadowColor}
 ---@return Label
 function Label.new(data)
-	return setmetatable({
+	local self = setmetatable({
 		type = "text",
+		-- Keep the original translatable form so a live language switch can
+		-- re-resolve this label (data.text is already resolved by ValueParser).
+		_rawText = (data.__raw and data.__raw.text) or data.text or "",
 		text = data.text or "",
 		font = data.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 		color = data.color and { unpack(data.color) } or { 1, 1, 1, 1 },
@@ -59,6 +80,9 @@ function Label.new(data)
 		_scrollT = 0,
 		_textW = nil,
 	}, Label)
+	instances[self] = true
+	ensureLanguageListener()
+	return self
 end
 
 ---@param dt number
