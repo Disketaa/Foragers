@@ -64,3 +64,7 @@ severity = "error"
 [Rules.RegistryUsedBeforeRegistration]
 enabled = true
 severity = "error"
+
+[Rules.UnguardedPcallRequire]
+enabled = true
+severity = "warn"
