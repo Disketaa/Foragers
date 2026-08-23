@@ -1,5 +1,5 @@
 import re
-from _shared import find_block_end, _line_block_delta
+from _shared import find_block_end, _line_block_delta, _function_spans, _enclosing_func
 
 # Flags module-level mutable singletons: `local name = nil` at file scope whose
 # mutation is SCATTERED across the module (real "hidden shared state" smell),
@@ -11,26 +11,6 @@ from _shared import find_block_end, _line_block_delta
 NIL_DECL = re.compile(r"^\s*local\s+([A-Za-z_]\w*)\s*=\s*nil\s*$")
 ASSIGN = re.compile(r"(?<![\w.])([A-Za-z_]\w*)\s*=(?!=)")
 FUNC_START = re.compile(r"^\s*(?:local\s+)?function\s+[\w.:]+\s*\(")
-
-
-def _function_spans(lines):
-    spans = []
-    i, n = 0, len(lines)
-    while i < n:
-        if FUNC_START.match(lines[i]):
-            end = min(find_block_end(lines, i), n - 1)
-            spans.append((i, end))
-            i = end + 1
-        else:
-            i += 1
-    return spans
-
-
-def _enclosing_func(spans, idx):
-    for s, e in spans:
-        if s <= idx <= e:
-            return (s, e)
-    return None
 
 
 def check(text, path, config):

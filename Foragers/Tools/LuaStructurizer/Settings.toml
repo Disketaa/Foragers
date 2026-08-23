@@ -60,3 +60,7 @@ severity = "warn"
 [Rules.FilePathSlash]
 enabled = true
 severity = "error"
+
+[Rules.RegistryUsedBeforeRegistration]
+enabled = true
+severity = "error"

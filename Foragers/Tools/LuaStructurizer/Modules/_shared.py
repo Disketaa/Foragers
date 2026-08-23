@@ -52,3 +52,41 @@ def find_block_end(lines, start):
             return i
         i += 1
     return n
+
+
+# A function definition line. Used to bound scans to the enclosing function so
+# module-scope checks don't false-positive on calls that live inside a function
+# body. Matches `function NAME(...)`, `local function NAME(...)`, assigned
+# functions `NAME = function(...)` (incl. table methods `handlers.build =
+# function()`), and inline callbacks `foo(function() ... end)` — any line that
+# opens a function block, so anonymous/table-valued/argument callbacks are still
+# recognized as a function scope.
+FUNC_START = re.compile(
+    r"(?:"
+    r"^\s*(?:local\s+)?function\s*[\w.:]*\s*\("
+    r"|"
+    r".*\bfunction\s*[\w.:]*\s*\("
+    r")"
+)
+
+
+def _function_spans(lines):
+    """Return list of (start, end) line indices for each top-level function."""
+    spans = []
+    i, n = 0, len(lines)
+    while i < n:
+        if FUNC_START.match(lines[i]):
+            end = min(find_block_end(lines, i), n - 1)
+            spans.append((i, end))
+            i = end + 1
+        else:
+            i += 1
+    return spans
+
+
+def _enclosing_func(spans, idx):
+    """Return the (start, end) span containing idx, or None if module scope."""
+    for s, e in spans:
+        if s <= idx <= e:
+            return (s, e)
+    return None
