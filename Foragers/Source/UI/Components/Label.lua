@@ -4,8 +4,7 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 local TextParser = require("Source.Helpers.Core.TextParser")
 local I18n = require("Source.Helpers.Core.I18n")
 
--- Active labels, for live language switching. Weak-KEYED so GC'd labels don't
--- accumulate. A single I18n listener re-resolves every live label on change.
+-- Weak-KEYED so GC'd labels don't accumulate.
 local instances = setmetatable({}, { __mode = "k" })
 local _listenerReady = false
 local function ensureLanguageListener()

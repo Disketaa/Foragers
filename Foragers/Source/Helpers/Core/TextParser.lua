@@ -1,4 +1,3 @@
--- Resolves a component's `text` field into the final display string.
 -- Universal entry used by ValueParser for every `text` key, so any text-based
 -- component (Label, TextEmitter, Counter label, ...) localizes for free.
 --

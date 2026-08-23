@@ -104,9 +104,9 @@ function ValueParser.callRange(tbl, field)
 	return ValueParser.range(tbl[field])
 end
 
--- Resolves all strings in-place. Stores originals in tbl.__raw for re-rolling.
--- Skips __-prefixed keys so repeated calls are idempotent. `seen` guards against
--- self-referential / cyclic tables (a shared sub-table is also visited once).
+-- Stores originals in tbl.__raw so values can be re-rolled later.
+-- Skips __-prefixed keys so repeated calls are idempotent. `seen` guards
+-- against self-referential / cyclic tables (a shared sub-table is visited once).
 ---@param tbl table
 ---@param seen table|nil internal: visited tables for cycle protection
 ---@return table
@@ -121,31 +121,32 @@ function ValueParser.table(tbl, seen)
 	seen[tbl] = true
 	for k, v in pairs(tbl) do
 		local kstr = type(k) == "string" and k or nil
-		if kstr and kstr:sub(1, 2) == "__" then
-			-- internal bookkeeping: never touch
-		elseif kstr == "text" then
-			-- Localize display text. TextParser.resolve passes literal strings
-			-- (e.g. "1") and dynamic values through unchanged, so glyph rendering
-			-- stays intact; only "@key" / {key=...} forms get translated. We do
-			-- NOT recurse into a {key=...} table (avoids ValueParser.value mangling
-			-- a key). When the form was translatable we keep the original in
-			-- __raw.text so a live language switch can re-resolve it.
-			local resolved = TextParser.resolve(v)
-			if resolved ~= v then
-				tbl.__raw = tbl.__raw or {}
-				tbl.__raw[k] = v
-			end
-			tbl[k] = resolved
-		else
-			if type(v) == "string" then
-				local resolved = ValueParser.value(v)
+		-- __-prefixed keys are internal bookkeeping; never parse them.
+		if not (kstr and kstr:sub(1, 2) == "__") then
+			if kstr == "text" then
+				-- TextParser.resolve passes literal strings (e.g. "1") and dynamic
+				-- values through unchanged so glyph rendering stays intact; only
+				-- "@key" / {key=...} forms get translated. We don't recurse into a
+				-- {key=...} table (ValueParser.value would mangle the key). When the
+				-- form was translatable we keep the original in __raw.text so a live
+				-- language switch can re-resolve it.
+				local resolved = TextParser.resolve(v)
 				if resolved ~= v then
 					tbl.__raw = tbl.__raw or {}
 					tbl.__raw[k] = v
 				end
 				tbl[k] = resolved
-			elseif type(v) == "table" then
-				ValueParser.table(v, seen)
+			else
+				if type(v) == "string" then
+					local resolved = ValueParser.value(v)
+					if resolved ~= v then
+						tbl.__raw = tbl.__raw or {}
+						tbl.__raw[k] = v
+					end
+					tbl[k] = resolved
+				elseif type(v) == "table" then
+					ValueParser.table(v, seen)
+				end
 			end
 		end
 	end

@@ -1,7 +1,4 @@
--- Universal in-game localization.
--- Loads every Content/Data/I18n/<Language>.lua table, resolves dotted
--- keys via I18n.t(key, params), falls back to "English", and returns the key
--- itself when a translation is missing (so gaps stay visible during development).
+-- Missing translations return the raw key so gaps stay visible during development.
 local Path = require("Source.Helpers.Core.Path")
 
 local I18n = {}
@@ -10,18 +7,17 @@ I18n.DEFAULT_LANG = "English"
 I18n._langs = {}        -- code -> table
 I18n._current = I18n.DEFAULT_LANG
 I18n._pending = nil     -- language requested before _langs was loaded (deferred)
-I18n._listeners = {}    -- callbacks fired on language change (live switch)
+I18n._listeners = {}
 local _warned = {}      -- dedupe missing-key / load warnings
 
---- Register a callback invoked when the active language changes. Used to
---- re-resolve already-built text (live language switch without a reload).
+--- Register a callback for language changes; used to re-resolve already-built
+--- text for a live switch without a reload.
 ---@param cb fun(code: string)
 function I18n.onLanguageChange(cb)
 	table.insert(I18n._listeners, cb)
 end
 
---- Scan the I18n directory and require each <Language>.lua table.
---- Safe to call once at boot; subsequent calls refresh.
+--- Safe to call once at boot; subsequent calls refresh the language tables.
 function I18n.load()
 	I18n._langs = {}
 	Path.scanDirectory("Content/Data/I18n", function(fullPath)
@@ -40,9 +36,9 @@ function I18n.load()
 		-- Without the canonical table every lookup degrades to the raw key.
 		I18n._langs[I18n.DEFAULT_LANG] = {}
 	end
-	-- Adopt the user's language from Options if present (decoupled: pcall so
-	-- I18n never forces an Options load order or import cycle). Log a genuine
-	-- failure once so a broken Options import isn't masked as "defaults to en".
+	-- Decoupled via pcall so I18n never forces an Options load order or import
+	-- cycle. A genuine failure is logged once so a broken Options import isn't
+	-- masked as "defaults to en".
 	local ok, Options = pcall(require, "Source.Helpers.Systems.Options")
 	if ok and Options and Options.language then
 		I18n.setLanguage(Options.language)
@@ -59,7 +55,7 @@ function I18n.load()
 	return I18n
 end
 
----@param code string|nil Language code (e.g. "English", "Russian"). Falls back to default.
+---@param code string|nil
 function I18n.setLanguage(code)
 	if not code then return end
 	-- Langs may not be loaded yet (e.g. an explicit setLanguage before boot
@@ -78,7 +74,6 @@ function I18n.setLanguage(code)
 			end
 		end
 	else
-		-- Unknown code: keep default but note it once.
 		if not _warned["lang:" .. code] then
 			_warned["lang:" .. code] = true
 			print("[I18n] unknown language '" .. code .. "'; using '" .. I18n._current .. "'")
@@ -103,9 +98,8 @@ local function lookup(tbl, key)
 	return node
 end
 
---- Format a placeholder value for display. Integers render without a decimal
---- (2.0 -> "2"); non-integers keep up to 2 decimals with trailing zeros stripped
---- (so computed buff values never show as "+2.0 damage").
+--- Integers render without a decimal; non-integers keep up to 2 decimals with
+--- trailing zeros stripped, so buff values never show as "+2.0 damage".
 ---@param v any
 ---@return string
 local function formatParam(v)
@@ -120,7 +114,7 @@ local function formatParam(v)
 	return tostring(v)
 end
 
---- Replace {name} placeholders ("{n}") from the params table.
+--- Replace {name} placeholders (e.g. "{n}") using the params table.
 ---@param str string
 ---@param params table|nil
 ---@return string
@@ -133,7 +127,6 @@ local function interpolate(str, params)
 	end))
 end
 
---- Resolve a translation key into the active language string.
 ---@param key string Dotted key path
 ---@param params table|nil Placeholder values
 ---@return string
