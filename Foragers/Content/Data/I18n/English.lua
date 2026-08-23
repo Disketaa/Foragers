@@ -1,5 +1,5 @@
 return {
 	["card.durability"] = "Durability",
-	["card.bonusDamage"] = "+{n} damage",
-	["card.bonusTempo"] = "+{n} tempo",
+	["modifier.buffDamage"] = "+{n} damage",
+	["modifier.buffTempo"] = "+{n} tempo",
 }

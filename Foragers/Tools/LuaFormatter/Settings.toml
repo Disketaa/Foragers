@@ -29,7 +29,7 @@ param_groups.content.tags = "props tags tweens particle inheritFlip details imag
 param_groups.ui.tags = "maxWidth horizontalAlign verticalAlign text layer sortOffsetY"
 param_groups.sound.tags = "volume pitch pitchRandomness"
 param_groups.ambients.tags = "fadeInDuration fadeOutDuration wanderingSpeed"
-param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius restartHoldDuration enabled"
+param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius restartHoldDuration language enabled"
 
 component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop pickup ambient weapon shake tween particle_emitter text_emitter emote sound cursor hover ui image text counter emissive silhouette shader"
 
