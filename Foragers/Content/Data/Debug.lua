@@ -1,6 +1,5 @@
 return {
 	debug = true,
-	snapshot = { topScopes = 10, rollupFps = 15, fpsTarget = 60 },
 	gizmo = {
 		enabled = false,
 		collisions = {
@@ -60,4 +59,5 @@ return {
 		profiler = { enabled = false, updateSpeed = 10, nameMaxChars = 18, digits = 1, valueMaxChars = 8, limit = 10 },
 		chat = { enabled = false, repeatDelay = 0.5, repeatInterval = 0.033, outputTimeout = 3, historyMax = 10, enterSound = "Content/Assets/Sounds/Events/ShortPop.ogg" },
 	},
+	snapshot = { topScopes = 10, rollupFps = 15, fpsTarget = 60 },
 }

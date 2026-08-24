@@ -6,14 +6,6 @@ return {
 	backgroundColor = { 0.15, 0.625, 0.8 },
 	borderTileOffset = 8,
 	noise = { scale = 0.15, detail = 0.3, density = 0.8 },
-	dayCycle = {
-		dayLengthSec = 300,
-		sunriseHour = 6,
-		sunsetHour = 18,
-		smoothness = 0.15,
-		shadow = { maxLen = 4, stretchPx = 8, stretchWindow = 0.125, stretchPower = 4 },
-	},
-
 	ambient = {
 		density = 0.1,
 		day = {
@@ -27,6 +19,14 @@ return {
 			spawnTime = "19>5",
 			types = { "Content/Assets/Sprites/Ambient/Firefly" },
 		},
+	},
+
+	dayCycle = {
+		dayLengthSec = 300,
+		sunriseHour = 6,
+		sunsetHour = 18,
+		smoothness = 0.15,
+		shadow = { maxLen = 4, stretchPx = 8, stretchWindow = 0.125, stretchPower = 4 },
 	},
 
 	props = {

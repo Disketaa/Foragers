@@ -41,8 +41,6 @@ return {
 			mode = "progress",
 			field = "experience",
 			sourceType = "player_stats",
-			smoothness = 0.3,
-			curve = "OutCubic",
 			label = {
 				font = "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 				charSpacing = -4,
@@ -50,6 +48,8 @@ return {
 				offsetX = 1,
 				offsetY = 0,
 			},
+			smoothness = 0.3,
+			curve = "OutCubic",
 		},
 
 		{

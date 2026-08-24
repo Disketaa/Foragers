@@ -44,9 +44,10 @@ def finalize(script_dir):
 
 
 def _key_of(entry: str):
-    if "\n" in entry:
-        return None
-    m = re.match(r"(\w+)\s*=", entry)
+    # Key is always on the first line (e.g. `spacing = {`); a multiline value
+    # must not lose its key, or group-based sorting breaks.
+    first = entry.split("\n", 1)[0]
+    m = re.match(r"(\w+)\s*=", first)
     return m.group(1) if m else None
 
 

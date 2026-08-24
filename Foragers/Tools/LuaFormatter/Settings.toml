@@ -17,21 +17,22 @@ Modules.WrapTables.include_folders = ["Content/"]
 # A param lands in the group whose tag shares the most words with its key
 # (camelCase-aware: offsetX -> offset,x); ties go to the earlier group.
 # Unknown keys stay last in file order. Tune tags here.
-param_groups.order = "identity size frame pivot coords motion ambients stats appearance timing content ui sound options"
-param_groups.identity.tags = "mode name extends object order debug snapshot postprocess seed id type module priority appliesTo applies_to host event field maxField sourceType image label clientId largeImageKey"
+param_groups.order = "identity size frame pivot coords motion stats appearance ambients timing content ui sound options last"
+param_groups.identity.tags = "mode name extends object order debug gizmo hud snapshot postprocess seed id type module priority appliesTo applies_to host event field maxField sourceType image label clientId largeImageKey"
 param_groups.size.tags = "width height scale tileSize chunkSize"
 param_groups.frame.tags = "frameWidth frameHeight collisionWidth collisionHeight columns rows animations chars charSpacing spacing font"
 param_groups.pivot.tags = "pivotX pivotY"
 param_groups.coords.tags = "offsetX offsetY x y"
 param_groups.motion.tags = "moveX moveY moving movementSpeed swimmingSpeed moveThreshold followRadius followDelay accelerate gravity bob smoothness smoothnessX smoothnessY parallax rotate angle leanAngle leanThreshold leanSmoothness slowdown"
 param_groups.stats.tags = "level maxLevel experience xp xpCurve satiety maxSatiety satietyDrain lowSatietyPercent lowSatietyWarnings lowSatietyZoom lowSatietyMaskRadius hp damage range cooldown critChance critMult swing drops attackSpeed"
-param_groups.appearance.tags = "color backgroundColor dropshadowColor borderTileOffset tint brightness noise shaders shader uniforms silhouette magnitude decay curve replaceWith visible autoTrim"
-param_groups.timing.tags = "duration interval stepInterval count hideDelay spawnOn triggerOn destroy destroyCurve changeDirectionInterval spawnTime"
-param_groups.content.tags = "props tags tweens particle inheritFlip details image largeImageText stateByScene"
+param_groups.appearance.tags = "color backgroundColor dropshadowColor borderTileOffset tint brightness noise shaders shader uniforms code silhouette magnitude decay curve replaceWith visible autoTrim"
+param_groups.timing.tags = "duration interval stepInterval count hideDelay spawnOn triggerOn destroy destroyCurve changeDirectionInterval spawnTime dayCycle"
+param_groups.content.tags = "props adjacency particle inheritFlip details image largeImageText stateByScene"
 param_groups.ui.tags = "maxWidth horizontalAlign verticalAlign text layer sortOffsetY"
 param_groups.sound.tags = "volume pitch pitchRandomness"
-param_groups.ambients.tags = "fadeInDuration fadeOutDuration wanderingSpeed"
-param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius restartHoldDuration language enabled"
+param_groups.ambients.tags = "fadeInDuration fadeOutDuration wanderingSpeed ambient"
+param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius restartHoldDuration language enabled keybinds"
+param_groups.last.tags = "tweens tags"
 
 component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop pickup ambient weapon shake tween particle_emitter text_emitter emote sound cursor hover ui image text counter emissive silhouette shader"
 
