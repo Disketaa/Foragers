@@ -2,6 +2,7 @@ local SpriteFont = {}
 SpriteFont.__index = SpriteFont
 
 local Pivot = require("Source.Helpers.Core.Pivot")
+local Log = require("Source.Helpers.Core.Log")
 
 -- LuaJIT (Lua 5.1) has no utf8 module; string ops are byte-based. The font
 -- `chars` string contains multi-byte UTF-8 (Cyrillic), so we must iterate by
@@ -30,6 +31,30 @@ local function utf8Next(str, i)
 	return i + len, str:sub(i, i + len - 1)
 end
 
+--- Returns the glyph's pixel width (rightmost ink column + 1), or 0 if the quad
+--- is fully transparent. Uses a > 0 as the ink test: correct for hard-alpha
+--- pixel fonts, where no semi-transparent fringe exists.
+---@param imageData love.ImageData
+---@param quad love.Quad
+---@param frameW integer
+---@param frameH integer
+---@return integer
+local function measureGlyphWidth(imageData, quad, frameW, frameH)
+	local qx, qy = quad:getViewport()
+	local maxX = -1
+	for x = frameW - 1, 0, -1 do
+		for y = 0, frameH - 1 do
+			local _, _, _, a = imageData:getPixel(qx + x, qy + y)
+			if a > 0 then
+				maxX = x
+				break
+			end
+		end
+		if maxX >= 0 then break end
+	end
+	return maxX + 1
+end
+
 function SpriteFont.new(data)
 	if not data or not data.chars then
 		return setmetatable({ type = "spritefont", text = "" }, SpriteFont)
@@ -41,6 +66,7 @@ function SpriteFont.new(data)
 		chars = data.chars,
 		spacing = data.spacing or {},
 		charSpacing = data.charSpacing or 0,
+		autoTrim = data.autoTrim or false,
 		color = data.color and { unpack(data.color) } or { 0, 0, 0, 1 },
 		_charIndex = {},
 		_charWidth = {},
@@ -163,7 +189,37 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 	end
 end
 
-function SpriteFont:attach() end
+function SpriteFont:attach()
+	if not self.autoTrim then return end
+	local ss = self.parent and self.parent:findComponent("spritesheet")
+	if not ss or not ss.image or not ss.quads then return end
+	local ok, imageData = pcall(function() return ss.image:getData() end)
+	if not ok or not imageData then
+		Log.write("SpriteFont", "autoTrim skipped: could not read image pixels (getData failed)")
+		return
+	end
+	-- Glyphs are ASSUMED left-aligned at tile col 0 (font-authoring convention,
+	-- not verified here). With a center pivot the tight per-char advance is then
+	-- (glyphWidth - 1). Since drawText advances by (charWidth + charSpacing), the
+	-- stored width must be:
+	--   charWidth = glyphWidth - 1 - charSpacing
+	-- (charSpacing = -3 => charWidth = glyphWidth + 2, matching the hand-tuned
+	-- spacing entries already in the font data).
+	local offset = -1 - (self.charSpacing or 0)
+	for c, idx in pairs(self._charIndex) do
+		if not self._charWidth[c] then -- data.spacing overrides win
+			local quad = ss.quads[idx]
+			if quad then
+				local gw = measureGlyphWidth(imageData, quad, ss.frameWidth, ss.frameHeight)
+				if gw > 0 then
+					self._charWidth[c] = gw + offset
+				else
+					Log.write("SpriteFont", "autoTrim: char '%s' measured 0 width; falling back to frameWidth", c)
+				end
+			end
+		end
+	end
+end
 
 function SpriteFont:update(dt) end
 
