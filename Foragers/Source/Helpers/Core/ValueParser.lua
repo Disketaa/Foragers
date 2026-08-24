@@ -90,7 +90,7 @@ function ValueParser.call(tbl, field)
 			return ValueParser.value(rawVal)
 		end
 	end
-	return tbl[field]
+	return ValueParser.value(tbl[field])
 end
 
 function ValueParser.range(value)

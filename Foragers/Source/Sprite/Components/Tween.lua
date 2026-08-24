@@ -27,9 +27,9 @@ Tween.__index = Tween
 function Tween.new(target, from, to, duration, curve, loop, pingPong, destroyOnComplete)
 	return setmetatable({
 		target = target,
-		from = from,
-		to = to,
-		duration = duration,
+		from = tonumber(from) or 0,
+		to = tonumber(to) or 0,
+		duration = tonumber(duration) or 0,
 		curve = curve,
 		timer = 0,
 		loop = loop or false,
