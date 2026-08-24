@@ -105,14 +105,15 @@ function SpriteFont.measureText(ref, text, charSpacing)
 	local w = 0
 	local i = 1
 	local n = #text
-	local first = true
+	-- Advance must match drawText exactly: every glyph advances by
+	-- (charWidth + charSpacing), so charSpacing is added n times (including
+	-- the trailing gap). Adding it only (n-1) times overcounts the real
+	-- rendered width by -charSpacing, which falsely trips maxWidth overflow
+	-- (and the ping-pong scroll) on text that visually fits.
 	while i <= n do
 		local nextI, c = utf8Next(text, i)
 		w = w + (ref.charWidth[c] or ref.frameW)
-		if not first then
-			w = w + charSpacing
-		end
-		first = false
+		w = w + charSpacing
 		i = nextI
 	end
 	return w
@@ -189,6 +190,10 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 	end
 end
 
+--- Derives per-glyph widths from the spritesheet pixels. Requires the sibling
+--- "spritesheet" component to already be attached to self.parent (it reads
+--- ss.image / ss.quads). Runs only when data.autoTrim is true; hand-tuned
+--- data.spacing entries take precedence (see the loop below).
 function SpriteFont:attach()
 	if not self.autoTrim then return end
 	local ss = self.parent and self.parent:findComponent("spritesheet")
@@ -198,13 +203,16 @@ function SpriteFont:attach()
 		Log.write("SpriteFont", "autoTrim skipped: could not read image pixels (getData failed)")
 		return
 	end
-	-- Glyphs are ASSUMED left-aligned at tile col 0 (font-authoring convention,
-	-- not verified here). With a center pivot the tight per-char advance is then
-	-- (glyphWidth - 1). Since drawText advances by (charWidth + charSpacing), the
-	-- stored width must be:
-	--   charWidth = glyphWidth - 1 - charSpacing
-	-- (charSpacing = -3 => charWidth = glyphWidth + 2, matching the hand-tuned
-	-- spacing entries already in the font data).
+	-- Atlas contract: glyph ink starts at column 1 of the 8px cell (offset one
+	-- pixel from the left edge, NOT left-aligned at col 0). So measureGlyphWidth
+	-- returns maxx+1 = trueInk+1. We need drawText's per-glyph advance
+	-- (charWidth + charSpacing) to equal the true ink width (trueInk), so the
+	-- rendered width matches measureText and never falsely trips a maxWidth clip
+	-- on text that visually fits. Solving for charWidth:
+	--   charWidth = trueInk - charSpacing = (gw - 1) - charSpacing
+	--             = gw + (-1 - charSpacing)
+	-- (charSpacing = -3 => charWidth = gw + 2, same spirit as the hand-tuned
+	-- spacing entries in the font data).
 	local offset = -1 - (self.charSpacing or 0)
 	for c, idx in pairs(self._charIndex) do
 		if not self._charWidth[c] then -- data.spacing overrides win
