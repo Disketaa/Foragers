@@ -11,11 +11,13 @@ return {
 
 		{
 			component = "hover",
+			id = "hover",
 			type = "hand",
 		},
 
 		{
 			component = "ui",
+			id = "ui",
 			offsetX = 0,
 			offsetY = 0,
 			horizontalAlign = "center",
@@ -24,7 +26,18 @@ return {
 
 		{
 			component = "image",
-			image = "Content/Assets/Sprites/UI/CardBackgrounds/Cavern",
+			id = "frame",
+			image = "Content/Assets/Sprites/UI/Cards/Frames/Black",
+			scale = 1,
+			offsetX = 0,
+			offsetY = 0,
+			layer = "below",
+		},
+
+		{
+			component = "image",
+			id = "background",
+			image = "Content/Assets/Sprites/UI/Cards/Backgrounds/Cavern",
 			scale = 1,
 			offsetX = 0,
 			offsetY = -16,
@@ -34,6 +47,7 @@ return {
 
 		{
 			component = "image",
+			id = "overlay",
 			image = "Content/Assets/Sprites/UI/RayLightsOverlay",
 			scale = 1,
 			offsetX = 0,
@@ -43,6 +57,7 @@ return {
 
 		{
 			component = "image",
+			id = "label",
 			image = "Content/Assets/Sprites/UI/CopperLabel",
 			scale = 1,
 			offsetX = 0,
@@ -52,8 +67,7 @@ return {
 
 		{
 			component = "image",
-			image = "Content/Assets/Sprites/UI/Icons/BronzePickaxe",
-			scale = 1,
+			id = "icon",
 			offsetX = 0,
 			offsetY = -17,
 			bob = 1,
@@ -62,45 +76,10 @@ return {
 
 		{
 			component = "text",
+			id = "title",
 			offsetX = 0,
 			offsetY = -40,
 			dropshadowColor = { 0.56, 0.32, 0.73, 1 },
-			text = { key = "card.durability" },
-			maxWidth = 46,
-			horizontalAlign = "center",
-			verticalAlign = "center",
-		},
-
-		{
-			component = "text",
-			offsetX = 1,
-			offsetY = 0,
-			color = { 0.93, 0.7, 0.61 },
-			dropshadowColor = { 0, 0, 0, 0.25 },
-			text = "1",
-			horizontalAlign = "center",
-			verticalAlign = "center",
-		},
-
-		{
-			component = "text",
-			offsetX = 0,
-			offsetY = 16,
-			color = { 0.41, 0.35, 0.34 },
-			dropshadowColor = { 0.09, 0.08, 0.08, 1 },
-			text = { key = "modifier.buffDamage", params = { n = 2 } },
-			maxWidth = 46,
-			horizontalAlign = "center",
-			verticalAlign = "center",
-		},
-
-		{
-			component = "text",
-			offsetX = 0,
-			offsetY = 25,
-			color = { 0.41, 0.35, 0.34 },
-			dropshadowColor = { 0.09, 0.08, 0.08, 1 },
-			text = { key = "modifier.buffTempo", params = { n = 1 } },
 			maxWidth = 46,
 			horizontalAlign = "center",
 			verticalAlign = "center",
@@ -108,6 +87,7 @@ return {
 
 		{
 			component = "shader",
+			id = "skew",
 			shaders = {
 				{ CursorSkew = { u_amount = 0.1, u_radius = 300 } },
 			},

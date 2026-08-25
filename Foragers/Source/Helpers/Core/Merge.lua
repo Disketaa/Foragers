@@ -79,6 +79,21 @@ local function _mergeShaderShaders(base, override)
 	return result
 end
 
+--- Component merge key: prefer an explicit `id` field over positional
+--- occurrence index so a child override targets the intended base component
+--- (e.g. the icon slot) instead of the first same-type component (e.g. the
+--- background). Backward compatible: components without `id` keep the old
+--- type+index behaviour.
+---@param comp table
+---@param count number occurrence index among same-type components
+---@return string
+function Merge._compKey(comp, count)
+	if comp.id ~= nil then
+		return comp.component .. "#id:" .. tostring(comp.id)
+	end
+	return comp.component .. "#" .. count
+end
+
 --- Merge data.components with inheritance: match by component key.
 --- Arrays (component lists) are matched and deep-merged by key.
 --- Base order is preserved; new override entries are appended at the end.
@@ -95,14 +110,14 @@ function Merge.componentMerge(baseComponents, overrideComponents)
 	local baseTypeCount = {}
 	for i, comp in ipairs(baseComponents) do
 		baseTypeCount[comp.component] = (baseTypeCount[comp.component] or 0) + 1
-		local key = comp.component .. "#" .. baseTypeCount[comp.component]
+		local key = Merge._compKey(comp, baseTypeCount[comp.component])
 		baseKeys[i] = key
 		byKey[key] = Merge._deepCopy(comp)
 	end
 	local overTypeCount = {}
 	for _, comp in ipairs(overrideComponents) do
 		overTypeCount[comp.component] = (overTypeCount[comp.component] or 0) + 1
-		local key = comp.component .. "#" .. overTypeCount[comp.component]
+		local key = Merge._compKey(comp, overTypeCount[comp.component])
 		if byKey[key] then
 			local merged = Merge.merge(byKey[key], comp)
 			if comp.component == "shader" then
