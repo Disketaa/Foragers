@@ -356,12 +356,8 @@ function initGame()
 		end
 	end
 
-	-- Cards start hidden; shown only on level up (CardSelect.start).
-	for _, ui in ipairs(uiSprites) do
-		if ui.sprite.object == "card" then
-			ui.sprite.alpha = 0
-		end
-	end
+	-- Cards are hidden by the draw gate in love.draw (skipped unless
+	-- GameState.showingCards); they appear only on level up via CardSelect.start.
 
 	-- Wire counter components to player sprite (event-driven, no polling)
 	if GameState.playerSprite then
@@ -647,8 +643,14 @@ function love.draw()
 	-- via the hold-to-restart interaction.
 	table.sort(uiSprites, function(a, b) return (a.sprite.layer or 0) < (b.sprite.layer or 0) end)
 	for _, ui in ipairs(uiSprites) do
+		-- Cards are component sprites that ignore sprite.alpha; hide them by
+		-- skipping the draw unless a selection is active (CardSelect sets this).
+		if ui.sprite.object == "card" and not GameState.showingCards then
+			goto skip_card
+		end
 		Layout.positionUI(ui, canvas)
 		ui.sprite:draw()
+		::skip_card::
 	end
 	love.graphics.pop()
 
