@@ -202,6 +202,7 @@ function PlayerStats:addExperience(amount)
 	local oldLevel = self.level
 	self.experience = self.experience + amount
 	local leveledUp = false
+	local gained = 0
 	while self.experience >= self:xpForNextLevel() do
 		if self.level >= self.maxLevel then
 			self.experience = self:xpForNextLevel()
@@ -210,9 +211,13 @@ function PlayerStats:addExperience(amount)
 		self.experience = self.experience - self:xpForNextLevel()
 		self.level = self.level + 1
 		leveledUp = true
+		gained = gained + 1
 	end
 	self:_applyLevelChange(oldLevel)
 	self:_emitStats("experience", self.experience, self:xpForNextLevel())
+	if leveledUp and self.parent then
+		self.parent:emit(Events.LEVEL_UP, self.level, gained)
+	end
 	return leveledUp
 end
 
@@ -265,8 +270,12 @@ function PlayerStats:addLevels(amount)
 	end
 	local oldLevel = self.level
 	self.level = math.min(self.maxLevel, math.max(1, self.level + amount))
+	local gained = self.level - oldLevel
 	self:_applyLevelChange(oldLevel)
 	self:_emitStats("level", self.experience, self:xpForNextLevel())
+	if gained > 0 and self.parent then
+		self.parent:emit(Events.LEVEL_UP, self.level, gained)
+	end
 end
 
 ---@param amount number

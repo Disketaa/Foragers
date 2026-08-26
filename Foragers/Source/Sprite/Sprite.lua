@@ -20,6 +20,7 @@ local Pivot = require("Source.Helpers.Core.Pivot")
 ---@field sortOffsetY number Per-sprite vertical offset for Y-sorting (foot position relative to origin)
 ---@field layer integer Draw layer: zKey = layer * 100000 + sortY
 ---@field object string|nil Gameplay identifier from data (e.g. "player", "tile")
+---@field data table|nil Resolved data table the sprite was instantiated from (read-only)
 ---@field _events EventEmitter Event emitter for sprite-level events
 ---@field shader love.Shader|nil Bound shader (set by applyShader path)
 ---@field shaderData table|nil Shader uniforms sent on dirty

@@ -1,6 +1,7 @@
 return {
 	extends = "Content.Assets.Sprites.UI.Cards._Base",
 	object = "card",
+	modifier = { stat = "damage", amount = 2 },
 	components = {
 		{
 			component = "image",

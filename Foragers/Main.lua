@@ -234,6 +234,10 @@ function initGame()
 	ShaderLoader.sendUniform("u_noise", 0)
 	GameState.revealActive = false
 	GameState.revealTimer = 0
+	GameState.pendingLevelUps = 0
+	GameState.cardDarkenActive = false
+	GameState.cardDarkenTimer = 0
+	GameState.showingCards = false
 	ShaderLoader.sendUniform("u_darken", 1)
 	GameState.startDarkenActive = true
 	GameState.startDarkenTimer = 0
@@ -352,8 +356,12 @@ function initGame()
 		end
 	end
 
-	CardSelect.enter(uiSprites, canvas)
-	GameState.showingCards = true
+	-- Cards start hidden; shown only on level up (CardSelect.start).
+	for _, ui in ipairs(uiSprites) do
+		if ui.sprite.object == "card" then
+			ui.sprite.alpha = 0
+		end
+	end
 
 	-- Wire counter components to player sprite (event-driven, no polling)
 	if GameState.playerSprite then
@@ -429,6 +437,12 @@ function initGame()
 			pendingClearAttacker = true
 		end, 5)
 
+		-- Level up: queue a card selection. The update loop opens the
+		-- card-select state once the world is safe to pause (state=="game").
+		GameState.playerSprite:on(Events.LEVEL_UP, function(_, gained)
+			GameState.pendingLevelUps = GameState.pendingLevelUps + (gained or 1)
+		end, 5)
+
 		-- The death anim is non-looping; the frame reaching its last index means
 		-- the collapse is done. The circle stays at its satiety-0 value — no
 		-- blackout.
@@ -479,11 +493,6 @@ local function commandsCtx()
 		end,
 	}
 end
-
-Commands.register("cards", function(_, ctx)
-	CardSelect.tryEnter(uiSprites, canvas)
-	return GameState.showingCards and "3 cards shown" or "Can't show cards now", GameState.showingCards
-end, "Show 3 upgrade cards")
 
 function love.draw()
 	Snapshot.markDrawStart()
@@ -728,8 +737,6 @@ function love.keypressed(key, _, _)
 
 	if Bindings.matches(Options.keybinds.restart, "keyboard", key) then
 		Lifecycle.handleRestartPress()
-	elseif key == "c" and GameState.state == "game" and not GameState.showingCards then
-	CardSelect.tryEnter(uiSprites, canvas)
 	elseif Bindings.matches(Options.keybinds.toggleFullscreen, "keyboard", key) then
 		local fullscreen, fstype = love.window.getFullscreen()
 		Options.fullscreen = not fullscreen
@@ -775,8 +782,9 @@ function love.mousepressed(x, y, button)
 		if button == 1 then
 			local picked = CardSelect.handleClick()
 			if picked then
-				CardSelect.exit()
-				GameState.showingCards = false
+				-- Apply modifier + close. If more level-ups are queued, the
+				-- update loop re-opens card selection next frame.
+				CardSelect.finish()
 			end
 		end
 		return
@@ -833,6 +841,12 @@ function love.update(dt)
 		return
 	end
 
+	if GameState.pendingLevelUps > 0 and not GameState.showingCards and GameState.state == "game" then
+		if CardSelect.start(uiSprites, canvas) then
+			GameState.pendingLevelUps = GameState.pendingLevelUps - 1
+		end
+	end
+
 	if GameState.showingCards then
 		for _, entry in ipairs(uiSprites) do
 			if entry.sprite.object == "card" then
@@ -846,6 +860,7 @@ function love.update(dt)
 	local scaledDt = dt * TimeScale.scale
 	PostProcess.updateReveal(dt, canvas)
 	PostProcess.updateStartDarken(dt)
+	PostProcess.updateCardDarken(dt)
 	-- Manual GC step: spread collection across frames so a full trace never
 	-- lands in one stall.
 	collectgarbage("step", GC_STEP)

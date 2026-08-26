@@ -1,11 +1,10 @@
---- Card-select state: shows 3 upgrade cards horizontally, player picks one.
---- Uses existing card sprites loaded by loadAll (identified by object="card").
---- On enter: finds 3 card sprites in uiSprites, positions with gap, shows them.
---- On exit: hides them. Click detection uses Bounds helper (same math as Hover).
+--- Card selection reuses the Darken post-process shader (PostProcess.startCardDarken)
+--- for the dim — eased in by start() and out by finish(), same easing concept as the intro fade.
 local Bounds = require("Source.Helpers.Core.Bounds")
 local Layout = require("Source.UI.Layout")
 local Cursor = require("Source.Sprite.Components.Cursor")
 local GameState = require("Source.Helpers.Systems.GameState")
+local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 
 local CardSelect = {}
 
@@ -14,9 +13,8 @@ local cardSlots = { -1, 0, 1 }
 
 local _cards = {}
 
---- Enter card-select overlay. Only valid while state=="game".
+--- Callers must gate state themselves (start() does); this only lays out + shows.
 function CardSelect.enter(uiSprites, canvas)
-	if GameState.state ~= "game" then return end
 	_cards = {}
 	for _, entry in ipairs(uiSprites) do
 		if entry.sprite.object == "card" then
@@ -40,12 +38,26 @@ function CardSelect.enter(uiSprites, canvas)
 	end
 end
 
---- Guarded enter + set showingCards. Returns true if cards shown.
-function CardSelect.tryEnter(uiSprites, canvas)
-	if GameState.state ~= "game" or GameState.showingCards then return false end
+--- Start the card-select state from gameplay (level up). Pauses the world by
+--- switching GameState.state to "cardselect" (Main's `simulating` gate), dims
+--- the background, and shows the cards. No-op if already showing or not in game.
+---@return boolean shown
+function CardSelect.start(uiSprites, canvas)
+	if GameState.state ~= "game" or GameState.showingCards then
+		return false
+	end
+	GameState.state = "cardselect"
 	CardSelect.enter(uiSprites, canvas)
 	GameState.showingCards = true
+	PostProcess.startCardDarken(PostProcess.CARD_DARKEN_TARGET)
 	return true
+end
+
+function CardSelect.finish()
+	PostProcess.startCardDarken(0)
+	CardSelect.exit()
+	GameState.showingCards = false
+	GameState.state = "game"
 end
 
 function CardSelect.exit()
@@ -53,6 +65,30 @@ function CardSelect.exit()
 		entry.sprite.alpha = 0
 	end
 	_cards = {}
+end
+
+--- Apply a card's modifier to the player. Modifier is read from the card's data
+--- table: either a function `modifier(stats)` or a table
+--- `{ stat = "damage", amount = 2 }`. Handles both number and {base,gain} stats.
+function CardSelect.applyModifier(sprite)
+	local mod = sprite.data and sprite.data.modifier
+	if not mod then
+		return
+	end
+	local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
+	if not stats then
+		return
+	end
+	if type(mod) == "function" then
+		mod(stats)
+		return
+	end
+	local cur = stats[mod.stat]
+	if type(cur) == "table" then
+		cur.base = (cur.base or 0) + (mod.amount or 0)
+	else
+		stats[mod.stat] = (stats[mod.stat] or 0) + (mod.amount or 0)
+	end
 end
 
 function CardSelect.handleClick()
@@ -69,7 +105,7 @@ function CardSelect.handleClick()
 	for _, entry in ipairs(_cards) do
 		local left, top, w, h = Bounds.spriteBounds(entry.sprite)
 		if cx >= left and cx <= left + w and cy >= top and cy <= top + h then
-			-- TODO: apply card modifier to player/gamestate
+			CardSelect.applyModifier(entry.sprite)
 			return entry.sprite
 		end
 	end

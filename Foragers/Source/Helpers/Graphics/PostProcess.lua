@@ -18,8 +18,12 @@ local DEATH_DARKEN_DURATION = 1
 local DEATH_DARKEN_CURVE = "InOutCubic"
 local INTRO_DARKEN_DURATION = 1
 local INTRO_DARKEN_CURVE = "OutCubic"
+local CARD_DARKEN_DURATION = 0.4
+local CARD_DARKEN_CURVE = "OutCubic"
+local CARD_DARKEN_TARGET = 0.55
 
 local PostProcess = {}
+PostProcess.CARD_DARKEN_TARGET = CARD_DARKEN_TARGET
 
 --- Ease zoom to `target` over `duration` seconds with a temporarily faster
 --- smoothness, restoring the normal rate when the timer expires. Shared by the
@@ -81,6 +85,36 @@ function PostProcess.updateStartDarken(dt)
 	GameState.darkenUniform = 1 - e
 	if t >= 1 then
 		GameState.startDarkenActive = false
+	end
+end
+
+--- `target` is the darken amount to ease to (0 = clear, 1 = black);
+--- CARD_DARKEN_TARGET dims without fully blacking out. Eases from the current
+--- u_darken so entering/exiting never snaps.
+function PostProcess.startCardDarken(target, duration, curve)
+	GameState.cardDarkenFrom = GameState.darkenUniform
+	GameState.cardDarkenTo = target
+	GameState.cardDarkenDuration = duration or CARD_DARKEN_DURATION
+	GameState.cardDarkenCurve = curve or CARD_DARKEN_CURVE
+	GameState.cardDarkenTimer = 0
+	GameState.cardDarkenActive = true
+end
+
+--- Per-frame driver for the card-select dim. Owns u_darken only while
+--- state=="cardselect"; intro/death own it in their own phases so they never
+--- fight. Called unconditionally from Main; no-ops when inactive.
+function PostProcess.updateCardDarken(dt)
+	if not GameState.cardDarkenActive then
+		return
+	end
+	GameState.cardDarkenTimer = GameState.cardDarkenTimer + dt
+	local t = math.min(GameState.cardDarkenTimer / GameState.cardDarkenDuration, 1)
+	local e = (Easing[GameState.cardDarkenCurve] or Easing.Linear)(t)
+	local v = GameState.cardDarkenFrom + (GameState.cardDarkenTo - GameState.cardDarkenFrom) * e
+	ShaderLoader.sendUniform("u_darken", v)
+	GameState.darkenUniform = v
+	if t >= 1 then
+		GameState.cardDarkenActive = false
 	end
 end
 

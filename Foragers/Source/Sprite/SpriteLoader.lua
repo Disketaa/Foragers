@@ -16,6 +16,7 @@ local SpriteLoader = {}
 function SpriteLoader.instantiate(data, x, y, pngPath)
 	ValueParser.table(data)
 	local sprite = Sprite.new(x, y)
+	sprite.data = data
 	sprite.frameWidth = data.frameWidth
 	sprite.frameHeight = data.frameHeight
 	sprite.pivotX = data.pivotX
