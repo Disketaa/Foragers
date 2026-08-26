@@ -10,6 +10,22 @@ return {
 		},
 
 		{
+			component = "tween",
+			tags = {
+				show = {
+					{ target = "scale_x", from = 0, to = 1, duration = 0.2, curve = "OutBack" },
+					{ target = "scale_y", from = 2, to = 1, duration = 0.3, curve = "OutBack" },
+					{ target = "angle", from = 45, to = 0, duration = 1, curve = "OutBack" },
+				},
+
+				hide = {
+					{ target = "scale_x", from = 1, to = 0, duration = 0.2, curve = "OutCubic" },
+					{ target = "angle", from = 0, to = -45, duration = 1, curve = "OutBack" },
+				},
+			},
+		},
+
+		{
 			component = "hover",
 			id = "hover",
 			type = "hand",

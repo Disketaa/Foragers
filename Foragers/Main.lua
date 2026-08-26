@@ -781,12 +781,14 @@ end
 
 function love.mousepressed(x, y, button)
 	if GameState.showingCards then
-		if button == 1 then
+		-- Ignore clicks once the hide animation is playing (CardSelect.update
+		-- finalizes the close when the scale tween reaches 0).
+		if button == 1 and not CardSelect.isHiding() then
 			local picked = CardSelect.handleClick()
 			if picked then
-				-- Apply modifier + close. If more level-ups are queued, the
-				-- update loop re-opens card selection next frame.
-				CardSelect.finish()
+				-- Apply modifier + start the hide anim. If more level-ups are
+				-- queued, the update loop re-opens card selection next frame.
+				CardSelect.hide()
 			end
 		end
 		return
@@ -855,6 +857,9 @@ function love.update(dt)
 				entry.sprite:update(dt)
 			end
 		end
+		-- Advances the gap tween + finalizes the hide animation (scale tween
+		-- -> 0), then re-enables the world.
+		CardSelect.update(dt)
 	end
 
 	TimeScale.update(dt)

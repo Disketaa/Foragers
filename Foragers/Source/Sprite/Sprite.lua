@@ -218,11 +218,34 @@ function Sprite:draw()
 	-- Component draws: shader is managed by SpriteSheet, not here.
 	-- This ensures text overlays (counter label, spritefont, text_emitter)
 	-- draw without the sprite's tint shader.
+	-- Apply scale + rotation from tweens so component sprites honor
+	-- scale_x/scale_y/angle like StaticSprite does. Rotation is taken ONLY
+	-- from an angle tween (self.tweens.angle), never from self.angle — that
+	-- field is logic-only for component sprites and must not rotate their draws.
+	local sx, sy, rot = 1, 1, 0
+	if self.tweens then
+		if self.tweens.scale_x then sx = self.tweens.scale_x:getValue() end
+		if self.tweens.scale_y then sy = self.tweens.scale_y:getValue() end
+		if self.tweens.angle then rot = math.rad(self.tweens.angle:getValue()) end
+	end
+	local applyXform = (sx ~= 1 or sy ~= 1 or rot ~= 0)
+	if applyXform then
+		love.graphics.push()
+		love.graphics.translate(self.x, self.y)
+		love.graphics.rotate(rot)
+		love.graphics.scale(sx, sy)
+		love.graphics.translate(-self.x, -self.y)
+	end
+
 	drawComponents(self, function(c) return c.drawBehind end)
 
 	drawComponents(self, function(c) return not c.drawBehind and not c.drawOnTop end)
 
 	drawComponents(self, function(c) return c.drawOnTop end)
+
+	if applyXform then
+		love.graphics.pop()
+	end
 end
 
 return Sprite
