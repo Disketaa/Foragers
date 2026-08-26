@@ -235,8 +235,8 @@ function initGame()
 	GameState.revealActive = false
 	GameState.revealTimer = 0
 	GameState.pendingLevelUps = 0
-	GameState.cardDarkenActive = false
-	GameState.cardDarkenTimer = 0
+	GameState.selectionDarkenActive = false
+	GameState.selectionDarkenTimer = 0
 	GameState.showingCards = false
 	ShaderLoader.sendUniform("u_darken", 1)
 	GameState.startDarkenActive = true
@@ -860,7 +860,7 @@ function love.update(dt)
 	local scaledDt = dt * TimeScale.scale
 	PostProcess.updateReveal(dt, canvas)
 	PostProcess.updateStartDarken(dt)
-	PostProcess.updateCardDarken(dt)
+	PostProcess.updateSelectionDarken(dt)
 	-- Manual GC step: spread collection across frames so a full trace never
 	-- lands in one stall.
 	collectgarbage("step", GC_STEP)

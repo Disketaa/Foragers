@@ -15,11 +15,11 @@ GameState.showingCards = false
 GameState.pendingLevelUps = 0
 
 --- Card-select darken fade (owns u_darken only while state=="cardselect").
-GameState.cardDarkenActive = false
-GameState.cardDarkenTimer = 0
-GameState.cardDarkenFrom = 0
-GameState.cardDarkenTo = 0
-GameState.cardDarkenDuration = 0
-GameState.cardDarkenCurve = "Linear"
+GameState.selectionDarkenActive = false
+GameState.selectionDarkenTimer = 0
+GameState.selectionDarkenFrom = 0
+GameState.selectionDarkenTo = 0
+GameState.selectionDarkenDuration = 0
+GameState.selectionDarkenCurve = "Linear"
 
 return GameState

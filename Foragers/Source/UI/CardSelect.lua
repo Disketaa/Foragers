@@ -1,4 +1,4 @@
---- Card selection reuses the Darken post-process shader (PostProcess.startCardDarken)
+--- Card selection reuses the Darken post-process shader (PostProcess.startSelectionDarken)
 --- for the dim — eased in by start() and out by finish(), same easing concept as the intro fade.
 local Bounds = require("Source.Helpers.Core.Bounds")
 local Layout = require("Source.UI.Layout")
@@ -9,11 +9,11 @@ local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local CardSelect = {}
 
 local GAP = -4
-local cardSlots = { -1, 0, 1 }
 
 local _cards = {}
 
 --- Callers must gate state themselves (start() does); this only lays out + shows.
+--- Cards are centered as a row regardless of count (2, 3, 6, 10, ...).
 function CardSelect.enter(uiSprites, canvas)
 	_cards = {}
 	for _, entry in ipairs(uiSprites) do
@@ -22,8 +22,9 @@ function CardSelect.enter(uiSprites, canvas)
 		end
 	end
 
+	local n = #_cards
 	for i, entry in ipairs(_cards) do
-		local slot = cardSlots[i] or 0
+		local slot = i - (n + 1) / 2
 		local cardW = entry.sprite.frameWidth or 64
 		entry.ui.offsetX = slot * (cardW + GAP)
 		entry.ui.horizontalAlign = "center"
@@ -38,9 +39,8 @@ function CardSelect.enter(uiSprites, canvas)
 	end
 end
 
---- Start the card-select state from gameplay (level up). Pauses the world by
---- switching GameState.state to "cardselect" (Main's `simulating` gate), dims
---- the background, and shows the cards. No-op if already showing or not in game.
+--- Pauses the world by switching GameState.state to "cardselect"
+--- (Main's `simulating` gate). No-op if already showing or not in game.
 ---@return boolean shown
 function CardSelect.start(uiSprites, canvas)
 	if GameState.state ~= "game" or GameState.showingCards then
@@ -49,12 +49,12 @@ function CardSelect.start(uiSprites, canvas)
 	GameState.state = "cardselect"
 	CardSelect.enter(uiSprites, canvas)
 	GameState.showingCards = true
-	PostProcess.startCardDarken(PostProcess.CARD_DARKEN_TARGET)
+	PostProcess.startSelectionDarken(PostProcess.SELECTION_DARKEN_TARGET)
 	return true
 end
 
 function CardSelect.finish()
-	PostProcess.startCardDarken(0)
+	PostProcess.startSelectionDarken(0)
 	CardSelect.exit()
 	GameState.showingCards = false
 	GameState.state = "game"
