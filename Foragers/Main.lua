@@ -51,7 +51,7 @@ local Camera = require("Source.Helpers.Graphics.Camera")
 local GameState = require("Source.Helpers.Systems.GameState")
 local DayCycle = require("Source.Helpers.Systems.DayCycle")
 local AmbientSpawner = require("Source.Helpers.Systems.AmbientSpawner")
-local CardChoosing = require("Source.UI.CardChoosing")
+local CardSelect = require("Source.UI.CardSelect")
 
 local objects = {}
 local staticObjects = {}
@@ -352,7 +352,7 @@ function initGame()
 		end
 	end
 
-	CardChoosing.enter(uiSprites, canvas)
+	CardSelect.enter(uiSprites, canvas)
 	GameState.showingCards = true
 
 	-- Wire counter components to player sprite (event-driven, no polling)
@@ -481,7 +481,7 @@ local function commandsCtx()
 end
 
 Commands.register("cards", function(_, ctx)
-	CardChoosing.tryEnter(uiSprites, canvas)
+	CardSelect.tryEnter(uiSprites, canvas)
 	return GameState.showingCards and "3 cards shown" or "Can't show cards now", GameState.showingCards
 end, "Show 3 upgrade cards")
 
@@ -729,7 +729,7 @@ function love.keypressed(key, _, _)
 	if Bindings.matches(Options.keybinds.restart, "keyboard", key) then
 		Lifecycle.handleRestartPress()
 	elseif key == "c" and GameState.state == "game" and not GameState.showingCards then
-		CardChoosing.tryEnter(uiSprites, canvas)
+	CardSelect.tryEnter(uiSprites, canvas)
 	elseif Bindings.matches(Options.keybinds.toggleFullscreen, "keyboard", key) then
 		local fullscreen, fstype = love.window.getFullscreen()
 		Options.fullscreen = not fullscreen
@@ -773,9 +773,9 @@ end
 function love.mousepressed(x, y, button)
 	if GameState.showingCards then
 		if button == 1 then
-			local picked = CardChoosing.handleClick()
+			local picked = CardSelect.handleClick()
 			if picked then
-				CardChoosing.exit()
+				CardSelect.exit()
 				GameState.showingCards = false
 			end
 		end

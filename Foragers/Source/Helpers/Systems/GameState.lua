@@ -7,7 +7,7 @@
 --- cache them in a module-local.
 local GameState = {}
 
---- Only valid while state=="game". Set/cleared by CardChoosing.
+--- Only valid while state=="game". Set/cleared by CardSelect.
 GameState.showingCards = false
 
 return GameState

@@ -1,4 +1,4 @@
---- Card-choosing state: shows 3 upgrade cards horizontally, player picks one.
+--- Card-select state: shows 3 upgrade cards horizontally, player picks one.
 --- Uses existing card sprites loaded by loadAll (identified by object="card").
 --- On enter: finds 3 card sprites in uiSprites, positions with gap, shows them.
 --- On exit: hides them. Click detection uses Bounds helper (same math as Hover).
@@ -7,15 +7,15 @@ local Layout = require("Source.UI.Layout")
 local Cursor = require("Source.Sprite.Components.Cursor")
 local GameState = require("Source.Helpers.Systems.GameState")
 
-local CardChoosing = {}
+local CardSelect = {}
 
 local GAP = -4
 local cardSlots = { -1, 0, 1 }
 
 local _cards = {}
 
---- Enter card-choosing overlay. Only valid while state=="game".
-function CardChoosing.enter(uiSprites, canvas)
+--- Enter card-select overlay. Only valid while state=="game".
+function CardSelect.enter(uiSprites, canvas)
 	if GameState.state ~= "game" then return end
 	_cards = {}
 	for _, entry in ipairs(uiSprites) do
@@ -41,21 +41,21 @@ function CardChoosing.enter(uiSprites, canvas)
 end
 
 --- Guarded enter + set showingCards. Returns true if cards shown.
-function CardChoosing.tryEnter(uiSprites, canvas)
+function CardSelect.tryEnter(uiSprites, canvas)
 	if GameState.state ~= "game" or GameState.showingCards then return false end
-	CardChoosing.enter(uiSprites, canvas)
+	CardSelect.enter(uiSprites, canvas)
 	GameState.showingCards = true
 	return true
 end
 
-function CardChoosing.exit()
+function CardSelect.exit()
 	for _, entry in ipairs(_cards) do
 		entry.sprite.alpha = 0
 	end
 	_cards = {}
 end
 
-function CardChoosing.handleClick()
+function CardSelect.handleClick()
 	local cursor = Cursor.active
 	if not cursor or not cursor.canvas then
 		return nil
@@ -76,4 +76,4 @@ function CardChoosing.handleClick()
 	return nil
 end
 
-return CardChoosing
+return CardSelect
