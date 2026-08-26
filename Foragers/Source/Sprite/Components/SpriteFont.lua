@@ -31,28 +31,30 @@ local function utf8Next(str, i)
 	return i + len, str:sub(i, i + len - 1)
 end
 
---- Returns the glyph's pixel width (rightmost ink column + 1), or 0 if the quad
+--- Returns the glyph's ink bounding columns and pixel width, or 0 if the quad
 --- is fully transparent. Uses a > 0 as the ink test: correct for hard-alpha
 --- pixel fonts, where no semi-transparent fringe exists.
 ---@param imageData love.ImageData
 ---@param quad love.Quad
 ---@param frameW integer
 ---@param frameH integer
----@return integer
+---@return integer width rightmost ink column + 1 (0 if empty)
+---@return integer inkLeft leftmost ink column
+---@return integer inkRight rightmost ink column
 local function measureGlyphWidth(imageData, quad, frameW, frameH)
 	local qx, qy = quad:getViewport()
-	local maxX = -1
+	local minX, maxX = frameW, -1
 	for x = frameW - 1, 0, -1 do
 		for y = 0, frameH - 1 do
 			local _, _, _, a = imageData:getPixel(qx + x, qy + y)
 			if a > 0 then
-				maxX = x
-				break
+				if x > maxX then maxX = x end
+				if x < minX then minX = x end
 			end
 		end
-		if maxX >= 0 then break end
 	end
-	return maxX + 1
+	if maxX < 0 then return 0, 0, 0 end
+	return maxX + 1, minX, maxX
 end
 
 function SpriteFont.new(data)
@@ -70,6 +72,7 @@ function SpriteFont.new(data)
 		color = data.color and { unpack(data.color) } or { 0, 0, 0, 1 },
 		_charIndex = {},
 		_charWidth = {},
+		_charInkLeft = {},
 	}, SpriteFont)
 
 	local vi = 0
@@ -144,7 +147,11 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 	local cx = x
 	local cy = y
 	if opts.horizontalAlign == "center" then
-		cx = cx - totalW / 2
+		-- totalW includes trailing charSpacing after the last glyph (needed
+		-- for maxWidth overflow checks), but that phantom gap shifts the ink
+		-- block right by charSpacing/2.  Subtract it so the ink – not the
+		-- advance block – is centred on x.
+		cx = cx - totalW / 2 - charSpacing / 2
 	elseif opts.horizontalAlign == "right" then
 		cx = cx - totalW
 	end
@@ -198,29 +205,21 @@ function SpriteFont:attach()
 	if not self.autoTrim then return end
 	local ss = self.parent and self.parent:findComponent("spritesheet")
 	if not ss or not ss.image or not ss.quads then return end
-	local ok, imageData = pcall(function() return ss.image:getData() end)
-	if not ok or not imageData then
-		Log.write("SpriteFont", "autoTrim skipped: could not read image pixels (getData failed)")
+	local imageData = ss._imageData
+	if not imageData then
+		Log.write("SpriteFont", "autoTrim skipped: _imageData not available (GPU-side texture, no ImageData)")
 		return
 	end
-	-- Atlas contract: glyph ink starts at column 1 of the 8px cell (offset one
-	-- pixel from the left edge, NOT left-aligned at col 0). So measureGlyphWidth
-	-- returns maxx+1 = trueInk+1. We need drawText's per-glyph advance
-	-- (charWidth + charSpacing) to equal the true ink width (trueInk), so the
-	-- rendered width matches measureText and never falsely trips a maxWidth clip
-	-- on text that visually fits. Solving for charWidth:
-	--   charWidth = trueInk - charSpacing = (gw - 1) - charSpacing
-	--             = gw + (-1 - charSpacing)
-	-- (charSpacing = -3 => charWidth = gw + 2, same spirit as the hand-tuned
-	-- spacing entries in the font data).
-	local offset = -1 - (self.charSpacing or 0)
+	-- charWidth = gw - 1 so advance (charWidth + charSpacing) matches ink edge.
+	local offset = -1
 	for c, idx in pairs(self._charIndex) do
 		if not self._charWidth[c] then -- data.spacing overrides win
 			local quad = ss.quads[idx]
 			if quad then
-				local gw = measureGlyphWidth(imageData, quad, ss.frameWidth, ss.frameHeight)
+				local gw, inkLeft = measureGlyphWidth(imageData, quad, ss.frameWidth, ss.frameHeight)
 				if gw > 0 then
 					self._charWidth[c] = gw + offset
+					self._charInkLeft[c] = inkLeft
 				else
 					Log.write("SpriteFont", "autoTrim: char '%s' measured 0 width; falling back to frameWidth", c)
 				end

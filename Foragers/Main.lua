@@ -51,6 +51,7 @@ local Camera = require("Source.Helpers.Graphics.Camera")
 local GameState = require("Source.Helpers.Systems.GameState")
 local DayCycle = require("Source.Helpers.Systems.DayCycle")
 local AmbientSpawner = require("Source.Helpers.Systems.AmbientSpawner")
+local CardChoosing = require("Source.UI.CardChoosing")
 
 local objects = {}
 local staticObjects = {}
@@ -351,6 +352,9 @@ function initGame()
 		end
 	end
 
+	CardChoosing.enter(uiSprites, canvas)
+	GameState.showingCards = true
+
 	-- Wire counter components to player sprite (event-driven, no polling)
 	if GameState.playerSprite then
 		for _, ui in ipairs(uiSprites) do
@@ -475,6 +479,11 @@ local function commandsCtx()
 		end,
 	}
 end
+
+Commands.register("cards", function(_, ctx)
+	CardChoosing.tryEnter(uiSprites, canvas)
+	return GameState.showingCards and "3 cards shown" or "Can't show cards now", GameState.showingCards
+end, "Show 3 upgrade cards")
 
 function love.draw()
 	Snapshot.markDrawStart()
@@ -719,6 +728,8 @@ function love.keypressed(key, _, _)
 
 	if Bindings.matches(Options.keybinds.restart, "keyboard", key) then
 		Lifecycle.handleRestartPress()
+	elseif key == "c" and GameState.state == "game" and not GameState.showingCards then
+		CardChoosing.tryEnter(uiSprites, canvas)
 	elseif Bindings.matches(Options.keybinds.toggleFullscreen, "keyboard", key) then
 		local fullscreen, fstype = love.window.getFullscreen()
 		Options.fullscreen = not fullscreen
@@ -759,7 +770,17 @@ function love.keyreleased(key)
 	end
 end
 
-function love.mousepressed(_, _, button)
+function love.mousepressed(x, y, button)
+	if GameState.showingCards then
+		if button == 1 then
+			local picked = CardChoosing.handleClick()
+			if picked then
+				CardChoosing.exit()
+				GameState.showingCards = false
+			end
+		end
+		return
+	end
 	if not Debug.chatActive() and Bindings.matches(Options.keybinds.restart, "mouse", button) then
 		Lifecycle.handleRestartPress()
 	end
@@ -810,6 +831,14 @@ function love.update(dt)
 		Zoom.reset()
 		initGame()
 		return
+	end
+
+	if GameState.showingCards then
+		for _, entry in ipairs(uiSprites) do
+			if entry.sprite.object == "card" then
+				entry.sprite:update(dt)
+			end
+		end
 	end
 
 	TimeScale.update(dt)
@@ -988,9 +1017,9 @@ function love.update(dt)
 
 	Chat.updateRepeat(dt)
 
-	-- Update UI sprites (for counter animations, etc.)
+	-- Skip cards: updated in the mousepressed gate above.
 	for _, ui in ipairs(uiSprites) do
-		if ui.sprite and ui.sprite.update then
+		if ui.sprite and ui.sprite.update and ui.sprite.object ~= "card" then
 			ui.sprite:update(scaledDt)
 		end
 	end

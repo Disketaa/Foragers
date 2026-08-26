@@ -1,3 +1,5 @@
+local Log = require("Source.Helpers.Core.Log")
+
 --- Image (optionally animated) drawn on top of the host sprite at a centre-relative offset.
 --- Baked into a card-sized canvas and drawn through the parent's skew shader, so
 --- it warps with the EXACT same perspective as the card (one skew source of
@@ -63,7 +65,14 @@ function Image:attach()
 	local modPath = self.image:gsub("/", ".")
 	local ok, spriteData = pcall(require, modPath)
 	if not ok or not spriteData then
+		Log.write("Image", "attach: failed to load '%s'%s", self.image, ok and "" or " (" .. tostring(spriteData) .. ")")
 		return
+	end
+	-- Resolve extends so frames/backgrounds using inheritance get frameWidth
+	-- and spritesheet component before instantiate.
+	if spriteData.extends then
+		local Merge = require("Source.Helpers.Core.Merge")
+		spriteData = Merge.resolveExtends(spriteData)
 	end
 	local SpriteLoader = require("Source.Sprite.SpriteLoader")
 	local pngPath = self.image .. ".png"
@@ -148,14 +157,11 @@ function Image:draw(x, y)
 	end
 	local dx = bx + (self._parX or 0)
 	local dy = by + (self._parY or 0) + bobY
-	local shader = (self.skewWithParent and self.parent and self.parent.shader) or nil
+	local hadShader = self.parent and self.parent.applyShader and self.parent:applyShader() or false
 	local r, g, b, a = love.graphics.getColor()
 	love.graphics.setColor(1, 1, 1, 1)
-	if shader then
-		love.graphics.setShader(shader)
-	end
 	love.graphics.draw(self._canvas, dx, dy, 0, 1, 1, fw * 0.5, fh * 0.5)
-	if shader then
+	if hadShader then
 		love.graphics.setShader()
 	end
 	love.graphics.setColor(r, g, b, a)

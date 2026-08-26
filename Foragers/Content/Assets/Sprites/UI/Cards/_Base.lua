@@ -31,7 +31,6 @@ return {
 			scale = 1,
 			offsetX = 0,
 			offsetY = 0,
-			layer = "below",
 		},
 
 		{
@@ -48,7 +47,7 @@ return {
 		{
 			component = "image",
 			id = "overlay",
-			image = "Content/Assets/Sprites/UI/RayLightsOverlay",
+			image = "Content/Assets/Sprites/UI/Cards/Overlays/Rays",
 			scale = 1,
 			offsetX = 0,
 			offsetY = -16,
@@ -58,7 +57,7 @@ return {
 		{
 			component = "image",
 			id = "label",
-			image = "Content/Assets/Sprites/UI/CopperLabel",
+			image = "Content/Assets/Sprites/UI/Cards/Emblems/Copper",
 			scale = 1,
 			offsetX = 0,
 			offsetY = 1,
@@ -80,6 +79,29 @@ return {
 			offsetX = 0,
 			offsetY = -40,
 			dropshadowColor = { 0.56, 0.32, 0.73, 1 },
+			maxWidth = 46,
+			horizontalAlign = "center",
+			verticalAlign = "center",
+		},
+
+		{
+			component = "text",
+			id = "level",
+			offsetX = 0,
+			offsetY = 0,
+			color = { 0.93, 0.7, 0.61 },
+			dropshadowColor = { 0, 0, 0, 0.25 },
+			text = "1",
+			horizontalAlign = "center",
+			verticalAlign = "center",
+		},
+
+		{
+			component = "text",
+			id = "description",
+			offsetY = 16,
+			color = { 0.41, 0.35, 0.34 },
+			dropshadowColor = { 0.09, 0.08, 0.08, 1 },
 			maxWidth = 46,
 			horizontalAlign = "center",
 			verticalAlign = "center",

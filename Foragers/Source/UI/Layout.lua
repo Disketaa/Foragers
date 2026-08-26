@@ -6,8 +6,8 @@ local Layout = {}
 --- Apply pivot and active tween offsets; `canvas` is the render context
 --- (width/height), passed like Camera.update so layout stays free of game state.
 function Layout.positionUI(ui, canvas)
-	local w = ui.sprite.frameWidth or ui.sprite.image:getWidth()
-	local h = ui.sprite.frameHeight or ui.sprite.image:getHeight()
+	local w = ui.sprite.frameWidth or (ui.sprite.image and ui.sprite.image:getWidth() or 0)
+	local h = ui.sprite.frameHeight or (ui.sprite.image and ui.sprite.image:getHeight() or 0)
 	local px, py = UIComponent.calculate(ui.ui, canvas.width, canvas.height, w, h)
 	local tweens = ui.sprite.tweens
 	local tweenX = tweens and tweens.x and tweens.x:getValue() or 0

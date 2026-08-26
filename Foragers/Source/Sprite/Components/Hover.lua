@@ -5,8 +5,8 @@
 local Hover = {}
 Hover.__index = Hover
 
-local Pivot = require("Source.Helpers.Core.Pivot")
 local Cursor = require("Source.Sprite.Components.Cursor")
+local Bounds = require("Source.Helpers.Core.Bounds")
 
 ---@param data table
 ---@return Hover
@@ -27,11 +27,8 @@ function Hover:update()
 	local cy = (my - cv.offsetY) / cv.scale
 
 	local p = self.parent
-	if not p then return end
-	local w = p.frameWidth or (p.image and p.image:getWidth()) or 0
-	local h = p.frameHeight or (p.image and p.image:getHeight()) or 0
-	local left = p.x - Pivot.px(p.pivotX, w, 0)
-	local top = p.y - Pivot.px(p.pivotY, h, 0)
+	if not p or (p.alpha ~= nil and p.alpha <= 0) then return end
+	local left, top, w, h = Bounds.spriteBounds(p)
 
 	if cx >= left and cx <= left + w and cy >= top and cy <= top + h then
 		cursor:setType(self.cursorKind)

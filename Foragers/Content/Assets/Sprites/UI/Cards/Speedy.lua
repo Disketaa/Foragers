@@ -17,13 +17,13 @@ return {
 		{
 			component = "text",
 			id = "title",
-			text = { key = "card.durability" },
+			text = { key = "card.speedy" },
 		},
 
 		{
 			component = "text",
 			id = "description",
-			text = { key = "modifier.buffDamage", params = { n = 2 } },
+			text = { key = "modifier.buffTempo", params = { n = 1 } },
 		},
 	},
 }

@@ -64,7 +64,6 @@ function Label.new(data)
 		text = data.text or "",
 		font = data.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 		color = data.color and { unpack(data.color) } or { 1, 1, 1, 1 },
-		charSpacing = data.charSpacing,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
 		horizontalAlign = data.horizontalAlign or "center",
@@ -76,6 +75,7 @@ function Label.new(data)
 		scrollSpeed = data.scrollSpeed or Label.SCROLL_SPEED,
 		scrollPause = data.scrollPause or Label.SCROLL_PAUSE,
 		scrollEdgePad = data.scrollEdgePad or 1,
+		charSpacing = data.charSpacing,
 		_scrollT = 0,
 		_textW = nil,
 	}, Label)
@@ -249,14 +249,11 @@ function Label:draw(x, y)
 		return
 	end
 
-	local shader = (self.skewWithParent and self.parent and self.parent.shader) or nil
+	local hadShader = self.parent and self.parent.applyShader and self.parent:applyShader() or false
 	local r, g, b, a = love.graphics.getColor()
 	love.graphics.setColor(1, 1, 1, 1)
-	if shader then
-		love.graphics.setShader(shader)
-	end
 	love.graphics.draw(self._canvas, math.floor(x + 0.5), math.floor(y + 0.5), 0, 1, 1, fw * 0.5, fh * 0.5)
-	if shader then
+	if hadShader then
 		love.graphics.setShader()
 	end
 	love.graphics.setColor(r, g, b, a)

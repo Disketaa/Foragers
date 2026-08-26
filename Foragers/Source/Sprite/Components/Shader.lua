@@ -113,7 +113,10 @@ function ShaderComponent:update()
 		local cx, cy = (mx - ox) / scale, (my - oy) / scale
 		local hw = (self.parent.frameWidth or 64) * 0.5
 		local hh = (self.parent.frameHeight or 88) * 0.5
-		local dx, dy = cx - self.parent.x, cy - self.parent.y
+		-- Use uniform skew center if set (card overlay), else per-sprite center.
+		local centerX = self.skewCenterX or self.parent.x
+		local centerY = self.skewCenterY or self.parent.y
+		local dx, dy = cx - centerX, cy - centerY
 		local radius = self.u_radius or 80
 		local dist = math.sqrt(dx * dx + dy * dy)
 		local fade = 1 - math.min(dist / radius, 1)

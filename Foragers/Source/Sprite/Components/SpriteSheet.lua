@@ -12,6 +12,7 @@ SpriteSheet.__index = SpriteSheet
 -- ASSUMPTION: if a prop type's PNG can ever change between resets (runtime mods,
 -- hot-reload, reskins), add an invalidation path or this serves stale textures.
 local imageCache = {}
+local imageDataCache = {}
 local quadCache = {}
 
 --- Map a currentTime (seconds) to its frame index 1..anim.frames, walking the
@@ -43,6 +44,7 @@ function SpriteSheet.new(data)
 
 	local self = setmetatable({
 		image = image,
+		_path = data.spriteSheet,
 		type = "spritesheet",
 		frameWidth = data.frameWidth or 8,
 		frameHeight = data.frameHeight or 8,
@@ -138,14 +140,26 @@ function SpriteSheet.new(data)
 end
 
 function SpriteSheet:attach()
+	-- Cache by path so sprites sharing an atlas (e.g. font chars) share one CPU-side pixel buffer.
+	if self._path and not imageDataCache[self._path] then
+		local ok, imgData = pcall(love.image.newImageData, self._path)
+		if ok then
+			imageDataCache[self._path] = imgData
+		end
+	end
+	self._imageData = self._path and imageDataCache[self._path] or nil
+
 	if self.parent then
 		-- Reflect the true per-frame size and pivot onto the sprite; data may omit
 		-- them (props derive size from imageW / columns and default pivot to 0.5),
 		-- leaving sprite.frameWidth/pivotX nil and misaligning draw vs boundaries.
-		self.parent.frameWidth = self.frameWidth
-		self.parent.frameHeight = self.frameHeight
-		self.parent.pivotX = self.pivotX
-		self.parent.pivotY = self.pivotY
+		-- Guard: bare spritesheet (no PNG) has nil frameWidth — don't overwrite.
+		if self.frameWidth then
+			self.parent.frameWidth = self.frameWidth
+			self.parent.frameHeight = self.frameHeight
+			self.parent.pivotX = self.pivotX
+			self.parent.pivotY = self.pivotY
+		end
 	end
 	self.parent:on(Events.STATE_CHANGED, function(newState)
 		local animName = self.tags and self.tags[newState] or newState

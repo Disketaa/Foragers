@@ -43,9 +43,9 @@ return {
 			sourceType = "player_stats",
 			label = {
 				font = "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
-				charSpacing = -4,
+				charSpacing = 0,
 				color = { 0.56, 0.32, 0.73 },
-				offsetX = 1,
+				offsetX = 0,
 				offsetY = 0,
 			},
 			smoothness = 0.3,

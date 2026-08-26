@@ -17,7 +17,7 @@ return {
 		{
 			component = "text",
 			id = "title",
-			text = { key = "card.durability" },
+			text = { key = "card.sharpness" },
 		},
 
 		{

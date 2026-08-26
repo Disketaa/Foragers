@@ -12,13 +12,13 @@ return {
 		{
 			component = "spritefont",
 			chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя1234567890!\"#$%&'()*+,-./:;<=>",
-			charSpacing = -3,
+			charSpacing = 1,
 			spacing = {
-				{ 9, "Mmwм" },
-				{ 7, "т>" },
-				{ 6, "+"},
+				{ 5, "Mmwм" },
+				{ 3, "т>" },
+				{ 2, "+"},
 				{ 5, ".li-" },
-				{ 5, " " },
+				{ 1, " " },
 			},
 			autoTrim = true,
 		},
