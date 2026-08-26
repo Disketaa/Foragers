@@ -29,7 +29,6 @@ local function finalOffset(i, n, cardW)
 end
 
 --- Callers must gate state themselves (start() does); this only lays out + shows.
---- Cards are centered as a row regardless of count (2, 3, 6, 10, ...).
 function CardSelect.enter(uiSprites, canvas)
 	_cards = {}
 	_hiding = false
@@ -55,7 +54,6 @@ function CardSelect.enter(uiSprites, canvas)
 		if tw then
 			tw:triggerTag("show")
 		end
-		-- Stack at centre, then separate to the aligned slot.
 		local cardW = s.frameWidth or 64
 		entry.ui.offsetX = 0
 		entry.offsetTween = Tween.new("offsetX", 0, finalOffset(i, n, cardW), SHOW_OFFSET_DURATION, Easing.OutCubic)
@@ -99,11 +97,9 @@ function CardSelect.isHiding()
 	return _hiding
 end
 
---- Called each frame while showingCards. Advances each card's separation
---- tween (stack<->spread). Finalizes once every card has collapsed to centre
---- AND its scale tween (driven by the tween component's "hide" tag) finished.
+--- Called each frame while showingCards. Finalizes once every card has collapsed
+--- to centre AND its scale tween (driven by the tween component's "hide" tag) finished.
 function CardSelect.update(dt)
-	-- Advance each card's offset tween and apply the live horizontal offset.
 	for _, entry in ipairs(_cards) do
 		if entry.offsetTween then
 			entry.offsetTween:update(dt)
@@ -115,8 +111,6 @@ function CardSelect.update(dt)
 		return
 	end
 
-	-- Finalize once every card has collapsed to centre AND shrunk (scale tween
-	-- from the tween component's "hide" tag).
 	for _, entry in ipairs(_cards) do
 		if entry.offsetTween and not entry.offsetTween:isFinished() then
 			return
