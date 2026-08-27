@@ -37,17 +37,22 @@ return {
 		},
 
 		{
+			component = "text",
+			id = "level",
+			charSpacing = 0,
+			font = "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
+			offsetX = -1,
+			offsetY = 0,
+			color = { 0.56, 0.32, 0.73 },
+			horizontalAlign = "center",
+			verticalAlign = "center",
+		},
+
+		{
 			component = "counter",
 			mode = "progress",
 			field = "experience",
 			sourceType = "player_stats",
-			label = {
-				font = "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
-				charSpacing = 0,
-				color = { 0.56, 0.32, 0.73 },
-				offsetX = 0,
-				offsetY = 0,
-			},
 			smoothness = 0.3,
 			curve = "OutCubic",
 		},

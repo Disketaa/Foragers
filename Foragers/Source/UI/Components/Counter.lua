@@ -1,6 +1,5 @@
 local Events = require("Source.Helpers.Core.Events")
 local Easing = require("Source.Sprite.Components.Tween").Easing
-local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 local Pivot = require("Source.Helpers.Core.Pivot")
 
 --- Read a source field, resolving it through the component's curve resolver if
@@ -14,7 +13,8 @@ local function readStat(comp, field)
 end
 
 --- Maps source component value to spritesheet frame. Event-driven, opt-in smooth tween.
---- Optional `label` block renders a text overlay (e.g. level number) via font spritesheet.
+--- Level text is forwarded to a sibling `text` component (if present) so the
+--- counter stays a pure progress mapper and the label owns its own render.
 local Counter = {}
 Counter.__index = Counter
 
@@ -28,7 +28,7 @@ function Counter.new(data)
 		frames = data.frames,
 		smoothness = data.smoothness or 0,
 		curve = data.curve or "OutBack",
-		_labelText = "",
+		_label = nil,
 		_displayProgress = 0,
 		_fromProgress = 0,
 		_targetProgress = 0,
@@ -36,16 +36,6 @@ function Counter.new(data)
 		_tweenDuration = 0,
 		_lastLevel = nil,
 	}, Counter)
-
-	if data.label then
-		self._labelFont = data.label.font or "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder"
-		self._labelColor = data.label.color and { unpack(data.label.color) } or { 1, 1, 1 }
-		self._labelCharSpacing = data.label.charSpacing
-		self._labelOffsetX = data.label.offsetX or 0
-		self._labelOffsetY = data.label.offsetY or 0
-		self._labelHorizontalAlign = data.label.horizontalAlign or "center"
-		self._labelVerticalAlign = data.label.verticalAlign or "center"
-	end
 
 	if data.icon then
 		self._iconSprite = data.icon.sprite
@@ -60,37 +50,6 @@ end
 function Counter:attach()
 	local Path = require("Source.Helpers.Core.Path")
 	local SpriteLoader = require("Source.Sprite.SpriteLoader")
-
-	if self._labelFont then
-		local luaPath = Path.moduleToPath(self._labelFont)
-		local pngPath = luaPath .. ".png"
-		local ok, fontData = pcall(require, self._labelFont)
-		if ok and fontData then
-			local sprite = SpriteLoader.instantiate(fontData, 0, 0, pngPath)
-			if sprite then
-				local ss = sprite:findComponent("spritesheet")
-				if ss then
-					self._labelImage = ss.image
-					self._labelQuads = ss.quads
-					self._labelFrameW = ss.frameWidth
-					self._labelFrameH = ss.frameHeight
-					self._labelPivotX = ss.pivotX or "center"
-					self._labelPivotY = ss.pivotY or "center"
-				end
-				local sf = sprite:findComponent("spritefont")
-				if sf then
-					self._labelCharIndex = sf._charIndex
-					self._labelCharWidth = sf._charWidth
-					if self._labelCharSpacing == nil then
-						self._labelCharSpacing = sf.charSpacing
-					end
-				end
-			end
-		end
-		if not self._labelImage or not self._labelCharIndex then
-			self._labelFont = nil
-		end
-	end
 
 	if self._iconSprite then
 		local luaPath = Path.moduleToPath(self._iconSprite)
@@ -125,6 +84,10 @@ function Counter:setPlayerSprite(sprite)
 		self:onValueChanged(data)
 	end, 5)
 
+	-- Forward the level to a sibling text component (if present) so the
+	-- counter stays a pure progress mapper and the label owns its own render.
+	self._label = self.parent and self.parent:findComponent("text")
+
 	-- Initial sync: no animation, jump to current value
 	local comp = sprite:findComponent(self.sourceType)
 	if comp then
@@ -142,8 +105,8 @@ function Counter:setPlayerSprite(sprite)
 				self._targetProgress = p
 				self:_setFrame(p)
 			end
-			if self._labelFont then
-				self._labelText = tostring(comp.level or "")
+			if self._label then
+				self._label:setText(tostring(comp.level or ""))
 			end
 			self._lastLevel = comp.level
 		end
@@ -152,8 +115,8 @@ end
 
 ---@param data { sourceType:string, field:string, value:number, maxValue:number, level:number }
 function Counter:onValueChanged(data)
-	if data.level ~= nil and self._labelFont then
-		self._labelText = tostring(data.level)
+	if data.level ~= nil and self._label then
+		self._label:setText(tostring(data.level))
 	end
 	if data.field ~= self.field then
 		return
@@ -234,37 +197,6 @@ function Counter:draw(x, y)
 			love.graphics.draw(self._iconImage, quad, math.floor(ix + 0.5), math.floor(iy + 0.5), 0, 1, 1, ox, oy)
 		end
 	end
-
-	if not self._labelFont or not self._labelImage or not self._labelQuads or not self._labelCharSpacing then
-		return
-	end
-	local text = self._labelText
-	if #text == 0 then
-		return
-	end
-
-	local ox = Pivot.px(self._labelPivotX, self._labelFrameW, "center")
-	SpriteFont.drawText(
-		{
-			image = self._labelImage,
-			quads = self._labelQuads,
-			charIndex = self._labelCharIndex,
-			charWidth = self._labelCharWidth,
-			charSpacing = self._labelCharSpacing,
-			frameW = self._labelFrameW,
-			frameH = self._labelFrameH,
-			pivotX = self._labelPivotX,
-			pivotY = self._labelPivotY,
-		},
-		text,
-		x + self._labelOffsetX + ox,
-		y + self._labelOffsetY,
-		{
-			color = self._labelColor,
-			horizontalAlign = self._labelHorizontalAlign,
-			verticalAlign = self._labelVerticalAlign,
-		}
-	)
 end
 
 return Counter
