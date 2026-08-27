@@ -877,9 +877,12 @@ function love.update(dt)
 	end
 
 	if GameState.pendingLevelUps > 0 and not GameState.showingCards and GameState.state == "game" then
-		if CardSelect.start(uiSprites, canvas) then
-			GameState.pendingLevelUps = GameState.pendingLevelUps - 1
+		-- Consume the level-up whether or not a card is still pickable, so a
+		-- fully-maxed run doesn't retry the (impossible) selection each frame.
+		if CardSelect.shouldShow(uiSprites) then
+			CardSelect.start(uiSprites, canvas)
 		end
+		GameState.pendingLevelUps = GameState.pendingLevelUps - 1
 	end
 
 	if GameState.showingCards then

@@ -6,7 +6,7 @@ return {
 	components = {
 		{
 			component = "spritesheet",
-			columns = 1,
+			columns = 5,
 		},
 	},
 }

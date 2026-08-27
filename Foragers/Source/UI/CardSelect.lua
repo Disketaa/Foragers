@@ -22,6 +22,21 @@ local HIDE_OFFSET_DURATION = 0.4
 local _cards = {}
 local _hiding = false
 
+--- A card is still pickable while its group's chosen count is below the card's
+--- maxLevel (unbounded when maxLevel is absent). Drives both filtering and the
+--- "no upgrades left" check in shouldShow.
+local function cardAvailable(sprite)
+	local grp = sprite.data and sprite.data.group
+	if not grp then
+		return true
+	end
+	local max = sprite.data.maxLevel
+	if not max then
+		return true
+	end
+	return (GameState.cardGroupCounts[grp] or 0) < max
+end
+
 --- Resting horizontal offset for card i of n (centred row).
 local function finalOffset(i, n, cardW)
 	local slot = i - (n + 1) / 2
@@ -33,7 +48,7 @@ function CardSelect.enter(uiSprites, canvas)
 	_cards = {}
 	_hiding = false
 	for _, entry in ipairs(uiSprites) do
-		if entry.sprite.object == "card" then
+		if entry.sprite.object == "card" and cardAvailable(entry.sprite) then
 			table.insert(_cards, entry)
 		end
 	end
@@ -57,10 +72,16 @@ function CardSelect.enter(uiSprites, canvas)
 		-- Level text = chosen count of this card's group + 1 (first pack shows "1").
 		local grp = s.data and s.data.group
 		if grp then
-			local n = (GameState.cardGroupCounts[grp] or 0) + 1
+			local level = (GameState.cardGroupCounts[grp] or 0) + 1
 			local lvl = s:findComponent("text", function(c) return c.id == "level" end)
 			if lvl then
-				lvl:setText(tostring(n))
+				lvl:setText(tostring(level))
+			end
+			-- Emblem tier: 5 frames span levels 0-4, 5-9, 10-14, 15-19, 20.
+			local emblem = s:findComponent("image", function(c) return c.id == "emblem" end)
+			if emblem then
+				local maxTier = (emblem._ss and emblem._ss.columns) or 5
+				emblem:setFrame(math.min(maxTier, math.floor(level / 5) + 1))
 			end
 		end
 		local cardW = s.frameWidth or 64
@@ -76,11 +97,28 @@ function CardSelect.start(uiSprites, canvas)
 	if GameState.state ~= "game" or GameState.showingCards then
 		return false
 	end
-	GameState.state = "cardselect"
 	CardSelect.enter(uiSprites, canvas)
+	-- All cards maxed: nothing to pick, so don't open the screen.
+	if #_cards == 0 then
+		CardSelect.exit()
+		return false
+	end
+	GameState.state = "cardselect"
 	GameState.showingCards = true
 	PostProcess.startSelectionDarken(PostProcess.SELECTION_DARKEN_TARGET)
 	return true
+end
+
+--- True if at least one card is still below its maxLevel. Caller consumes the
+--- pending level-up whether or not this returns true, so a fully-maxed run
+--- never retries the (now impossible) selection every frame.
+function CardSelect.shouldShow(uiSprites)
+	for _, entry in ipairs(uiSprites) do
+		if entry.sprite.object == "card" and cardAvailable(entry.sprite) then
+			return true
+		end
+	end
+	return false
 end
 
 --- Begin the hide animation. Keeps showingCards true so cards keep drawing and

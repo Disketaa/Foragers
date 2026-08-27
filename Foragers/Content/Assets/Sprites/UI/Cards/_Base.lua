@@ -3,6 +3,7 @@ return {
 	frameHeight = 104,
 	pivotX = "center",
 	pivotY = "center",
+	maxLevel = 20,
 	components = {
 		{
 			component = "spritesheet",
@@ -72,8 +73,8 @@ return {
 
 		{
 			component = "image",
-			id = "label",
-			image = "Content/Assets/Sprites/UI/Cards/Emblems/Copper",
+			id = "emblem",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Emblems",
 			scale = 1,
 			offsetX = 0,
 			offsetY = 1,
@@ -103,11 +104,11 @@ return {
 		{
 			component = "text",
 			id = "level",
-			offsetX = 0,
+			charSpacing = 0,
+			offsetX = -1,
 			offsetY = 0,
 			color = { 0.93, 0.7, 0.61 },
 			dropshadowColor = { 0, 0, 0, 0.25 },
-			text = "1",
 			horizontalAlign = "center",
 			verticalAlign = "center",
 		},

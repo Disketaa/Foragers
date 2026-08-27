@@ -24,6 +24,7 @@ Image.__index = Image
 function Image.new(data)
 	return setmetatable({
 		type = "image",
+		id = data.id,
 		image = data.image,
 		offsetX = data.offsetX or 0,
 		offsetY = data.offsetY or 0,
@@ -129,6 +130,16 @@ function Image:buildCanvas(cx, cy, fw, fh)
 	love.graphics.pop()
 	love.graphics.setCanvas(prev)
 	return canvas
+end
+
+--- Select which spritesheet frame the emblem shows (level tier). Clears the
+--- baked canvas so draw() re-bakes with the new quad.
+function Image:setFrame(index)
+	if not self._ss then
+		return
+	end
+	self._ss._currentIndex = index
+	self._canvas = nil
 end
 
 function Image:draw(x, y)
