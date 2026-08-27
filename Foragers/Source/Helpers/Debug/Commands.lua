@@ -4,6 +4,8 @@
 --- the message red. Main.lua routes results to `Debug.setChatOutput(message, success)`.
 local Commands = {}
 
+local Binds = require("Source.Helpers.Debug.Binds")
+
 local handlers = {}
 local descriptions = {}
 local subcommands = {} -- name -> array of sub-command names (sorted)
@@ -15,6 +17,11 @@ local subcommands = {} -- name -> array of sub-command names (sorted)
 function Commands.register(name, fn, help)
 	handlers[name] = fn
 	descriptions[name] = help
+	-- Register every command as a sub-command of `bind`/`unbind` so their
+	-- command argument tab-completes; kept in sync automatically as commands
+	-- are added (no manual list to maintain).
+	Commands.addSubcommand("bind", name)
+	Commands.addSubcommand("unbind", name)
 end
 
 --- Register a sub-command for completion (e.g. `world` → `clear`). Doesn't add a
@@ -97,6 +104,35 @@ function Commands.parseAmount(arg)
 		op = "sub"
 	end
 	return num, op
+end
+
+--- Split a command line into tokens, honoring "double-quoted" spans so a
+--- command containing spaces (e.g. `world clear`) stays one token. Lets bind
+--- separate the trailing key from a multi-word command whether or not the
+--- command is quoted: `bind world clear a` and `bind "world clear" a` both
+--- yield { "world clear", "a" }.
+---@param s string
+---@return table tokens
+function Commands.tokenizeArgs(s)
+	local tokens = {}
+	local i = 1
+	local n = #s
+	while i <= n do
+		while i <= n and s:sub(i, i):match("%s") do i = i + 1 end
+		if i > n then break end
+		if s:sub(i, i) == '"' then
+			i = i + 1
+			local start = i
+			while i <= n and s:sub(i, i) ~= '"' do i = i + 1 end
+			tokens[#tokens + 1] = s:sub(start, i - 1)
+			i = i + 1
+		else
+			local start = i
+			while i <= n and not s:sub(i, i):match("%s") do i = i + 1 end
+			tokens[#tokens + 1] = s:sub(start, i - 1)
+		end
+	end
+	return tokens
 end
 
 --- Execute a chat line ("xp +50"). Returns `(message, success)`.
@@ -296,6 +332,62 @@ Commands.register("time", function(args, ctx)
 	dc.setTime(h % 24)
 	return "Time set to " .. string.format("%.2f", dc.time), true
 end, "show or set the day/night time (0-24).")
+
+Commands.register("bind", function(args, ctx)
+	local tokens = Commands.tokenizeArgs(args)
+	if #tokens < 2 then
+		-- No command+key given: list current binds as styled lines.
+		local all = Binds.all()
+		if #all == 0 then
+			return "No bindings. Usage: bind <command> <key>.", true
+		end
+		local lines = {}
+		for _, b in ipairs(all) do
+			lines[#lines + 1] = {
+				{ b.key .. ": ", "name" },
+				{ b.command, "label" },
+			}
+		end
+		return lines, true, 10
+	end
+	local key = tokens[#tokens]
+	local command = table.concat(tokens, " ", 1, #tokens - 1)
+	if key == "" or command == "" then
+		return "Usage: bind <command> <key>.", false
+	end
+	if key:find("%s") then
+		return "Key cannot contain spaces.", false
+	end
+	-- Warn on a command with no registered handler so a typo fails now, not
+	-- silently at keypress time.
+	if not handlers[tokens[1]] then
+		return "Unknown command: '" .. tokens[1] .. "'.", false
+	end
+	-- Reject core keys (restart/fullscreen/debug/chat toggles) so a bind can
+	-- never shadow the controls needed to open the console and unbind it.
+	if ctx and ctx.reservedKey and ctx.reservedKey(key) then
+		return "Key '" .. key .. "' is reserved (core binding); cannot bind.", false
+	end
+	Binds.set(key, command)
+	return "Bound '" .. command .. "' → " .. key, true
+end, "bind a command to a key (bind <cmd> <key>).")
+
+Commands.register("unbind", function(args, ctx)
+	local tokens = Commands.tokenizeArgs(args)
+	local key = tokens[1]
+	if not key or key == "" then
+		return "Usage: unbind <key> | unbind *", false
+	end
+	if key == "*" then
+		Binds.clear()
+		return "Cleared all bindings.", true
+	end
+	if not Binds.get(key) then
+		return "No binding for " .. key, false
+	end
+	Binds.remove(key)
+	return "Unbound " .. key, true
+end, "remove a key binding (unbind <key>; unbind * clears all).")
 
 -- Keep PAGE_SIZE + 2 (blank + footer line) <= Debug.lua's maxLines cap (10),
 -- else the renderer trims the first commands and pagination never triggers.

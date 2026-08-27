@@ -44,6 +44,7 @@ local Math = require("Source.Helpers.Core.Math")
 local Input = require("Source.Helpers.Systems.Input")
 local Bindings = require("Source.Helpers.Systems.Bindings")
 local Commands = require("Source.Helpers.Debug.Commands")
+local Binds = require("Source.Helpers.Debug.Binds")
 local Chat = require("Source.Helpers.Debug.Chat")
 local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local Lifecycle = require("Source.Helpers.Systems.Lifecycle")
@@ -197,6 +198,8 @@ function love.load()
 	ModLoader.loadAllMods("Mods")
 
 	DiscordRPC.init()
+
+	Binds.load()
 
 	initGame()
 end
@@ -487,6 +490,19 @@ local function commandsCtx()
 		my = love.mouse.getPosition()
 			return Camera.screenToWorld(canvas, mx, my)
 		end,
+		-- True for any key already bound in Options, so the `bind` command only
+		-- allows unused keys. Derived from Options.keybinds at runtime (not a
+		-- hardcoded name list), so it stays correct if keybinds are added or
+		-- remapped — and it protects the chat/debug toggles needed to open the
+		-- console and unbind, preventing a soft-lock.
+		reservedKey = function(key)
+			for _, binding in pairs(Options.keybinds) do
+				if Bindings.matches(binding, "keyboard", key) then
+					return true
+				end
+			end
+			return false
+		end,
 	}
 end
 
@@ -734,6 +750,16 @@ function love.keypressed(key, _, _)
 		end
 		-- Chat consumes every key while open; never fall through to gameplay
 		-- bindings (e.g. R-restart) so typing can't trigger the world.
+		return
+	end
+
+	-- User key bindings fire here (chat closed), mirroring the chat execute
+	-- path so output/feedback is identical. Reserved core keys are rejected at
+	-- bind time, so any key reaching this point is safe to override.
+	local bound = Binds.get(key)
+	if bound then
+		local message, success, hold = Commands.execute(bound, commandsCtx())
+		Debug.setChatOutput(message, success, hold)
 		return
 	end
 
