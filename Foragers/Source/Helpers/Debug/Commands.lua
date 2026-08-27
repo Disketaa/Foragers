@@ -297,7 +297,9 @@ Commands.register("time", function(args, ctx)
 	return "Time set to " .. string.format("%.2f", dc.time), true
 end, "show or set the day/night time (0-24).")
 
-local PAGE_SIZE = 10
+-- Keep PAGE_SIZE + 2 (blank + footer line) <= Debug.lua's maxLines cap (10),
+-- else the renderer trims the first commands and pagination never triggers.
+local PAGE_SIZE = 8
 
 Commands.register("help", function(args)
 	local names = Commands.list()
