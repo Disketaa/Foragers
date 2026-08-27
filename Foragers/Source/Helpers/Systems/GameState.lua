@@ -14,6 +14,10 @@ GameState.showingCards = false
 --- decremented when a card is chosen; re-shows cards while > 0.
 GameState.pendingLevelUps = 0
 
+--- Per-group chosen-card counts; CardSelect reads this to label each card's
+--- level and increments it on pick. Reset on new game (see initGame).
+GameState.cardGroupCounts = {}
+
 --- Card-select darken fade (owns u_darken only while state=="cardselect").
 GameState.selectionDarkenActive = false
 GameState.selectionDarkenTimer = 0

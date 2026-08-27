@@ -238,6 +238,7 @@ function initGame()
 	GameState.revealActive = false
 	GameState.revealTimer = 0
 	GameState.pendingLevelUps = 0
+	GameState.cardGroupCounts = {}
 	GameState.selectionDarkenActive = false
 	GameState.selectionDarkenTimer = 0
 	GameState.showingCards = false

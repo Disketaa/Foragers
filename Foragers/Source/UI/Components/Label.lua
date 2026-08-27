@@ -58,6 +58,7 @@ Label.SCROLL_PAUSE = 0.6 -- sec dwell at each scroll end
 function Label.new(data)
 	local self = setmetatable({
 		type = "text",
+		id = data.id,
 		-- Keep the original translatable form so a live language switch can
 		-- re-resolve this label (data.text is already resolved by ValueParser).
 		_rawText = (data.__raw and data.__raw.text) or data.text or "",

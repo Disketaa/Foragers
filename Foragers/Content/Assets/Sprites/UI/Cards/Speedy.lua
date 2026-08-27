@@ -1,6 +1,7 @@
 return {
 	extends = "Content.Assets.Sprites.UI.Cards._Base",
 	object = "card",
+	group = "pickaxe",
 	modifier = { stat = "movementSpeed", amount = 10 },
 	components = {
 		{

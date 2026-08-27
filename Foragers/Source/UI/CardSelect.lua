@@ -54,6 +54,15 @@ function CardSelect.enter(uiSprites, canvas)
 		if tw then
 			tw:triggerTag("show")
 		end
+		-- Level text = chosen count of this card's group + 1 (first pack shows "1").
+		local grp = s.data and s.data.group
+		if grp then
+			local n = (GameState.cardGroupCounts[grp] or 0) + 1
+			local lvl = s:findComponent("text", function(c) return c.id == "level" end)
+			if lvl then
+				lvl:setText(tostring(n))
+			end
+		end
 		local cardW = s.frameWidth or 64
 		entry.ui.offsetX = 0
 		entry.offsetTween = Tween.new("offsetX", 0, finalOffset(i, n, cardW), SHOW_OFFSET_DURATION, Easing.OutCubic)
@@ -141,6 +150,11 @@ function CardSelect.applyModifier(sprite)
 	local mod = sprite.data and sprite.data.modifier
 	if not mod then
 		return
+	end
+	-- Count the pick toward its group (even if stats component is missing).
+	local grp = sprite.data and sprite.data.group
+	if grp then
+		GameState.cardGroupCounts[grp] = (GameState.cardGroupCounts[grp] or 0) + 1
 	end
 	local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
 	if not stats then
