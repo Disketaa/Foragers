@@ -49,7 +49,7 @@ return {
 		badColor = { 1, 0, 0, 1 },
 		font = { label = "Content/Assets/Sprites/UI/Fonts/AzeretMonoMedium.ttf", value = "Content/Assets/Sprites/UI/Fonts/AzeretMonoSemiBold.ttf" },
 		fps = true,
-		fpsGraph = { enabled = true, tolerance = 10, gap = 2, width = 25, height = 4, thickness = 0.5 },
+		fpsGraph = { enabled = true, tolerance = 0.25, gap = 2, width = 25, height = 4, thickness = 0.5 },
 		objectCount = true,
 		toggles = {
 			{ label = "Debug", path = "debug", key = "toggleDebug" },

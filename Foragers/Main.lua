@@ -490,13 +490,17 @@ local function commandsCtx()
 		my = love.mouse.getPosition()
 			return Camera.screenToWorld(canvas, mx, my)
 		end,
-		-- True for any key already bound in Options, so the `bind` command only
+		-- True for any key already bound in Options,
+		-- so the `bind` command only
 		-- allows unused keys. Derived from Options.keybinds at runtime (not a
-		-- hardcoded name list), so it stays correct if keybinds are added or
+		-- hardcoded name list),
+		-- so it stays correct if keybinds are added or
 		-- remapped — and it protects the chat/debug toggles needed to open the
-		-- console and unbind, preventing a soft-lock.
+		-- console and unbind,
+		-- preventing a soft-lock.
 		reservedKey = function(key)
-			for _, binding in pairs(Options.keybinds) do
+			for _,
+		binding in pairs(Options.keybinds) do
 				if Bindings.matches(binding, "keyboard", key) then
 					return true
 				end

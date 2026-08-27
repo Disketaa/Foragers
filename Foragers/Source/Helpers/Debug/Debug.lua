@@ -941,10 +941,32 @@ function Debug.draw(objectCount, scale)
 			renderText(val, offset + r.labelW + (r.fixedValW - valueFont:getWidth(val)), r.y, valueColor, valueFont)
 
 			if graphShown then
-				local target = Options.maxFps or 60
-				-- Red only on real peaks: allow drops within `tolerance` fps of the
-				-- target (reading jitter) before marking a segment as bad.
-				local threshold = target - (gs.tolerance or 0)
+			local target = Options.maxFps or 60
+			-- Color against the real ceiling: user maxFps capped at what the display
+			-- can actually sustain, so a 144hz panel at ~144 isn't painted red against
+			-- an unreachable 180 target. Options.maxFps stays the static user setting
+			-- (bar scale + label); only the threshold/cap-marker use the ceiling.
+			-- getDisplayRefreshRate is absent on some LÖVE builds, so fall back to the
+			-- highest measured FPS (the display cap appears as the peak sample when
+			-- maxFps is above it).
+			local refresh = 0
+			local getRate = love.window["getDisplayRefreshRate"]
+			if getRate then
+				refresh = getRate() or 0
+			end
+			if refresh <= 0 then
+				local peak = 0
+				for i = 1, historyCount do
+					local idx = (historyIndex - historyCount + i - 1) % HISTORY_MAX + 1
+					if (history[idx] or 0) > peak then peak = history[idx] end
+				end
+				refresh = peak
+			end
+			local effectiveMax = (refresh > 0 and math.min(target, refresh) or target)
+			-- `tolerance` is a fraction of the ceiling (0.5 = 50%): at 60fps a
+			-- segment stays green down to 30fps before it goes red.
+			local tolerance = gs.tolerance or 0
+			local threshold = effectiveMax * (1 - tolerance)
 				local gy = r.y + (fontHeight - gh) / 2
 				local step = (gs.width or 60) * scale / (historyCount - 1)
 				local gx = offset + graphX
@@ -958,8 +980,16 @@ function Debug.draw(objectCount, scale)
 					return history[idx]
 				end
 				-- Per-segment color: green while stable, red at the samples that dropped.
-				love.graphics.setLineWidth(math.max(1, (gs.thickness or 1) * scale))
-				for k = 1, historyCount - 1 do
+			love.graphics.setLineWidth(math.max(1, (gs.thickness or 1) * scale))
+			-- Dim marker at the display refresh cap when it's below the user's
+			-- maxFps target, so the graph shows both the configured line and the
+			-- real ceiling it can't exceed.
+			if effectiveMax < target then
+				local capY = gy + gh - (effectiveMax / target) * gh
+				love.graphics.setColor(labelColor[1], labelColor[2], labelColor[3], 0.5)
+				love.graphics.line(gx, capY, gx + (gs.width or 60) * scale, capY)
+			end
+			for k = 1, historyCount - 1 do
 					local v1, v2 = sampleAt(k - 1), sampleAt(k)
 					local c = (v2 or 0) >= threshold and goodColor or badColor
 					love.graphics.setColor(c[1], c[2], c[3], c[4])
