@@ -40,6 +40,7 @@ end
 ---@field scale number
 ---@field skewWithParent boolean
 ---@field dropshadowColor table|nil @ dropshadow renders only when this is set
+---@field tierColors table|nil @ per-tier level text colors, indexed by emblem tier (1..5); consumed by CardSelect
 ---@field maxWidth number|nil @ nil disables clip/scroll
 ---@field scrollSpeed number @ px/sec text travels while scrolling
 ---@field scrollPause number @ sec dwell at each scroll end
@@ -79,6 +80,7 @@ function Label.new(data)
 		charSpacing = data.charSpacing,
 		_scrollT = 0,
 		_textW = nil,
+		tierColors = data.tierColors,
 	}, Label)
 	instances[self] = true
 	ensureLanguageListener()
@@ -146,6 +148,16 @@ end
 ---@param text string
 function Label:setText(text)
 	self.text = text or ""
+	self._canvas = nil
+end
+
+---@param color table {r, g, b, a}
+function Label:setColor(color)
+	if not color then
+		return
+	end
+	self.color = { unpack(color) }
+	-- Text is baked into a canvas; clear it so draw() re-bakes with the new color.
 	self._canvas = nil
 end
 

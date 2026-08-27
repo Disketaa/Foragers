@@ -79,9 +79,14 @@ function CardSelect.enter(uiSprites, canvas)
 			end
 			-- Emblem tier: 5 frames span levels 0-4, 5-9, 10-14, 15-19, 20.
 			local emblem = s:findComponent("image", function(c) return c.id == "emblem" end)
+			local maxTier = (emblem and emblem._ss and emblem._ss.columns) or 5
+			local tier = math.min(maxTier, math.floor(level / 5) + 1)
 			if emblem then
-				local maxTier = (emblem._ss and emblem._ss.columns) or 5
-				emblem:setFrame(math.min(maxTier, math.floor(level / 5) + 1))
+				emblem:setFrame(tier)
+			end
+			-- Match the level text color to the emblem tier's background.
+			if lvl and lvl.tierColors then
+				lvl:setColor(lvl.tierColors[tier] or lvl.tierColors[1])
 			end
 		end
 		local cardW = s.frameWidth or 64
