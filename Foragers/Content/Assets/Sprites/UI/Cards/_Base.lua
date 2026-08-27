@@ -44,7 +44,7 @@ return {
 		{
 			component = "image",
 			id = "frame",
-			image = "Content/Assets/Sprites/UI/Cards/Frames/Black",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Frames/Black",
 			scale = 1,
 			offsetX = 0,
 			offsetY = 0,
@@ -53,7 +53,7 @@ return {
 		{
 			component = "image",
 			id = "background",
-			image = "Content/Assets/Sprites/UI/Cards/Backgrounds/Cavern",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Backgrounds/Cavern",
 			scale = 1,
 			offsetX = 0,
 			offsetY = -16,
@@ -64,7 +64,7 @@ return {
 		{
 			component = "image",
 			id = "overlay",
-			image = "Content/Assets/Sprites/UI/Cards/Overlays/Rays",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Overlays/Rays",
 			scale = 1,
 			offsetX = 0,
 			offsetY = -16,
