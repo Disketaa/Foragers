@@ -17,17 +17,17 @@ return {
 					{ target = "scale_x", from = 0, to = 1, duration = 0.2, curve = "OutBack" },
 					{ target = "scale_y", from = 2, to = 1, duration = 0.3, curve = "OutBack" },
 				},
-
-				hide = {
-					{ target = "scale_x", from = 1, to = 0, duration = 0.2, curve = "OutCubic" },
-				},
-
+				hide = { { target = "scale_x", from = 1, to = 0, duration = 0.2, curve = "OutCubic" } },
 				select = {
-					{ target = "y", from = 0, to = -6, duration = 0.3, curve = "OutCubic" },
+					{ target = "scale_x", from = 1.1, to = 1, duration = 0.7, curve = "OutCubic" },
+					{ target = "scale_y", from = 1.1, to = 1, duration = 0.6, curve = "OutBack" },
+					{ target = "brightness", from = 0.35, to = 0.5, duration = 0.3, curve = "OutBack" },
 				},
 
 				unselect = {
-					{ target = "y", from = -6, to = 0, duration = 0.3, curve = "OutCubic" },
+					{ target = "scale_x", from = 1.1, to = 1, duration = 0.9, curve = "OutCubic" },
+					{ target = "scale_y", from = 1.1, to = 1, duration = 0.7, curve = "OutBack" },
+					{ target = "brightness", from = 0.5, to = 0.35, duration = 0.3, curve = "OutBack" },
 				},
 			},
 		},
@@ -140,6 +140,7 @@ return {
 			component = "shader",
 			id = "skew",
 			shaders = {
+				"Brightness",
 				{ Skew = { u_amount = 0.1 } },
 			},
 		},

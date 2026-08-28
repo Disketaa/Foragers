@@ -57,6 +57,7 @@ function CardSelect.enter(uiSprites, canvas)
 		local tw = s:findComponent("tween")
 		if tw then
 			tw:triggerTag("show")
+			tw:triggerTag("unselect")
 		end
 		-- Level text = chosen count of this card's group + 1 (first pack shows "1").
 		local grp = s.data and s.data.group
