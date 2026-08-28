@@ -57,8 +57,24 @@ function Hover:update()
 			if current and current.sprite == p then
 				self._hovered = true
 			elseif mouseMoved or not GridNav.active._keyboardActive then
-				self._hovered = true
-				GridNav.active:focusSprite(p)
+				-- Nearest-center: avoid jitter when cursor between overlapping cards.
+				-- Only switch if this card's center is closer than current selection.
+				local cur = current and current.sprite
+				if not cur then
+					self._hovered = true
+					GridNav.active:focusSprite(p)
+				else
+					local dxSelf = cx - p.x
+					local dySelf = cy - p.y
+					local distSelf = dxSelf * dxSelf + dySelf * dySelf
+					local dxCur = cx - cur.x
+					local dyCur = cy - cur.y
+					local distCur = dxCur * dxCur + dyCur * dyCur
+					if distSelf < distCur then
+						self._hovered = true
+						GridNav.active:focusSprite(p)
+					end
+				end
 			end
 		elseif not self._hovered then
 			self._hovered = true

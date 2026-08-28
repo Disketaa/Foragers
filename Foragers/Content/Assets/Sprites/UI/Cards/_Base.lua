@@ -19,14 +19,14 @@ return {
 				},
 				hide = { { target = "scale_x", from = 1, to = 0, duration = 0.2, curve = "OutCubic" } },
 				select = {
-					{ target = "scale_x", from = 1.1, to = 1, duration = 0.7, curve = "OutCubic" },
-					{ target = "scale_y", from = 1.1, to = 1, duration = 0.6, curve = "OutBack" },
+					{ target = "scale_x", from = 1, to = 1.25, duration = 0.7, curve = "OutCubic" },
+					{ target = "scale_y", from = 1, to = 1.25, duration = 0.6, curve = "OutBack" },
 					{ target = "brightness", from = 0.35, to = 0.5, duration = 0.3, curve = "OutBack" },
 				},
 
 				unselect = {
-					{ target = "scale_x", from = 1.1, to = 1, duration = 0.9, curve = "OutCubic" },
-					{ target = "scale_y", from = 1.1, to = 1, duration = 0.7, curve = "OutBack" },
+					{ target = "scale_x", from = 1.25, to = 1, duration = 0.3, curve = "OutCubic" },
+					{ target = "scale_y", from = 1.25, to = 1, duration = 0.4, curve = "OutBack" },
 					{ target = "brightness", from = 0.5, to = 0.35, duration = 0.3, curve = "OutBack" },
 				},
 			},
