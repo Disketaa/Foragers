@@ -4,6 +4,7 @@
 --- component draws ignore alpha, so scale 0 is the real hide mechanism.
 local Bounds = require("Source.Helpers.Core.Bounds")
 local Cursor = require("Source.Sprite.Components.Cursor")
+local Events = require("Source.Helpers.Core.Events")
 local GameState = require("Source.Helpers.Systems.GameState")
 local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local GridNav = require("Source.Helpers.UI.GridNav")
@@ -100,7 +101,13 @@ function CardSelect.start(uiSprites, canvas)
 	GameState.state = "cardselect"
 	GameState.showingCards = true
 	PostProcess.startSelectionDarken(PostProcess.SELECTION_DARKEN_TARGET)
-	GridNav.active = GridNav.new(_cards, { onConfirm = function(sprite) CardSelect.applyModifier(sprite); CardSelect.hide() end })
+	GridNav.active = GridNav.new(_cards, {
+		onConfirm = function(sprite) CardSelect.applyModifier(sprite); CardSelect.hide() end,
+		onSelect = function(entry, selected)
+			if selected then entry.sprite:emit(Events.CARD_SELECTED) end
+		end,
+	})
+	_cards[1].sprite:emit(Events.CARD_SELECT_OPEN)
 	return true
 end
 

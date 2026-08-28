@@ -44,6 +44,7 @@ function GridNav.new(entries, opts)
 		r = 1,
 		c = 1,
 		onConfirm = opts.onConfirm,
+		onSelect = opts.onSelect,
 		_held = false,
 		_next = 0,
 		_confirmHeld = false,
@@ -56,7 +57,9 @@ function GridNav.new(entries, opts)
 	if self.rows[1] then
 		self.c = math.max(1, math.ceil(#self.rows[1].items / 2))
 	end
+	self._initialSelect = true
 	self:_setSelected(self:current(), true)
+	self._initialSelect = false
 	return self
 end
 
@@ -124,6 +127,9 @@ function GridNav:_setSelected(entry, selected)
 		if hov then hov._hovered = false end
 	end
 	entry.sprite._shaderDirty = true
+	if self.onSelect and not self._initialSelect then
+		self.onSelect(entry, selected)
+	end
 end
 
 function GridNav:_applyMove(dx, dy)

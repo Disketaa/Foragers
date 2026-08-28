@@ -144,6 +144,14 @@ function Sound:attach()
 	self.parent:on(Events.DEATH, function()
 		self:_play("death")
 	end, 15)
+
+	self.parent:on(Events.CARD_SELECT_OPEN, function()
+		self:_play("card_shuffle")
+	end, 15)
+
+	self.parent:on(Events.CARD_SELECTED, function()
+		self:_play("card_select")
+	end, 15)
 end
 
 function Sound:_play(state)

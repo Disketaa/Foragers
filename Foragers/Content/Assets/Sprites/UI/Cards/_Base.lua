@@ -33,6 +33,20 @@ return {
 		},
 
 		{
+			component = "sound",
+			volume = 0.4,
+			pitchRandomness = 0.15,
+			tags = {
+				card_shuffle = { "Content/Assets/Sounds/Events/CardShuffle.ogg" },
+				card_select = {
+					"Content/Assets/Sounds/Events/Card1.ogg",
+					"Content/Assets/Sounds/Events/Card2.ogg",
+					"Content/Assets/Sounds/Events/Card3.ogg",
+				},
+			},
+		},
+
+		{
 			component = "hover",
 			id = "hover",
 			type = "hand",

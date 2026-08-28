@@ -22,5 +22,7 @@ local Events = {
 	DEATH = "death",
 	TARGET_SELECTED = "target_selected",
 	TIME_CHANGED = "time_changed",
+	CARD_SELECT_OPEN = "card_select_open",
+	CARD_SELECTED = "card_selected",
 }
 return Events
