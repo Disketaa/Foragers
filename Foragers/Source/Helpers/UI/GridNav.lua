@@ -100,8 +100,10 @@ function GridNav:_setSelected(entry, selected)
 	if not entry then return end
 	local tw = entry.sprite:findComponent("tween")
 	if tw then tw:triggerTag(selected and "select" or "unselect") end
-	local hov = entry.sprite:findComponent("hover")
-	if hov then hov._hovered = selected end
+	if not selected then
+		local hov = entry.sprite:findComponent("hover")
+		if hov then hov._hovered = false end
+	end
 end
 
 function GridNav:_applyMove(dx, dy)

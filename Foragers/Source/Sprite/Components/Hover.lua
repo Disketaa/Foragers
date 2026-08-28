@@ -3,6 +3,8 @@
 ---@field type "hover"
 ---@field cursorKind string Cursor kind applied while the pointer is over the parent (e.g. "hand")
 ---@field _hovered boolean Was hovered last frame (detect enter/exit)
+---@field _lastMX number|nil Mouse X last frame (detect real movement)
+---@field _lastMY number|nil Mouse Y last frame
 local Hover = {}
 Hover.__index = Hover
 
@@ -17,6 +19,8 @@ function Hover.new(data)
 		cursorKind = data.type or "hand",
 		type = "hover",
 		_hovered = false,
+		_lastMX = nil,
+		_lastMY = nil,
 	}, Hover)
 end
 
@@ -25,6 +29,8 @@ function Hover:update()
 	if not cursor or not cursor.canvas then return end
 
 	local mx, my = love.mouse.getPosition()
+	local mouseMoved = (self._lastMX ~= nil) and ((mx ~= self._lastMX) or (my ~= self._lastMY))
+	self._lastMX, self._lastMY = mx, my
 	local cv = cursor.canvas
 	local cx = (mx - cv.offsetX) / cv.scale
 	local cy = (my - cv.offsetY) / cv.scale
@@ -46,14 +52,18 @@ function Hover:update()
 	if inside then
 		cursor:setType(self.cursorKind)
 		cursor._hoverClaimed = true
-		if not self._hovered then
-			self._hovered = true
-			if GridNav.active and not GridNav.active._keyboardActive then
+		if GridNav.active then
+			local current = GridNav.active:current()
+			if current and current.sprite == p then
+				self._hovered = true
+			elseif mouseMoved or not GridNav.active._keyboardActive then
+				self._hovered = true
 				GridNav.active:focusSprite(p)
-			elseif not GridNav.active then
-				local tw = p:findComponent("tween")
-				if tw then tw:triggerTag("select") end
 			end
+		elseif not self._hovered then
+			self._hovered = true
+			local tw = p:findComponent("tween")
+			if tw then tw:triggerTag("select") end
 		end
 	elseif self._hovered then
 		self._hovered = false
