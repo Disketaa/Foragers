@@ -55,7 +55,13 @@ function Hover:update()
 		if GridNav.active then
 			local current = GridNav.active:current()
 			if current and current.sprite == p then
-				self._hovered = true
+				if not self._hovered then
+					-- Re-enter same card after mouse unhover: re-apply select.
+					self._hovered = true
+					GridNav.active:_setSelected(current, true)
+				else
+					self._hovered = true
+				end
 			elseif mouseMoved or not GridNav.active._keyboardActive then
 				-- Nearest-center: avoid jitter when cursor between overlapping cards.
 				-- Only switch if this card's center is closer than current selection.
@@ -83,7 +89,13 @@ function Hover:update()
 		end
 	elseif self._hovered then
 		self._hovered = false
-		if not GridNav.active then
+		if GridNav.active then
+			local cur = GridNav.active:current()
+			if cur and cur.sprite == p then
+				-- Visual unselect only, keep GridNav position for keyboard/gamepad.
+				GridNav.active:_setSelected(cur, false)
+			end
+		else
 			local tw = p:findComponent("tween")
 			if tw then tw:triggerTag("unselect") end
 		end

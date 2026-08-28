@@ -160,6 +160,7 @@ end
 function CardSelect.exit()
 	GridNav.active = nil
 	for _, entry in ipairs(_cards) do
+		entry.sprite.tweens.skewAngle = nil
 		entry.sprite.alpha = 0
 	end
 	_cards = {}
