@@ -48,6 +48,7 @@ function GridNav.new(entries, opts)
 		_next = 0,
 		_confirmHeld = false,
 		_keyboardActive = false,
+		_keyboardEverUsed = false,
 		_keyboardIdleTimer = 0,
 		_lastDx = 0,
 		_lastDy = 0,
@@ -165,6 +166,7 @@ function GridNav:update(dt)
 		end
 	else
 		self._keyboardActive = true
+		self._keyboardEverUsed = true
 		self._keyboardIdleTimer = 0
 		if dx ~= self._lastDx or dy ~= self._lastDy then
 			self._held = false
