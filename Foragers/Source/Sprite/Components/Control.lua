@@ -88,24 +88,7 @@ end
 ---@param binding table { keyboard, gamepad }
 ---@return boolean
 function Control:isDirectionActive(binding)
-	if binding.keyboard and InputCheck.keyboardDown(binding.keyboard) then
-		return true
-	end
-	local gp = binding.gamepad
-	if gp then
-		local joysticks = love.joystick.getJoysticks()
-		for _, joystick in ipairs(joysticks) do
-			if joystick:isGamepad() then
-				if gp.buttons and InputCheck.gamepadButtonDown(joystick, gp.buttons) then
-					return true
-				end
-				if gp.axes and InputCheck.gamepadAxisActive(joystick, gp.axes, Options.gamepadDeadzone) then
-					return true
-				end
-			end
-		end
-	end
-	return false
+	return InputCheck.isDirectionActive(binding)
 end
 
 function Control:update(dt)

@@ -52,13 +52,7 @@ function GridNav.new(entries, opts)
 	if self.rows[1] then
 		self.c = math.max(1, math.ceil(#self.rows[1].items / 2))
 	end
-	local now = self:current()
-	if now then
-		local tw = now.sprite:findComponent("tween")
-		if tw then tw:triggerTag("select") end
-		local hov = now.sprite:findComponent("hover")
-		if hov then hov._hovered = true end
-	end
+	self:_setSelected(self:current(), true)
 	return self
 end
 
@@ -74,16 +68,10 @@ function GridNav:focusSprite(sprite)
 			if entry.sprite == sprite then
 				local prev = self:current()
 				if prev and prev.sprite ~= sprite then
-					local tw = prev.sprite:findComponent("tween")
-					if tw then tw:triggerTag("unselect") end
-					local hov = prev.sprite:findComponent("hover")
-					if hov then hov._hovered = false end
+					self:_setSelected(prev, false)
 				end
 				self.r, self.c = ri, ci
-				local tw = sprite:findComponent("tween")
-				if tw then tw:triggerTag("select") end
-				local hov = sprite:findComponent("hover")
-				if hov then hov._hovered = true end
+				self:_setSelected(entry, true)
 				return true
 			end
 		end
@@ -108,43 +96,25 @@ function GridNav:move(dx, dy)
 	end
 end
 
+function GridNav:_setSelected(entry, selected)
+	if not entry then return end
+	local tw = entry.sprite:findComponent("tween")
+	if tw then tw:triggerTag(selected and "select" or "unselect") end
+	local hov = entry.sprite:findComponent("hover")
+	if hov then hov._hovered = selected end
+end
+
 function GridNav:_applyMove(dx, dy)
 	local prev = self:current()
 	self:move(dx, dy)
 	local now = self:current()
 	if now == prev then return end
-	if prev then
-		local tw = prev.sprite:findComponent("tween")
-		if tw then tw:triggerTag("unselect") end
-		local hov = prev.sprite:findComponent("hover")
-		if hov then hov._hovered = false end
-	end
-	if now then
-		local tw = now.sprite:findComponent("tween")
-		if tw then tw:triggerTag("select") end
-		local hov = now.sprite:findComponent("hover")
-		if hov then hov._hovered = true end
-	end
-end
-
-function GridNav:isDirectionActive(binding)
-	if binding.keyboard and InputCheck.keyboardDown(binding.keyboard) then
-		return true
-	end
-	local gp = binding.gamepad
-	if gp then
-		for _, j in ipairs(love.joystick.getJoysticks()) do
-			if j:isGamepad() then
-				if gp.buttons and InputCheck.gamepadButtonDown(j, gp.buttons) then return true end
-				if gp.axes and InputCheck.gamepadAxisActive(j, gp.axes, Options.gamepadDeadzone) then return true end
-			end
-		end
-	end
-	return false
+	self:_setSelected(prev, false)
+	self:_setSelected(now, true)
 end
 
 function GridNav:pollConfirm()
-	local down = self:isDirectionActive(Options.keybinds.confirm)
+	local down = InputCheck.isDirectionActive(Options.keybinds.confirm)
 	if down and not self._confirmHeld then
 		self._confirmHeld = true
 		local now = self:current()
@@ -159,10 +129,10 @@ end
 function GridNav:update(dt)
 	if Input.isCaptured() then return end
 	local dx, dy = 0, 0
-	if self:isDirectionActive(Options.keybinds.left) then dx = -1
-	elseif self:isDirectionActive(Options.keybinds.right) then dx = 1 end
-	if self:isDirectionActive(Options.keybinds.up) then dy = -1
-	elseif self:isDirectionActive(Options.keybinds.down) then dy = 1 end
+	if InputCheck.isDirectionActive(Options.keybinds.left) then dx = -1
+	elseif InputCheck.isDirectionActive(Options.keybinds.right) then dx = 1 end
+	if InputCheck.isDirectionActive(Options.keybinds.up) then dy = -1
+	elseif InputCheck.isDirectionActive(Options.keybinds.down) then dy = 1 end
 
 	if dx == 0 and dy == 0 then
 		self._held = false
