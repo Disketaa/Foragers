@@ -6,18 +6,11 @@ local Bounds = require("Source.Helpers.Core.Bounds")
 local Cursor = require("Source.Sprite.Components.Cursor")
 local GameState = require("Source.Helpers.Systems.GameState")
 local PostProcess = require("Source.Helpers.Graphics.PostProcess")
-local TweenModule = require("Source.Sprite.Components.Tween")
-local Tween = TweenModule.Tween
-local Easing = TweenModule.Easing
 
 local CardSelect = {}
 
--- Cards stack at one centre spot (offsetX 0) then separate to their aligned
--- slot. REST_GAP is the resting spacing between card centres (cardW+REST_GAP).
--- Show: stack(0) -> separated(final). Hide: separated(final) -> stack(0).
+-- REST_GAP is the resting spacing between card centres (cardW+REST_GAP).
 local REST_GAP = -4
-local SHOW_OFFSET_DURATION = 0.3
-local HIDE_OFFSET_DURATION = 0.4
 
 local _cards = {}
 local _hiding = false
@@ -90,8 +83,7 @@ function CardSelect.enter(uiSprites, canvas)
 			end
 		end
 		local cardW = s.frameWidth or 64
-		entry.ui.offsetX = 0
-		entry.offsetTween = Tween.new("offsetX", 0, finalOffset(i, n, cardW), SHOW_OFFSET_DURATION, Easing.OutCubic)
+		entry.ui.offsetX = finalOffset(i, n, cardW)
 	end
 end
 
@@ -135,13 +127,10 @@ function CardSelect.hide()
 	_hiding = true
 	PostProcess.startSelectionDarken(0)
 	for _, entry in ipairs(_cards) do
-		-- Collapse to centre (offset tween) while the tween component's "hide"
-		-- tag shrinks the scale. No vertical motion now.
 		local tw = entry.sprite:findComponent("tween")
 		if tw then
 			tw:triggerTag("hide")
 		end
-		entry.offsetTween = Tween.new("offsetX", entry.ui.offsetX, 0, HIDE_OFFSET_DURATION, Easing.InOutBack)
 	end
 end
 
@@ -149,24 +138,14 @@ function CardSelect.isHiding()
 	return _hiding
 end
 
---- Called each frame while showingCards. Finalizes once every card has collapsed
---- to centre AND its scale tween (driven by the tween component's "hide" tag) finished.
+--- Called each frame while showingCards. Finalizes once every card's scale tween
+--- (driven by the tween component's "hide" tag) finished.
 function CardSelect.update(dt)
-	for _, entry in ipairs(_cards) do
-		if entry.offsetTween then
-			entry.offsetTween:update(dt)
-			entry.ui.offsetX = entry.offsetTween:getValue()
-		end
-	end
-
 	if not _hiding then
 		return
 	end
 
 	for _, entry in ipairs(_cards) do
-		if entry.offsetTween and not entry.offsetTween:isFinished() then
-			return
-		end
 		local sx = entry.sprite.tweens.scale_x
 		if sx and not sx:isFinished() then
 			return
@@ -180,7 +159,6 @@ end
 function CardSelect.exit()
 	for _, entry in ipairs(_cards) do
 		entry.sprite.alpha = 0
-		entry.offsetTween = nil
 	end
 	_cards = {}
 	_hiding = false
