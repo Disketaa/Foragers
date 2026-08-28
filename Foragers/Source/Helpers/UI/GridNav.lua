@@ -70,12 +70,16 @@ function GridNav:current()
 end
 
 function GridNav:focusSprite(sprite)
+	local cur = self:current()
+	-- Already focused: no-op, so re-focusing never replays the select feedback.
+	if cur and cur.sprite == sprite then
+		return true
+	end
 	for ri, row in ipairs(self.rows) do
 		for ci, entry in ipairs(row.items) do
 			if entry.sprite == sprite then
-				local prev = self:current()
-				if prev and prev.sprite ~= sprite then
-					self:_setSelected(prev, false)
+				if cur then
+					self:_setSelected(cur, false)
 				end
 				self.r, self.c = ri, ci
 				self:_setSelected(entry, true)

@@ -55,13 +55,10 @@ function Hover:update()
 		if GridNav.active then
 			local current = GridNav.active:current()
 			if current and current.sprite == p then
-				if not self._hovered then
-					-- Re-enter same card after mouse unhover: re-apply select.
-					self._hovered = true
-					GridNav.active:_setSelected(current, true)
-				else
-					self._hovered = true
-				end
+				-- Already the selected entry. Leaving its bounds never unselects
+				-- while GridNav is active, so re-entering must not re-trigger
+				-- select (that would replay the pop tween and CARD_SELECTED).
+				self._hovered = true
 			elseif not GridNav.active._keyboardEverUsed or mouseMoved then
 				-- Nearest-center: avoid jitter when cursor between overlapping cards.
 				-- Only switch if this card's center is closer than current selection.
