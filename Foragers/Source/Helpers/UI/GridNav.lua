@@ -113,11 +113,13 @@ function GridNav:_setSelected(entry, selected)
 		entry.sprite.shaderData.u_strength = 1
 		entry.sprite.tweens.skewAngle = Tween.new("skewAngle", 0, 6.2832, 2, Easing.Linear, true)
 		entry.sprite.tweens.skewAngle:start()
+		entry.sprite.layer = 1
 	else
 		if shader then shader._uniformValues.u_strength = 0 end
 		entry.sprite.shaderData.u_strength = 0
 		entry.sprite.shaderData.u_skewAngle = 0
 		entry.sprite.tweens.skewAngle = nil
+		entry.sprite.layer = 0
 		local hov = entry.sprite:findComponent("hover")
 		if hov then hov._hovered = false end
 	end

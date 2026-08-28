@@ -84,7 +84,6 @@ return {
 			scale = 1,
 			offsetX = 0,
 			offsetY = 1,
-			parallax = 0.25,
 		},
 
 		{
