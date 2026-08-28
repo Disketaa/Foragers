@@ -51,6 +51,13 @@ return {
 			},
 		},
 
+		confirm = {
+			keyboard = { "space" },
+			gamepad = {
+				buttons = { "a" },
+			},
+		},
+
 		toggleDebug = {
 			keyboard = { "f1" },
 		},

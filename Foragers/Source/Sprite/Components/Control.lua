@@ -1,6 +1,7 @@
 local Events = require("Source.Helpers.Core.Events")
 local Options = require("Source.Helpers.Systems.Options")
 local Input = require("Source.Helpers.Systems.Input")
+local InputCheck = require("Source.Helpers.Core.InputCheck")
 
 ---@class Control
 ---@field parent Sprite|nil Parent sprite reference
@@ -41,41 +42,6 @@ local function normalizeKeys(keys)
 		end
 	end
 	return normalized
-end
-
---- Check if any keyboard key in the array is held down.
----@param kbKeys string[]
----@return boolean
-local function isKeyboardDown(kbKeys)
-	return not not (#kbKeys > 0 and love.keyboard.isDown(unpack(kbKeys)))
-end
-
---- Check if any gamepad button in the array is held down on the joystick.
----@param joystick love.Joystick
----@param btnKeys string[]
----@return boolean
-local function isGamepadButtonDown(joystick, btnKeys)
-	return not not (#btnKeys > 0 and joystick:isGamepadDown(unpack(btnKeys)))
-end
-
---- Check if any gamepad axis in the array exceeds the deadzone in the given direction.
----@param joystick love.Joystick
----@param axes { [1]: string, [2]: number }[]
----@return boolean
-local function isGamepadAxisActive(joystick, axes)
-	for _, entry in ipairs(axes) do
-		local axis, sign = entry[1], entry[2]
-		if sign > 0 then
-			if joystick:getGamepadAxis(axis) > Options.gamepadDeadzone then
-				return true
-			end
-		else
-			if joystick:getGamepadAxis(axis) < -Options.gamepadDeadzone then
-				return true
-			end
-		end
-	end
-	return false
 end
 
 function Control.new(data)
@@ -122,7 +88,7 @@ end
 ---@param binding table { keyboard, gamepad }
 ---@return boolean
 function Control:isDirectionActive(binding)
-	if binding.keyboard and isKeyboardDown(binding.keyboard) then
+	if binding.keyboard and InputCheck.keyboardDown(binding.keyboard) then
 		return true
 	end
 	local gp = binding.gamepad
@@ -130,10 +96,10 @@ function Control:isDirectionActive(binding)
 		local joysticks = love.joystick.getJoysticks()
 		for _, joystick in ipairs(joysticks) do
 			if joystick:isGamepad() then
-				if gp.buttons and isGamepadButtonDown(joystick, gp.buttons) then
+				if gp.buttons and InputCheck.gamepadButtonDown(joystick, gp.buttons) then
 					return true
 				end
-				if gp.axes and isGamepadAxisActive(joystick, gp.axes) then
+				if gp.axes and InputCheck.gamepadAxisActive(joystick, gp.axes, Options.gamepadDeadzone) then
 					return true
 				end
 			end

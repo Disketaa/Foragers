@@ -6,6 +6,7 @@ local Bounds = require("Source.Helpers.Core.Bounds")
 local Cursor = require("Source.Sprite.Components.Cursor")
 local GameState = require("Source.Helpers.Systems.GameState")
 local PostProcess = require("Source.Helpers.Graphics.PostProcess")
+local GridNav = require("Source.Helpers.UI.GridNav")
 
 local CardSelect = {}
 
@@ -103,6 +104,7 @@ function CardSelect.start(uiSprites, canvas)
 	GameState.state = "cardselect"
 	GameState.showingCards = true
 	PostProcess.startSelectionDarken(PostProcess.SELECTION_DARKEN_TARGET)
+	GridNav.active = GridNav.new(_cards, { onConfirm = function(sprite) CardSelect.applyModifier(sprite); CardSelect.hide() end })
 	return true
 end
 
@@ -141,6 +143,9 @@ end
 --- Called each frame while showingCards. Finalizes once every card's scale tween
 --- (driven by the tween component's "hide" tag) finished.
 function CardSelect.update(dt)
+	if GridNav.active and not _hiding then
+		GridNav.active:update(dt)
+	end
 	if not _hiding then
 		return
 	end
@@ -157,6 +162,7 @@ function CardSelect.update(dt)
 end
 
 function CardSelect.exit()
+	GridNav.active = nil
 	for _, entry in ipairs(_cards) do
 		entry.sprite.alpha = 0
 	end
