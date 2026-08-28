@@ -8,6 +8,9 @@ local Events = require("Source.Helpers.Core.Events")
 local GameState = require("Source.Helpers.Systems.GameState")
 local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local GridNav = require("Source.Helpers.UI.GridNav")
+local SpriteLoader = require("Source.Sprite.SpriteLoader")
+local UIComponent = require("Source.UI.Components.UI")
+local SpotlightData = require("Content.Assets.Sprites.UI.Cards.Graphics.Spotlight")
 
 local CardSelect = {}
 
@@ -16,6 +19,8 @@ local REST_GAP = -4
 
 local _cards = {}
 local _hiding = false
+local _uiSprites = nil
+local _spotlight = nil
 
 --- A card is still pickable while its group's chosen count is below the card's
 --- maxLevel (unbounded when maxLevel is absent). Drives both filtering and the
@@ -42,6 +47,7 @@ end
 function CardSelect.enter(uiSprites, canvas)
 	_cards = {}
 	_hiding = false
+	_uiSprites = uiSprites
 	for _, entry in ipairs(uiSprites) do
 		if entry.sprite.object == "card" and cardAvailable(entry.sprite) then
 			table.insert(_cards, entry)
@@ -104,10 +110,32 @@ function CardSelect.start(uiSprites, canvas)
 	GridNav.active = GridNav.new(_cards, {
 		onConfirm = function(sprite) CardSelect.applyModifier(sprite); CardSelect.hide() end,
 		onSelect = function(entry, selected)
-			if selected then entry.sprite:emit(Events.CARD_SELECTED) end
+			if selected then
+				entry.sprite:emit(Events.CARD_SELECTED)
+				-- Restart the glow pop so it re-pulses on every new selection.
+				if _spotlight then
+					local stw = _spotlight.sprite:findComponent("tween")
+					if stw then
+						stw:triggerTag("show")
+					end
+				end
+			end
 		end,
 	})
 	_cards[1].sprite:emit(Events.CARD_SELECT_OPEN)
+	-- Spotlight glow lives on its own sprite (layer -1) so it isn't clipped to
+	-- the card canvas like a card image component would be; it follows the
+	-- selected card each frame in update().
+	local spot = SpriteLoader.instantiate(SpotlightData, 0, 0, "Content/Assets/Sprites/UI/Cards/Graphics/Spotlight.png")
+	spot.layer = -1
+	local spotUI = UIComponent.new({ horizontalAlign = "center", verticalAlign = "center", offsetX = 0, offsetY = 0 })
+	spot:addComponent(spotUI)
+	_spotlight = { sprite = spot, ui = spotUI }
+	table.insert(_uiSprites, _spotlight)
+	local tw = spot:findComponent("tween")
+	if tw then
+		tw:triggerTag("show")
+	end
 	return true
 end
 
@@ -137,6 +165,12 @@ function CardSelect.hide()
 			tw:triggerTag("hide")
 		end
 	end
+	if _spotlight then
+		local stw = _spotlight.sprite:findComponent("tween")
+		if stw then
+			stw:triggerTag("hide")
+		end
+	end
 end
 
 function CardSelect.isHiding()
@@ -146,6 +180,13 @@ end
 --- Called each frame while showingCards. Finalizes once every card's scale tween
 --- (driven by the tween component's "hide" tag) finished.
 function CardSelect.update(dt)
+	if _spotlight and GridNav.active then
+		local cur = GridNav.active:current()
+		if cur then
+			_spotlight.ui.offsetX = cur.ui.offsetX
+			_spotlight.ui.offsetY = cur.ui.offsetY
+		end
+	end
 	if GridNav.active and not _hiding then
 		GridNav.active:update(dt)
 	end
@@ -166,6 +207,15 @@ end
 
 function CardSelect.exit()
 	GridNav.active = nil
+	if _spotlight and _uiSprites then
+		for i, e in ipairs(_uiSprites) do
+			if e == _spotlight then
+				table.remove(_uiSprites, i)
+				break
+			end
+		end
+		_spotlight = nil
+	end
 	for _, entry in ipairs(_cards) do
 		entry.sprite.tweens.skewAngle = nil
 		entry.sprite.alpha = 0

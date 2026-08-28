@@ -14,10 +14,15 @@ return {
 			component = "tween",
 			tags = {
 				show = {
-					{ target = "scale_x", from = 0, to = 1, duration = 0.2, curve = "OutBack" },
+					{ target = "scale_x", from = 0, to = 1, duration = 0.1, curve = "OutBack" },
 					{ target = "scale_y", from = 2, to = 1, duration = 0.3, curve = "OutBack" },
 				},
-				hide = { { target = "scale_x", from = 1, to = 0, duration = 0.2, curve = "OutCubic" } },
+
+				hide = {
+					{ target = "scale_x", from = 1, to = 0, duration = 0.2, curve = "OutCubic" },
+					{ target = "scale_y", from = 1, to = 1.25, duration = 0.1, curve = "OutCubic" },
+				},
+
 				select = {
 					{ target = "scale_x", from = 1, to = 1.25, duration = 0.7, curve = "OutBack" },
 					{ target = "scale_y", from = 1, to = 1.25, duration = 0.6, curve = "OutBack" },
