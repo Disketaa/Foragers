@@ -47,12 +47,19 @@ function Image:update(dt)
 	if self.bob then
 		self._bobT = self._bobT + dt
 	end
-	if not self.parallax or not self.parent or not self.parent.shaderData then
+	if not self.parallax or not self.parent then
 		return
 	end
-	-- Ease toward the cursor-driven target so the slide is smooth (not a 1:1
-	-- jump). dt-scaled so the feel is identical regardless of frame rate.
-	local uc = self.parent.shaderData.u_cursor or { 0, 0 }
+	-- Drive parallax from the card's skew angle so inner images lag behind the
+	-- card's rotation, creating a depth cue. Falls back to {0,0} when unselected
+	-- (no skewAngle tween). parallaxSmoothing eases the slide for the delay feel.
+	local skew = self.parent.tweens and self.parent.tweens.skewAngle
+	local uc = { 0, 0 }
+	if skew then
+		local a = skew:getValue()
+		uc[1] = math.cos(a)
+		uc[2] = math.sin(a)
+	end
 	local tx, ty = uc[1] * self.parallax, uc[2] * self.parallax
 	local k = math.min(1, dt * self.parallaxSmoothing)
 	self._parX = (self._parX or 0) + (tx - (self._parX or 0)) * k
