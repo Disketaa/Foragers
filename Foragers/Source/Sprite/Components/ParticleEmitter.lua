@@ -409,4 +409,9 @@ function ParticleEmitter:draw()
 	love.graphics.setShader(prevShader)
 end
 
+function ParticleEmitter.reset()
+	burstParticles = {}
+	detachedEmitters = {}
+end
+
 return ParticleEmitter

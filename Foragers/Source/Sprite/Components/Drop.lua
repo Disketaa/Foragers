@@ -91,4 +91,8 @@ function Drop.getPending()
 	return list
 end
 
+function Drop.reset()
+	pendingDrops = {}
+end
+
 return Drop
