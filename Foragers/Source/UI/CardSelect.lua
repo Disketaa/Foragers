@@ -19,7 +19,7 @@ local REST_GAP = -4
 
 local _cards = {}
 local _hiding = false
-local _uiSprites = nil
+local _uiSprites = {}
 local _spotlight = nil
 
 --- A card is still pickable while its group's chosen count is below the card's
@@ -44,7 +44,7 @@ local function finalOffset(i, n, cardW)
 end
 
 --- Callers must gate state themselves (start() does); this only lays out + shows.
-function CardSelect.enter(uiSprites, canvas)
+function CardSelect.enter(uiSprites)
 	_cards = {}
 	_hiding = false
 	_uiSprites = uiSprites
@@ -94,11 +94,11 @@ end
 --- Pauses the world by switching GameState.state to "cardselect"
 --- (Main's `simulating` gate). No-op if already showing or not in game.
 ---@return boolean shown
-function CardSelect.start(uiSprites, canvas)
+function CardSelect.start(uiSprites)
 	if GameState.state ~= "game" or GameState.showingCards then
 		return false
 	end
-	CardSelect.enter(uiSprites, canvas)
+	CardSelect.enter(uiSprites)
 	-- All cards maxed: nothing to pick, so don't open the screen.
 	if #_cards == 0 then
 		CardSelect.exit()

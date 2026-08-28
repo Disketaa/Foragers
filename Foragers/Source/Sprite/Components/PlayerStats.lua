@@ -1,4 +1,5 @@
 local Events = require("Source.Helpers.Core.Events")
+local GameState = require("Source.Helpers.Systems.GameState")
 
 ---@class PlayerStats
 ---@field parent Sprite|nil
@@ -22,15 +23,46 @@ local Events = require("Source.Helpers.Core.Events")
 ---@field swimmingSpeed number|{base:number, gain:number} Swimming speed (flat or curve)
 ---@field satietyDrain table<string, number> Per-state satiety drain rates
 ---@field type string
+---@field _defaults table Snapshot of construction-derived fields for reset()
 local PlayerStats = {}
 PlayerStats.__index = PlayerStats
+
+local function deepcopy(v)
+	if type(v) ~= "table" then
+		return v
+	end
+	local t = {}
+	for k, vv in pairs(v) do
+		t[k] = deepcopy(vv)
+	end
+	return t
+end
+
+local function restoreTableInPlace(dst, src)
+	for k in pairs(dst) do
+		dst[k] = nil
+	end
+	for k, v in pairs(src) do
+		dst[k] = deepcopy(v)
+	end
+end
+
+local RUNTIME_KEYS = {
+	parent = true,
+	_defaults = true,
+	type = true,
+	dead = true,
+	_warned = true,
+	_currentState = true,
+}
 
 ---@param data table
 ---@return PlayerStats
 function PlayerStats.new(data)
+	data = deepcopy(data)
 	local xpCurve = data.xpCurve or {}
 	local satietyDrain = data.satietyDrain or {}
-	return setmetatable({
+	local self = setmetatable({
 		critChance = data.critChance or 0,
 		critMult = data.critMult or 1.5,
 		damage = data.damage or 1,
@@ -61,6 +93,40 @@ function PlayerStats.new(data)
 		swimmingSpeed = data.swimmingSpeed or 30,
 		type = "player_stats",
 	}, PlayerStats)
+	self._defaults = {}
+	for k, v in pairs(self) do
+		if not RUNTIME_KEYS[k] then
+			self._defaults[k] = deepcopy(v)
+		end
+	end
+	return self
+end
+
+function PlayerStats:resetStats()
+	if not self._defaults then
+		return
+	end
+	for k, v in pairs(self._defaults) do
+		if type(v) == "table" and type(self[k]) == "table" then
+			restoreTableInPlace(self[k], v)
+		else
+			self[k] = deepcopy(v)
+		end
+	end
+	self.dead = false
+	self._warned = 0
+	self._currentState = "idle"
+end
+
+function PlayerStats.reset()
+	local sprite = GameState.playerSprite
+	if not sprite then
+		return
+	end
+	local stats = sprite:findComponent("player_stats")
+	if stats then
+		stats:resetStats()
+	end
 end
 
 function PlayerStats:attach()
