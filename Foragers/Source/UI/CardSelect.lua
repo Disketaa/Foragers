@@ -52,11 +52,6 @@ function CardSelect.enter(uiSprites, canvas)
 		entry.ui.horizontalAlign = "center"
 		entry.ui.verticalAlign = "center"
 		entry.sprite.alpha = 1
-		local shader = entry.sprite:findComponent("shader")
-		if shader then
-			shader.skewCenterX = canvas.width * 0.5
-			shader.skewCenterY = canvas.height * 0.5
-		end
 		-- Scale/angle handled by the tween component's "show" tag.
 		local s = entry.sprite
 		local tw = s:findComponent("tween")

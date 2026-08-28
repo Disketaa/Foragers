@@ -1,6 +1,9 @@
 local Options = require("Source.Helpers.Systems.Options")
 local Input = require("Source.Helpers.Systems.Input")
 local InputCheck = require("Source.Helpers.Core.InputCheck")
+local TweenModule = require("Source.Sprite.Components.Tween")
+local Tween = TweenModule.Tween
+local Easing = TweenModule.Easing
 
 local DELAY = 0.35
 local RATE = 0.12
@@ -100,10 +103,24 @@ function GridNav:_setSelected(entry, selected)
 	if not entry then return end
 	local tw = entry.sprite:findComponent("tween")
 	if tw then tw:triggerTag(selected and "select" or "unselect") end
-	if not selected then
+	if not entry.sprite.shaderData then
+		entry.sprite.shaderData = {}
+	end
+	local shader = entry.sprite:findComponent("shader")
+	if selected then
+		if shader then shader._uniformValues.u_strength = 1 end
+		entry.sprite.shaderData.u_strength = 1
+		entry.sprite.tweens.skewAngle = Tween.new("skewAngle", 0, 6.2832, 2, Easing.Linear, true)
+		entry.sprite.tweens.skewAngle:start()
+	else
+		if shader then shader._uniformValues.u_strength = 0 end
+		entry.sprite.shaderData.u_strength = 0
+		entry.sprite.shaderData.u_skewAngle = 0
+		entry.sprite.tweens.skewAngle = nil
 		local hov = entry.sprite:findComponent("hover")
 		if hov then hov._hovered = false end
 	end
+	entry.sprite._shaderDirty = true
 end
 
 function GridNav:_applyMove(dx, dy)

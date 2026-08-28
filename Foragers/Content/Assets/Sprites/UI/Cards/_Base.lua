@@ -16,24 +16,18 @@ return {
 				show = {
 					{ target = "scale_x", from = 0, to = 1, duration = 0.2, curve = "OutBack" },
 					{ target = "scale_y", from = 2, to = 1, duration = 0.3, curve = "OutBack" },
-					{ target = "angle", from = 45, to = 0, duration = 1, curve = "OutBack" },
 				},
 
 				hide = {
 					{ target = "scale_x", from = 1, to = 0, duration = 0.2, curve = "OutCubic" },
-					{ target = "angle", from = 0, to = -45, duration = 1, curve = "OutBack" },
 				},
 
 				select = {
-					{ target = "scale_x", from = 1, to = 1.15, duration = 0.15, curve = "OutQuad" },
-					{ target = "scale_y", from = 1, to = 1.15, duration = 0.15, curve = "OutQuad" },
-					{ target = "offsetY", from = 0, to = -6, duration = 0.15, curve = "OutQuad" },
+					{ target = "y", from = 0, to = -6, duration = 0.3, curve = "OutCubic" },
 				},
 
 				unselect = {
-					{ target = "scale_x", from = 1.15, to = 1, duration = 0.15, curve = "OutQuad" },
-					{ target = "scale_y", from = 1.15, to = 1, duration = 0.15, curve = "OutQuad" },
-					{ target = "offsetY", from = -6, to = 0, duration = 0.15, curve = "OutQuad" },
+					{ target = "y", from = -6, to = 0, duration = 0.3, curve = "OutCubic" },
 				},
 			},
 		},
@@ -146,7 +140,7 @@ return {
 			component = "shader",
 			id = "skew",
 			shaders = {
-				{ CursorSkew = { u_amount = 0.1, u_radius = 300 } },
+				{ Skew = { u_amount = 0.1 } },
 			},
 		},
 	},
