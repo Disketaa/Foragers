@@ -141,6 +141,7 @@ function ShaderLoader._compileProgram(names, meta)
 	local effectHeader = "\nvec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {\n"
 	local code = table.concat(decls, "\n")
 		.. "\n"
+		.. "vec2 _rimlight_uv;\n"
 		.. table.concat(bodies, "\n")
 		.. effectHeader
 		.. "	vec2 uv = tex_coords;\n"
@@ -148,6 +149,10 @@ function ShaderLoader._compileProgram(names, meta)
 		.. "\n"
 		.. "	vec4 sampled = Texel(texture, uv);\n"
 		.. "	color = sampled;\n"
+		.. "	// Sprite-local uv forwarded to color-chain shaders so effects that\n"
+		.. "	// need centered-space coordinates (rimlight, gradients) don't need\n"
+		.. "	// the sprite draw rect to reconstruct them.\n"
+		.. "	_rimlight_uv = uv;\n"
 		.. table.concat(colorCalls, "\n")
 		.. "\n"
 		.. "	return color;\n}\n"

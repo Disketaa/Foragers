@@ -36,4 +36,4 @@ param_groups.last.tags = "tweens tags"
 
 component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop pickup ambient weapon shake tween particle_emitter text_emitter emote sound cursor hover ui image text counter emissive silhouette shader"
 
-tween_order.order = "x y scale_x scale_y angle brightness tint_mix alpha"
+tween_order.order = "x y scale_x scale_y angle rim_angle rim_strength brightness tint_mix alpha"

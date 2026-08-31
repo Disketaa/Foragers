@@ -26,12 +26,14 @@ return {
 				select = {
 					{ target = "scale_x", from = 1, to = 1.25, duration = 0.7, curve = "OutBack" },
 					{ target = "scale_y", from = 1, to = 1.25, duration = 0.6, curve = "OutBack" },
+					{ target = "rim_angle", from = 0, to = 360, duration = 120, curve = "Linear", loop = true },
 					{ target = "brightness", from = 0.35, to = 0.5, duration = 0.3, curve = "OutBack" },
 				},
 
 				unselect = {
 					{ target = "scale_x", from = 1.25, to = 1, duration = 0.1, curve = "OutBack" },
 					{ target = "scale_y", from = 1.25, to = 1, duration = 0.2, curve = "OutBack" },
+					{ target = "rim_angle", from = 0, to = 0, duration = 0, curve = "Linear" },
 					{ target = "brightness", from = 0.5, to = 0.35, duration = 0.3, curve = "OutBack" },
 				},
 
@@ -166,6 +168,7 @@ return {
 			shaders = {
 				"Brightness",
 				{ Skew = { u_amount = 0.1 } },
+				{ Rimlight = { u_coneWidth = 2, u_inner = 0.3, u_outer = 1, u_threshold = 0.2, u_rim_strength = 0.5 } },
 			},
 		},
 	},
