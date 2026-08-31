@@ -34,6 +34,12 @@ return {
 					{ target = "scale_y", from = 1.25, to = 1, duration = 0.2, curve = "OutBack" },
 					{ target = "brightness", from = 0.5, to = 0.35, duration = 0.3, curve = "OutBack" },
 				},
+
+				chosen = {
+					{ target = "scale_x", from = 1.25, to = 1.6, duration = 0.35, curve = "OutBack" },
+					{ target = "scale_y", from = 1.25, to = 1.6, duration = 0.35, curve = "OutBack" },
+					{ target = "brightness", from = 0.5, to = 1, duration = 0.2, curve = "OutBack" },
+				},
 			},
 		},
 

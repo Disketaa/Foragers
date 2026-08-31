@@ -1,7 +1,5 @@
---- Card selection reuses the Darken post-process shader (PostProcess.startSelectionDarken)
---- for the dim — eased in by start() and out by hide(), same easing concept as the intro fade.
---- Show/hide pop is a scale tween on each card (Tween component, tags "show"/"hide"):
---- component draws ignore alpha, so scale 0 is the real hide mechanism.
+--- Card selection reuses the Darken post-process shader for the dim.
+--- Component draws ignore alpha, so scale 0 is the real hide mechanism.
 local Bounds = require("Source.Helpers.Core.Bounds")
 local Cursor = require("Source.Sprite.Components.Cursor")
 local Events = require("Source.Helpers.Core.Events")
@@ -14,17 +12,16 @@ local SpotlightData = require("Content.Assets.Sprites.UI.Cards.Graphics.Spotligh
 
 local CardSelect = {}
 
--- REST_GAP is the resting spacing between card centres (cardW+REST_GAP).
 local REST_GAP = -4
 
 local _cards = {}
 local _hiding = false
+local _chosen = nil
 local _uiSprites = {}
 local _spotlight = nil
 
---- A card is still pickable while its group's chosen count is below the card's
---- maxLevel (unbounded when maxLevel is absent). Drives both filtering and the
---- "no upgrades left" check in shouldShow.
+--- Pickable while group count < maxLevel (unbounded when maxLevel absent).
+--- Drives both filtering in enter() and the "no upgrades left" check in shouldShow.
 local function cardAvailable(sprite)
 	local grp = sprite.data and sprite.data.group
 	if not grp then
@@ -37,7 +34,6 @@ local function cardAvailable(sprite)
 	return (GameState.cardGroupCounts[grp] or 0) < max
 end
 
---- Resting horizontal offset for card i of n (centred row).
 local function finalOffset(i, n, cardW)
 	local slot = i - (n + 1) / 2
 	return slot * (cardW + REST_GAP)
@@ -47,6 +43,7 @@ end
 function CardSelect.enter(uiSprites)
 	_cards = {}
 	_hiding = false
+	_chosen = nil
 	_uiSprites = uiSprites
 	for _, entry in ipairs(uiSprites) do
 		if entry.sprite.object == "card" and cardAvailable(entry.sprite) then
@@ -59,14 +56,13 @@ function CardSelect.enter(uiSprites)
 		entry.ui.horizontalAlign = "center"
 		entry.ui.verticalAlign = "center"
 		entry.sprite.alpha = 1
-		-- Scale/angle handled by the tween component's "show" tag.
 		local s = entry.sprite
 		local tw = s:findComponent("tween")
 		if tw then
 			tw:triggerTag("show")
 			tw:triggerTag("unselect")
 		end
-		-- Level text = chosen count of this card's group + 1 (first pack shows "1").
+		-- Level text = chosen count + 1 (first pack shows "1").
 		local grp = s.data and s.data.group
 		if grp then
 			local level = (GameState.cardGroupCounts[grp] or 0) + 1
@@ -108,7 +104,7 @@ function CardSelect.start(uiSprites)
 	GameState.showingCards = true
 	PostProcess.startSelectionDarken(PostProcess.SELECTION_DARKEN_TARGET)
 	GridNav.active = GridNav.new(_cards, {
-		onConfirm = function(sprite) CardSelect.applyModifier(sprite); CardSelect.hide() end,
+		onConfirm = function(sprite) CardSelect.applyModifier(sprite); CardSelect.hide(sprite) end,
 		onSelect = function(entry, selected)
 			if selected then
 				entry.sprite:emit(Events.CARD_SELECTED)
@@ -151,18 +147,23 @@ function CardSelect.shouldShow(uiSprites)
 	return false
 end
 
---- Begin the hide animation. Keeps showingCards true so cards keep drawing and
---- updating until the scale tween reaches 0; update() finalizes once all done.
-function CardSelect.hide()
+---@param chosenSprite table|nil plays the "chosen" pop; others play "hide".
+--- Nil means no pick yet (e.g. manual dismiss) and all cards shrink together.
+function CardSelect.hide(chosenSprite)
 	if _hiding then
 		return
 	end
 	_hiding = true
+	_chosen = chosenSprite
 	PostProcess.startSelectionDarken(0)
 	for _, entry in ipairs(_cards) do
 		local tw = entry.sprite:findComponent("tween")
 		if tw then
-			tw:triggerTag("hide")
+			if entry.sprite == chosenSprite then
+				tw:triggerTag("chosen")
+			else
+				tw:triggerTag("hide")
+			end
 		end
 	end
 	if _spotlight then
@@ -177,8 +178,6 @@ function CardSelect.isHiding()
 	return _hiding
 end
 
---- Called each frame while showingCards. Finalizes once every card's scale tween
---- (driven by the tween component's "hide" tag) finished.
 function CardSelect.update(dt)
 	if _spotlight and GridNav.active then
 		local cur = GridNav.active:current()
@@ -195,9 +194,11 @@ function CardSelect.update(dt)
 	end
 
 	for _, entry in ipairs(_cards) do
-		local sx = entry.sprite.tweens.scale_x
-		if sx and not sx:isFinished() then
-			return
+		if entry.sprite ~= _chosen then
+			local sx = entry.sprite.tweens.scale_x
+			if sx and not sx:isFinished() then
+				return
+			end
 		end
 	end
 	CardSelect.exit()
@@ -268,6 +269,7 @@ function CardSelect.handleClick()
 		local left, top, w, h = Bounds.spriteBounds(entry.sprite)
 		if cx >= left and cx <= left + w and cy >= top and cy <= top + h then
 			CardSelect.applyModifier(entry.sprite)
+			CardSelect.hide(entry.sprite)
 			return entry.sprite
 		end
 	end
