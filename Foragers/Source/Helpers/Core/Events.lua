@@ -24,5 +24,7 @@ local Events = {
 	TIME_CHANGED = "time_changed",
 	CARD_SELECT_OPEN = "card_select_open",
 	CARD_SELECTED = "card_selected",
+	CARD_HIDE = "card_hide",
+	CARD_CHOOSE = "card_choose",
 }
 return Events

@@ -63,6 +63,12 @@ return {
 					"Content/Assets/Sounds/Events/Card2.ogg",
 					"Content/Assets/Sounds/Events/Card3.ogg",
 				},
+
+				card_hide = {
+					sounds = { "Content/Assets/Sounds/Events/CardWhoosh.ogg" },
+					volume = 0.7,
+				},
+				card_choose = {},
 			},
 		},
 

@@ -152,6 +152,14 @@ function Sound:attach()
 	self.parent:on(Events.CARD_SELECTED, function()
 		self:_play("card_select")
 	end, 15)
+
+	self.parent:on(Events.CARD_HIDE, function()
+		self:_play("card_hide")
+	end, 15)
+
+	self.parent:on(Events.CARD_CHOOSE, function()
+		self:_play("card_choose")
+	end, 15)
 end
 
 function Sound:_play(state)

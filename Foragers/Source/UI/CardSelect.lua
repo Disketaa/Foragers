@@ -176,8 +176,10 @@ function CardSelect.hide(chosenSprite)
 		if tw then
 			if entry.sprite == chosenSprite then
 				tw:triggerTag("chosen")
+				entry.sprite:emit(Events.CARD_CHOOSE)
 			else
 				tw:triggerTag("hide")
+				entry.sprite:emit(Events.CARD_HIDE)
 			end
 		end
 	end
