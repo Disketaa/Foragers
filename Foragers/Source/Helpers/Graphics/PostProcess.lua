@@ -18,12 +18,14 @@ local DEATH_DARKEN_DURATION = 1
 local DEATH_DARKEN_CURVE = "InOutCubic"
 local INTRO_DARKEN_DURATION = 1
 local INTRO_DARKEN_CURVE = "OutCubic"
-local SELECTION_DARKEN_DURATION = 0.4
+local SELECTION_DARKEN_DURATION = 0.5
 local SELECTION_DARKEN_CURVE = "OutCubic"
 local SELECTION_DARKEN_TARGET = 0.8
+local SELECTION_UNDARKEN_DELAY = 1.25
 
 local PostProcess = {}
 PostProcess.SELECTION_DARKEN_TARGET = SELECTION_DARKEN_TARGET
+PostProcess.SELECTION_UNDARKEN_DELAY = SELECTION_UNDARKEN_DELAY
 
 --- Ease zoom to `target` over `duration` seconds with a temporarily faster
 --- smoothness, restoring the normal rate when the timer expires. Shared by the
@@ -90,13 +92,15 @@ end
 
 --- `target` is the darken amount to ease to (0 = clear, 1 = black);
 --- SELECTION_DARKEN_TARGET dims screen without fully blacking out. Eases from
---- the current u_darken so entering/exiting never snaps.
-function PostProcess.startSelectionDarken(target, duration, curve)
+--- the current u_darken so entering/exiting never snaps. Optional `delay` holds
+--- the current value before starting the ease.
+function PostProcess.startSelectionDarken(target, duration, curve, delay)
 	GameState.selectionDarkenFrom = GameState.darkenUniform
 	GameState.selectionDarkenTo = target
 	GameState.selectionDarkenDuration = duration or SELECTION_DARKEN_DURATION
 	GameState.selectionDarkenCurve = curve or SELECTION_DARKEN_CURVE
 	GameState.selectionDarkenTimer = 0
+	GameState.selectionDarkenDelay = delay or 0
 	GameState.selectionDarkenActive = true
 end
 
@@ -108,7 +112,14 @@ function PostProcess.updateSelectionDarken(dt)
 		return
 	end
 	GameState.selectionDarkenTimer = GameState.selectionDarkenTimer + dt
-	local t = math.min(GameState.selectionDarkenTimer / GameState.selectionDarkenDuration, 1)
+	local elapsed = GameState.selectionDarkenTimer
+	local delay = GameState.selectionDarkenDelay or 0
+	if elapsed < delay then
+		-- Hold current value during delay.
+		ShaderLoader.sendUniform("u_darken", GameState.darkenUniform)
+		return
+	end
+	local t = math.min((elapsed - delay) / GameState.selectionDarkenDuration, 1)
 	local e = (Easing[GameState.selectionDarkenCurve] or Easing.Linear)(t)
 	local v = GameState.selectionDarkenFrom + (GameState.selectionDarkenTo - GameState.selectionDarkenFrom) * e
 	ShaderLoader.sendUniform("u_darken", v)

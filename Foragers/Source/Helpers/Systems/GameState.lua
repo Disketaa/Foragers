@@ -24,6 +24,7 @@ GameState.selectionDarkenTimer = 0
 GameState.selectionDarkenFrom = 0
 GameState.selectionDarkenTo = 0
 GameState.selectionDarkenDuration = 0
+GameState.selectionDarkenDelay = 0
 GameState.selectionDarkenCurve = "Linear"
 
 return GameState

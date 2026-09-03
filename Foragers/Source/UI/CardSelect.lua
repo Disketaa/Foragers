@@ -57,10 +57,22 @@ function CardSelect.enter(uiSprites)
 		entry.ui.verticalAlign = "center"
 		entry.sprite.alpha = 1
 		local s = entry.sprite
+		-- Force-reset burn and angle directly on the sprite, bypassing tween
+		-- system. The LOVE shader object retains the old uniform otherwise.
+		s.angle = 0
+		if s.shader then
+			s.shader:send("u_burn", 0)
+		end
+		local shader = s:findComponent("shader")
+		if shader then
+			shader._uniformValues.u_burn = 0
+			s.shaderData.u_burn = 0
+		end
+		s.tweens.burn = nil
+		s.tweens.angle = nil
 		local tw = s:findComponent("tween")
 		if tw then
 			tw:triggerTag("show")
-			tw:triggerTag("unselect")
 		end
 		-- Level text = chosen count + 1 (first pack shows "1").
 		local grp = s.data and s.data.group
@@ -154,8 +166,12 @@ function CardSelect.hide(chosenSprite)
 		return
 	end
 	_hiding = true
+	_cardSelectHiding = true
 	_chosen = chosenSprite
-	PostProcess.startSelectionDarken(0)
+	if chosenSprite then
+		chosenSprite.layer = 2
+	end
+	PostProcess.startSelectionDarken(0, nil, nil, PostProcess.SELECTION_UNDARKEN_DELAY)
 	for _, entry in ipairs(_cards) do
 		local tw = entry.sprite:findComponent("tween")
 		if tw then
@@ -171,6 +187,13 @@ function CardSelect.hide(chosenSprite)
 		if stw then
 			stw:triggerTag("hide")
 		end
+	end
+	-- Unpause the game immediately when a card is chosen. The chosen card's
+	-- burn animation continues playing while the game runs underneath.
+	-- showingCards stays true so Main doesn't open another card select and
+	-- keeps updating/rendering the card sprites.
+	if chosenSprite then
+		GameState.state = "game"
 	end
 end
 
@@ -202,6 +225,14 @@ function CardSelect.update(dt)
 			end
 		end
 	end
+	-- Also wait for chosen card's tweens (burn takes 2s, longer than hide).
+	if _chosen then
+		for _, tween in pairs(_chosen.tweens) do
+			if not tween.loop and not tween:isFinished() then
+				return
+			end
+		end
+	end
 	CardSelect.exit()
 	GameState.showingCards = false
 	GameState.state = "game"
@@ -221,9 +252,11 @@ function CardSelect.exit()
 	for _, entry in ipairs(_cards) do
 		entry.sprite.tweens.skewAngle = nil
 		entry.sprite.alpha = 0
+		entry.sprite.layer = 0
 	end
 	_cards = {}
 	_hiding = false
+	_cardSelectHiding = false
 end
 
 --- Apply a card's modifier to the player. Modifier is read from the card's data
@@ -257,7 +290,7 @@ end
 
 function CardSelect.handleClick()
 	local cursor = Cursor.active
-	if not cursor or not cursor.canvas then
+	if not cursor or not cursor.canvas or _hiding then
 		return nil
 	end
 

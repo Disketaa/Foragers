@@ -24,7 +24,8 @@ Tween.__index = Tween
 ---@param loop boolean|nil
 ---@param pingPong boolean|nil
 ---@param destroyOnComplete boolean|nil
-function Tween.new(target, from, to, duration, curve, loop, pingPong, destroyOnComplete)
+---@param wait number|nil Delay before tween starts
+function Tween.new(target, from, to, duration, curve, loop, pingPong, destroyOnComplete, wait)
 	return setmetatable({
 		target = target,
 		from = tonumber(from) or 0,
@@ -35,6 +36,7 @@ function Tween.new(target, from, to, duration, curve, loop, pingPong, destroyOnC
 		loop = loop or false,
 		pingPong = pingPong or false,
 		destroyOnComplete = destroyOnComplete or false,
+		wait = wait or 0,
 	}, Tween)
 end
 
@@ -43,35 +45,42 @@ function Tween:start()
 end
 
 function Tween:update(dt)
+	if self.wait > 0 and self.timer < self.wait then
+		self.timer = math.min(self.timer + dt, self.wait)
+		return
+	end
+	local elapsed = self.timer - self.wait
 	if self.pingPong then
 		local period = self.duration * 2
 		if self.loop then
-			self.timer = (self.timer + dt) % period
+			elapsed = (elapsed + dt) % period
 		else
-			self.timer = math.min(self.timer + dt, period)
+			elapsed = math.min(elapsed + dt, period)
 		end
 	elseif self.loop then
 		if self.duration > 0 then
-			self.timer = (self.timer + dt) % self.duration
+			elapsed = (elapsed + dt) % self.duration
 		end
 	else
-		self.timer = math.min(self.timer + dt, self.duration)
+		elapsed = math.min(elapsed + dt, self.duration)
 	end
+	self.timer = self.wait + elapsed
 end
 
 function Tween:getValue()
+	local elapsed = math.max(self.timer - self.wait, 0)
 	local t
 	if self.pingPong then
 		local period = self.duration * 2
-		local elapsed = math.min(self.timer, period)
-		local progress = period > 0 and elapsed / period or 0
+		local e = math.min(elapsed, period)
+		local progress = period > 0 and e / period or 0
 		if progress <= 0.5 then
 			t = progress * 2
 		else
 			t = (1 - progress) * 2
 		end
 	else
-		t = self.duration > 0 and self.timer / self.duration or 1
+		t = self.duration > 0 and elapsed / self.duration or 1
 	end
 	t = math.min(math.max(t, 0), 1)
 	return self.from + (self.to - self.from) * self.curve(t)
@@ -81,10 +90,11 @@ function Tween:isFinished()
 	if self.loop then
 		return false
 	end
+	local elapsed = math.max(self.timer - self.wait, 0)
 	if self.pingPong then
-		return self.timer >= self.duration * 2
+		return elapsed >= self.duration * 2
 	end
-	return self.timer >= self.duration
+	return elapsed >= self.duration
 end
 
 local Easing = {}
@@ -272,8 +282,8 @@ end
 
 local _pendingDestroy = {}
 
-local function createTween(target, from, to, duration, curve, loop, pingPong, destroyOnComplete)
-	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong, destroyOnComplete)
+local function createTween(target, from, to, duration, curve, loop, pingPong, destroyOnComplete, wait)
+	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong, destroyOnComplete, wait)
 end
 
 local function applyTweens(self, tweenSet)
@@ -286,6 +296,7 @@ local function applyTweens(self, tweenSet)
 			local curveFunc = Easing[tweenData.curve] or Easing.OutBack
 			local destroyOnComplete = tweenData.destroyOnComplete ~= nil and tweenData.destroyOnComplete
 				or globalDestroyOnComplete
+			local wait = tweenData.wait or 0
 			if not self.parent.tweens[tweenData.target] then
 				self.parent.tweens[tweenData.target] = createTween(
 					tweenData.target,
@@ -295,7 +306,8 @@ local function applyTweens(self, tweenSet)
 					curveFunc,
 					tweenData.loop,
 					tweenData.pingPong,
-					destroyOnComplete
+					destroyOnComplete,
+					wait
 				)
 			end
 			local tween = self.parent.tweens[tweenData.target]
@@ -306,6 +318,7 @@ local function applyTweens(self, tweenSet)
 			tween.loop = tweenData.loop or false
 			tween.pingPong = tweenData.pingPong or false
 			tween.destroyOnComplete = destroyOnComplete or false
+			tween.wait = wait
 			tween._destroyHandled = nil
 			tween:start()
 		end
@@ -426,7 +439,8 @@ function TweenComponent:update(dt)
 					curveFunc,
 					tweenData.loop,
 					tweenData.pingPong,
-					tweenData.destroyOnComplete
+					tweenData.destroyOnComplete,
+					tweenData.wait or 0
 				)
 				self.parent.tweens[key]:start()
 			end

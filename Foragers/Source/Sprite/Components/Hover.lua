@@ -46,6 +46,10 @@ function Hover:update()
 		end
 		return
 	end
+
+	if _cardSelectHiding then
+		return
+	end
 	local left, top, w, h = Bounds.spriteBounds(p)
 
 	local inside = cx >= left and cx <= left + w and cy >= top and cy <= top + h
