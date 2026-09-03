@@ -7,12 +7,16 @@ local GameState = require("Source.Helpers.Systems.GameState")
 local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local GridNav = require("Source.Helpers.UI.GridNav")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
+local Zoom = require("Source.Helpers.Graphics.Zoom")
 local UIComponent = require("Source.UI.Components.UI")
 local SpotlightData = require("Content.Assets.Sprites.UI.Cards.Graphics.Spotlight")
 
 local CardSelect = {}
 
 local REST_GAP = -4
+local ZOOM_ADD = 0.25
+local ZOOM_SMOOTHNESS = 0.05
+local ZOOM_HOLD = 0.2
 
 local _cards = {}
 local _hiding = false
@@ -20,6 +24,9 @@ _G._cardSelectHiding = false
 local _chosen = nil
 local _uiSprites = {}
 local _spotlight = nil
+local _baseZoom = 1
+local _savedSmoothness = Zoom.smoothness
+local _zoomRestoreTimer = 0
 
 --- Pickable while group count < maxLevel (unbounded when maxLevel absent).
 --- Drives both filtering in enter() and the "no upgrades left" check in shouldShow.
@@ -73,7 +80,6 @@ function CardSelect.enter(uiSprites)
 		if tw then
 			tw:triggerTag("show")
 		end
-		-- Level text = chosen count + 1 (first pack shows "1").
 		local grp = s.data and s.data.group
 		if grp then
 			local level = (GameState.cardGroupCounts[grp] or 0) + 1
@@ -81,14 +87,12 @@ function CardSelect.enter(uiSprites)
 			if lvl then
 				lvl:setText(tostring(level))
 			end
-			-- Emblem tier: 5 frames span levels 0-4, 5-9, 10-14, 15-19, 20.
 			local emblem = s:findComponent("image", function(c) return c.id == "emblem" end)
 			local maxTier = (emblem and emblem._ss and emblem._ss.columns) or 5
 			local tier = math.min(maxTier, math.floor(level / 5) + 1)
 			if emblem then
 				emblem:setFrame(tier)
 			end
-			-- Match the level text color to the emblem tier's background.
 			if lvl and lvl.tierColors then
 				lvl:setColor(lvl.tierColors[tier] or lvl.tierColors[1])
 			end
@@ -106,7 +110,7 @@ function CardSelect.start(uiSprites)
 		return false
 	end
 	CardSelect.enter(uiSprites)
-	-- All cards maxed: nothing to pick, so don't open the screen.
+	_baseZoom = Zoom.current
 	if #_cards == 0 then
 		CardSelect.exit()
 		return false
@@ -115,7 +119,7 @@ function CardSelect.start(uiSprites)
 	GameState.showingCards = true
 	PostProcess.startSelectionDarken(PostProcess.SELECTION_DARKEN_TARGET)
 	GridNav.active = GridNav.new(_cards, {
-		onConfirm = function(sprite) CardSelect.applyModifier(sprite); CardSelect.hide(sprite) end,
+		onConfirm = function(sprite) CardSelect.applyModifier(sprite); Zoom.smoothness = ZOOM_SMOOTHNESS; Zoom.target = _baseZoom + ZOOM_ADD; CardSelect.hide(sprite) end,
 		onSelect = function(entry, selected)
 			if selected then
 				entry.sprite:emit(Events.CARD_SELECTED)
@@ -194,6 +198,7 @@ function CardSelect.hide(chosenSprite)
 	-- showingCards stays true so Main doesn't open another card select and
 	-- keeps updating/rendering the card sprites.
 	if chosenSprite then
+		_zoomRestoreTimer = ZOOM_HOLD
 		GameState.state = "game"
 	end
 end
@@ -203,6 +208,13 @@ function CardSelect.isHiding()
 end
 
 function CardSelect.update(dt)
+	if _zoomRestoreTimer > 0 then
+		_zoomRestoreTimer = _zoomRestoreTimer - dt
+		if _zoomRestoreTimer <= 0 then
+			Zoom.target = _baseZoom
+			Zoom.smoothness = _savedSmoothness
+		end
+	end
 	if _spotlight and GridNav.active then
 		local cur = GridNav.active:current()
 		if cur then
@@ -240,6 +252,7 @@ function CardSelect.update(dt)
 end
 
 function CardSelect.exit()
+	_zoomRestoreTimer = 0
 	GridNav.active = nil
 	if _spotlight and _uiSprites then
 		for i, e in ipairs(_uiSprites) do
@@ -268,7 +281,6 @@ function CardSelect.applyModifier(sprite)
 	if not mod then
 		return
 	end
-	-- Count the pick toward its group (even if stats component is missing).
 	local grp = sprite.data and sprite.data.group
 	if grp then
 		GameState.cardGroupCounts[grp] = (GameState.cardGroupCounts[grp] or 0) + 1
@@ -304,6 +316,8 @@ function CardSelect.handleClick()
 		local left, top, w, h = Bounds.spriteBounds(entry.sprite)
 		if cx >= left and cx <= left + w and cy >= top and cy <= top + h then
 			CardSelect.applyModifier(entry.sprite)
+			Zoom.smoothness = ZOOM_SMOOTHNESS
+			Zoom.target = _baseZoom + ZOOM_ADD
 			CardSelect.hide(entry.sprite)
 			return entry.sprite
 		end
