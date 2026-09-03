@@ -14,9 +14,7 @@ local SpotlightData = require("Content.Assets.Sprites.UI.Cards.Graphics.Spotligh
 local CardSelect = {}
 
 local REST_GAP = -4
-local ZOOM_ADD = 0.25
-local ZOOM_SMOOTHNESS = 0.05
-local ZOOM_HOLD = 0.2
+local ZOOM_ADD = 0.15
 
 local _cards = {}
 local _hiding = false
@@ -25,8 +23,6 @@ local _chosen = nil
 local _uiSprites = {}
 local _spotlight = nil
 local _baseZoom = 1
-local _savedSmoothness = Zoom.smoothness
-local _zoomRestoreTimer = 0
 
 --- Pickable while group count < maxLevel (unbounded when maxLevel absent).
 --- Drives both filtering in enter() and the "no upgrades left" check in shouldShow.
@@ -110,7 +106,7 @@ function CardSelect.start(uiSprites)
 		return false
 	end
 	CardSelect.enter(uiSprites)
-	_baseZoom = Zoom.current
+	_baseZoom = Zoom.target
 	if #_cards == 0 then
 		CardSelect.exit()
 		return false
@@ -119,7 +115,7 @@ function CardSelect.start(uiSprites)
 	GameState.showingCards = true
 	PostProcess.startSelectionDarken(PostProcess.SELECTION_DARKEN_TARGET)
 	GridNav.active = GridNav.new(_cards, {
-		onConfirm = function(sprite) CardSelect.applyModifier(sprite); Zoom.smoothness = ZOOM_SMOOTHNESS; Zoom.target = _baseZoom + ZOOM_ADD; CardSelect.hide(sprite) end,
+		onConfirm = function(sprite) CardSelect.applyModifier(sprite); Zoom.current = _baseZoom + ZOOM_ADD; Zoom.target = _baseZoom; CardSelect.hide(sprite) end,
 		onSelect = function(entry, selected)
 			if selected then
 				entry.sprite:emit(Events.CARD_SELECTED)
@@ -198,7 +194,6 @@ function CardSelect.hide(chosenSprite)
 	-- showingCards stays true so Main doesn't open another card select and
 	-- keeps updating/rendering the card sprites.
 	if chosenSprite then
-		_zoomRestoreTimer = ZOOM_HOLD
 		GameState.state = "game"
 	end
 end
@@ -208,13 +203,6 @@ function CardSelect.isHiding()
 end
 
 function CardSelect.update(dt)
-	if _zoomRestoreTimer > 0 then
-		_zoomRestoreTimer = _zoomRestoreTimer - dt
-		if _zoomRestoreTimer <= 0 then
-			Zoom.target = _baseZoom
-			Zoom.smoothness = _savedSmoothness
-		end
-	end
 	if _spotlight and GridNav.active then
 		local cur = GridNav.active:current()
 		if cur then
@@ -316,8 +304,8 @@ function CardSelect.handleClick()
 		local left, top, w, h = Bounds.spriteBounds(entry.sprite)
 		if cx >= left and cx <= left + w and cy >= top and cy <= top + h then
 			CardSelect.applyModifier(entry.sprite)
-			Zoom.smoothness = ZOOM_SMOOTHNESS
-			Zoom.target = _baseZoom + ZOOM_ADD
+			Zoom.current = _baseZoom + ZOOM_ADD
+			Zoom.target = _baseZoom
 			CardSelect.hide(entry.sprite)
 			return entry.sprite
 		end
