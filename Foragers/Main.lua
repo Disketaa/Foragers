@@ -325,6 +325,7 @@ function initGame()
 
 	-- Cursor loaded separately: has no "ui" component, follows mouse instead of anchor.
 	local cursorData = require("Content.Assets.Sprites.UI.Cursors.Arrow")
+	cursorData = Merge.resolveExtends(cursorData)
 	local cursorObj = SpriteLoader.instantiate(cursorData, 0, 0, "Content/Assets/Sprites/UI/Cursors/Arrow.png")
 	if cursorObj then
 		-- data.components is now non-empty, so the loader skips the StaticSprite gate; force it so the PNG still renders.

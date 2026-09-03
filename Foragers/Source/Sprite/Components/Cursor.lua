@@ -72,7 +72,7 @@ function Cursor:update(dt)
 		self.parent.y = (my - self.canvas.offsetY) / self.canvas.scale
 	end
 
-	if self.parent.tweens.alpha then
+	if self.parent.tweens.alpha and not self.parent.tweens.alpha:isFinished() then
 		self.parent.alpha = self.parent.tweens.alpha:getValue()
 	end
 
