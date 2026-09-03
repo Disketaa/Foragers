@@ -312,6 +312,7 @@ function initGame()
 		end
 		AttackSystem.registerAttacker(GameState.playerSprite, toolEntries[1] and toolEntries[1].instance)
 		weaponSprite = toolEntries[1] and toolEntries[1].instance
+		GameState.weaponSprite = weaponSprite
 	end
 
 	PropSpawner.init(worldData, World, {

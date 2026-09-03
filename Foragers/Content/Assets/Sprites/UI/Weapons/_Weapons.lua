@@ -36,6 +36,7 @@ return {
 			scale = 1,
 			offsetX = 0,
 			offsetY = 6,
+			shader = "Palette",
 		},
 
 		{
@@ -58,7 +59,6 @@ return {
 
 		{
 			component = "tier",
-			level = 3,
 		},
 	},
 }

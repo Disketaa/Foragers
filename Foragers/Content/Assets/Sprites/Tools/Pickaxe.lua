@@ -75,7 +75,11 @@ return {
 
 		{
 			component = "shader",
-			shaders = { "Brightness" },
+			shaders = { "Brightness", "Palette" },
+		},
+
+		{
+			component = "tier",
 		},
 	},
 }

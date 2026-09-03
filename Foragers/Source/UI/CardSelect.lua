@@ -300,6 +300,13 @@ function CardSelect.applyModifier(sprite)
 		if wpalette and grp == wgrp then
 			wpalette:setLevel(wlvl)
 		end
+		local heldWeapon = GameState.weaponSprite
+		if heldWeapon and grp == wgrp then
+			local heldTier = heldWeapon:findComponent("tier")
+			if heldTier then
+				heldTier:setLevel(wlvl)
+			end
+		end
 	end
 	local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
 	if not stats then

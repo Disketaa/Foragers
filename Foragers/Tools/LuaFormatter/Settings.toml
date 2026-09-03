@@ -27,13 +27,13 @@ param_groups.motion.tags = "moveX moveY moving movementSpeed swimmingSpeed moveT
 param_groups.stats.tags = "modifier level maxLevel experience xp xpCurve satiety maxSatiety satietyDrain lowSatietyPercent lowSatietyWarnings lowSatietyZoom lowSatietyMaskRadius hp damage range cooldown critChance critMult swing drops attackSpeed"
 param_groups.appearance.tags = "color tierColors backgroundColor dropshadowColor borderTileOffset tint brightness noise shaders shader uniforms code silhouette magnitude decay curve replaceWith visible autoTrim"
 param_groups.timing.tags = "duration interval stepInterval count hideDelay spawnOn triggerOn destroy destroyCurve changeDirectionInterval spawnTime dayCycle"
-param_groups.content.tags = "props adjacency particle inheritFlip details image largeImageText stateByScene"
+param_groups.content.tags = "props adjacency particle inheritFlip details image tier largeImageText stateByScene"
 param_groups.ui.tags = "maxWidth horizontalAlign verticalAlign text layer sortOffsetY"
 param_groups.sound.tags = "volume pitch pitchRandomness"
 param_groups.ambients.tags = "fadeInDuration fadeOutDuration wanderingSpeed ambient"
 param_groups.options.tags = "fullscreen vsync maxFps gamepadDeadzone mouseSlowdownRadius restartHoldDuration language enabled keybinds"
 param_groups.last.tags = "tweens tags"
 
-component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop pickup ambient weapon shake tween particle_emitter text_emitter emote sound cursor hover ui image text counter emissive silhouette shader"
+component_order.order = "spritesheet spritefont player_stats shadow control collision scroll_to follow destructible drop pickup ambient weapon shake tween particle_emitter text_emitter emote sound cursor hover ui image text counter emissive silhouette shader tier"
 
 tween_order.order = "x y scale_x scale_y angle burn rim_angle rim_strength brightness tint_mix alpha"
