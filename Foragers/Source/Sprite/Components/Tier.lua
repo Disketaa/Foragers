@@ -15,11 +15,9 @@ end
 
 function Tier:attach()
 	if not self.parent then
-		print("[Tier DEBUG] attach: no parent")
 		return
 	end
 	self._shader = self.parent:findComponent("shader")
-	print(string.format("[Tier DEBUG] attach parent=%s shader=%s", tostring(self.parent.object), tostring(self._shader and self._shader.name or "nil")))
 	if not self._shader then
 		return
 	end
@@ -36,7 +34,6 @@ function Tier:setTier(name)
 end
 
 function Tier:setLevel(level)
-	print(string.format("[Tier DEBUG] setLevel called level=%s", tostring(level)))
 	if self.level == level then
 		return
 	end
@@ -83,9 +80,6 @@ function Tier:_apply()
 			self._shader:_setUniform("u_tier_" .. i, color)
 		end
 	end
-	-- DEBUG: no-tick, prints once per tier apply
-	local parentType = self.parent and self.parent.object or "unknown"
-	print(string.format("[Tier DEBUG] parent=%s tier=%s level=%s u_tier_1=%s", parentType, tostring(self.tier), tostring(self.level), tostring(def.colors[1])))
 	-- Invalidate all Image component canvases on the parent so they re-bake
 	-- with the new tier colors. Without this, the icon canvas stays cached
 	-- with the old tier colors forever.
