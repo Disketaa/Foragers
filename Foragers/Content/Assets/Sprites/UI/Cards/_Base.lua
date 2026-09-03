@@ -130,7 +130,7 @@ return {
 			component = "image",
 			id = "icon",
 			offsetX = 0,
-			offsetY = -17,
+			offsetY = -12,
 			bob = 1,
 			parallax = -1,
 		},

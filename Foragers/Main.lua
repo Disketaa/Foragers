@@ -372,6 +372,38 @@ function initGame()
 			end
 		end
 
+		-- Wire weapon UI sprite level text + emblem to card group counts (mirrors card)
+		local weaponLevelText = nil
+		local weaponEmblem = nil
+		local weaponTween = nil
+		for _, ui in ipairs(uiSprites) do
+			if ui.sprite.object == "weapon" then
+				weaponLevelText = ui.sprite:findComponent("text", function(c) return c.id == "level" end)
+				weaponEmblem = ui.sprite:findComponent("image", function(c) return c.id == "emblem" end)
+				weaponTween = ui.sprite:findComponent("tween", function(c) return c.tags and c.tags.chosen end)
+				break
+			end
+		end
+		if weaponLevelText then
+			-- Stored on GameState so CardSelect can refresh without holding its own ref.
+			GameState.weaponLevelText = weaponLevelText
+			GameState.weaponEmblem = weaponEmblem
+			GameState.weaponTween = weaponTween
+			-- Weapon level tracks pickaxe card upgrades, not player level.
+			local grp = "pickaxe"
+			local level = (GameState.cardGroupCounts[grp] or 0)
+			weaponLevelText:setText(tostring(level))
+			if weaponLevelText.tierColors then
+				local tier = math.min(#weaponLevelText.tierColors, math.floor(level / 5) + 1)
+				weaponLevelText:setColor(weaponLevelText.tierColors[tier] or weaponLevelText.tierColors[1])
+			end
+			if weaponEmblem then
+				local maxTier = (weaponEmblem._ss and weaponEmblem._ss.columns) or 5
+				local emblemTier = math.min(maxTier, math.floor(level / 5) + 1)
+				weaponEmblem:setFrame(emblemTier)
+			end
+		end
+
 		GameState.playerSprite:on(Events.VALUE_CHANGED, function(data)
 			if data.field ~= "satiety" then
 				return

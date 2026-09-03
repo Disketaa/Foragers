@@ -273,6 +273,30 @@ function CardSelect.applyModifier(sprite)
 	if grp then
 		GameState.cardGroupCounts[grp] = (GameState.cardGroupCounts[grp] or 0) + 1
 	end
+	-- Refresh weapon UI level text + emblem if this pickaxe group changed.
+	-- Main.lua stores the refs on GameState so CardSelect can update them here.
+	local wt = GameState.weaponLevelText
+	local we = GameState.weaponEmblem
+	local wtw = GameState.weaponTween
+	if wt or we or wtw then
+		local wgrp = "pickaxe"
+		local wlvl = (GameState.cardGroupCounts[wgrp] or 0)
+		if wt then
+			wt:setText(tostring(wlvl))
+			if wt.tierColors then
+				local tier = math.min(#wt.tierColors, math.floor(wlvl / 5) + 1)
+				wt:setColor(wt.tierColors[tier] or wt.tierColors[1])
+			end
+		end
+		if we then
+			local maxTier = (we._ss and we._ss.columns) or 5
+			local emblemTier = math.min(maxTier, math.floor(wlvl / 5) + 1)
+			we:setFrame(emblemTier)
+		end
+		if wtw and grp == wgrp then
+			wtw:triggerTag("chosen")
+		end
+	end
 	local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
 	if not stats then
 		return
