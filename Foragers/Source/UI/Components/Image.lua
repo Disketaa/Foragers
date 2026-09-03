@@ -153,10 +153,13 @@ function Image:draw(x, y)
 	if not self._image or not self._ss then
 		return
 	end
-	-- Base anchor stays pixel-perfect (card is pixel-art); only the parallax
-	-- offset is sub-pixel so the slide is smooth and independent of the grid.
-	local bx = math.floor(x + 0.5)
-	local by = math.floor(y + 0.5)
+	-- Base anchor stays pixel-perfect (card is pixel-art); only the parallax,
+	-- bob, and tween offsets are sub-pixel so motion is smooth and independent
+	-- of the pixel grid.
+	local tx = self.parent and self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
+	local ty = self.parent and self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+	local bx = math.floor(x - tx + 0.5)
+	local by = math.floor(y - ty + 0.5)
 	local fw = self.parent and self.parent.frameWidth or 64
 	local fh = self.parent and self.parent.frameHeight or 104
 	-- Re-bake only when the source frame changes (animated images) or first draw.
@@ -173,8 +176,8 @@ function Image:draw(x, y)
 	if self.bob then
 		bobY = -math.cos(self._bobT * (math.pi * 0.5)) * self.bob
 	end
-	local dx = bx + (self._parX or 0)
-	local dy = by + (self._parY or 0) + bobY
+	local dx = bx + (self._parX or 0) + tx
+	local dy = by + (self._parY or 0) + bobY + ty
 	local hadShader = self.parent and self.parent.applyShader and self.parent:applyShader() or false
 	local r, g, b, a = love.graphics.getColor()
 	love.graphics.setColor(1, 1, 1, 1)

@@ -254,9 +254,14 @@ function Label:draw(x, y)
 	local fw = self.parent and self.parent.frameWidth or self._frameW or 64
 	local fh = self.parent and self.parent.frameHeight or self._frameH or 104
 
+	local tx = self.parent and self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
+	local ty = self.parent and self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+	local bx = math.floor(x - tx + 0.5)
+	local by = math.floor(y - ty + 0.5)
+
 	local scrolling = self.maxWidth and self._textW and self._textW > self.maxWidth
 	if not self._canvas or scrolling then
-		self._canvas = self:buildCanvas(math.floor(x + 0.5), math.floor(y + 0.5), fw, fh)
+		self._canvas = self:buildCanvas(bx, by, fw, fh)
 	end
 	if not self._canvas then
 		return
@@ -265,7 +270,7 @@ function Label:draw(x, y)
 	local hadShader = self.parent and self.parent.applyShader and self.parent:applyShader() or false
 	local r, g, b, a = love.graphics.getColor()
 	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.draw(self._canvas, math.floor(x + 0.5), math.floor(y + 0.5), 0, 1, 1, fw * 0.5, fh * 0.5)
+	love.graphics.draw(self._canvas, bx + tx, by + ty, 0, 1, 1, fw * 0.5, fh * 0.5)
 	if hadShader then
 		love.graphics.setShader()
 	end

@@ -19,11 +19,12 @@ return {
 				},
 
 				hide = {
-					{ target = "scale_x", from = 1, to = 0, duration = 0.2, curve = "OutCubic" },
-					{ target = "scale_y", from = 1, to = 1.25, duration = 0.1, curve = "OutCubic" },
+					{ target = "scale_y", from = 1, to = 1.25, duration = 0.3, curve = "OutCubic" },
+					{ target = "y", from = 0, to = 20, duration = 0.25, curve = "OutCubic" },
 				},
 
 				select = {
+					{ target = "y", from = 0, to = 0, duration = 0, curve = "Linear" },
 					{ target = "scale_x", from = 1, to = 1.25, duration = 0.7, curve = "OutBack" },
 					{ target = "scale_y", from = 1, to = 1.25, duration = 0.6, curve = "OutBack" },
 					{ target = "rim_angle", from = 0, to = 360, duration = 120, curve = "Linear", loop = true },
@@ -32,6 +33,7 @@ return {
 				},
 
 				unselect = {
+					{ target = "y", from = 0, to = 2, duration = "1..2", curve = "InOutCubic", loop = true, pingPong = true },
 					{ target = "scale_x", from = 1.25, to = 1, duration = 0.1, curve = "OutBack" },
 					{ target = "scale_y", from = 1.25, to = 1, duration = 0.2, curve = "OutBack" },
 					{ target = "rim_angle", from = 0, to = 0, duration = 0, curve = "Linear" },

@@ -195,9 +195,10 @@ function CardSelect.update(dt)
 
 	for _, entry in ipairs(_cards) do
 		if entry.sprite ~= _chosen then
-			local sx = entry.sprite.tweens.scale_x
-			if sx and not sx:isFinished() then
-				return
+			for _, tween in pairs(entry.sprite.tweens) do
+				if not tween.loop and not tween:isFinished() then
+					return
+				end
 			end
 		end
 	end
