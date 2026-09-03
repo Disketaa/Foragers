@@ -16,6 +16,7 @@ local REST_GAP = -4
 
 local _cards = {}
 local _hiding = false
+_G._cardSelectHiding = false
 local _chosen = nil
 local _uiSprites = {}
 local _spotlight = nil
@@ -164,7 +165,7 @@ function CardSelect.hide(chosenSprite)
 		return
 	end
 	_hiding = true
-	_cardSelectHiding = true
+	_G._cardSelectHiding = true
 	_chosen = chosenSprite
 	if chosenSprite then
 		chosenSprite.layer = 2
@@ -254,7 +255,7 @@ function CardSelect.exit()
 	end
 	_cards = {}
 	_hiding = false
-	_cardSelectHiding = false
+	_G._cardSelectHiding = false
 end
 
 --- Apply a card's modifier to the player. Modifier is read from the card's data

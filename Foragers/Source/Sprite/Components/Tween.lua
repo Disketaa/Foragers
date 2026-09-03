@@ -11,6 +11,7 @@ local ValueParser = require("Source.Helpers.Core.ValueParser")
 ---@field loop boolean If true, replay from start on finish
 ---@field pingPong boolean If true, oscillate forward then backward
 ---@field destroyOnComplete boolean
+---@field wait number|nil Delay before tween starts
 ---@field _destroyHandled boolean|nil Guard so TWEEN_COMPLETED emits once per finish
 ---@field _smoothness number|nil Attack swing smoothness override (set by AttackSystem)
 local Tween = {}
@@ -45,11 +46,12 @@ function Tween:start()
 end
 
 function Tween:update(dt)
-	if self.wait > 0 and self.timer < self.wait then
-		self.timer = math.min(self.timer + dt, self.wait)
+	local w = self.wait or 0
+	if w > 0 and self.timer < w then
+		self.timer = math.min(self.timer + dt, w)
 		return
 	end
-	local elapsed = self.timer - self.wait
+	local elapsed = self.timer - w
 	if self.pingPong then
 		local period = self.duration * 2
 		if self.loop then
@@ -68,7 +70,7 @@ function Tween:update(dt)
 end
 
 function Tween:getValue()
-	local elapsed = math.max(self.timer - self.wait, 0)
+	local elapsed = math.max(self.timer - (self.wait or 0), 0)
 	local t
 	if self.pingPong then
 		local period = self.duration * 2
@@ -90,7 +92,7 @@ function Tween:isFinished()
 	if self.loop then
 		return false
 	end
-	local elapsed = math.max(self.timer - self.wait, 0)
+	local elapsed = math.max(self.timer - (self.wait or 0), 0)
 	if self.pingPong then
 		return elapsed >= self.duration * 2
 	end
@@ -297,7 +299,7 @@ local function applyTweens(self, tweenSet)
 	-- target is in the component-level persist list (e.g. idle y float).
 	-- Universal reset: no tag leaks stale tweens (rim_angle, burn, angle).
 	local persist = self.persist or {}
-	for target, tween in pairs(self.parent.tweens) do
+	for target, _ in pairs(self.parent.tweens) do
 		if not active[target] and not persist[target] then
 			self.parent.tweens[target] = nil
 		end

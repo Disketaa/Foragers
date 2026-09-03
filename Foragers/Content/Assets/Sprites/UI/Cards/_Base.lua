@@ -17,8 +17,8 @@ return {
 					{ target = "y", from = 0, to = 2, duration = "1..2", curve = "InOutCubic", loop = true, pingPong = true },
 					{ target = "scale_x", from = 0, to = 1, duration = 0.1, curve = "OutBack" },
 					{ target = "scale_y", from = 2, to = 1, duration = 0.3, curve = "OutBack" },
-					{ target = "brightness", from = 0, to = 0.35, duration = 0.3, curve = "OutCubic" },
 					{ target = "rim_strength", set = 0 },
+					{ target = "brightness", from = 0, to = 0.35, duration = 0.3, curve = "OutCubic" },
 				},
 
 				hide = {
@@ -44,8 +44,8 @@ return {
 				},
 
 				chosen = {
-					{ target = "scale_x", from = 1.25, to = 1.6, duration = 0.35, curve = "OutBack" },
-					{ target = "scale_y", from = 1.25, to = 1.6, duration = 0.35, curve = "OutBack" },
+					{ target = "scale_x", from = 1.25, to = 1.4, duration = 1, curve = "OutCubic" },
+					{ target = "scale_y", from = 1.25, to = 1.4, duration = 1, curve = "OutCubic" },
 					{ target = "burn", from = 0, to = 1, duration = 1, wait = 1, curve = "OutCubic" },
 					{ target = "brightness", from = 0.5, to = 0, duration = 0.5, wait = 1, curve = "OutCubic" },
 				},
