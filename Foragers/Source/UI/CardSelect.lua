@@ -68,8 +68,6 @@ function CardSelect.enter(uiSprites)
 			shader._uniformValues.u_burn = 0
 			s.shaderData.u_burn = 0
 		end
-		s.tweens.burn = nil
-		s.tweens.angle = nil
 		local tw = s:findComponent("tween")
 		if tw then
 			tw:triggerTag("show")

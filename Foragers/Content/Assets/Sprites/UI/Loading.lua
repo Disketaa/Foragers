@@ -14,8 +14,8 @@ return {
 		{
 			component = "tween",
 			tweens = {
-				{ target = "scale_x", from = 0, to = 0, duration = 0.01 },
-				{ target = "scale_y", from = 0, to = 0, duration = 0.01 },
+				{ target = "scale_x", set = 0 },
+				{ target = "scale_y", set = 0 },
 			},
 
 			tags = {

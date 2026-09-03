@@ -17,7 +17,8 @@ return {
 					{ target = "y", from = 0, to = 2, duration = "1..2", curve = "InOutCubic", loop = true, pingPong = true },
 					{ target = "scale_x", from = 0, to = 1, duration = 0.1, curve = "OutBack" },
 					{ target = "scale_y", from = 2, to = 1, duration = 0.3, curve = "OutBack" },
-					{ target = "brightness", from = 0, to = 0.5, duration = 0.3, curve = "OutCubic" },
+					{ target = "brightness", from = 0, to = 0.35, duration = 0.3, curve = "OutCubic" },
+					{ target = "rim_strength", set = 0 },
 				},
 
 				hide = {
@@ -27,7 +28,7 @@ return {
 				},
 
 				select = {
-					{ target = "y", from = 0, to = 0, duration = 0, curve = "Linear" },
+					{ target = "y", set = 0 },
 					{ target = "scale_x", from = 1, to = 1.25, duration = 0.7, curve = "OutBack" },
 					{ target = "scale_y", from = 1, to = 1.25, duration = 0.6, curve = "OutBack" },
 					{ target = "rim_angle", from = 0, to = 360, duration = 120, curve = "Linear", loop = true },
@@ -39,8 +40,6 @@ return {
 					{ target = "y", from = 0, to = 2, duration = "1..2", curve = "InOutCubic", loop = true, pingPong = true },
 					{ target = "scale_x", from = 1.25, to = 1, duration = 0.1, curve = "OutBack" },
 					{ target = "scale_y", from = 1.25, to = 1, duration = 0.2, curve = "OutBack" },
-					{ target = "rim_angle", from = 0, to = 0, duration = 0, curve = "Linear" },
-					{ target = "rim_strength", from = 0.3, to = 0, duration = 0, curve = "Linear" },
 					{ target = "brightness", from = 0.5, to = 0.35, duration = 0.3, curve = "OutBack" },
 				},
 

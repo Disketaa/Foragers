@@ -287,40 +287,60 @@ local function createTween(target, from, to, duration, curve, loop, pingPong, de
 end
 
 local function applyTweens(self, tweenSet)
+	local active = {}
+	for _, td in pairs(tweenSet) do
+		if type(td) == "table" and td.target then
+			active[td.target] = true
+		end
+	end
+	-- Kill every existing tween whose target is NOT in this set, UNLESS the
+	-- target is in the component-level persist list (e.g. idle y float).
+	-- Universal reset: no tag leaks stale tweens (rim_angle, burn, angle).
+	local persist = self.persist or {}
+	for target, tween in pairs(self.parent.tweens) do
+		if not active[target] and not persist[target] then
+			self.parent.tweens[target] = nil
+		end
+	end
 	local globalDestroyOnComplete = tweenSet.destroyOnComplete
 	for _, tweenData in pairs(tweenSet) do
 		if type(tweenData) == "table" and tweenData.target then
-			local from = ValueParser.call(tweenData, "from")
-			local to = ValueParser.call(tweenData, "to")
-			local dur = ValueParser.call(tweenData, "duration")
-			local curveFunc = Easing[tweenData.curve] or Easing.OutBack
-			local destroyOnComplete = tweenData.destroyOnComplete ~= nil and tweenData.destroyOnComplete
-				or globalDestroyOnComplete
-			local wait = tweenData.wait or 0
-			if not self.parent.tweens[tweenData.target] then
-				self.parent.tweens[tweenData.target] = createTween(
-					tweenData.target,
-					from,
-					to,
-					dur,
-					curveFunc,
-					tweenData.loop,
-					tweenData.pingPong,
-					destroyOnComplete,
-					wait
-				)
+			if tweenData.set ~= nil then
+				self.parent.tweens[tweenData.target] = nil
+				self.parent[tweenData.target] = ValueParser.call(tweenData, "set")
+			else
+				local from = ValueParser.call(tweenData, "from")
+				local to = ValueParser.call(tweenData, "to")
+				local dur = ValueParser.call(tweenData, "duration")
+				local curveFunc = Easing[tweenData.curve] or Easing.OutBack
+				local destroyOnComplete = tweenData.destroyOnComplete ~= nil and tweenData.destroyOnComplete
+					or globalDestroyOnComplete
+				local wait = tweenData.wait or 0
+				if not self.parent.tweens[tweenData.target] then
+					self.parent.tweens[tweenData.target] = createTween(
+						tweenData.target,
+						from,
+						to,
+						dur,
+						curveFunc,
+						tweenData.loop,
+						tweenData.pingPong,
+						destroyOnComplete,
+						wait
+					)
+				end
+				local tween = self.parent.tweens[tweenData.target]
+				tween.from = from
+				tween.to = to
+				tween.duration = dur
+				tween.curve = curveFunc
+				tween.loop = tweenData.loop or false
+				tween.pingPong = tweenData.pingPong or false
+				tween.destroyOnComplete = destroyOnComplete or false
+				tween.wait = wait
+				tween._destroyHandled = nil
+				tween:start()
 			end
-			local tween = self.parent.tweens[tweenData.target]
-			tween.from = from
-			tween.to = to
-			tween.duration = dur
-			tween.curve = curveFunc
-			tween.loop = tweenData.loop or false
-			tween.pingPong = tweenData.pingPong or false
-			tween.destroyOnComplete = destroyOnComplete or false
-			tween.wait = wait
-			tween._destroyHandled = nil
-			tween:start()
 		end
 	end
 end
@@ -339,6 +359,7 @@ function TweenComponent.new(data)
 	return setmetatable({
 		tweens = data.tweens or {},
 		tags = data.tags or {},
+		persist = data.persist or {},
 		_tweensInitialized = false,
 		type = "tween",
 	}, TweenComponent)
