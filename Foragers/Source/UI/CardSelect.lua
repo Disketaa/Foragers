@@ -4,7 +4,7 @@ local Bounds = require("Source.Helpers.Core.Bounds")
 local Cursor = require("Source.Sprite.Components.Cursor")
 local Events = require("Source.Helpers.Core.Events")
 local GameState = require("Source.Helpers.Systems.GameState")
-local PostProcess = require("Source.Helpers.Graphics.PostProcess")
+	local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local GridNav = require("Source.Helpers.UI.GridNav")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Zoom = require("Source.Helpers.Graphics.Zoom")
@@ -273,12 +273,13 @@ function CardSelect.applyModifier(sprite)
 	if grp then
 		GameState.cardGroupCounts[grp] = (GameState.cardGroupCounts[grp] or 0) + 1
 	end
-	-- Refresh weapon UI level text + emblem if this pickaxe group changed.
+	-- Refresh weapon UI level text + emblem + palette component if this pickaxe group changed.
 	-- Main.lua stores the refs on GameState so CardSelect can update them here.
 	local wt = GameState.weaponLevelText
 	local we = GameState.weaponEmblem
 	local wtw = GameState.weaponTween
-	if wt or we or wtw then
+	local wpalette = GameState.weaponTier
+	if wt or we or wtw or wpalette then
 		local wgrp = "pickaxe"
 		local wlvl = (GameState.cardGroupCounts[wgrp] or 0)
 		if wt then
@@ -295,6 +296,9 @@ function CardSelect.applyModifier(sprite)
 		end
 		if wtw and grp == wgrp then
 			wtw:triggerTag("chosen")
+		end
+		if wpalette and grp == wgrp then
+			wpalette:setLevel(wlvl)
 		end
 	end
 	local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")

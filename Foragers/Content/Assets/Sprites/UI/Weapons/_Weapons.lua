@@ -16,7 +16,7 @@ return {
 				chosen = {
 					{ target = "scale_x", from = 0.85, to = 1, duration = 0.2, curve = "OutCubic" },
 					{ target = "scale_y", from = 1.1, to = 1, duration = 0.3, curve = "OutCubic" },
-                    { target = "brightness", from = 0.25, to = 0.5, duration = 0.5, curve = "OutCubic" },
+					{ target = "brightness", from = 1, to = 0.5, duration = 0.5, curve = "OutCubic" },
 				},
 			},
 		},
@@ -60,7 +60,12 @@ return {
 
 		{
 			component = "shader",
-			shaders = { "Brightness" },
+			shaders = { "Brightness", "Palette" },
+		},
+
+		{
+			component = "tier",
+			level = 3,
 		},
 	},
 }

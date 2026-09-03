@@ -40,6 +40,7 @@ local Counter = require("Source.UI.Components.Counter")
 local Label = require("Source.UI.Components.Label")
 local Image = require("Source.UI.Components.Image")
 local UI = require("Source.UI.Components.UI")
+local Tier = require("Source.Sprite.Components.Tier")
 local PlayerStats = require("Source.Sprite.Components.PlayerStats")
 local Pickup = require("Source.Sprite.Components.Pickup")
 local Silhouette = require("Source.Sprite.Components.Silhouette")
@@ -78,6 +79,7 @@ local registry = {
 	cursor = Cursor,
 	hover = Hover,
 	ambient = Ambient,
+	tier = Tier,
 }
 for name, module in pairs(registry) do
 	ComponentRegistry.register(name, function(data) return module.new(data) end)

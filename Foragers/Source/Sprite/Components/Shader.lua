@@ -62,14 +62,14 @@ function ShaderComponent:attach()
 		self.parent.shaderData = {}
 	end
 
-	for name, default in pairs(loaded.uniforms or {}) do
-		if self.parent.shader:hasUniform(name) then
-			self._uniformWhitelist[name] = true
-			local v = self[name] ~= nil and self[name] or default
-			self._uniformValues[name] = v
-			self.parent.shaderData[name] = v
+		for name, default in pairs(loaded.uniforms or {}) do
+			if self.parent.shader:hasUniform(name) then
+				self._uniformWhitelist[name] = true
+				local v = self[name] ~= nil and self[name] or default
+				self._uniformValues[name] = v
+				self.parent.shaderData[name] = v
+			end
 		end
-	end
 	-- u_seed: per-instance variation. If not explicitly set, derive from position
 	-- so multiple props of the same type sway out of phase.
 	if self._uniformWhitelist.u_seed and self.u_seed == nil then

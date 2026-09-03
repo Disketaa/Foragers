@@ -372,15 +372,17 @@ function initGame()
 			end
 		end
 
-		-- Wire weapon UI sprite level text + emblem to card group counts (mirrors card)
+		-- Wire weapon UI sprite level text + emblem + palette component to card group counts (mirrors card)
 		local weaponLevelText = nil
 		local weaponEmblem = nil
 		local weaponTween = nil
+		local weaponTier = nil
 		for _, ui in ipairs(uiSprites) do
 			if ui.sprite.object == "weapon" then
 				weaponLevelText = ui.sprite:findComponent("text", function(c) return c.id == "level" end)
 				weaponEmblem = ui.sprite:findComponent("image", function(c) return c.id == "emblem" end)
 				weaponTween = ui.sprite:findComponent("tween", function(c) return c.tags and c.tags.chosen end)
+				weaponTier = ui.sprite:findComponent("tier")
 				break
 			end
 		end
@@ -389,9 +391,10 @@ function initGame()
 			GameState.weaponLevelText = weaponLevelText
 			GameState.weaponEmblem = weaponEmblem
 			GameState.weaponTween = weaponTween
-			-- Weapon level tracks pickaxe card upgrades, not player level.
-			local grp = "pickaxe"
-			local level = (GameState.cardGroupCounts[grp] or 0)
+			GameState.weaponTier = weaponTier
+		-- Weapon level tracks pickaxe card upgrades, not player level.
+		local grp = "pickaxe"
+		local level = (GameState.cardGroupCounts[grp] or 0)
 			weaponLevelText:setText(tostring(level))
 			if weaponLevelText.tierColors then
 				local tier = math.min(#weaponLevelText.tierColors, math.floor(level / 5) + 1)
@@ -402,6 +405,9 @@ function initGame()
 				local emblemTier = math.min(maxTier, math.floor(level / 5) + 1)
 				weaponEmblem:setFrame(emblemTier)
 			end
+		if weaponTier then
+			weaponTier:setLevel(level)
+		end
 		end
 
 		GameState.playerSprite:on(Events.VALUE_CHANGED, function(data)

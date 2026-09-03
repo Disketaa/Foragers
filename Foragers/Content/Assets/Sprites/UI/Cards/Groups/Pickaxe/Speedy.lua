@@ -11,7 +11,7 @@ return {
 		{
 			component = "image",
 			id = "icon",
-			image = "Content/Assets/Sprites/UI/Weapons/Pickaxe/BronzePickaxe",
+			image = "Content/Assets/Sprites/UI/Weapons/Pickaxe",
 		},
 
 		{
