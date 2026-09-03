@@ -1,4 +1,4 @@
-local Tiers = require("Content.Data.Tiers")
+local Tiers = require("Source.Helpers.Systems.Tiers")
 
 local Tier = {}
 Tier.__index = Tier
@@ -46,21 +46,7 @@ function Tier:_resolve()
 	if not self.level then
 		return
 	end
-	local bestName = nil
-	local bestMax = math.huge
-	for name, def in pairs(Tiers) do
-		if type(def) == "table" and def.maxLevel then
-			if self.level < def.maxLevel and def.maxLevel < bestMax then
-				bestMax = def.maxLevel
-				bestName = name
-			end
-		end
-	end
-	if bestName then
-		self.tier = bestName
-	else
-		self.tier = "bronze"
-	end
+	self.tier = Tiers.tierNameForLevel(self.level)
 end
 
 function Tier:_apply()

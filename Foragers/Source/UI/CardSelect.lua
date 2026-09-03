@@ -10,7 +10,7 @@ local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Zoom = require("Source.Helpers.Graphics.Zoom")
 local UIComponent = require("Source.UI.Components.UI")
 local SpotlightData = require("Content.Assets.Sprites.UI.Cards.Graphics.Spotlight")
-local Tiers = require("Content.Data.Tiers")
+local Tiers = require("Source.Helpers.Systems.Tiers")
 
 local CardSelect = {}
 

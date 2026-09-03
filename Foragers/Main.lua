@@ -1,5 +1,5 @@
 local World = require("Content.Data.World")
-local Tiers = require("Content.Data.Tiers")
+local Tiers = require("Source.Helpers.Systems.Tiers")
 local Options = require("Source.Helpers.Systems.Options")
 local Log = require("Source.Helpers.Core.Log")
 
