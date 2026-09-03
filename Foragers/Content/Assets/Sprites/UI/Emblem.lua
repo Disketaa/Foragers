@@ -6,7 +6,16 @@ return {
 	components = {
 		{
 			component = "spritesheet",
-			columns = 5,
+			columns = 1,
+		},
+
+		{
+			component = "shader",
+			shaders = { "Palette" },
+		},
+
+		{
+			component = "tier",
 		},
 	},
 }

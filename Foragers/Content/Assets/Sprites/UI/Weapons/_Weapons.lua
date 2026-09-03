@@ -32,7 +32,7 @@ return {
 		{
 			component = "image",
 			id = "emblem",
-			image = "Content/Assets/Sprites/UI/Cards/Graphics/Emblems",
+			image = "Content/Assets/Sprites/UI/Emblem",
 			scale = 1,
 			offsetX = 0,
 			offsetY = 6,
@@ -45,13 +45,6 @@ return {
 			font = "Content.Assets.Sprites.UI.SpriteFonts.Tinylorder",
 			offsetX = -1,
 			offsetY = 5,
-			tierColors = {
-				{ 0.90, 0.54, 0.21 },
-				{ 0.52, 0.77, 0.60 },
-				{ 1, 0.94, 0.53 },
-				{ 0.81, 1, 0.91 },
-				{ 1, 1, 1 },
-			},
 			dropshadowColor = { 0, 0, 0, 0.33 },
 			maxWidth = 46,
 			horizontalAlign = "center",

@@ -1,4 +1,4 @@
-return {
+local Tiers = {
 	bronze = {
 		maxLevel = 5,
 		colors = {
@@ -54,3 +54,34 @@ return {
 		},
 	},
 }
+
+-- Ordered list for index lookup; matches Tiers iteration order.
+local TIER_ORDER = { "bronze", "silver", "gold", "diamond", "nebular" }
+
+--- Returns 1-based tier index for a level. Iterates maxLevel thresholds.
+---@param level number
+---@return number tierIndex (1=bronze, 2=silver, etc.)
+function Tiers.tierForLevel(level)
+	for i, name in ipairs(TIER_ORDER) do
+		local def = Tiers[name]
+		if def and def.maxLevel and level < def.maxLevel then
+			return i
+		end
+	end
+	return #TIER_ORDER
+end
+
+--- Returns the top (brightest) tier color for a level.
+---@param level number
+---@return number, number, number r, g, b
+function Tiers.tierColor(level)
+	local idx = Tiers.tierForLevel(level)
+	local name = TIER_ORDER[idx]
+	local def = Tiers[name]
+	if def and def.colors and def.colors[1] then
+		return unpack(def.colors[1])
+	end
+	return 1, 1, 1
+end
+
+return Tiers

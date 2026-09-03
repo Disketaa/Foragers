@@ -10,6 +10,7 @@ local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local Zoom = require("Source.Helpers.Graphics.Zoom")
 local UIComponent = require("Source.UI.Components.UI")
 local SpotlightData = require("Content.Assets.Sprites.UI.Cards.Graphics.Spotlight")
+local Tiers = require("Content.Data.Tiers")
 
 local CardSelect = {}
 
@@ -84,13 +85,12 @@ function CardSelect.enter(uiSprites)
 				lvl:setText(tostring(level))
 			end
 			local emblem = s:findComponent("image", function(c) return c.id == "emblem" end)
-			local maxTier = (emblem and emblem._ss and emblem._ss.columns) or 5
-			local tier = math.min(maxTier, math.floor(level / 5) + 1)
+			local tier = Tiers.tierForLevel(level)
 			if emblem then
 				emblem:setFrame(tier)
 			end
-			if lvl and lvl.tierColors then
-				lvl:setColor(lvl.tierColors[tier] or lvl.tierColors[1])
+			if lvl then
+				lvl:setColor({ Tiers.tierColor(level) })
 			end
 			local cardTier = s:findComponent("tier")
 			if cardTier and grp == "pickaxe" then
@@ -288,14 +288,10 @@ function CardSelect.applyModifier(sprite)
 		local wlvl = (GameState.cardGroupCounts[wgrp] or 0)
 		if wt then
 			wt:setText(tostring(wlvl))
-			if wt.tierColors then
-				local tier = math.min(#wt.tierColors, math.floor(wlvl / 5) + 1)
-				wt:setColor(wt.tierColors[tier] or wt.tierColors[1])
-			end
+			wt:setColor({ Tiers.tierColor(wlvl) })
 		end
 		if we then
-			local maxTier = (we._ss and we._ss.columns) or 5
-			local emblemTier = math.min(maxTier, math.floor(wlvl / 5) + 1)
+			local emblemTier = Tiers.tierForLevel(wlvl)
 			we:setFrame(emblemTier)
 		end
 		if wtw and grp == wgrp then

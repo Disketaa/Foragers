@@ -1,4 +1,5 @@
 local World = require("Content.Data.World")
+local Tiers = require("Content.Data.Tiers")
 local Options = require("Source.Helpers.Systems.Options")
 local Log = require("Source.Helpers.Core.Log")
 
@@ -395,14 +396,10 @@ function initGame()
 		-- Weapon level tracks pickaxe card upgrades, not player level.
 		local grp = "pickaxe"
 		local level = (GameState.cardGroupCounts[grp] or 0)
-			weaponLevelText:setText(tostring(level))
-			if weaponLevelText.tierColors then
-				local tier = math.min(#weaponLevelText.tierColors, math.floor(level / 5) + 1)
-				weaponLevelText:setColor(weaponLevelText.tierColors[tier] or weaponLevelText.tierColors[1])
-			end
+		weaponLevelText:setText(tostring(level))
+			weaponLevelText:setColor({ Tiers.tierColor(level) })
 			if weaponEmblem then
-				local maxTier = (weaponEmblem._ss and weaponEmblem._ss.columns) or 5
-				local emblemTier = math.min(maxTier, math.floor(level / 5) + 1)
+				local emblemTier = Tiers.tierForLevel(level)
 				weaponEmblem:setFrame(emblemTier)
 			end
 		if weaponTier then
