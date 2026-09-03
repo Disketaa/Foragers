@@ -92,6 +92,10 @@ function CardSelect.enter(uiSprites)
 			if lvl and lvl.tierColors then
 				lvl:setColor(lvl.tierColors[tier] or lvl.tierColors[1])
 			end
+			local cardTier = s:findComponent("tier")
+			if cardTier and grp == "pickaxe" then
+				cardTier:setLevel(level)
+			end
 		end
 		local cardW = s.frameWidth or 64
 		entry.ui.offsetX = finalOffset(i, n, cardW)

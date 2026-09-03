@@ -129,7 +129,9 @@ function Sprite:applyShader()
 			love.graphics.setShader(self.shader)
 			if self._shaderDirty then
 				for k, v in pairs(self.shaderData or {}) do
-					self.shader:send(k, v)
+					if self.shader:hasUniform(k) then
+						self.shader:send(k, v)
+					end
 				end
 				self._shaderDirty = false
 			end

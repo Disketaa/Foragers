@@ -64,16 +64,31 @@ function Tier:_resolve()
 end
 
 function Tier:_apply()
-	if not self._shader then
-		return
-	end
 	local def = Tiers and Tiers[self.tier]
 	if not def or not def.colors then
 		return
 	end
 	for i = 1, 5 do
 		local color = def.colors[i] or def.colors[1]
-		self._shader:_setUniform("u_tier_" .. i, color)
+		-- Update parent shaderData directly so per-image Palette shaders can
+		-- forward these uniforms without going through the sprite shader's
+		-- whitelist (the sprite shader may not include Palette).
+		if self.parent and self.parent.shaderData then
+			self.parent.shaderData["u_tier_" .. i] = color
+		end
+		if self._shader then
+			self._shader:_setUniform("u_tier_" .. i, color)
+		end
+	end
+	-- Invalidate all Image component canvases on the parent so they re-bake
+	-- with the new tier colors. Without this, the icon canvas stays cached
+	-- with the old tier colors forever.
+	if self.parent and self.parent.components then
+		for _, comp in ipairs(self.parent.components) do
+			if comp.type == "image" and comp._canvas then
+				comp._canvas = nil
+			end
+		end
 	end
 end
 

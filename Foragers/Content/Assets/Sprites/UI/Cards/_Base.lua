@@ -133,6 +133,7 @@ return {
 			offsetY = -12,
 			bob = 1,
 			parallax = -1,
+			shader = "Palette",
 		},
 
 		{
@@ -184,6 +185,10 @@ return {
 				{ Rimlight = { u_coneWidth = 4, u_inner = 0.4, u_outer = 1, u_threshold = 0.25, u_rim_strength = 0 } },
 				"Burn",
 			},
+		},
+
+		{
+			component = "tier",
 		},
 	},
 }

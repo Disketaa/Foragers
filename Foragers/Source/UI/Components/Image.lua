@@ -1,4 +1,5 @@
 local Log = require("Source.Helpers.Core.Log")
+local ShaderLoader = require("Source.Helpers.Graphics.ShaderLoader")
 
 --- Image (optionally animated) drawn on top of the host sprite at a centre-relative offset.
 --- Baked into a card-sized canvas and drawn through the parent's skew shader, so
@@ -16,10 +17,11 @@ local Log = require("Source.Helpers.Core.Log")
 ---@field parallax number|nil px the image slides toward the cursor at full deflection (parallax depth cue)
 ---@field parallaxSmoothing number easing rate of the parallax offset (higher = snappier)
 ---@field bob number|nil px amplitude of the vertical bob
+---@field shader string|table|nil shader name or list of names to apply when baking this image to its canvas
 local Image = {}
 Image.__index = Image
 
----@param data table {image, offsetX, offsetY, scale, skewWithParent, parallax, parallaxSmoothing, bob}
+---@param data table {image, offsetX, offsetY, scale, skewWithParent, parallax, parallaxSmoothing, bob, shader}
 ---@return Image
 function Image.new(data)
 	return setmetatable({
@@ -34,7 +36,9 @@ function Image.new(data)
 		parallax = data.parallax,
 		parallaxSmoothing = data.parallaxSmoothing or 10,
 		bob = data.bob,
+		shader = data.shader,
 		_bobT = 0,
+		_shader = nil,
 	}, Image)
 end
 
@@ -102,6 +106,18 @@ function Image:attach()
 	if self._animated then
 		self._sprite = sprite
 	end
+	if self.shader then
+		local names = type(self.shader) == "string" and { self.shader } or self.shader
+		local loaded = ShaderLoader.compose(names)
+		if loaded then
+			self._shader = loaded.shader
+			-- Seed defaults from the composed module uniforms so the GPU state
+			-- matches Lua defaults before any tier uniforms are sent.
+			for u, v in pairs(loaded.uniforms or {}) do
+				self._shader:send(u, v)
+			end
+		end
+	end
 end
 
 ---@param cx number card centre x (screen)
@@ -129,10 +145,25 @@ function Image:buildCanvas(cx, cy, fw, fh)
 	local dx = math.floor(cx + self.offsetX + 0.5)
 	local dy = math.floor(cy + self.offsetY + 0.5)
 	local quad = self._ss:_getQuad()
+	local hadImageShader = false
+	if self._shader and self.parent and self.parent.shaderData then
+		hadImageShader = true
+		love.graphics.setShader(self._shader)
+		-- Forward only uniforms that exist on this image's shader (e.g. u_tier_*
+		-- from Palette), skipping parent sprite uniforms like u_brightness.
+		for u, v in pairs(self.parent.shaderData) do
+			if u:match("^u_") and self._shader:hasUniform(u) then
+				self._shader:send(u, v)
+			end
+		end
+	end
 	if quad then
 		love.graphics.draw(self._image, quad, dx, dy, 0, self.scale, self.scale, self._frameW * 0.5, self._frameH * 0.5)
 	else
 		love.graphics.draw(self._image, dx, dy, 0, self.scale, self.scale, self._frameW * 0.5, self._frameH * 0.5)
+	end
+	if hadImageShader then
+		love.graphics.setShader()
 	end
 	love.graphics.pop()
 	love.graphics.setCanvas(prev)
