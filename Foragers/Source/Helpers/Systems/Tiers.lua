@@ -6,7 +6,6 @@ for name in pairs(Tiers) do
 end
 table.sort(TIER_ORDER, function(a, b) return Tiers[a].maxLevel < Tiers[b].maxLevel end)
 
---- Returns 1-based tier index for a level. Iterates maxLevel thresholds.
 ---@param level number
 ---@return number tierIndex (1=bronze, 2=silver, etc.)
 function Tiers.tierForLevel(level)
@@ -19,7 +18,6 @@ function Tiers.tierForLevel(level)
 	return #TIER_ORDER
 end
 
---- Returns the tier name for a level.
 ---@param level number
 ---@return string tierName
 function Tiers.tierNameForLevel(level)
@@ -27,15 +25,14 @@ function Tiers.tierNameForLevel(level)
 	return TIER_ORDER[idx]
 end
 
---- Returns the top (brightest) tier color for a level.
 ---@param level number
----@return number, number, number r, g, b
+---@return number, number, number
 function Tiers.tierColor(level)
 	local idx = Tiers.tierForLevel(level)
 	local name = TIER_ORDER[idx]
 	local def = Tiers[name]
 	if def and def.colors and def.colors[1] then
-		return unpack(def.colors[1])
+		return def.colors[1][1], def.colors[1][2], def.colors[1][3]
 	end
 	return 1, 1, 1
 end

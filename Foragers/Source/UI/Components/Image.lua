@@ -151,7 +151,6 @@ function Image:buildCanvas(cx, cy, fw, fh)
 		love.graphics.setShader(self._shader)
 		-- Forward only uniforms that exist on this image's shader (e.g. u_tier_*
 		-- from Palette), skipping parent sprite uniforms like u_brightness.
-		local forwarded = {}
 		for u, v in pairs(self.parent.shaderData) do
 			if u:match("^u_") and self._shader:hasUniform(u) then
 				self._shader:send(u, v)

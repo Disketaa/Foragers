@@ -244,7 +244,6 @@ function CardSelect.update(dt)
 end
 
 function CardSelect.exit()
-	_zoomRestoreTimer = 0
 	GridNav.active = nil
 	if _spotlight and _uiSprites then
 		for i, e in ipairs(_uiSprites) do
