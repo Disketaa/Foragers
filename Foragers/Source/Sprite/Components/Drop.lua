@@ -63,7 +63,7 @@ function Drop:attach()
 							newSprite._dropBaseY = self.parent.y
 							newSprite:addComponent({
 								type = "drop_pos",
-								update = function(self_, dt)
+								update = function(self_, _dt)
 									local p = self_.parent
 									if p and p.tweens and p.tweens.x then
 										p.x = p._dropBaseX + p.tweens.x:getValue()

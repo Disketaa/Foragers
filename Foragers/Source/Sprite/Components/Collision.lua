@@ -106,8 +106,8 @@ local function collidesWithAny(rect, list)
 	return false
 end
 
----@param dt number
-function Collision:update(dt)
+---@param _dt number
+function Collision:update(_dt)
 	if not self.parent then
 		return
 	end

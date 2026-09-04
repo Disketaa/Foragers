@@ -151,8 +151,8 @@ function TextEmitter:attach()
 	end, 5)
 end
 
-function TextEmitter:update(dt) end
-function TextEmitter:draw(x, y) end
+function TextEmitter:update(_dt) end
+function TextEmitter:draw(_x, _y) end
 
 --- Advance all active floating texts (called from Main)
 function TextEmitter.updateAll(dt)

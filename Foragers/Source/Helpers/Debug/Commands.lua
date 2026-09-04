@@ -372,7 +372,7 @@ Commands.register("bind", function(args, ctx)
 	return "Bound '" .. command .. "' → " .. key, true
 end, "bind a command to a key (bind <cmd> <key>).")
 
-Commands.register("unbind", function(args, ctx)
+Commands.register("unbind", function(args, _ctx)
 	local tokens = Commands.tokenizeArgs(args)
 	local key = tokens[1]
 	if not key or key == "" then

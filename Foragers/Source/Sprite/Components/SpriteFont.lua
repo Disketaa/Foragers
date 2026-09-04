@@ -228,7 +228,7 @@ function SpriteFont:attach()
 	end
 end
 
-function SpriteFont:update(dt) end
+function SpriteFont:update(_dt) end
 
 function SpriteFont:draw(x, y)
 	if not self.parent or not self.chars then
