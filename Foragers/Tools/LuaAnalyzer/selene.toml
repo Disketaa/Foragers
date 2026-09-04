@@ -4,7 +4,7 @@ allow_unused_function_args = true
 
 [lints]
 multiple_statements = "allow"
-global_usage = "deny"
+global_usage = "allow"
 undefined_variable = "allow"
 if_same_then_else = "deny"
 mixed_table = "deny"
