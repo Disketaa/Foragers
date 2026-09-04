@@ -25,15 +25,35 @@ function Format-Summary {
     }
 }
 
+function Get-ErrorCount {
+    param([string[]]$Lines)
+    $count = -1
+    foreach ($line in $Lines) {
+        if ($line -match '^Total:\s*\d+\s*warnings\s*/\s*(\d+)\s*errors') {
+            $count = [int]$Matches[1]
+        }
+    }
+    return $count
+}
+
 Write-Host "`n- Lua Check:" -ForegroundColor Cyan
-$luaCheck = & "$root\luacheck.exe" -q "$gameRoot\Main.lua" "$gameRoot\Source" "$gameRoot\Content" 2>&1
-Format-Summary $luaCheck
+$luaCheckOutput = & "$root\luacheck.exe" -q "$gameRoot\Main.lua" "$gameRoot\Source" "$gameRoot\Content" 2>&1
+Format-Summary $luaCheckOutput
+$LuaCheckErrors = Get-ErrorCount $luaCheckOutput
+if ($LuaCheckErrors -lt 0) { Write-Host "Warning: could not parse luacheck output" -ForegroundColor Yellow; $LuaCheckErrors = 1 }
 
 Write-Host "`n- Lua Analyzer:" -ForegroundColor Cyan
-$luaAnalyzer = powershell -File "$root\LuaAnalyzer\check.ps1" 2>&1
-Format-Summary $luaAnalyzer
+$luaAnalyzerOutput = powershell -File "$root\LuaAnalyzer\check.ps1" 2>&1
+Format-Summary $luaAnalyzerOutput
+$LuaAnalyzerErrors = Get-ErrorCount $luaAnalyzerOutput
+if ($LuaAnalyzerErrors -lt 0) { Write-Host "Warning: could not parse LuaAnalyzer output" -ForegroundColor Yellow; $LuaAnalyzerErrors = 1 }
 
 Write-Host "`n- Lua Structurizer:" -ForegroundColor Cyan
-$structurizer = python "$root\LuaStructurizer\Structurizer.py" 2>&1
-Format-Summary $structurizer
-exit $LASTEXITCODE
+$structurizerOutput = python "$root\LuaStructurizer\Structurizer.py" 2>&1
+Format-Summary $structurizerOutput
+$StructurizerErrors = Get-ErrorCount $structurizerOutput
+if ($StructurizerErrors -lt 0) { Write-Host "Warning: could not parse Structurizer output" -ForegroundColor Yellow; $StructurizerErrors = 1 }
+
+$TotalErrors = $LuaCheckErrors + $LuaAnalyzerErrors + $StructurizerErrors
+Write-Host "`nAggregated: $TotalErrors error(s) across all gates." -ForegroundColor Cyan
+exit $TotalErrors

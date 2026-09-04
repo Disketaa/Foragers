@@ -88,7 +88,7 @@ def strip_comments_and_strings(text: str) -> str:
             m = _LONG_OPEN.match(text, i)
             if m:
                 eq = m.group(0)
-                close = eq[0] + eq[1:-1] + "]"
+                close = "]" + eq[1:-1] + "]"
                 j = text.find(close, i + len(eq))
                 if j == -1:
                     j = n
