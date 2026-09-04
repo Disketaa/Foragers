@@ -1,0 +1,11 @@
+[config]
+allow_unused_self = true
+allow_unused_function_args = true
+
+[lints]
+multiple_statements = "deny"
+global_usage = "deny"
+undefined_variable = "allow"
+if_same_then_else = "deny"
+mixed_table = "deny"
+unused_variable = "deny"
