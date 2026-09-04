@@ -119,11 +119,10 @@ local function pick(tileSeed, remainingSlots, hostProvider)
 	end
 
 	if vegQuota > 0 and _vegWeight > 0 then
-		if remainingSlots and remainingSlots <= vegQuota then
-			chooseVeg = true
-		elseif _nonVegWeight == 0 then
-			chooseVeg = true
-		elseif love.math.random() <= prdChance() then
+		if remainingSlots and remainingSlots <= vegQuota
+			or _nonVegWeight == 0
+			or love.math.random() <= prdChance()
+		then
 			chooseVeg = true
 		end
 	end
