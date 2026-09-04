@@ -10,6 +10,7 @@ Modules.NormalizeNumbers.collapse_integer_floats = true
 Modules.AddBlankLines.enabled = true
 Modules.DocComments.enabled = true
 Modules.DocComments.warn_misused_doc_comments = false
+Modules.TrimLines.enabled = true
 
 Modules.WrapTables.enabled = true
 Modules.WrapTables.include_folders = ["Content/"]
