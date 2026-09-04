@@ -1,5 +1,4 @@
 # Compact LuaAnalyzer CLI check: one line per diagnostic, run from the game root.
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $gameRoot = Split-Path (Split-Path $PSScriptRoot)
 Set-Location $gameRoot
 
@@ -19,7 +18,9 @@ Remove-Item $checkOut2 -Force -ErrorAction SilentlyContinue
 & $exe --check (Join-Path $gameRoot "Content") --configpath $cfg --check_format=json --check_out_path=$checkOut2 --checklevel=Warning | Out-Null
 $out3 = & $selene --config $seleneCfg Source/ Content/ 2>&1 | Out-String
 
-$diag = @()
+# Count errors/warnings for summary
+$warnings = 0
+$errors = 0
 
 # Parse lua-language-server JSON check reports
 foreach ($report in @($checkOut1, $checkOut2)) {
@@ -36,6 +37,12 @@ foreach ($report in @($checkOut1, $checkOut2)) {
             $decoded = [System.Uri]::UnescapeDataString($Matches[1])
             $filePath = $decoded -replace '/', '\'
         }
+        # Normalize to relative path (case-insensitive drive letter check)
+        $normalizedGameRoot = $gameRoot.TrimEnd('\')
+        $normalizedFilePath = $filePath.TrimEnd('\')
+        if ($normalizedFilePath -like "$normalizedGameRoot\*") {
+            $filePath = $normalizedFilePath.Substring($normalizedGameRoot.Length).TrimStart('\')
+        }
 
         $diagnostics = $prop.Value
         if ($diagnostics -is [System.Array]) {
@@ -45,8 +52,8 @@ foreach ($report in @($checkOut1, $checkOut2)) {
                 $line = $d.range.start.line + 1
                 $col  = $d.range.start.character + 1
                 $msg = ($d.message -replace '\r?\n', ' | ')
-                $icon = if ($sev -eq 'WARN') { 'WARN' } else { 'ERROR' }
-                $diag += "[$icon] ${filePath}:${line}:${col} - $msg"
+                if ($sev -eq 'WARN') { $warnings++ } else { $errors++ }
+                $diag += "$filePath`:$line`:$col - $msg`n"
             }
         }
     }
@@ -68,24 +75,21 @@ foreach ($line in $lines) {
 
     # selene location line: contains file.lua:line:col after severity
     if ($pendingSeverity -and $line -match '([A-Za-z0-9_\-\\/\.]+\.lua):(\d+):(\d+)') {
-        $icon = if ($pendingSeverity -eq 'warning') { 'WARN' } else { 'ERROR' }
         $msg = ($pendingMessage -replace '\r?\n', ' | ')
-        $diag += "[$icon] $($Matches[1]):$($Matches[2]):$($Matches[3]) - $msg"
+        $color = if ($pendingSeverity -eq 'warning') { 'Yellow' } else { 'Red' }
+        if ($pendingSeverity -eq 'warning') { $warnings++ } else { $errors++ }
+        $diag += "$($Matches[1]):$($Matches[2]):$($Matches[3]) - $msg`n"
         $pendingSeverity = $null
         $pendingMessage = $null
     }
 }
 
-$errIcon = [char]0x26D4 + [char]0xFE0F  # ⛔ + variation selector
-$warnIcon = [char]0x26A0 + [char]0xFE0F  # ⚠️ (with variation selector for color)
 if ($diag.Count -gt 0) {
     foreach ($d in $diag) {
-        $line = $d -replace '^\[ERROR\]', "$errIcon" -replace '^\[WARN\]', "$warnIcon"
-        Write-Host $line
+        Write-Host $d
     }
 }
-$warnings = ($diag | Where-Object { $_ -match '^\[WARN\]' }).Count
-$errors = ($diag | Where-Object { $_ -match '^\[ERROR\]' }).Count
+
 $files = (Get-ChildItem -Path $gameRoot\Source, $gameRoot\Content -Recurse -Filter *.lua -File).Count
 Write-Host "Total: $warnings warnings / $errors errors in $files files"
 

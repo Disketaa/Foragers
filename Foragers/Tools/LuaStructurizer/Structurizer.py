@@ -214,10 +214,11 @@ def main():
 
     all_violations.sort(key=lambda v: (str(v[0]), v[1], v[3]))
     errors = 0
+
     for path, line, name, sev, msg in all_violations:
-        icon = "🛑" if sev == "error" else "⚠️"
         rel = path.relative_to(project_root)
-        print(f"{icon} {rel} L{line}: {name} — {msg}")
+        # Use standard format: path:line:col - message (col=1 for structurizer rules since they don't track column)
+        print(f"{rel}:{line}:1 - {msg}")
         if sev == "error":
             errors += 1
 
