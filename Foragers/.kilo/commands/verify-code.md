@@ -63,7 +63,7 @@ Items 2/3/4/12 from the prior list (Sprite instantiation, Component creation, `_
 1. **Component scan** — must use `findComponent`/`getComponents`:
    `grep -rn "for _, comp in ipairs(.*components" Source/ Main.lua` and formatter-split `grep -rn "for _, comp in$" Source/ Main.lua`.
    Exceptions: `Sprite:update()`/`drawComponents()`, `Merge.lua`, `ParticleEmitter.lua:75`.
-2. **Cross-component reads in update()** — `grep -rn "parent\.\w" Source/Sprite/Components/ | grep -v "draw()\|_state\|flipX\|tweens\|shader\|shaderData"`. Events only; `tweens`/`shader`/`shaderData` allowed (AGENTS §X). `_state`/`flipX` single-writer is auto-enforced by the LuaStructurizer `FieldOwnership` rule — manual review only for non-`_state`/`flipX` fields.
+2. **Cross-component reads in update()** — `grep -rn "parent\.\w" Source/Sprite/Components/ | grep -v "draw()\|_state\|flipX\|tweens\|shader\|shaderData\|alpha"`. Events only; `tweens`/`shader`/`shaderData`/`alpha` allowed (AGENTS §X). `_state`/`flipX` single-writer is auto-enforced by the LuaStructurizer `FieldOwnership` rule — manual review only for non-`_state`/`flipX` fields.
 3. **Hardcoded gameplay values** — `grep -rn "love\.math\.random\|math\.random\|timer\s*=\s*[0-9]" Source/ Main.lua | grep -v "Content/Data/"`. Numbers in `Content/Data/`.
 4. **Nil guards on sprite.components** — `grep -rn "\.components\b" Source/ Main.lua | grep -v "or {}\|findComponent\|getComponents\|self\.components\|data\.components\|baseComponents\|overrideComponents"`. Access without `or {}` = potential nil error.
 5. **Event string literals** — `grep -rn 'Events\.' Source/ | grep -v "require.*Events\|Events\.lua"`. Use `Events.lua` constants.
