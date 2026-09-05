@@ -153,11 +153,11 @@ def main():
 
         if updated != original:
             path.write_text(updated, encoding="utf-8")
-            print(f"Updated: {path}")
+            print(f"{path}:1:1 - needs formatting")
             changed += 1
         # unchanged files are silently skipped — printing them only spams the console
 
-    print(f"\n\u2705 Done. {changed} file(s) updated out of {len(all_files)} total.")
+    print(f"Total: {changed} warnings / 0 errors in {len(all_files)} files")
     sys.stdout.flush()
 
     for opt_name, module, opt_config in enabled_plugins:

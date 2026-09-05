@@ -1,8 +1,9 @@
-# Single entry point: run all three code gates.
+# Single entry point: run all four code gates.
 #   - luacheck (lua correctness)
 #   - LuaAnalyzer check (Lua Language Server diagnostics)
+#   - LuaFormatter (code formatting)
 #   - StructureCheck (project architecture rules)
-# Exit code reflects StructureCheck's error count so it can gate CI / pre-commit.
+# Exit code reflects total error count so it can gate CI / pre-commit.
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $gameRoot = Split-Path $root
@@ -96,7 +97,8 @@ function Invoke-Gate {
 $LuaCheckErrors    = Invoke-Gate "Lua Check"       { & "$root\luacheck.exe" -q "$gameRoot\Main.lua" "$gameRoot\Source" "$gameRoot\Content" } $gameRoot
 $LuaAnalyzerErrors = Invoke-Gate "Lua Analyzer"    { powershell -File "$root\LuaAnalyzer\check.ps1" } $gameRoot
 $StructurizerErrors= Invoke-Gate "Lua Structurizer" { python "$root\LuaStructurizer\Structurizer.py" } $gameRoot
+$LuaFormatterErrors= Invoke-Gate "Lua Formatter"   { python "$root\LuaFormatter\Formatter.py" } $gameRoot
 
-$TotalErrors = $LuaCheckErrors + $LuaAnalyzerErrors + $StructurizerErrors
+$TotalErrors = $LuaCheckErrors + $LuaAnalyzerErrors + $LuaFormatterErrors + $StructurizerErrors
 Write-Host "${SectionColor}`nAggregated: $TotalErrors error(s) across all gates.${Reset}"
 exit $TotalErrors
