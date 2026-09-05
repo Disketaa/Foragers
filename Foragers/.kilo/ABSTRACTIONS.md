@@ -425,3 +425,20 @@ entire data tree. These fields are safe to randomize:
 - **Never use `os.execute` to create a directory for file logging.** On Windows with `t.console = false` it spawns a console and a malformed command (e.g. the unix `mkdir -p "..." 2>/dev/null` branch when `os.getenv("OS")` isn't detected) can block waiting on a `Terminate batch job` prompt — the game freezes black for ~10s then continues. Use `love.filesystem` instead: it targets the save directory and creates it as needed, no shell involved.
 - **`love.filesystem.write`/`append`/`createDirectory` always operate on the SAVE directory**, never the project source dir. To relocate the log (or any save data) out of the default `LOVE/`, set `t.identity = "Foragers"` in `conf.lua` → save dir becomes `%APPDATA%/Foragers/`. Writing into the project tree would require the shell approach above — avoided.
 - **`Log.init()` must run once at startup** (first thing in `love.load`) before any `print`, or the file is never opened and `Log.write` falls back to stdout-only.
+
+## Tier / Palette component (Source/Sprite/Components/Tier.lua)
+
+- **Tier writes `parent.shaderData` directly.** It sets `u_tier_1..u_tier_5` on `parent.shaderData` so per-image Palette shaders can forward these uniforms without going through the sprite shader's whitelist (the sprite shader may not include Palette). It also forwards to the parent's `shader` component via `_setUniform`.
+- **Tier invalidates `image` component canvases on change.** When tier or level changes, `_apply()` iterates all `image` components on the parent and nukes their `_canvas` so they re-bake with the new tier colors. Without this, the icon canvas stays cached with the old tier colors forever.
+
+## Card-sized canvas baking (Label, Image)
+
+- **Label and Image bake into a card-sized canvas drawn through the parent's skew shader.** Both components render their content to an offscreen canvas sized to the parent card (`frameWidth`×`frameHeight`), then draw that canvas through `parent:applyShader()` so the content warps with the EXACT same perspective as the card. This avoids a separate affine shear that can drift from the card.
+- **Base anchor stays pixel-perfect; motion offsets are sub-pixel.** The base position is `math.floor(...)` for pixel-perfect card placement; parallax, bob, and tween offsets are additive sub-pixel so motion is smooth and independent of the pixel grid.
+- **Image supports per-image shader composition.** `shader` field (string or array) is composed via `ShaderLoader.compose()` at attach; the composed shader is used only when baking the image canvas, not applied to the parent sprite. Uniforms from `parent.shaderData` are forwarded only if the image shader declares them (`hasUniform` check).
+
+## CardSelect repeat on multiple levels (Source/UI/CardSelect.lua)
+
+- **`GameState.pendingLevelUps` queues level-ups across card picks.** `PlayerStats` increments it on `LEVEL_UP`; `CardSelect.applyModifier()` decrements it when a card is chosen. Main re-shows cards while `> 0`, so gaining 2+ levels at once shows the picker repeatedly.
+- **`GameState.showingCards` prevents re-entry.** `CardSelect.start()` gates on `not showingCards`; the flag is cleared only after the hide tweens finish in `CardSelect.update()`, not on pick. This keeps the chosen card's burn animation playing while the world runs underneath.
+- **`GameState.cardGroupCounts` tracks per-group picks.** Each card's `group` field increments its count on pick; `cardAvailable()` checks `count < maxLevel` so fully-maxed groups stop appearing.

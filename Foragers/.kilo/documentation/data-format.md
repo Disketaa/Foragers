@@ -93,6 +93,16 @@ Each entry in `Content/Data/World.lua` `props.items` references a prop data file
 | `offsetY` | number | `0` | Child Y offset from the host pivot |
 | `inheritFrame` | boolean | `false` | Start the child on the host's current animation frame |
 
+## Card data fields
+
+Card sprite data files (`Content/Assets/Sprites/UI/Cards/...`) support these additional top-level fields:
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `maxLevel` | number | nil | Maximum level this card can be picked. When set, `CardSelect` filters out cards whose group has already reached this count. |
+| `group` | string | nil | Card group name (e.g. `"pickaxe"`). Used to track per-group pick counts in `GameState.cardGroupCounts`; cards in the same group share a counter. |
+| `modifier` | function / table | nil | Effect applied when the card is chosen. A function receives `(stats)` and mutates it directly. A table `{ stat = "damage", amount = 2 }` adds `amount` to `stats[stat]` (handles both flat and `{base,gain}` stats). |
+
 ## Complete example
 
 ```lua

@@ -153,7 +153,7 @@ All Critical Constraints in Section I apply here.
 
 ### Component list
 
-25 core: `ambient`, `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `player_stats`, `pickup`, `silhouette`, `emote`, `cursor`, `hover`.
+29 registered: `ambient`, `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `text`, `image`, `player_stats`, `pickup`, `silhouette`, `emissive`, `emote`, `cursor`, `hover`, `tier`.
 
 ---
 

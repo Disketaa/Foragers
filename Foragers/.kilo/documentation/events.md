@@ -27,14 +27,17 @@ Source of truth: `Source/Helpers/Core/Events.lua`.
 | `VALUE_CHANGED` payload | — | PlayerStats emits `VALUE_CHANGED` with `{ sourceType, field, value, maxValue, level }` in `addExperience()` when XP changes. Counter uses `field` to filter and `value/maxValue` for frame; `level` drives optional label text. main.lua listens for `field == "satiety"` to update the saturation shader and global timescale. | — |
 | `COUNTER_TICK` | `"counter_tick"` | Counter | Tween(10) |
 | `COUNTER_WRAP` | `"counter_wrap"` | Counter | Tween(10), Sound(15) |
+| `LEVEL_UP` | `"level_up"` | PlayerStats | — |
+| `CARD_SELECT_OPEN` | `"card_select_open"` | CardSelect | Sound(15) |
+| `CARD_SELECTED` | `"card_selected"` | CardSelect | Sound(15) |
+| `CARD_HIDE` | `"card_hide"` | CardSelect | Sound(15) |
+| `CARD_CHOOSE` | `"card_choose"` | CardSelect | Sound(15) |
 | `SWING` | `"swing"` | AttackSystem | — |
 | `TARGET_SELECTED` | `"target_selected"` | AttackSystem | ParticleEmitter(5) |
 | `FOLLOW_ARRIVED` | `"follow_arrived"` | Follow | Tween(10) |
 | `PICKUP` | `"pickup"` | main.lua (pendingDestroy) | Tween(10) |
 | `TWEEN_COMPLETED` | `"tween_completed"` | Tween | Sound(15) |
 | `TIME_CHANGED` | `"time_changed"` | DayCycle | Ambient(100) — starts fade-out on day/night transition |
-| `COUNTER_TICK` | `"counter_tick"` | Counter | Tween(10) |
-| `COUNTER_WRAP` | `"counter_wrap"` | Counter | Tween(10), Sound(15) |
 
 ## Priority conventions
 
