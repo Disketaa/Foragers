@@ -11,7 +11,7 @@ function Ambient.new(data)
 		duration = data.duration or 20,
 		fadeInDuration = data.fadeInDuration or 0.5,
 		fadeOutDuration = data.fadeOutDuration or 1.5,
-		changeDirectionInterval = data.changeDirectionInterval or 3,
+		changeDirectionInterval = tonumber(data.changeDirectionInterval) or 3,
 		wanderingSpeed = data.wanderingSpeed or 10,
 		spawnStart = winStart,
 		spawnEnd = winEnd,
@@ -45,7 +45,8 @@ function Ambient:attach()
 	self:_pickDirection()
 
 	if self._hasRaw and self.__raw.changeDirectionInterval then
-		self.changeDirectionInterval = ValueParser.value(self.__raw.changeDirectionInterval)
+		local v = ValueParser.value(self.__raw.changeDirectionInterval)
+		self.changeDirectionInterval = tonumber(v) or self.changeDirectionInterval
 	end
 
 	self.parent.alpha = 0
@@ -127,7 +128,8 @@ function Ambient:update(dt)
 	if self._dirTimer >= self.changeDirectionInterval then
 		self._dirTimer = 0
 		if self._hasRaw and self.__raw.changeDirectionInterval then
-			self.changeDirectionInterval = ValueParser.value(self.__raw.changeDirectionInterval)
+			local v = ValueParser.value(self.__raw.changeDirectionInterval)
+			self.changeDirectionInterval = tonumber(v) or self.changeDirectionInterval
 		end
 		self:_pickDirection()
 	end
