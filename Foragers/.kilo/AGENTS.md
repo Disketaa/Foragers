@@ -104,7 +104,7 @@ Foragers/
 │   ├── Sprite/
 │   │   ├── Sprite.lua
 │   │   ├── SpriteLoader.lua
-│   │   └── Components/   # ambient, collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, player_stats, pickup, silhouette, emote
+│   │   └── Components/   # ambient, collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, text_emitter, counter, ui, text, image, player_stats, pickup, silhouette, emissive, emote, cursor, hover, tier
 │   ├── UI/
 │   │   ├── Components/   # TextEmitter, UI
 │   │   ├── Layout.lua
@@ -175,7 +175,7 @@ Full event table: `.kilo/documentation/events.md`
 
 ## XI. Component Registry
 
-`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 25 core components. Mods register new types:
+`Source/Helpers/Core/ComponentRegistry.lua`: `.register(name, factory)`, `.create(name, data)`. Pre-registers 29 core components. Mods register new types:
 ```lua
 ComponentRegistry.register("my_component", function(data) return MyComponent.new(data) end)
 ```
