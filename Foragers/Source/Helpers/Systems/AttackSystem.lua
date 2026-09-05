@@ -78,7 +78,7 @@ function AttackSystem.update(dt, allObjects)
 		attacker.cooldownTimer = attacker.cooldownTimer - dt
 	end
 
-	cleanupTween(ws, "swing_angle")
+	cleanupTween(ws, "swingAngle")
 
 	local targetValid = false
 	if attacker.currentTarget then
@@ -92,7 +92,7 @@ function AttackSystem.update(dt, allObjects)
 		end
 		if not targetValid and weaponFollow then
 			local committed = attacker._arrived and attacker.cooldownTimer > 0
-			if not committed and not (ws and ws.tweens and ws.tweens.swing_angle) then
+			if not committed and not (ws and ws.tweens and ws.tweens.swingAngle) then
 				weaponFollow:recall(weaponFollow.smoothnessX / speedScale)
 				attacker.currentTarget = nil
 				attacker.damageTimer = nil
@@ -189,9 +189,9 @@ function AttackSystem.update(dt, allObjects)
 	local dir = -attacker._deployDir
 	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.OutSine
 	local easeFunc = swingCurve(rawEase)
-	local angleTween = TweenModule.Tween.new("swing_angle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration / speedScale, easeFunc)
+	local angleTween = TweenModule.Tween.new("swingAngle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration / speedScale, easeFunc)
 	angleTween._smoothness = swing.smoothness
-	ws.tweens.swing_angle = angleTween
+	ws.tweens.swingAngle = angleTween
 	angleTween:start()
 	ws:emit(Events.FLIPPED, attacker._deployDir == -1)
 	ws._lastHitX = nil

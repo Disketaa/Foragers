@@ -79,15 +79,15 @@ return {
 			component = "tween",
 			tags = {
 				flip = {
-					{ target = "scale_x", from = 0.75, to = 1, duration = 0.3, curve = "OutBack" },
-					{ target = "scale_y", from = 1.25, to = 1, duration = 0.3, curve = "OutBack" },
+					{ target = "scaleX", from = 0.75, to = 1, duration = 0.3, curve = "OutBack" },
+					{ target = "scaleY", from = 1.25, to = 1, duration = 0.3, curve = "OutBack" },
 				},
 
 				splash = {
-					{ target = "scale_x", from = 1.25, to = 1, duration = 0.75, curve = "OutBack" },
-					{ target = "scale_y", from = 0.75, to = 1, duration = 0.5, curve = "OutBack" },
+					{ target = "scaleX", from = 1.25, to = 1, duration = 0.75, curve = "OutBack" },
+					{ target = "scaleY", from = 0.75, to = 1, duration = 0.5, curve = "OutBack" },
 				},
-				pickup = { { target = "tint_mix", from = 0.5, to = 0, duration = 0.5, curve = "OutCubic" } },
+				pickup = { { target = "tintMix", from = 0.5, to = 0, duration = 0.5, curve = "OutCubic" } },
 			},
 		},
 

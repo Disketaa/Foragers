@@ -217,8 +217,8 @@ function Follow:draw(x, y)
 	end
 	local hadShader = parent.applyShader and parent:applyShader() or false
 	local rot = math.rad(self._currentAngle or 0)
-	if parent.tweens and parent.tweens.swing_angle then
-		rot = rot + math.rad(parent.tweens.swing_angle:getValue())
+	if parent.tweens and parent.tweens.swingAngle then
+		rot = rot + math.rad(parent.tweens.swingAngle:getValue())
 	end
 	love.graphics.draw(
 		parent.image,

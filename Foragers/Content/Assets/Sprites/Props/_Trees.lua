@@ -48,8 +48,8 @@ return {
 			component = "tween",
 			tags = {
 				prop_hit = {
-					{ target = "scale_x", from = 0.8, to = 1, duration = 1.5, curve = "OutBack" },
-					{ target = "scale_y", from = 1.1, to = 1, duration = 0.6, curve = "OutBack" },
+					{ target = "scaleX", from = 0.8, to = 1, duration = 1.5, curve = "OutBack" },
+					{ target = "scaleY", from = 1.1, to = 1, duration = 0.6, curve = "OutBack" },
 					{ target = "brightness", from = 1, to = 0.5, duration = 0.2, curve = "InBack" },
 				},
 			},

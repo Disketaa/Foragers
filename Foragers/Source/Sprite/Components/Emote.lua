@@ -212,11 +212,11 @@ end
 function Emote:getDrawContext()
 	local sx, sy = 1, 1
 	local rot = 0
-	local t = self._liveTweens.scale_x
+	local t = self._liveTweens.scaleX
 	if t then
 		sx = t:getValue()
 	end
-	t = self._liveTweens.scale_y
+	t = self._liveTweens.scaleY
 	if t then
 		sy = t:getValue()
 	end

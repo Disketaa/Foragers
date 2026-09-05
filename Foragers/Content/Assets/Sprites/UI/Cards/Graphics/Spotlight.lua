@@ -16,13 +16,13 @@ return {
 			component = "tween",
 			tags = {
 				show = {
-					{ target = "scale_x", from = 1.25, to = 1, duration = 0.5, curve = "OutCubic" },
-					{ target = "scale_y", from = 1.25, to = 1, duration = 0.5, curve = "OutCubic" },
+					{ target = "scaleX", from = 1.25, to = 1, duration = 0.5, curve = "OutCubic" },
+					{ target = "scaleY", from = 1.25, to = 1, duration = 0.5, curve = "OutCubic" },
 				},
 
 				hide = {
-					{ target = "scale_x", from = 1, to = 0, duration = 0.5, curve = "OutCubic" },
-					{ target = "scale_y", from = 1, to = 0, duration = 0.5, curve = "OutCubic" },
+					{ target = "scaleX", from = 1, to = 0, duration = 0.5, curve = "OutCubic" },
+					{ target = "scaleY", from = 1, to = 0, duration = 0.5, curve = "OutCubic" },
 				},
 			},
 		},

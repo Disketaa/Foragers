@@ -27,16 +27,16 @@ return {
 			tweens = {
 				{ target = "x", from = 0, to = "-8..8", duration = "0.4..0.5", curve = "OutCubic" },
 				{ target = "y", from = 0, to = "-8..8", duration = "0.4..0.5", curve = "OutCubic" },
-				{ target = "scale_x", from = 0, to = 1, duration = 1.5, curve = "OutBack" },
-				{ target = "scale_y", from = 2, to = 1, duration = "0.75..1.25", curve = "OutBack" },
+				{ target = "scaleX", from = 0, to = 1, duration = 1.5, curve = "OutBack" },
+				{ target = "scaleY", from = 2, to = 1, duration = "0.75..1.25", curve = "OutBack" },
 				{ target = "brightness", from = 1, to = 0.5, duration = 0.66, curve = "InOutCubic" },
 			},
 
 			tags = {
 				arrived = {
 					destroyOnComplete = true,
-					{ target = "scale_x", from = 1, to = 0, duration = 0.3, curve = "InBack" },
-					{ target = "scale_y", from = 1, to = 0.5, duration = 0.3, curve = "InBack" },
+					{ target = "scaleX", from = 1, to = 0, duration = 0.3, curve = "InBack" },
+					{ target = "scaleY", from = 1, to = 0.5, duration = 0.3, curve = "InBack" },
 					{ target = "angle", from = 0, to = 0, duration = 0.3 },
 					{ target = "brightness", from = 0.5, to = 1, duration = 0.3, curve = "OutCubic" },
 				},

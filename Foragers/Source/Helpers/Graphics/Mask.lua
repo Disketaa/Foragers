@@ -29,7 +29,7 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 					local rot = 0
 					local t = sprite.tweens
 					if t then
-						local angleTween = t.swing_angle or t.angle
+						local angleTween = t.swingAngle or t.angle
 						if angleTween then
 							rot = math.rad(angleTween:getValue())
 						end
@@ -40,11 +40,11 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 
 					local scaleX, scaleY = 1, 1
 					if t then
-						if t.scale_x then
-							scaleX = t.scale_x:getValue()
+						if t.scaleX then
+							scaleX = t.scaleX:getValue()
 						end
-						if t.scale_y then
-							scaleY = t.scale_y:getValue()
+						if t.scaleY then
+							scaleY = t.scaleY:getValue()
 						end
 					end
 

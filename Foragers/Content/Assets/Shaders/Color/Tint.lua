@@ -4,12 +4,12 @@ return {
 	module = true,
 	uniforms = {
 		u_tint_color = { 1, 0, 1 },
-		u_tint_mix = 0,
+		u_tintMix = 0,
 		u_additive = 0,
 	},
 	code = [[
 vec4 Tint_color(vec4 color, vec2 screen_coords) {
-	float t = u_tint_mix;
+	float t = u_tintMix;
 	if (t == 0 || color.a == 0) {
 		return color;
 	}

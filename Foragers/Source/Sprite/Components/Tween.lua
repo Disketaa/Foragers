@@ -297,7 +297,7 @@ local function applyTweens(self, tweenSet)
 	end
 	-- Kill every existing tween whose target is NOT in this set, UNLESS the
 	-- target is in the component-level persist list (e.g. idle y float).
-	-- Universal reset: no tag leaks stale tweens (rim_angle, burn, angle).
+	-- Universal reset: no tag leaks stale tweens (rimAngle, burn, angle).
 	local persist = self.persist or {}
 	for target, _ in pairs(self.parent.tweens) do
 		if not active[target] and not persist[target] then
