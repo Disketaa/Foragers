@@ -79,7 +79,8 @@ return {
 		},
 
 		{
-			component = "tier",
+			component = "palette",
+			scheme = "tier",
 		},
 	},
 }

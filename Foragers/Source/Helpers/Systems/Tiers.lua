@@ -1,4 +1,4 @@
-local Tiers = require("Content.Data.Tiers")
+local Tiers = require("Content.Assets.Palettes.Tier")
 
 local TIER_ORDER = {}
 for name in pairs(Tiers) do

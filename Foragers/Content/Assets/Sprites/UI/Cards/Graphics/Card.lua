@@ -8,5 +8,15 @@ return {
 			component = "spritesheet",
 			columns = 1,
 		},
+
+		{
+			component = "shader",
+			shaders = { "Brightness", "Palette" },
+		},
+
+		{
+			component = "palette",
+			scheme = "rarity",
+		},
 	},
 }

@@ -89,10 +89,14 @@ return {
 		{
 			component = "image",
 			id = "frame",
-			image = "Content/Assets/Sprites/UI/Cards/Graphics/Frames/Black",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Card",
 			scale = 1,
 			offsetX = 0,
 			offsetY = 0,
+			palette = {
+				scheme = "rarity",
+			},
+			shader = "Palette",
 		},
 
 		{
@@ -141,7 +145,7 @@ return {
 			id = "title",
 			offsetX = 0,
 			offsetY = -40,
-			dropshadowColor = { 0.56, 0.32, 0.73, 1 },
+			dropshadowColor = { 0, 0, 0, 0.33 },
 			maxWidth = 46,
 			horizontalAlign = "center",
 			verticalAlign = "center",
@@ -181,7 +185,8 @@ return {
 		},
 
 		{
-			component = "tier",
+			component = "palette",
+			scheme = "tier",
 		},
 	},
 }

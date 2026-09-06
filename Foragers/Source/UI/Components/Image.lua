@@ -18,10 +18,25 @@ local ShaderLoader = require("Source.Helpers.Graphics.ShaderLoader")
 ---@field parallaxSmoothing number easing rate of the parallax offset (higher = snappier)
 ---@field bob number|nil px amplitude of the vertical bob
 ---@field shader string|table|nil shader name or list of names to apply when baking this image to its canvas
+---@field palette table|nil @{scheme: string, value: string|nil} optional per-image palette; value falls back to parent.data
 local Image = {}
 Image.__index = Image
 
----@param data table {image, offsetX, offsetY, scale, skewWithParent, parallax, parallaxSmoothing, bob, shader}
+local PALETTE_CONFIGS = {
+	tier = {
+		dataModule = require("Content.Assets.Palettes.Tier"),
+		prefix = "u_tier_",
+		default = "bronze",
+	},
+
+	rarity = {
+		dataModule = require("Content.Assets.Palettes.Rarity"),
+		prefix = "u_tier_", -- reuse u_tier_* uniforms for rarity too
+		default = "common",
+	},
+}
+
+---@param data table {image, offsetX, offsetY, scale, skewWithParent, parallax, parallaxSmoothing, bob, shader, palette}
 ---@return Image
 function Image.new(data)
 	return setmetatable({
@@ -37,6 +52,7 @@ function Image.new(data)
 		parallaxSmoothing = data.parallaxSmoothing or 10,
 		bob = data.bob,
 		shader = data.shader,
+		palette = data.palette, -- @{scheme, value} per-image palette
 		_bobT = 0,
 		_shader = nil,
 	}, Image)
@@ -149,11 +165,38 @@ function Image:buildCanvas(cx, cy, fw, fh)
 	if self._shader and self.parent and self.parent.shaderData then
 		hadImageShader = true
 		love.graphics.setShader(self._shader)
-		-- Forward only uniforms that exist on this image's shader (e.g. u_tier_*
-		-- from Palette), skipping parent sprite uniforms like u_brightness.
-		for u, v in pairs(self.parent.shaderData) do
-			if u:match("^u_") and self._shader:hasUniform(u) then
-				self._shader:send(u, v)
+		-- Per-image palette: load palette directly instead of reading from parent.shaderData
+		if self.palette then
+			local cfg = PALETTE_CONFIGS[self.palette.scheme]
+			if cfg then
+				-- Resolve value: use explicit value or fall back to parent.data
+				local value = self.palette.value
+				if not value and self.parent.data then
+					value = self.parent.data[self.palette.scheme] -- e.g. data.rarity or data.tier
+				end
+				value = value or cfg.default
+				local def = cfg.dataModule[value]
+				if def and def.colors then
+					for i = 1, #def.colors do
+						local color = def.colors[i] or def.colors[1]
+						local key = cfg.prefix .. i
+						if self._shader:hasUniform(key) then
+							self._shader:send(key, color)
+						end
+					end
+					-- Also set u_tier_5 for lum < 0.65 fallback
+					if self.palette.scheme == "rarity" and self._shader:hasUniform("u_tier_5") then
+						local lastColor = def.colors[4] or def.colors[1]
+						self._shader:send("u_tier_5", lastColor)
+					end
+				end
+			end
+		else
+			-- Default: forward uniforms from parent shaderData (tier palette from sprite-level component)
+			for u, v in pairs(self.parent.shaderData) do
+				if u:match("^u_") and self._shader:hasUniform(u) then
+					self._shader:send(u, v)
+				end
 			end
 		end
 	end

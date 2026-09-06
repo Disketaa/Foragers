@@ -104,7 +104,7 @@ Foragers/
 │   ├── Sprite/
 │   │   ├── Sprite.lua
 │   │   ├── SpriteLoader.lua
-│   │   └── Components/   # ambient, collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, text_emitter, counter, ui, text, image, player_stats, pickup, silhouette, emissive, emote, cursor, hover, tier
+│   │   └── Components/   # ambient, collision, control, spritesheet, tween, sound, particle_emitter, follow, destructible, weapon, shake, shader, drop, scroll_to, shadow, spritefont, text_emitter, counter, ui, text, image, player_stats, pickup, silhouette, emissive, emote, cursor, hover, palette
 │   ├── UI/
 │   │   ├── Components/   # TextEmitter, UI
 │   │   ├── Layout.lua
@@ -153,7 +153,7 @@ All Critical Constraints in Section I apply here.
 
 ### Component list
 
-29 registered: `ambient`, `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `text`, `image`, `player_stats`, `pickup`, `silhouette`, `emissive`, `emote`, `cursor`, `hover`, `tier`.
+29 registered: `ambient`, `collision`, `control`, `spritesheet`, `tween`, `sound`, `particle_emitter`, `follow`, `destructible`, `weapon`, `shake`, `shader`, `drop`, `scroll_to`, `shadow`, `spritefont`, `text_emitter`, `counter`, `ui`, `text`, `image`, `player_stats`, `pickup`, `silhouette`, `emissive`, `emote`, `cursor`, `hover`, `palette`.
 
 ---
 

@@ -1,13 +1,8 @@
 return {
 	extends = "Content.Assets.Sprites.UI.Cards.Groups.Pickaxe._Pickaxe",
 	modifier = { stat = "damage", amount = 2 },
+	rarity = "common",
 	components = {
-		{
-			component = "image",
-			id = "frame",
-			image = "Content/Assets/Sprites/UI/Cards/Graphics/Frames/Purple",
-		},
-
 		{
 			component = "image",
 			id = "icon",

@@ -426,10 +426,11 @@ entire data tree. These fields are safe to randomize:
 - **`love.filesystem.write`/`append`/`createDirectory` always operate on the SAVE directory**, never the project source dir. To relocate the log (or any save data) out of the default `LOVE/`, set `t.identity = "Foragers"` in `conf.lua` → save dir becomes `%APPDATA%/Foragers/`. Writing into the project tree would require the shell approach above — avoided.
 - **`Log.init()` must run once at startup** (first thing in `love.load`) before any `print`, or the file is never opened and `Log.write` falls back to stdout-only.
 
-## Tier / Palette component (Source/Sprite/Components/Tier.lua)
+## Palette component (Source/Sprite/Components/Palette.lua)
 
-- **Tier writes `parent.shaderData` directly.** It sets `u_tier_1..u_tier_5` on `parent.shaderData` so per-image Palette shaders can forward these uniforms without going through the sprite shader's whitelist (the sprite shader may not include Palette). It also forwards to the parent's `shader` component via `_setUniform`.
-- **Tier invalidates `image` component canvases on change.** When tier or level changes, `_apply()` iterates all `image` components on the parent and nukes their `_canvas` so they re-bake with the new tier colors. Without this, the icon canvas stays cached with the old tier colors forever.
+- **Palette writes `parent.shaderData` directly.** It sets `u_tier_1..u_tier_5` on `parent.shaderData` so per-image Palette shaders can forward these uniforms without going through the sprite shader's whitelist (the sprite shader may not include Palette). It also forwards to the parent's `shader` component via `_setUniform`.
+- **Palette invalidates `image` component canvases on change (tier scheme only).** When tier or level changes, `_apply()` iterates all `image` components on the parent and nukes their `_canvas` so they re-bake with the new tier colors. Without this, the icon canvas stays cached with the old tier colors forever. Rarity scheme does not invalidate canvases.
+- **Image supports per-image palette.** When Image data has `palette = {scheme, value}`, it loads that palette directly instead of reading from parent.shaderData — allows different images on the same sprite to use different palettes.
 
 ## Card-sized canvas baking (Label, Image)
 
