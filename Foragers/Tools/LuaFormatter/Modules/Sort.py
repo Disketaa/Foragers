@@ -8,12 +8,14 @@ from _lua import matching_brace, split_top_level, table_block
 
 
 # Unlisted-value debug state, accumulated across the whole run.
-_current_path = None
 _issues = {  # kind -> value -> ordered list of files using it
     "param": {},
     "component": {},
     "tween": {},
 }
+
+
+_current_path = None
 
 
 def set_path(path):
@@ -25,10 +27,13 @@ def _short(path: str) -> str:
     return Path(path).stem
 
 
-def _report(kind: str, value: str):
+def _report(kind: str, value: str, path: str | None = None):
+    if path is None:
+        path = _current_path
     files = _issues[kind].setdefault(value, [])
-    if _current_path and _short(_current_path) not in files:
-        files.append(_short(_current_path))
+    stem = _short(path) if path else "?"
+    if stem not in files:
+        files.append(stem)
 
 
 def finalize(script_dir):
@@ -37,10 +42,13 @@ def finalize(script_dir):
         "component": "Component not in component_order",
         "tween": "Tween target not in tween_order",
     }
+    # ANSI yellow for warnings
+    YELLOW = "\x1b[38;2;204;167;0m"
+    RESET = "\x1b[0m"
     for kind in ("param", "component", "tween"):
         for value, files in _issues[kind].items():
             loc = ", ".join(files) if files else "?"
-            print(f"⚠️  {labels[kind]}: '{value}'  ({loc})", file=sys.stderr)
+            print(f"{YELLOW}{labels[kind]}: '{value}'  ({loc}){RESET}", file=sys.stderr)
 
 
 def _key_of(entry: str):

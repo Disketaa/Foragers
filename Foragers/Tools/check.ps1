@@ -94,11 +94,11 @@ function Invoke-Gate {
     return $err
 }
 
+$LuaFormatterErrors= Invoke-Gate "Lua Formatter"   { python "$root\LuaFormatter\Formatter.py" } $gameRoot
 $LuaCheckErrors    = Invoke-Gate "Lua Check"       { & "$root\luacheck.exe" -q "$gameRoot\Main.lua" "$gameRoot\Source" "$gameRoot\Content" } $gameRoot
 $LuaAnalyzerErrors = Invoke-Gate "Lua Analyzer"    { powershell -File "$root\LuaAnalyzer\check.ps1" } $gameRoot
 $StructurizerErrors= Invoke-Gate "Lua Structurizer" { python "$root\LuaStructurizer\Structurizer.py" } $gameRoot
-$LuaFormatterErrors= Invoke-Gate "Lua Formatter"   { python "$root\LuaFormatter\Formatter.py" } $gameRoot
 
-$TotalErrors = $LuaCheckErrors + $LuaAnalyzerErrors + $LuaFormatterErrors + $StructurizerErrors
+$TotalErrors = $LuaFormatterErrors + $LuaCheckErrors + $LuaAnalyzerErrors + $StructurizerErrors
 Write-Host "${SectionColor}`nAggregated: $TotalErrors error(s) across all gates.${Reset}"
 exit $TotalErrors

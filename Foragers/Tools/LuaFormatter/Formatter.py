@@ -1,5 +1,6 @@
 import importlib.util
 import io
+import re
 import sys
 from pathlib import Path
 from typing import cast
@@ -28,6 +29,48 @@ def normalize_orders(config: dict) -> dict:
         if isinstance(sub, dict):
             sub["order"] = _split_order(sub.get("order"))
     return config
+
+
+def collect_config_params(config: dict) -> set[str]:
+    """Extract all param names from Settings.toml."""
+    params = set()
+    for group_name, group_data in config.get("param_groups", {}).items():
+        if isinstance(group_data, dict):
+            tags = group_data.get("tags", "")
+            if isinstance(tags, str):
+                for p in tags.split():
+                    params.add(p)
+    for section in ("component_order", "tween_order"):
+        if section in config:
+            order = config[section].get("order", [])
+            if isinstance(order, str):
+                order = order.replace(",", " ").split()
+            for item in order:
+                params.add(item.strip())
+    return params
+
+
+def check_unused_params(config: dict, project_root: Path) -> list[str]:
+    """Find params in Settings.toml that are not used in any .lua file."""
+    params = collect_config_params(config)
+    lua_files = [
+        f for f in project_root.rglob("*.lua")
+        if "Tools" not in f.parts
+    ]
+    unused = []
+    for p in sorted(params):
+        pattern = re.compile(rb"(?<![a-zA-Z0-9_])" + p.encode() + rb"(?![a-zA-Z0-9_])")
+        found = False
+        for lf in lua_files:
+            try:
+                if pattern.search(lf.read_bytes()):
+                    found = True
+                    break
+            except Exception:
+                pass
+        if not found:
+            unused.append(p)
+    return unused
 
 
 def find_lua_files(
@@ -66,6 +109,8 @@ def main():
 
     script_dir = Path(__file__).resolve().parent
     config_path = script_dir / "Settings.toml"
+
+    verify_only = "--verify" in sys.argv or "-v" in sys.argv
 
     if not config_path.is_file():
         print(f"Error: Config file not found at {config_path}", file=sys.stderr)
@@ -153,16 +198,24 @@ def main():
 
         if updated != original:
             path.write_text(updated, encoding="utf-8")
-            print(f"{path}:1:1 - needs formatting")
+            rel_path = path.relative_to(project_root).as_posix()
+            print(f"{rel_path}:1:1 - needs formatting")
             changed += 1
         # unchanged files are silently skipped — printing them only spams the console
-
-    print(f"Total: {changed} warnings / 0 errors in {len(all_files)} files")
-    sys.stdout.flush()
 
     for opt_name, module, opt_config in enabled_plugins:
         if hasattr(module, "finalize"):
             module.finalize(script_dir)
+
+    # Check for unused params in Settings.toml
+    unused = check_unused_params(config, project_root)
+    unused_count = len(unused)
+    for p in unused:
+        rel_config = config_path.relative_to(project_root).as_posix()
+        print(f"{rel_config}:1:1 - unused param '{p}'")
+
+    # Summary format: Total: W warnings / E errors in F files
+    print(f"Total: {changed} warnings / {unused_count} errors in {len(all_files)} files")
 
 
 if __name__ == "__main__":
