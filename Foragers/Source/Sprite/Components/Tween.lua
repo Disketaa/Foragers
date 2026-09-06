@@ -310,6 +310,16 @@ local function applyTweens(self, tweenSet)
 			if tweenData.set ~= nil then
 				self.parent.tweens[tweenData.target] = nil
 				self.parent[tweenData.target] = ValueParser.call(tweenData, "set")
+				-- Mark shader dirty so uniform picks up the new parent value
+				local shaderComp = self.parent:findComponent("shader")
+				if shaderComp then
+					local uniformName = "u_" .. tweenData.target
+					if shaderComp._uniformWhitelist[uniformName] then
+						shaderComp._uniformValues[uniformName] = ValueParser.call(tweenData, "set")
+						self.parent.shaderData[uniformName] = ValueParser.call(tweenData, "set")
+						self.parent._shaderDirty = true
+					end
+				end
 			else
 				local from = ValueParser.call(tweenData, "from")
 				local to = ValueParser.call(tweenData, "to")
