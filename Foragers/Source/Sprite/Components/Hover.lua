@@ -27,6 +27,7 @@ end
 function Hover:update()
 	local cursor = Cursor.active
 	if not cursor or not cursor.canvas then return end
+	if cursor._state == "hidden" then return end
 
 	local mx, my = love.mouse.getPosition()
 	local mouseMoved = (self._lastMX ~= nil) and ((mx ~= self._lastMX) or (my ~= self._lastMY))

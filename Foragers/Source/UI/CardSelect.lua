@@ -328,6 +328,9 @@ function CardSelect.handleClick()
 	if not cursor or not cursor.canvas or _hiding then
 		return nil
 	end
+	if cursor._state == "hidden" then
+		return nil
+	end
 
 	local mx, my = love.mouse.getPosition()
 	local cv = cursor.canvas
