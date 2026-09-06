@@ -179,7 +179,7 @@ return {
 			shaders = {
 				"Brightness",
 				{ Skew = { u_amount = 0.1 } },
-				{ Rimlight = { u_coneWidth = 4, u_inner = 0.4, u_outer = 1, u_threshold = 0.25, u_rimStrength = 0 } },
+				{ Rimlight = { u_coneWidth = 1, u_inner = 0.4, u_outer = 1, u_threshold = 0.25, u_rimStrength = 0 } },
 				"Burn",
 			},
 		},
