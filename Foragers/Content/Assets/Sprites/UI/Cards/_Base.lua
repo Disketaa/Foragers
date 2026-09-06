@@ -28,7 +28,6 @@ return {
 				},
 
 				select = {
-					{ target = "y", set = 0 },
 					{ target = "scaleX", from = 1, to = 1.25, duration = 0.7, curve = "OutBack" },
 					{ target = "scaleY", from = 1, to = 1.25, duration = 0.6, curve = "OutBack" },
 					{ target = "rimAngle", from = 0, to = 360, duration = 120, curve = "Linear", loop = true },
