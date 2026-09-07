@@ -6,7 +6,7 @@ return {
 		{
 			component = "image",
 			id = "icon",
-			image = "Content/Assets/Sprites/UI/Weapons/Pickaxe",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Icons/Grindstone",
 		},
 
 		{

@@ -1,4 +1,5 @@
 return {
+	weapon = "pickaxe",
 	frameWidth = 10,
 	frameHeight = 10,
 	pivotX = "center",

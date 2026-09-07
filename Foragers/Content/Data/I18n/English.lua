@@ -1,7 +1,7 @@
 return {
-	["card.durability"] = "Durability",
+	["card.extraction"] = "Extraction",
 	["card.sharpness"] = "Sharpness",
-	["card.speedy"] = "Speedy",
+	["card.furious"] = "Furious",
 	["modifier.buffDamage"] = "+{n} damage",
-	["modifier.buffTempo"] = "+{n} tempo",
+	["modifier.buffTempo"] = "+{n} attack speed",
 }

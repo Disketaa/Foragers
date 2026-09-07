@@ -5,6 +5,7 @@
 local Commands = {}
 
 local Binds = require("Source.Helpers.Debug.Binds")
+local GameState = require("Source.Helpers.Systems.GameState")
 
 local handlers = {}
 local descriptions = {}
@@ -195,7 +196,101 @@ Commands.register("xp", function(args, ctx)
 	return "XP set to " .. amount, true
 end, "set, add, or remove XP.")
 
+local function refreshWeaponUI(wlvl)
+	local Tiers = require("Source.Helpers.Systems.Tiers")
+	local wt = GameState.weaponLevelText
+	local we = GameState.weaponEmblem
+	local wtw = GameState.weaponTween
+	local wpalette = GameState.weaponTier
+	if wt then
+		wt:setText(tostring(wlvl))
+		wt:setColor({ Tiers.tierColor(wlvl) })
+	end
+	if we then
+		local emblemTier = Tiers.tierForLevel(wlvl)
+		we:setFrame(emblemTier)
+	end
+	if wtw then
+		wtw:triggerTag("chosen")
+	end
+	if wpalette then
+		wpalette:setLevel(wlvl)
+	end
+	local heldWeapon = GameState.weaponSprite
+	if heldWeapon then
+		local heldTier = heldWeapon:findComponent("tier")
+		if heldTier then
+			heldTier:setLevel(wlvl)
+		end
+	end
+end
+
+--- Dynamically discover weapon names from Content/Assets/Sprites/Tools/*.lua
+--- that have a `weapon` field set.
+local _weaponNames = nil
+local function getWeaponNames()
+	if _weaponNames then
+		return _weaponNames
+	end
+	_weaponNames = {}
+	local toolsPath = "Content/Assets/Sprites/Tools"
+	local items = love and love.filesystem and love.filesystem.getDirectoryItems(toolsPath)
+	if not items then
+		return _weaponNames
+	end
+	for _, item in ipairs(items) do
+		if item:match("%.lua$") then
+			local modulePath = "Content/Assets/Sprites/Tools/" .. item:gsub("%.lua$", "")
+			local ok, data = pcall(require, modulePath)
+			if ok and data and data.weapon then
+				_weaponNames[data.weapon] = true
+			end
+		end
+	end
+	return _weaponNames
+end
+
+-- Register weapon names as subcommands for tab-completion
+for name in pairs(getWeaponNames()) do
+	Commands.addSubcommand("lvl", name)
+end
+
 Commands.register("lvl", function(args, ctx)
+	-- Handle weapon level: lvl <weapon> N
+	local firstArg = args:match("^(%S+)")
+	local weaponGroups = getWeaponNames()
+	if firstArg and weaponGroups[firstArg] then
+		local weaponName = firstArg
+		local rest = args:match("^%S+%s+(.*)$") or ""
+		if rest == "" then
+			local currentLevel = GameState.cardGroupCounts[weaponName] or 0
+			return weaponName .. " level: " .. currentLevel, true
+		end
+		local amount, op = Commands.parseAmount(rest)
+		if not amount then
+			return 'Usage: lvl pickaxe | lvl pickaxe +N | lvl pickaxe N', false
+		end
+		local currentLevel = GameState.cardGroupCounts[weaponName] or 0
+		local newLevel
+		if op == "add" then
+			newLevel = currentLevel + amount
+		elseif op == "sub" then
+			newLevel = math.max(0, currentLevel - amount)
+		else
+			newLevel = amount
+		end
+		GameState.cardGroupCounts[weaponName] = newLevel
+		refreshWeaponUI(newLevel)
+		local delta = newLevel - currentLevel
+		if delta > 0 then
+			return weaponName .. " level: " .. currentLevel .. " → " .. newLevel, true
+		elseif delta < 0 then
+			return weaponName .. " level: " .. currentLevel .. " → " .. newLevel, true
+		end
+		return weaponName .. " level unchanged: " .. newLevel, true
+	end
+
+	-- Player level (original behavior)
 	local s, err = needStats(ctx)
 	if not s then
 		return err, false
@@ -206,7 +301,7 @@ Commands.register("lvl", function(args, ctx)
 	end
 	local amount, op = Commands.parseAmount(args)
 	if not amount then
-		return 'Usage: lvl | lvl +N | lvl -N | lvl N', false
+		return 'Usage: lvl | lvl +N | lvl -N | lvl N | lvl pickaxe N', false
 	end
 	if op == "add" then
 		s:addLevels(amount)
@@ -217,7 +312,7 @@ Commands.register("lvl", function(args, ctx)
 	end
 	s:setLevel(amount)
 	return "Level set to " .. amount, true
-end, "set, add, or remove levels.")
+end, "player lvl or lvl <weapon> N.")
 
 Commands.register("satiety", function(args, ctx)
 	local s, err = needStats(ctx)

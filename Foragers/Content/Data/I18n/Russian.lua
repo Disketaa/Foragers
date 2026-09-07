@@ -1,7 +1,7 @@
 return {
-	["card.durability"] = "Прочность",
+	["card.extraction"] = "Извлечение",
 	["card.sharpness"] = "Острота",
-	["card.speedy"] = "Скорость",
+	["card.furious"] = "Ярость",
 	["modifier.buffDamage"] = "+{n} урон",
 	["modifier.buffTempo"] = "+{n} темп",
 }
