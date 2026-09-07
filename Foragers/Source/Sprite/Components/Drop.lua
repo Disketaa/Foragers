@@ -16,6 +16,9 @@ function Drop.new(data)
 		for _, d in ipairs(data.drops) do
 			if d.sprite then
 				local entry = { sprite = d.sprite, amount = d.amount or "1" }
+				if d.bonusStats then
+					entry.bonusStats = d.bonusStats
+				end
 				if d.__raw then
 					entry.__raw = d.__raw
 				end
@@ -26,6 +29,9 @@ function Drop.new(data)
 		end
 	elseif data.sprite then
 		local entry = { sprite = data.sprite, amount = data.amount or "1" }
+		if data.bonusStats then
+			entry.bonusStats = data.bonusStats
+		end
 		if data.__raw then
 			entry.__raw = data.__raw
 		end
