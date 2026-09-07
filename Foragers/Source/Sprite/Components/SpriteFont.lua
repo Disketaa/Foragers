@@ -166,7 +166,7 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 		pr, pg, pb, pa = love.graphics.getColor()
 		local r, g, b, a = pr, pg, pb, pa
 		if opts.color then
-			r, g, b = opts.color[1], opts.color[2], opts.color[3]
+			r, g, b = opts.color[1] or r, opts.color[2] or g, opts.color[3] or b
 			a = opts.color[4] or a
 		end
 		if opts.alpha then
