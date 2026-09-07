@@ -14,7 +14,13 @@ return {
 		{
 			component = "image",
 			id = "background",
-			image = "Content/Assets/Sprites/UI/Cards/Graphics/Backgrounds/Cavern",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Backgrounds/Forge",
+		},
+
+		{
+			component = "image",
+			id = "icon",
+			image = "Content/Assets/Sprites/UI/Weapons/Pickaxe",
 		},
 	},
 }

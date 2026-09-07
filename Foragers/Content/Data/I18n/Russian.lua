@@ -1,7 +1,7 @@
 return {
 	["card.extraction"] = "Извлечение",
 	["card.sharpness"] = "Острота",
-	["card.furious"] = "Ярость",
+	["card.handy"] = "Удобство",
 	["modifier.buffDamage"] = "+{n} урон",
-	["modifier.buffTempo"] = "+{n} темп",
+	["modifier.buffAttackSpeed"] = "+{n} скорость атаки",
 }

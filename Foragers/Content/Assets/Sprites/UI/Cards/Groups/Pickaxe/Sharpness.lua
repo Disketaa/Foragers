@@ -4,12 +4,6 @@ return {
 	rarity = "common",
 	components = {
 		{
-			component = "image",
-			id = "icon",
-			image = "Content/Assets/Sprites/UI/Cards/Graphics/Icons/Grindstone",
-		},
-
-		{
 			component = "text",
 			id = "title",
 			text = { key = "card.sharpness" },

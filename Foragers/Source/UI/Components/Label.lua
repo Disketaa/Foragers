@@ -43,6 +43,7 @@ end
 ---@field tierColors table|nil @ per-tier level text colors, indexed by emblem tier (1..5); consumed by CardSelect
 ---@field maxWidth number|nil @ nil disables clip/scroll
 ---@field maxHeight number|nil @ nil disables height clip; enables word-wrap when set
+---@field coloredModifiers boolean @ auto-color +/-N patterns with MOD_POSITIVE/MOD_NEGATIVE
 ---@field scrollSpeed number @ px/sec text travels while scrolling
 ---@field scrollPause number @ sec dwell at each scroll end
 ---@field scrollEdgePad number @ px overshoot so glyph ink reaches window edge
@@ -55,6 +56,8 @@ Label.__index = Label
 --- Default scroll tuning shared by every scrolling label.
 Label.SCROLL_SPEED = 30 -- px/sec the text travels
 Label.SCROLL_PAUSE = 0.6 -- sec dwell at each scroll end
+Label.MOD_POSITIVE = { 0.34, 0.38, 0.2 }
+Label.MOD_NEGATIVE = { 0.73, 0.20, 0.11 }
 
 ---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadowColor}
 ---@return Label
@@ -77,6 +80,7 @@ function Label.new(data)
 		skewWithParent = data.skewWithParent ~= false,
 		maxWidth = data.maxWidth,
 		maxHeight = data.maxHeight,
+		coloredModifiers = data.coloredModifiers,
 		scrollSpeed = data.scrollSpeed or Label.SCROLL_SPEED,
 		scrollPause = data.scrollPause or Label.SCROLL_PAUSE,
 		scrollEdgePad = data.scrollEdgePad or 1,
@@ -119,6 +123,42 @@ function Label:scrollOffset(range)
 		local t2 = t - (pause * 2 + moveDur)
 		return range - (t2 / moveDur) * range
 	end
+end
+
+--- Parse text into segments with colors. +/-N patterns get MOD_POSITIVE/MOD_NEGATIVE;
+--- all other content (words, plain numbers) gets defaultColor.
+---@param text string
+---@param defaultColor table
+---@return table segments @ {# {text, color}}
+function Label:parseBuffs(text, defaultColor)
+	local segments = {}
+	if not text or text == "" then
+		return segments
+	end
+
+	local pos = 1
+	local len = #text
+	while pos <= len do
+		local b, e, prefix = text:find("^([+-]?)(%d+)", pos)
+		if not b or b ~= pos then
+			-- Non-number word, or number pattern not at word start — plain text.
+			local word = text:match("^%S+", pos) or text:sub(pos, pos)
+			table.insert(segments, { text = word, color = defaultColor })
+			pos = pos + #word
+		elseif prefix == "+" then
+			table.insert(segments, { text = text:sub(b, e), color = Label.MOD_POSITIVE })
+			pos = e + 1
+		elseif prefix == "-" then
+			table.insert(segments, { text = text:sub(b, e), color = Label.MOD_NEGATIVE })
+			pos = e + 1
+		else
+			-- Plain number (no sign) — treat as regular text
+			table.insert(segments, { text = text:sub(b, e), color = defaultColor })
+			pos = e + 1
+		end
+	end
+
+	return segments
 end
 
 --- Break text into lines that fit within maxWidth (word-wrap).
@@ -278,20 +318,47 @@ function Label:buildCanvas(cx, cy, fw, fh)
 				break
 			end
 
-			if self.dropshadowColor then
-				SpriteFont.drawText(ref, line.text, baseX + 1, drawY + 1, {
-					color = self.dropshadowColor,
+			if self.coloredModifiers then
+				local segments = self:parseBuffs(line.text, self.color)
+				local totalW = 0
+				for _, seg in ipairs(segments) do
+					totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)
+				end
+				totalW = totalW * self.scale
+				local segX = baseX - totalW * 0.5 - (self._charSpacing * self.scale) * 0.5
+				for _, seg in ipairs(segments) do
+					if self.dropshadowColor then
+						SpriteFont.drawText(ref, seg.text, segX + 1, drawY + 1, {
+							color = self.dropshadowColor,
+							horizontalAlign = "left",
+							verticalAlign = "center",
+							scale = self.scale,
+						})
+					end
+					SpriteFont.drawText(ref, seg.text, segX, drawY, {
+						color = seg.color,
+						horizontalAlign = "left",
+						verticalAlign = "center",
+						scale = self.scale,
+					})
+					segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
+				end
+			else
+				if self.dropshadowColor then
+					SpriteFont.drawText(ref, line.text, baseX + 1, drawY + 1, {
+						color = self.dropshadowColor,
+						horizontalAlign = self.horizontalAlign,
+						verticalAlign = "center",
+						scale = self.scale,
+					})
+				end
+				SpriteFont.drawText(ref, line.text, baseX, drawY, {
+					color = self.color,
 					horizontalAlign = self.horizontalAlign,
 					verticalAlign = "center",
 					scale = self.scale,
 				})
 			end
-			SpriteFont.drawText(ref, line.text, baseX, drawY, {
-				color = self.color,
-				horizontalAlign = self.horizontalAlign,
-				verticalAlign = "center",
-				scale = self.scale,
-			})
 			drawY = drawY + lineH
 		end
 
@@ -324,15 +391,42 @@ function Label:buildCanvas(cx, cy, fw, fh)
 			verticalAlign = self.verticalAlign,
 			scale = self.scale,
 		}
-		if self.dropshadowColor then
-			SpriteFont.drawText(ref, self.text, drawX + 1, anchorY + 1, {
-				color = self.dropshadowColor,
-				horizontalAlign = drawAlign,
-				verticalAlign = self.verticalAlign,
-				scale = self.scale,
-			})
+		if self.coloredModifiers then
+			local segments = self:parseBuffs(self.text, self.color)
+			local totalW = 0
+			for _, seg in ipairs(segments) do
+				totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)
+			end
+			totalW = totalW * self.scale
+			local segX = drawX - totalW * 0.5 - (self._charSpacing * self.scale) * 0.5
+			for _, seg in ipairs(segments) do
+				if self.dropshadowColor then
+					SpriteFont.drawText(ref, seg.text, segX + 1, anchorY + 1, {
+						color = self.dropshadowColor,
+						horizontalAlign = "left",
+						verticalAlign = self.verticalAlign,
+						scale = self.scale,
+					})
+				end
+				SpriteFont.drawText(ref, seg.text, segX, anchorY, {
+					color = seg.color,
+					horizontalAlign = "left",
+					verticalAlign = self.verticalAlign,
+					scale = self.scale,
+				})
+				segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
+			end
+		else
+			if self.dropshadowColor then
+				SpriteFont.drawText(ref, self.text, drawX + 1, anchorY + 1, {
+					color = self.dropshadowColor,
+					horizontalAlign = drawAlign,
+					verticalAlign = self.verticalAlign,
+					scale = self.scale,
+				})
+			end
+			SpriteFont.drawText(ref, self.text, drawX, anchorY, opts)
 		end
-		SpriteFont.drawText(ref, self.text, drawX, anchorY, opts)
 
 		if clip then
 			love.graphics.setScissor()

@@ -4,21 +4,15 @@ return {
 	rarity = "common",
 	components = {
 		{
-			component = "image",
-			id = "icon",
-			image = "Content/Assets/Sprites/UI/Cards/Graphics/Icons/AttackSpeed",
-		},
-
-		{
 			component = "text",
 			id = "title",
-			text = { key = "card.furious" },
+			text = { key = "card.handy" },
 		},
 
 		{
 			component = "text",
 			id = "description",
-			text = { key = "modifier.buffTempo", params = { n = 1 } },
+			text = { key = "modifier.buffAttackSpeed", params = { n = 1 } },
 		},
 	},
 }

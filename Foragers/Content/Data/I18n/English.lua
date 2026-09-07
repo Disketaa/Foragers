@@ -1,7 +1,8 @@
 return {
 	["card.extraction"] = "Extraction",
 	["card.sharpness"] = "Sharpness",
-	["card.furious"] = "Furious",
-	["modifier.buffDamage"] = "+{n} damage",
-	["modifier.buffTempo"] = "+{n} attack speed",
+	["card.handy"] = "Handy",
+	["modifier.buffDamage"] = "+{n} Damage",
+	["modifier.buffAttackSpeed"] = "+{n} Attack Speed",
+	["modifier.buffCrystalsFromRocks"] = "+{n} Crystals from Rocks",
 }

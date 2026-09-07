@@ -4,12 +4,6 @@ return {
 	rarity = "common",
 	components = {
 		{
-			component = "image",
-			id = "icon",
-			image = "Content/Assets/Sprites/UI/Cards/Graphics/Icons/Geode",
-		},
-
-		{
 			component = "text",
 			id = "title",
 			text = { key = "card.extraction" },
@@ -18,7 +12,7 @@ return {
 		{
 			component = "text",
 			id = "description",
-			text = { key = "modifier.buffDamage", params = { n = 2 } },
+			text = { key = "modifier.buffCrystalsFromRocks", params = { n = 1 } },
 		},
 	},
 }
