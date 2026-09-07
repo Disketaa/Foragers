@@ -288,7 +288,8 @@ local function createTween(target, from, to, duration, curve, loop, pingPong, de
 	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong, destroyOnComplete, wait)
 end
 
-local function applyTweens(self, tweenSet)
+local function applyTweens(self, tweenSet, restart)
+	if restart == nil then restart = true end
 	local active = {}
 	for _, td in pairs(tweenSet) do
 		if type(td) == "table" and td.target then
@@ -308,16 +309,18 @@ local function applyTweens(self, tweenSet)
 	for _, tweenData in pairs(tweenSet) do
 		if type(tweenData) == "table" and tweenData.target then
 			if tweenData.set ~= nil then
+				local val = ValueParser.call(tweenData, "set")
 				self.parent.tweens[tweenData.target] = nil
-				self.parent[tweenData.target] = ValueParser.call(tweenData, "set")
+				self.parent[tweenData.target] = val
 				-- Mark shader dirty so uniform picks up the new parent value
 				local shaderComp = self.parent:findComponent("shader")
 				if shaderComp then
 					local uniformName = "u_" .. tweenData.target
 					if shaderComp._uniformWhitelist[uniformName] then
-						shaderComp._uniformValues[uniformName] = ValueParser.call(tweenData, "set")
-						self.parent.shaderData[uniformName] = ValueParser.call(tweenData, "set")
+						shaderComp._uniformValues[uniformName] = val
+						self.parent.shaderData[uniformName] = val
 						self.parent._shaderDirty = true
+						shaderComp:_setUniform(uniformName, val)
 					end
 				end
 			else
@@ -328,7 +331,8 @@ local function applyTweens(self, tweenSet)
 				local destroyOnComplete = tweenData.destroyOnComplete ~= nil and tweenData.destroyOnComplete
 					or globalDestroyOnComplete
 				local wait = tweenData.wait or 0
-				if not self.parent.tweens[tweenData.target] then
+				local isNew = not self.parent.tweens[tweenData.target]
+				if isNew then
 					self.parent.tweens[tweenData.target] = createTween(
 						tweenData.target,
 						from,
@@ -340,6 +344,13 @@ local function applyTweens(self, tweenSet)
 						destroyOnComplete,
 						wait
 					)
+					local shaderComp = self.parent:findComponent("shader")
+					if shaderComp then
+						local uniformName = "u_" .. tweenData.target
+						if shaderComp._uniformWhitelist[uniformName] then
+							shaderComp:_setUniform(uniformName, from)
+						end
+					end
 				end
 				local tween = self.parent.tweens[tweenData.target]
 				tween.from = from
@@ -351,7 +362,9 @@ local function applyTweens(self, tweenSet)
 				tween.destroyOnComplete = destroyOnComplete or false
 				tween.wait = wait
 				tween._destroyHandled = nil
-				tween:start()
+				if isNew or (restart and tween:isFinished()) then
+					tween:start()
+				end
 			end
 		end
 	end
@@ -434,7 +447,7 @@ function TweenComponent:attach()
 
 	self.parent:on(Events.COUNTER_TICK, function()
 		if self.tags.counter_tick then
-			applyTweens(self, self.tags.counter_tick)
+			applyTweens(self, self.tags.counter_tick, false)
 		end
 	end, 10)
 
