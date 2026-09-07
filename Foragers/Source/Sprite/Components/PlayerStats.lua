@@ -18,6 +18,8 @@ local GameState = require("Source.Helpers.Systems.GameState")
 ---@field damage number|{base:number, gain:number} Base attack damage
 ---@field range number|{base:number, gain:number} Attack range
 ---@field attackSpeed number|{base:number, gain:number} Attacks per second
+---@field crystalDropBonus number|{base:number, gain:number} Bonus crystals from all sources
+---@field rockCrystalBonus number|{base:number, gain:number} Bonus crystals specifically from rocks
 ---@field maxLevel number Level cap
 ---@field movementSpeed number|{base:number, gain:number} Movement speed (flat or curve)
 ---@field swimmingSpeed number|{base:number, gain:number} Swimming speed (flat or curve)
@@ -68,6 +70,8 @@ function PlayerStats.new(data)
 		damage = data.damage or 1,
 		range = data.range or 20,
 		attackSpeed = data.attackSpeed or 2,
+		crystalDropBonus = data.crystalDropBonus or 0,
+		rockCrystalBonus = data.rockCrystalBonus or 0,
 		level = data.level or 1,
 		maxLevel = data.maxLevel or 99,
 		experience = data.experience or 0,
@@ -207,6 +211,16 @@ end
 ---@return number attack speed (attacks/sec) for the current level
 function PlayerStats:getAttackSpeed()
 	return self:resolveStat(self.attackSpeed)
+end
+
+---@return number crystal drop bonus for the current level
+function PlayerStats:getCrystalDropBonus()
+	return self:resolveStat(self.crystalDropBonus)
+end
+
+---@return number rock crystal drop bonus for the current level
+function PlayerStats:getRockCrystalBonus()
+	return self:resolveStat(self.rockCrystalBonus)
 end
 
 ---@return number attack speed (attacks/sec) at level 1 — the curve base. Used as the

@@ -3,6 +3,7 @@ local Path = require("Source.Helpers.Core.Path")
 local Merge = require("Source.Helpers.Core.Merge")
 local Log = require("Source.Helpers.Core.Log")
 local ValueParser = require("Source.Helpers.Core.ValueParser")
+local GameState = require("Source.Helpers.Systems.GameState")
 
 local pendingDrops = {}
 
@@ -47,6 +48,14 @@ function Drop:attach()
 		local SpriteLoader = require("Source.Sprite.SpriteLoader")
 		for _, dropDef in ipairs(self.drops) do
 			local count = ValueParser.call(dropDef, "amount")
+			if dropDef.bonusStats then
+				local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
+				if stats then
+					for _, statName in ipairs(dropDef.bonusStats) do
+						count = count + (stats:resolveStat(stats[statName]) or 0)
+					end
+				end
+			end
 			local luaPath = Path.lua(dropDef.sprite)
 			local ok, dropData = pcall(require, luaPath)
 			if ok and dropData then
