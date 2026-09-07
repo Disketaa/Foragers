@@ -42,11 +42,13 @@ end
 ---@field dropshadowColor table|nil @ dropshadow renders only when this is set
 ---@field tierColors table|nil @ per-tier level text colors, indexed by emblem tier (1..5); consumed by CardSelect
 ---@field maxWidth number|nil @ nil disables clip/scroll
+---@field maxHeight number|nil @ nil disables height clip; enables word-wrap when set
 ---@field scrollSpeed number @ px/sec text travels while scrolling
 ---@field scrollPause number @ sec dwell at each scroll end
 ---@field scrollEdgePad number @ px overshoot so glyph ink reaches window edge
 ---@field _scrollT number @ accumulated scroll time
 ---@field _textW number|nil @ cached rendered width for overflow check
+---@field _textH number|nil @ cached rendered height for multiline check
 local Label = {}
 Label.__index = Label
 
@@ -74,12 +76,14 @@ function Label.new(data)
 		dropshadowColor = data.dropshadowColor and { unpack(data.dropshadowColor) } or nil,
 		skewWithParent = data.skewWithParent ~= false,
 		maxWidth = data.maxWidth,
+		maxHeight = data.maxHeight,
 		scrollSpeed = data.scrollSpeed or Label.SCROLL_SPEED,
 		scrollPause = data.scrollPause or Label.SCROLL_PAUSE,
 		scrollEdgePad = data.scrollEdgePad or 1,
 		charSpacing = data.charSpacing,
 		_scrollT = 0,
 		_textW = nil,
+		_textH = nil,
 		tierColors = data.tierColors,
 	}, Label)
 	instances[self] = true
@@ -115,6 +119,56 @@ function Label:scrollOffset(range)
 		local t2 = t - (pause * 2 + moveDur)
 		return range - (t2 / moveDur) * range
 	end
+end
+
+--- Break text into lines that fit within maxWidth (word-wrap).
+--- Returns array of {text, width} and total height in frame units.
+---@param text string
+---@param maxWidth number|nil nil disables wrapping
+---@param ref table font ref with measureText
+---@param charSpacing number
+---@return table lines @ {# {text, width}}
+---@return number totalH @ total height in frame units (unscaled)
+function Label:wrapText(text, maxWidth, ref, charSpacing)
+	local lines = {}
+	if not text or text == "" or not maxWidth then
+		return lines, 0
+	end
+
+	local words = {}
+	for word in text:gmatch("%S+") do
+		table.insert(words, word)
+	end
+	if #words == 0 then
+		return lines, 0
+	end
+
+	local currentLine = ""
+	local currentWidth = 0
+
+	for i, word in ipairs(words) do
+		local trailingSpace = i < #words and " " or ""
+		local wordWithSpace = word .. trailingSpace
+		local wordWidth = SpriteFont.measureText(ref, wordWithSpace, charSpacing)
+
+		if currentWidth + wordWidth <= maxWidth then
+			currentLine = currentLine .. wordWithSpace
+			currentWidth = currentWidth + wordWidth
+		else
+			if currentLine ~= "" then
+				table.insert(lines, { text = currentLine, width = currentWidth })
+			end
+			currentLine = word .. " "
+			currentWidth = SpriteFont.measureText(ref, word .. " ", charSpacing)
+		end
+	end
+
+	if currentLine ~= "" then
+		table.insert(lines, { text = currentLine, width = currentWidth })
+	end
+
+	local totalH = #lines * ref.frameH
+	return lines, totalH
 end
 
 function Label:attach()
@@ -198,45 +252,91 @@ function Label:buildCanvas(cx, cy, fw, fh)
 	local renderedW = textW * self.scale
 	self._textW = renderedW
 
-	local drawAlign = self.horizontalAlign
-	local drawX = baseX
-	local clip = self.maxWidth and renderedW > self.maxWidth
-	if clip then
-		-- Clip window is centred on the label's natural centre (anchorX),
-		-- so a scrolling label lines up with a non-scrolling one. Glyphs
-		-- draw pivot-centred, so the visual box is offset by ox from drawX;
-		-- shift the text (not the window) to sweep it through. A small
-		-- overshoot (scrollEdgePad) lets glyph ink reach the window edge
-		-- instead of leaving the frame's transparent padding as a gap.
-		local range = renderedW - self.maxWidth
-		local pad = self.scrollEdgePad
-		local f = range > 0 and (self:scrollOffset(range) / range) or 0
-		local scrollShift = (range * 0.5 - pad) - f * (range - 2 * pad)
-		drawX = baseX + scrollShift
-		-- Scissor is raw canvas pixels (unaffected by the translate above).
-		local winLeft = anchorX - self.maxWidth * 0.5
-		local canvasWinX = math.floor(winLeft - (cx - fw * 0.5) + 0.5)
-		love.graphics.setScissor(canvasWinX, 0, math.ceil(self.maxWidth), fh)
-	end
+	if self.maxHeight then
+		local maxH = self.maxHeight / self.scale
+		local lines, totalH = self:wrapText(self.text, self.maxWidth, ref, self._charSpacing)
+		self._textH = totalH * self.scale
 
-	local opts = {
-		color = self.color,
-		horizontalAlign = drawAlign,
-		verticalAlign = self.verticalAlign,
-		scale = self.scale,
-	}
-	if self.dropshadowColor then
-		SpriteFont.drawText(ref, self.text, drawX + 1, anchorY + 1, {
-			color = self.dropshadowColor,
+		local lineH = ref.frameH * self.scale
+		if self.verticalAlign == "center" then
+			anchorY = anchorY - (totalH - ref.frameH) * 0.5
+		elseif self.verticalAlign == "bottom" then
+			anchorY = anchorY - (totalH - ref.frameH)
+		end
+
+		local visibleLines = 0
+		if maxH > 0 and totalH > maxH then
+			visibleLines = math.floor(maxH / ref.frameH)
+			local winTop = anchorY - ref.frameH * 0.5 * self.scale
+			local canvasWinY = math.floor(winTop - (cy - fh * 0.5) + 0.5)
+			love.graphics.setScissor(0, canvasWinY, fw, maxH)
+		end
+
+		local drawY = anchorY
+		for i, line in ipairs(lines) do
+			if visibleLines > 0 and i > visibleLines then
+				break
+			end
+
+			if self.dropshadowColor then
+				SpriteFont.drawText(ref, line.text, baseX + 1, drawY + 1, {
+					color = self.dropshadowColor,
+					horizontalAlign = self.horizontalAlign,
+					verticalAlign = "center",
+					scale = self.scale,
+				})
+			end
+			SpriteFont.drawText(ref, line.text, baseX, drawY, {
+				color = self.color,
+				horizontalAlign = self.horizontalAlign,
+				verticalAlign = "center",
+				scale = self.scale,
+			})
+			drawY = drawY + lineH
+		end
+
+		love.graphics.setScissor()
+	else
+		local drawAlign = self.horizontalAlign
+		local drawX = baseX
+		local clip = self.maxWidth and renderedW > self.maxWidth
+		if clip then
+			-- Clip window is centred on the label's natural centre (anchorX),
+			-- so a scrolling label lines up with a non-scrolling one. Glyphs
+			-- draw pivot-centred, so the visual box is offset by ox from drawX;
+			-- shift the text (not the window) to sweep it through. A small
+			-- overshoot (scrollEdgePad) lets glyph ink reach the window edge
+			-- instead of leaving the frame's transparent padding as a gap.
+			local range = renderedW - self.maxWidth
+			local pad = self.scrollEdgePad
+			local f = range > 0 and (self:scrollOffset(range) / range) or 0
+			local scrollShift = (range * 0.5 - pad) - f * (range - 2 * pad)
+			drawX = baseX + scrollShift
+			-- Scissor is raw canvas pixels (unaffected by the translate above).
+			local winLeft = anchorX - self.maxWidth * 0.5
+			local canvasWinX = math.floor(winLeft - (cx - fw * 0.5) + 0.5)
+			love.graphics.setScissor(canvasWinX, 0, math.ceil(self.maxWidth), fh)
+		end
+
+		local opts = {
+			color = self.color,
 			horizontalAlign = drawAlign,
 			verticalAlign = self.verticalAlign,
 			scale = self.scale,
-		})
-	end
-	SpriteFont.drawText(ref, self.text, drawX, anchorY, opts)
+		}
+		if self.dropshadowColor then
+			SpriteFont.drawText(ref, self.text, drawX + 1, anchorY + 1, {
+				color = self.dropshadowColor,
+				horizontalAlign = drawAlign,
+				verticalAlign = self.verticalAlign,
+				scale = self.scale,
+			})
+		end
+		SpriteFont.drawText(ref, self.text, drawX, anchorY, opts)
 
-	if clip then
-		love.graphics.setScissor()
+		if clip then
+			love.graphics.setScissor()
+		end
 	end
 	love.graphics.pop()
 	love.graphics.setCanvas(prev)
@@ -259,7 +359,7 @@ function Label:draw(x, y)
 	local bx = math.floor(x - tx + 0.5)
 	local by = math.floor(y - ty + 0.5)
 
-	local scrolling = self.maxWidth and self._textW and self._textW > self.maxWidth
+	local scrolling = self.maxWidth and not self.maxHeight and self._textW and self._textW > self.maxWidth
 	if not self._canvas or scrolling then
 		self._canvas = self:buildCanvas(bx, by, fw, fh)
 	end

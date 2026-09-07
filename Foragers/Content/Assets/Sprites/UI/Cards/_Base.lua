@@ -166,10 +166,11 @@ return {
 		{
 			component = "text",
 			id = "description",
-			offsetY = 16,
+			offsetY = 20,
 			color = { 0.41, 0.35, 0.34 },
 			dropshadowColor = { 0.09, 0.08, 0.08, 1 },
 			maxWidth = 46,
+			maxHeight = 64,
 			horizontalAlign = "center",
 			verticalAlign = "center",
 		},
