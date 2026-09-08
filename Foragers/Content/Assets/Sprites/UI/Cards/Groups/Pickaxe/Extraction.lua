@@ -1,8 +1,17 @@
+local I18n = require("Source.Helpers.Core.I18n")
+local amount = 1
+
 return {
 	extends = "Content.Assets.Sprites.UI.Cards.Groups.Pickaxe._Pickaxe",
-	modifier = { stat = "rockCrystalBonus", amount = 1 },
+	modifier = { stat = "rockCrystalBonus", amount = amount },
 	rarity = "common",
 	components = {
+		{
+			component = "image",
+			id = "background",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Backgrounds/Cavern",
+		},
+
 		{
 			component = "text",
 			id = "title",
@@ -12,7 +21,7 @@ return {
 		{
 			component = "text",
 			id = "description",
-			text = { key = "modifier.buffCrystalsFromRocks", params = { n = 1 } },
+			text = I18n.withAmount("modifier.buffCrystalsFromRocks", amount),
 		},
 	},
 }

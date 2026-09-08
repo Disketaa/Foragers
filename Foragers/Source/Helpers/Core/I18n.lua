@@ -149,4 +149,15 @@ function I18n.t(key, params)
 	return interpolate(str, params)
 end
 
+--- Build a text config table whose `n` param mirrors a modifier amount.
+---@param key string I18n key
+---@param amount number value shared with modifier.amount
+---@param extraParams table|nil additional params merged in (n is reserved)
+---@return table text config {key, params}
+function I18n.withAmount(key, amount, extraParams)
+	local params = extraParams and { unpack(extraParams) } or {}
+	params.n = amount
+	return { key = key, params = params }
+end
+
 return I18n
