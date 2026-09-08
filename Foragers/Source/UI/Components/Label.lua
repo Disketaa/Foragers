@@ -43,7 +43,6 @@ end
 ---@field tierColors table|nil @ per-tier level text colors, indexed by emblem tier (1..5); consumed by CardSelect
 ---@field maxWidth number|nil @ nil disables clip/scroll
 ---@field maxHeight number|nil @ nil disables height clip; enables word-wrap when set
----@field coloredModifiers boolean @ auto-color +/-N patterns with MOD_POSITIVE/MOD_NEGATIVE
 ---@field scrollSpeed number @ px/sec text travels while scrolling
 ---@field scrollPause number @ sec dwell at each scroll end
 ---@field scrollEdgePad number @ px overshoot so glyph ink reaches window edge
@@ -52,9 +51,6 @@ end
 ---@field _textH number|nil @ cached rendered height for multiline check
 local Label = {}
 Label.__index = Label
-
-Label.MOD_POSITIVE = { 0.34, 0.38, 0.2 }
-Label.MOD_NEGATIVE = { 0.73, 0.20, 0.11 }
 
 ---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadowColor}
 ---@return Label
@@ -77,7 +73,6 @@ function Label.new(data)
 		skewWithParent = data.skewWithParent ~= false,
 		maxWidth = data.maxWidth,
 		maxHeight = data.maxHeight,
-		coloredModifiers = data.coloredModifiers,
 		scrollSpeed = data.scrollSpeed or Label.SCROLL_SPEED,
 		scrollPause = data.scrollPause or Label.SCROLL_PAUSE,
 		scrollEdgePad = data.scrollEdgePad or 1,
@@ -99,79 +94,81 @@ function Label:update(dt)
 	end
 end
 
----@param range number total travel distance in rendered px
----@return number offset in rendered px (0..range)
-function Label:scrollOffset(range)
-	if range <= 0 then
-		return 0
-	end
-	local moveDur = range / self.scrollSpeed
-	local pause = self.scrollPause
-	local cycle = (moveDur + pause) * 2
-	local t = self._scrollT % cycle
-	if t < pause then
-		return 0
-	elseif t < pause + moveDur then
-		return (t - pause) / moveDur * range
-	elseif t < pause + moveDur + pause then
-		return range
-	else
-		local t2 = t - (pause * 2 + moveDur)
-		return range - (t2 / moveDur) * range
-	end
-end
-
 ---@param text string
 ---@param defaultColor table
 ---@return table segments @ {# {text, color}}
-function Label:parseBuffs(text, defaultColor)
+---@return table finalColor @ color state at end of text
+function Label:parseColors(text, defaultColor)
 	local segments = {}
-	if not text or text == "" then
-		return segments
-	end
-
+	local currentColor = defaultColor or self.color or { 1, 1, 1, 1 }
 	local pos = 1
 	local len = #text
 	while pos <= len do
-		local b, e, prefix = text:find("^([+-]?)(%d+)", pos)
-		if not b or b ~= pos then
-			-- Non-number word, or number pattern not at word start — plain text.
-			local word = text:match("^%S+", pos) or text:sub(pos, pos)
-			table.insert(segments, { text = word, color = defaultColor })
-			pos = pos + #word
-		elseif prefix == "+" then
-			table.insert(segments, { text = text:sub(b, e), color = Label.MOD_POSITIVE })
-			pos = e + 1
-		elseif prefix == "-" then
-			table.insert(segments, { text = text:sub(b, e), color = Label.MOD_NEGATIVE })
-			pos = e + 1
+		local char = text:sub(pos, pos)
+		if char == "#" then
+			if pos < len then
+				local nextChar = text:sub(pos + 1, pos + 1)
+			if nextChar == "#" then
+				table.insert(segments, { text = "#", color = currentColor })
+				pos = pos + 2
+			else
+			local start = pos + 1
+			local match = text:match("^([%w_]+)", start)
+			if match then
+				-- Try longest prefix that is a known palette name or exact reset.
+				local resolved = nil
+				for i = #match, 1, -1 do
+					local candidate = match:sub(1, i)
+					if candidate == "r" then
+						resolved = { reset = true }
+						break
+					end
+					local palette = require("Content.Assets.Palettes.Text")
+					if palette.schemes.default.colors[candidate] then
+						resolved = { color = palette.schemes.default.colors[candidate], len = i }
+						break
+					end
+				end
+				if resolved and resolved.reset then
+					currentColor = defaultColor or self.color or { 1, 1, 1, 1 }
+					pos = start + 1
+				elseif resolved and resolved.color then
+					currentColor = resolved.color
+					pos = start + resolved.len
+				else
+					local hex = text:sub(start, start + 5)
+					if #hex == 6 and hex:match("^%x%x%x%x%x%x$") then
+						local r = tonumber(hex:sub(1, 2), 16) / 255
+						local g = tonumber(hex:sub(3, 4), 16) / 255
+						local b = tonumber(hex:sub(5, 6), 16) / 255
+						currentColor = { r, g, b, 1 }
+						pos = start + 6
+					else
+						table.insert(segments, { text = "#", color = currentColor })
+						pos = pos + 1
+					end
+				end
+			else
+				table.insert(segments, { text = "#", color = currentColor })
+				pos = pos + 1
+			end
+			end
+			else
+				table.insert(segments, { text = "#", color = currentColor })
+				pos = pos + 1
+			end
 		else
-			-- Plain number (no sign) — treat as regular text
-			table.insert(segments, { text = text:sub(b, e), color = defaultColor })
-			pos = e + 1
+			local start = pos
+			while pos <= len and text:sub(pos, pos) ~= "#" do
+				pos = pos + 1
+			end
+			local chunk = text:sub(start, pos - 1)
+			if #chunk > 0 then
+				table.insert(segments, { text = chunk, color = currentColor })
+			end
 		end
 	end
-
-	return segments
-end
-
----@param text string
----@param defaultColor table
----@return table|nil segments @ {# {text, color}} or nil if not a delta line
-function Label:parseDelta(text, defaultColor)
-	local oldStr, newStr = text:match("^(%-?%d+%.?%d*)%s*%->%s*(%-?%d+%.?%d*)$")
-	if not oldStr then
-		return nil
-	end
-	local oldVal = tonumber(oldStr)
-	local newVal = tonumber(newStr)
-	local color = defaultColor
-	if newVal > oldVal then
-		color = Label.MOD_POSITIVE
-	elseif newVal < oldVal then
-		color = Label.MOD_NEGATIVE
-	end
-	return { { text = text, color = color } }
+	return segments, currentColor
 end
 
 ---@param text string
@@ -328,58 +325,43 @@ function Label:buildCanvas(cx, cy, fw, fh)
 		end
 
 		local drawY = anchorY
+		local persistentColor = self.color
 		for i, line in ipairs(lines) do
 			if visibleLines > 0 and i > visibleLines then
 				break
 			end
 
-			if self.coloredModifiers then
-				local segments = self:parseDelta(line.text, self.color) or self:parseBuffs(line.text, self.color)
-				local totalW = 0
-				for _, seg in ipairs(segments) do
-					totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)
-				end
-				totalW = totalW * self.scale
-				local segX = baseX - totalW * 0.5 - (self._charSpacing * self.scale) * 0.5
-				for _, seg in ipairs(segments) do
-					if self.dropshadowColor then
-						SpriteFont.drawText(ref, seg.text, segX + 1, drawY + 1, {
-							color = self.dropshadowColor,
-							horizontalAlign = "left",
-							verticalAlign = "center",
-							scale = self.scale,
-						})
-					end
-					SpriteFont.drawText(ref, seg.text, segX, drawY, {
-						color = seg.color,
+			local coloredSegments, lineEndColor = self:parseColors(line.text, persistentColor)
+			persistentColor = lineEndColor
+			local totalW = 0
+			for _, seg in ipairs(coloredSegments) do
+				totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)
+			end
+			totalW = totalW * self.scale
+			local segX = baseX - totalW * 0.5 - (self._charSpacing * self.scale) * 0.5
+			for _, seg in ipairs(coloredSegments) do
+				local color = seg.color or self.color
+				if self.dropshadowColor then
+					SpriteFont.drawText(ref, seg.text, segX + 1, drawY + 1, {
+						color = self.dropshadowColor,
 						horizontalAlign = "left",
 						verticalAlign = "center",
 						scale = self.scale,
 					})
-					segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
 				end
-			else
-				if self.dropshadowColor then
-					SpriteFont.drawText(ref, line.text, baseX + 1, drawY + 1, {
-						color = self.dropshadowColor,
-						horizontalAlign = self.horizontalAlign,
-						verticalAlign = "center",
-						scale = self.scale,
-					})
-				end
-				SpriteFont.drawText(ref, line.text, baseX, drawY, {
-					color = self.color,
-					horizontalAlign = self.horizontalAlign,
+				SpriteFont.drawText(ref, seg.text, segX, drawY, {
+					color = color,
+					horizontalAlign = "left",
 					verticalAlign = "center",
 					scale = self.scale,
 				})
+				segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
 			end
 			drawY = drawY + lineH
 		end
 
 		love.graphics.setScissor()
 	else
-		local drawAlign = self.horizontalAlign
 		local drawX = baseX
 		local clip = self.maxWidth and renderedW > self.maxWidth
 		if clip then
@@ -400,47 +382,30 @@ function Label:buildCanvas(cx, cy, fw, fh)
 			love.graphics.setScissor(canvasWinX, 0, math.ceil(self.maxWidth), fh)
 		end
 
-		local opts = {
-			color = self.color,
-			horizontalAlign = drawAlign,
-			verticalAlign = self.verticalAlign,
-			scale = self.scale,
-		}
-		if self.coloredModifiers then
-			local segments = self:parseDelta(self.text, self.color) or self:parseBuffs(self.text, self.color)
-			local totalW = 0
-			for _, seg in ipairs(segments) do
-				totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)
-			end
-			totalW = totalW * self.scale
-			local segX = drawX - totalW * 0.5 - (self._charSpacing * self.scale) * 0.5
-			for _, seg in ipairs(segments) do
-				if self.dropshadowColor then
-					SpriteFont.drawText(ref, seg.text, segX + 1, anchorY + 1, {
-						color = self.dropshadowColor,
-						horizontalAlign = "left",
-						verticalAlign = self.verticalAlign,
-						scale = self.scale,
-					})
-				end
-				SpriteFont.drawText(ref, seg.text, segX, anchorY, {
-					color = seg.color,
+		local coloredSegments, _ = self:parseColors(self.text, self.color)
+		local totalW = 0
+		for _, seg in ipairs(coloredSegments) do
+			totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)
+		end
+		totalW = totalW * self.scale
+		local segX = drawX - totalW * 0.5 - (self._charSpacing * self.scale) * 0.5
+		for _, seg in ipairs(coloredSegments) do
+			local color = seg.color or self.color
+			if self.dropshadowColor then
+				SpriteFont.drawText(ref, seg.text, segX + 1, anchorY + 1, {
+					color = self.dropshadowColor,
 					horizontalAlign = "left",
 					verticalAlign = self.verticalAlign,
 					scale = self.scale,
 				})
-				segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
 			end
-		else
-			if self.dropshadowColor then
-				SpriteFont.drawText(ref, self.text, drawX + 1, anchorY + 1, {
-					color = self.dropshadowColor,
-					horizontalAlign = drawAlign,
-					verticalAlign = self.verticalAlign,
-					scale = self.scale,
-				})
-			end
-			SpriteFont.drawText(ref, self.text, drawX, anchorY, opts)
+			SpriteFont.drawText(ref, seg.text, segX, anchorY, {
+				color = color,
+				horizontalAlign = "left",
+				verticalAlign = self.verticalAlign,
+				scale = self.scale,
+			})
+			segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
 		end
 
 		if clip then

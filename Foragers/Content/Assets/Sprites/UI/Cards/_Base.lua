@@ -168,7 +168,6 @@ return {
 			offsetY = 22,
 			color = { 0.41, 0.35, 0.34 },
 			dropshadowColor = { 0.09, 0.08, 0.08, 1 },
-			coloredModifiers = true,
 			maxWidth = 50,
 			maxHeight = 64,
 			horizontalAlign = "center",
