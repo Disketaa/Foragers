@@ -2,7 +2,7 @@ return {
 	["card.extraction"] = "Извлечение",
 	["card.sharpness"] = "Острота",
 	["card.handy"] = "Удобство",
-	["modifier.buffDamage"] = "+{n} урон",
-	["modifier.buffAttackSpeed"] = "+{n} скорость атаки",
-	["modifier.buffCrystalsFromRocks"] = "+{n} Crystals from Rocks",
+	["modifier.buffDamage"] = "Повышение урона\n{old} -> {new}",
+	["modifier.buffAttackSpeed"] = "Увеличение скорости атаки\n{old} -> {new}",
+	["modifier.buffCrystalsFromRocks"] = "Больше кристаллов с камней\n{old} -> {new}",
 }

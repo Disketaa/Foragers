@@ -2,7 +2,7 @@ return {
 	["card.extraction"] = "Extraction",
 	["card.sharpness"] = "Sharpness",
 	["card.handy"] = "Handy",
-	["modifier.buffDamage"] = "+{n} Damage",
-	["modifier.buffAttackSpeed"] = "+{n} Attack Speed",
-	["modifier.buffCrystalsFromRocks"] = "+{n} Crystals from Rocks",
+	["modifier.buffDamage"] = "Damage\n{old} -> {new}",
+	["modifier.buffAttackSpeed"] = "Attack Speed\n{old} -> {new}",
+	["modifier.buffCrystalsFromRocks"] = "Rocks Drop More Crystals\n{old} -> {new}",
 }

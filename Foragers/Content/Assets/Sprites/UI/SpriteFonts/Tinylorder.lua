@@ -15,9 +15,9 @@ return {
 			charSpacing = 1,
 			spacing = {
 				{ 5, "Mmwм" },
-				{ 3, "т>" },
-				{ 2, "+.-"},
-				{ 1, "li" },
+				{ 3, "т" },
+				{ 2, "+."},
+				{ 1, "li-" },
 				{ 1, " " },
 			},
 			autoTrim = true,

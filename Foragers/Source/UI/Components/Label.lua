@@ -53,9 +53,6 @@ end
 local Label = {}
 Label.__index = Label
 
---- Default scroll tuning shared by every scrolling label.
-Label.SCROLL_SPEED = 30 -- px/sec the text travels
-Label.SCROLL_PAUSE = 0.6 -- sec dwell at each scroll end
 Label.MOD_POSITIVE = { 0.34, 0.38, 0.2 }
 Label.MOD_NEGATIVE = { 0.73, 0.20, 0.11 }
 
@@ -102,7 +99,6 @@ function Label:update(dt)
 	end
 end
 
---- Scroll position ping-pongs 0..range with a dwell at each end.
 ---@param range number total travel distance in rendered px
 ---@return number offset in rendered px (0..range)
 function Label:scrollOffset(range)
@@ -125,8 +121,6 @@ function Label:scrollOffset(range)
 	end
 end
 
---- Parse text into segments with colors. +/-N patterns get MOD_POSITIVE/MOD_NEGATIVE;
---- all other content (words, plain numbers) gets defaultColor.
 ---@param text string
 ---@param defaultColor table
 ---@return table segments @ {# {text, color}}
@@ -161,8 +155,25 @@ function Label:parseBuffs(text, defaultColor)
 	return segments
 end
 
---- Break text into lines that fit within maxWidth (word-wrap).
---- Returns array of {text, width} and total height in frame units.
+---@param text string
+---@param defaultColor table
+---@return table|nil segments @ {# {text, color}} or nil if not a delta line
+function Label:parseDelta(text, defaultColor)
+	local oldStr, newStr = text:match("^(%-?%d+%.?%d*)%s*%->%s*(%-?%d+%.?%d*)$")
+	if not oldStr then
+		return nil
+	end
+	local oldVal = tonumber(oldStr)
+	local newVal = tonumber(newStr)
+	local color = defaultColor
+	if newVal > oldVal then
+		color = Label.MOD_POSITIVE
+	elseif newVal < oldVal then
+		color = Label.MOD_NEGATIVE
+	end
+	return { { text = text, color = color } }
+end
+
 ---@param text string
 ---@param maxWidth number|nil nil disables wrapping
 ---@param ref table font ref with measureText
@@ -175,36 +186,40 @@ function Label:wrapText(text, maxWidth, ref, charSpacing)
 		return lines, 0
 	end
 
-	local words = {}
-	for word in text:gmatch("%S+") do
-		table.insert(words, word)
-	end
-	if #words == 0 then
-		return lines, 0
+	local paragraphs = {}
+	for paragraph in (text .. "\n"):gmatch("(.-)\n") do
+		table.insert(paragraphs, paragraph)
 	end
 
-	local currentLine = ""
-	local currentWidth = 0
-
-	for i, word in ipairs(words) do
-		local trailingSpace = i < #words and " " or ""
-		local wordWithSpace = word .. trailingSpace
-		local wordWidth = SpriteFont.measureText(ref, wordWithSpace, charSpacing)
-
-		if currentWidth + wordWidth <= maxWidth then
-			currentLine = currentLine .. wordWithSpace
-			currentWidth = currentWidth + wordWidth
+	for _, paragraph in ipairs(paragraphs) do
+		local words = {}
+		for word in paragraph:gmatch("%S+") do
+			table.insert(words, word)
+		end
+		if #words == 0 then
+			table.insert(lines, { text = "", width = 0 })
 		else
+			local currentLine = ""
+			local currentWidth = 0
+			for i, word in ipairs(words) do
+				local trailingSpace = i < #words and " " or ""
+				local wordWithSpace = word .. trailingSpace
+				local wordWidth = SpriteFont.measureText(ref, wordWithSpace, charSpacing)
+				if currentWidth + wordWidth <= maxWidth then
+					currentLine = currentLine .. wordWithSpace
+					currentWidth = currentWidth + wordWidth
+				else
+					if currentLine ~= "" then
+						table.insert(lines, { text = currentLine, width = currentWidth })
+					end
+					currentLine = word .. " "
+					currentWidth = SpriteFont.measureText(ref, word .. " ", charSpacing)
+				end
+			end
 			if currentLine ~= "" then
 				table.insert(lines, { text = currentLine, width = currentWidth })
 			end
-			currentLine = word .. " "
-			currentWidth = SpriteFont.measureText(ref, word .. " ", charSpacing)
 		end
-	end
-
-	if currentLine ~= "" then
-		table.insert(lines, { text = currentLine, width = currentWidth })
 	end
 
 	local totalH = #lines * ref.frameH
@@ -319,7 +334,7 @@ function Label:buildCanvas(cx, cy, fw, fh)
 			end
 
 			if self.coloredModifiers then
-				local segments = self:parseBuffs(line.text, self.color)
+				local segments = self:parseDelta(line.text, self.color) or self:parseBuffs(line.text, self.color)
 				local totalW = 0
 				for _, seg in ipairs(segments) do
 					totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)
@@ -392,7 +407,7 @@ function Label:buildCanvas(cx, cy, fw, fh)
 			scale = self.scale,
 		}
 		if self.coloredModifiers then
-			local segments = self:parseBuffs(self.text, self.color)
+			local segments = self:parseDelta(self.text, self.color) or self:parseBuffs(self.text, self.color)
 			local totalW = 0
 			for _, seg in ipairs(segments) do
 				totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)

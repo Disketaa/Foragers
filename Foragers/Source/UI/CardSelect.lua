@@ -4,9 +4,11 @@ local Bounds = require("Source.Helpers.Core.Bounds")
 local Cursor = require("Source.Sprite.Components.Cursor")
 local Events = require("Source.Helpers.Core.Events")
 local GameState = require("Source.Helpers.Systems.GameState")
+local I18n = require("Source.Helpers.Core.I18n")
 	local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local GridNav = require("Source.Helpers.UI.GridNav")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
+local TextParser = require("Source.Helpers.Core.TextParser")
 local Zoom = require("Source.Helpers.Graphics.Zoom")
 local UIComponent = require("Source.UI.Components.UI")
 local SpotlightData = require("Content.Assets.Sprites.UI.Cards.Graphics.Spotlight")
@@ -92,11 +94,22 @@ function CardSelect.enter(uiSprites)
 			if lvl then
 				lvl:setColor({ Tiers.tierColor(level) })
 			end
-			local cardTier = s:findComponent("tier")
-			if cardTier and grp == "pickaxe" then
-				cardTier:setLevel(level)
+		local cardTier = s:findComponent("tier")
+		if cardTier and grp == "pickaxe" then
+			cardTier:setLevel(level)
+		end
+		local mod = s.data and s.data.modifier
+		if mod and type(mod) == "table" and mod.stat then
+			local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
+			local desc = s:findComponent("text", function(c) return c.id == "description" end)
+			if stats and desc and desc._rawText and desc._rawText.key then
+				local old, new = stats:previewStat(mod)
+				local raw = I18n.withDelta(desc._rawText.key, old, new, desc._rawText.params)
+				desc._rawText = raw
+				desc:setText(TextParser.resolve(raw))
 			end
 		end
+	end
 		local cardW = s.frameWidth or 64
 		entry.ui.offsetX = finalOffset(i, n, cardW)
 	end
@@ -264,9 +277,6 @@ function CardSelect.exit()
 	_G._cardSelectHiding = false
 end
 
---- Apply a card's modifier to the player. Modifier is read from the card's data
---- table: either a function `modifier(stats)` or a table
---- `{ stat = "damage", amount = 2 }`. Handles both number and {base,gain} stats.
 function CardSelect.applyModifier(sprite)
 	local mod = sprite.data and sprite.data.modifier
 	if not mod then

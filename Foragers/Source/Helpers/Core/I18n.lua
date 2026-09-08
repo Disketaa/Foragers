@@ -160,4 +160,17 @@ function I18n.withAmount(key, amount, extraParams)
 	return { key = key, params = params }
 end
 
+--- Build a text config table with old/new delta params for stat-change display.
+---@param key string I18n key
+---@param old number current stat value
+---@param new number stat value after modifier
+---@param extraParams table|nil additional params merged in (old/new are reserved)
+---@return table text config {key, params}
+function I18n.withDelta(key, old, new, extraParams)
+	local params = extraParams and { unpack(extraParams) } or {}
+	params.old = old
+	params.new = new
+	return { key = key, params = params }
+end
+
 return I18n

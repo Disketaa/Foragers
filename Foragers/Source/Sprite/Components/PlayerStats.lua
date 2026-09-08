@@ -223,6 +223,23 @@ function PlayerStats:getRockCrystalBonus()
 	return self:resolveStat(self.rockCrystalBonus)
 end
 
+--- Preview old/new resolved value for a stat if `amount` were applied.
+--- Does not mutate. Handles both flat number and {base,gain} stat shapes.
+---@param mod {stat:string, amount:number}
+---@return number old current resolved value
+---@return number new resolved value after adding amount
+function PlayerStats:previewStat(mod)
+	local cur = self[mod.stat]
+	local old = self:resolveStat(cur)
+	local newVal
+	if type(cur) == "table" then
+		newVal = self:resolveStat({ base = (cur.base or 0) + (mod.amount or 0), gain = cur.gain })
+	else
+		newVal = old + (mod.amount or 0)
+	end
+	return old, newVal
+end
+
 ---@return number attack speed (attacks/sec) at level 1 — the curve base. Used as the
 --- reference so follow/swing travel scales up with level without changing the level-1 feel.
 function PlayerStats:getBaseAttackSpeed()

@@ -1,9 +1,6 @@
-local I18n = require("Source.Helpers.Core.I18n")
-local amount = 2
-
 return {
 	extends = "Content.Assets.Sprites.UI.Cards.Groups.Pickaxe._Pickaxe",
-	modifier = { stat = "damage", amount = amount },
+	modifier = { stat = "damage", amount = 2 },
 	rarity = "common",
 	components = {
 		{
@@ -15,7 +12,7 @@ return {
 		{
 			component = "text",
 			id = "description",
-			text = I18n.withAmount("modifier.buffDamage", amount),
+			text = { key = "modifier.buffDamage" },
 		},
 	},
 }
