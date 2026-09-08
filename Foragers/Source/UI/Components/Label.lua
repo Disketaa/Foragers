@@ -52,6 +52,9 @@ end
 local Label = {}
 Label.__index = Label
 
+Label.SCROLL_SPEED = 50
+Label.SCROLL_PAUSE = 1
+
 ---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadowColor}
 ---@return Label
 function Label.new(data)
@@ -94,6 +97,28 @@ function Label:update(dt)
 	end
 end
 
+---@param range number total travel distance in rendered px
+---@return number offset in rendered px (0..range)
+function Label:scrollOffset(range)
+	if range <= 0 then
+		return 0
+	end
+	local moveDur = range / self.scrollSpeed
+	local pause = self.scrollPause
+	local cycle = (moveDur + pause) * 2
+	local t = self._scrollT % cycle
+	if t < pause then
+		return 0
+	elseif t < pause + moveDur then
+		return (t - pause) / moveDur * range
+	elseif t < pause + moveDur + pause then
+		return range
+	else
+		local t2 = t - (pause * 2 + moveDur)
+		return range - (t2 / moveDur) * range
+	end
+end
+
 ---@param text string
 ---@param defaultColor table
 ---@return table segments @ {# {text, color}}
@@ -117,20 +142,20 @@ function Label:parseColors(text, defaultColor)
 			if match then
 				-- Try longest prefix that is a known palette name or exact reset.
 				local resolved = nil
-				for i = #match, 1, -1 do
-					local candidate = match:sub(1, i)
-					if candidate == "r" then
+			for i = #match, 1, -1 do
+				local candidate = match:sub(1, i)
+				if candidate == "r" then
 						resolved = { reset = true }
 						break
 					end
 					local palette = require("Content.Assets.Palettes.Text")
-					if palette.schemes.default.colors[candidate] then
-						resolved = { color = palette.schemes.default.colors[candidate], len = i }
+					if palette[candidate] then
+						resolved = { color = palette[candidate], len = i }
 						break
 					end
-				end
-				if resolved and resolved.reset then
-					currentColor = defaultColor or self.color or { 1, 1, 1, 1 }
+			end
+			if resolved and resolved.reset then
+					currentColor = self.color or { 1, 1, 1, 1 }
 					pos = start + 1
 				elseif resolved and resolved.color then
 					currentColor = resolved.color
