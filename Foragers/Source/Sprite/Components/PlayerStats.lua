@@ -69,7 +69,7 @@ function PlayerStats.new(data)
 		critMult = data.critMult or 1.5,
 		damage = data.damage or 1,
 		range = data.range or 20,
-		attackSpeed = data.attackSpeed or 2,
+		attackSpeed = data.attackSpeed or 20,
 		crystalDropBonus = data.crystalDropBonus or 0,
 		rockCrystalBonus = data.rockCrystalBonus or 0,
 		level = data.level or 1,
@@ -210,7 +210,7 @@ end
 
 ---@return number attack speed (attacks/sec) for the current level
 function PlayerStats:getAttackSpeed()
-	return self:resolveStat(self.attackSpeed)
+	return self:resolveStat(self.attackSpeed) / 10
 end
 
 ---@return number crystal drop bonus for the current level
@@ -243,7 +243,7 @@ end
 ---@return number attack speed (attacks/sec) at level 1 — the curve base. Used as the
 --- reference so follow/swing travel scales up with level without changing the level-1 feel.
 function PlayerStats:getBaseAttackSpeed()
-	return self:resolveStat(self.attackSpeed, 1)
+	return self:resolveStat(self.attackSpeed, 1) / 10
 end
 
 ---@return number attack cooldown (sec) for the current level, derived from attack speed

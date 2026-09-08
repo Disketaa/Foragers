@@ -39,7 +39,7 @@ return {
 			range = { base = 20, gain = 0.25 },
 			critChance = 0,
 			critMult = 1.5,
-			attackSpeed = { base = 2, gain = 0.1 },
+			attackSpeed = { base = 20, gain = 1 },
 		},
 
 		{
