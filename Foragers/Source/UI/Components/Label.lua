@@ -196,6 +196,69 @@ function Label:parseColors(text, defaultColor)
 	return segments, currentColor
 end
 
+--- Strip inline color codes from text so wrapping measures visible glyphs only.
+--- Uses same longest-prefix matching as parseColors so "#purpleDrops" -> "Drops".
+---@param text string
+---@return string stripped
+function Label:stripColorTags(text)
+	if not text then
+		return ""
+	end
+	local out = {}
+	local pos = 1
+	local len = #text
+	while pos <= len do
+		local char = text:sub(pos, pos)
+		if char == "#" then
+			if pos < len then
+				local nextChar = text:sub(pos + 1, pos + 1)
+				if nextChar == "#" then
+					table.insert(out, "#")
+					pos = pos + 2
+				else
+					local start = pos + 1
+					local match = text:match("^([%w_]+)", start)
+					if match then
+						local resolved = nil
+						for i = #match, 1, -1 do
+							local candidate = match:sub(1, i)
+							if candidate == "r" then
+								resolved = { len = i }
+								break
+							end
+							local palette = require("Content.Assets.Palettes.Text")
+							if palette[candidate] then
+								resolved = { len = i }
+								break
+							end
+						end
+						if resolved then
+							-- Skip the tag itself, keep any trailing text in this word.
+							pos = start + resolved.len
+						else
+							table.insert(out, "#")
+							pos = pos + 1
+						end
+					else
+						table.insert(out, "#")
+						pos = pos + 1
+					end
+				end
+			else
+				table.insert(out, "#")
+				pos = pos + 1
+			end
+		else
+			local start = pos
+			while pos <= len and text:sub(pos, pos) ~= "#" do
+				pos = pos + 1
+			end
+			table.insert(out, text:sub(start, pos - 1))
+		end
+	end
+	return table.concat(out)
+end
+
 ---@param text string
 ---@param maxWidth number|nil nil disables wrapping
 ---@param ref table font ref with measureText
@@ -223,21 +286,22 @@ function Label:wrapText(text, maxWidth, ref, charSpacing)
 		else
 			local currentLine = ""
 			local currentWidth = 0
-			for i, word in ipairs(words) do
-				local trailingSpace = i < #words and " " or ""
-				local wordWithSpace = word .. trailingSpace
-				local wordWidth = SpriteFont.measureText(ref, wordWithSpace, charSpacing)
-				if currentWidth + wordWidth <= maxWidth then
-					currentLine = currentLine .. wordWithSpace
-					currentWidth = currentWidth + wordWidth
-				else
-					if currentLine ~= "" then
-						table.insert(lines, { text = currentLine, width = currentWidth })
-					end
-					currentLine = word .. " "
-					currentWidth = SpriteFont.measureText(ref, word .. " ", charSpacing)
+		for i, word in ipairs(words) do
+			local trailingSpace = i < #words and " " or ""
+			local wordWithSpace = word .. trailingSpace
+			local strippedWord = self:stripColorTags(wordWithSpace)
+			local wordWidth = SpriteFont.measureText(ref, strippedWord, charSpacing)
+			if currentWidth + wordWidth <= maxWidth then
+				currentLine = currentLine .. wordWithSpace
+				currentWidth = currentWidth + wordWidth
+			else
+				if currentLine ~= "" then
+					table.insert(lines, { text = currentLine, width = currentWidth })
 				end
+				currentLine = word .. " "
+				currentWidth = SpriteFont.measureText(ref, self:stripColorTags(word .. " "), charSpacing)
 			end
+		end
 			if currentLine ~= "" then
 				table.insert(lines, { text = currentLine, width = currentWidth })
 			end
@@ -325,7 +389,7 @@ function Label:buildCanvas(cx, cy, fw, fh)
 	}
 
 	local baseX = anchorX + ox
-	local textW = SpriteFont.measureText(ref, self.text, self._charSpacing)
+	local textW = SpriteFont.measureText(ref, self:stripColorTags(self.text), self._charSpacing)
 	local renderedW = textW * self.scale
 	self._textW = renderedW
 

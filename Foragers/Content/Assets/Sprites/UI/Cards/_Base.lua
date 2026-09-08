@@ -28,8 +28,8 @@ return {
 				},
 
 				select = {
-					{ target = "scaleX", from = 1, to = 1.25, duration = 0.7, curve = "OutBack" },
-					{ target = "scaleY", from = 1, to = 1.25, duration = 0.6, curve = "OutBack" },
+					{ target = "scaleX", from = 1, to = 1.25, duration = 1, curve = "OutBack" },
+					{ target = "scaleY", from = 1, to = 1.25, duration = 1, curve = "OutBack" },
 					{ target = "rimAngle", from = 0, to = 360, duration = 120, curve = "Linear", loop = true },
 					{ target = "rimStrength", from = 0, to = 0.4, duration = 0.3, curve = "Linear" },
 					{ target = "brightness", from = 0.35, to = 0.5, duration = 0.3, curve = "OutBack" },
