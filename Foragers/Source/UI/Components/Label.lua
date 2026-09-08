@@ -12,7 +12,11 @@ local function ensureLanguageListener()
 	_listenerReady = true
 	I18n.onLanguageChange(function()
 		for lbl in pairs(instances) do
-			if lbl._rawText ~= nil then
+			-- Only re-resolve labels whose _rawText is a translation table.
+			-- Plain-string labels (e.g. runtime-set level numbers) keep their
+			-- current text; their _rawText is the final rendered string, not a
+			-- translation key.
+			if type(lbl._rawText) == "table" and lbl._rawText.key ~= nil then
 				lbl:setText(TextParser.resolve(lbl._rawText))
 			end
 		end
@@ -296,6 +300,12 @@ function Label:wrapText(text, maxWidth, ref, charSpacing)
 				currentWidth = currentWidth + wordWidth
 			else
 				if currentLine ~= "" then
+					-- Strip trailing space from the completed line; it was only
+					-- needed as word-separation padding, not as part of the line.
+					if currentLine:sub(-1) == " " then
+						currentLine = currentLine:sub(1, -2)
+						currentWidth = currentWidth - charSpacing
+					end
 					table.insert(lines, { text = currentLine, width = currentWidth })
 				end
 				currentLine = word .. " "
@@ -303,6 +313,11 @@ function Label:wrapText(text, maxWidth, ref, charSpacing)
 			end
 		end
 			if currentLine ~= "" then
+				-- Strip trailing space from the final line of the paragraph.
+				if currentLine:sub(-1) == " " then
+					currentLine = currentLine:sub(1, -2)
+					currentWidth = currentWidth - charSpacing
+				end
 				table.insert(lines, { text = currentLine, width = currentWidth })
 			end
 		end

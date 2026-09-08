@@ -6,6 +6,8 @@ local Commands = {}
 
 local Binds = require("Source.Helpers.Debug.Binds")
 local GameState = require("Source.Helpers.Systems.GameState")
+local I18n = require("Source.Helpers.Core.I18n")
+local Options = require("Source.Helpers.Systems.Options")
 
 local handlers = {}
 local descriptions = {}
@@ -509,5 +511,66 @@ Commands.register("help", function(args)
 	}
 	return lines, true, 10
 end, "list commands (help 2 for next page).")
+
+-- Discover language names from Content/Data/I18n/*.lua so `language ` tab-completes
+-- them the same way `lvl ` tab-completes weapon names.
+local _languageNames = nil
+local function getLanguageNames()
+	if _languageNames then
+		return _languageNames
+	end
+	_languageNames = {}
+	local i18nPath = "Content/Data/I18n"
+	local items = love and love.filesystem and love.filesystem.getDirectoryItems(i18nPath)
+	if items then
+		for _, item in ipairs(items) do
+			if item:match("%.lua$") then
+				local name = item:gsub("%.lua$", "")
+				_languageNames[name] = true
+			end
+		end
+	end
+	return _languageNames
+end
+
+for name in pairs(getLanguageNames()) do
+	Commands.addSubcommand("language", name)
+end
+
+Commands.register("language", function(args, _)
+	local lang = Commands.trim(args)
+	if lang == "" then
+		local current = I18n.getLanguage()
+		local names = {}
+		for name in pairs(getLanguageNames()) do
+			names[#names + 1] = name
+		end
+		table.sort(names)
+		return "Current: " .. current .. " | Available: " .. table.concat(names, ", "), true
+	end
+
+	-- Case-insensitive match against discovered language file names.
+	local matched = nil
+	for name in pairs(getLanguageNames()) do
+		if name:lower() == lang:lower() then
+			matched = name
+			break
+		end
+	end
+
+	if not matched then
+		local names = {}
+		for name in pairs(getLanguageNames()) do
+			names[#names + 1] = name
+		end
+		table.sort(names)
+		return "Unknown language: '" .. lang .. "'. Available: " .. table.concat(names, ", "), false
+	end
+
+	I18n.setLanguage(matched)
+	Options.language = matched
+	Options.save()
+	return "Language set to " .. matched, true
+end, "change game language without restart (language <name>).")
 
 return Commands
