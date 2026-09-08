@@ -112,7 +112,7 @@ return {
 
 		{
 			component = "image",
-			id = "overlay",
+			id = "rays",
 			image = "Content/Assets/Sprites/UI/Cards/Graphics/Overlays/Rays",
 			scale = 1,
 			offsetX = 0,
@@ -138,6 +138,15 @@ return {
 			bob = 0.5,
 			parallax = -1,
 			shader = "Palette",
+		},
+
+		{
+			component = "image",
+			id = "overlay",
+			offsetX = 0,
+			offsetY = -17,
+			bob = 0.5,
+			parallax = -1,
 		},
 
 		{

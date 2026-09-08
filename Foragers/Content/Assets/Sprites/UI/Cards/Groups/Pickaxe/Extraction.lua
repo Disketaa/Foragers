@@ -10,6 +10,12 @@ return {
 		},
 
 		{
+			component = "image",
+			id = "overlay",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Icons/Crystals",
+		},
+
+		{
 			component = "text",
 			id = "title",
 			text = { key = "card.extraction" },
