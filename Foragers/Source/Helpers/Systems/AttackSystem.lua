@@ -16,16 +16,15 @@ end
 local function getWeaponData(weaponSprite, playerSprite)
 	local weapon = weaponSprite and weaponSprite:findComponent("weapon")
 	local ps = playerSprite and playerSprite:findComponent("player_stats")
-	local range, cooldown, damage, attackSpeed, baseAttackSpeed
+	local range, cooldown, damage, attackSpeed
 	if ps then
 		range = ps:getRange()
 		cooldown = ps:getCooldown()
 		damage = ps:getDamage()
 		attackSpeed = ps:getAttackSpeed()
-		baseAttackSpeed = ps:getBaseAttackSpeed()
 	end
 	local swing = weapon and weapon.swing
-	return range, cooldown, damage, swing, attackSpeed, baseAttackSpeed
+	return range, cooldown, damage, swing, attackSpeed
 end
 
 local function getWeaponFollow(ws)
@@ -39,6 +38,11 @@ local function cleanupTween(ws, key)
 end
 
 local AttackSystem = {}
+
+-- Reference attack speed (attacks/sec) the weapon smoothness values were tuned
+-- against. Default PlayerStats.attackSpeed = 20 resolves to 2 APS, so that is
+-- the baseline: speedScale = current APS / 2.
+local REFERENCE_ATTACK_SPEED = 2
 
 function AttackSystem.registerAttacker(sprite, weaponSprite)
 	attacker = {
@@ -62,14 +66,17 @@ function AttackSystem.update(dt, allObjects)
 	end
 
 	local ws = attacker.weaponSprite
-	local range, cooldown, damage, swing, attackSpeed, baseAttackSpeed = getWeaponData(ws, attacker.sprite)
+	local range, cooldown, damage, swing, attackSpeed = getWeaponData(ws, attacker.sprite)
 	-- Higher attack speed => faster tool travel + swing, so the cooldown actually
 	-- pays off instead of being eaten by fixed follow/swing timing. Reference is
-	-- level-1 attack speed, so level 1 keeps its current feel (speedScale == 1).
+	-- the default 2 APS the smoothness values were tuned against.
 	local speedScale = 1
-	if baseAttackSpeed and baseAttackSpeed > 0 and attackSpeed and attackSpeed > 0 then
-		speedScale = attackSpeed / baseAttackSpeed
+	if attackSpeed and attackSpeed > 0 then
+		speedScale = attackSpeed / REFERENCE_ATTACK_SPEED
 	end
+	-- Swing stays linear so the animation doesn't vanish, but travel scales
+	-- more aggressively so high attack speed doesn't bottleneck on weapon transit.
+	local travelScale = speedScale > 1 and speedScale * speedScale or 1
 	local rangeSq = range * range
 	local weaponFollow = getWeaponFollow(ws)
 	local ax, ay = attacker.sprite.x, attacker.sprite.y
@@ -93,7 +100,7 @@ function AttackSystem.update(dt, allObjects)
 		if not targetValid and weaponFollow then
 			local committed = attacker._arrived and attacker.cooldownTimer > 0
 			if not committed and not (ws and ws.tweens and ws.tweens.swingAngle) then
-				weaponFollow:recall(weaponFollow.smoothnessX / speedScale)
+				weaponFollow:recall(weaponFollow.smoothnessX / travelScale)
 				attacker.currentTarget = nil
 				attacker.damageTimer = nil
 			end
@@ -117,7 +124,7 @@ function AttackSystem.update(dt, allObjects)
 			-- Deploy to far side of target: away from character, not from weapon
 			local deployDir = (attacker.sprite.x < chosen.x) and 1 or -1
 			if weaponFollow then
-				weaponFollow:deployTo(chosen, swing.offsetX, swing.offsetY, swing.smoothness / speedScale, deployDir)
+				weaponFollow:deployTo(chosen, swing.offsetX, swing.offsetY, swing.smoothness / travelScale, deployDir)
 			end
 			attacker.currentTarget = chosen
 			attacker._deployDir = deployDir
@@ -138,7 +145,6 @@ function AttackSystem.update(dt, allObjects)
 		end
 	end
 
-	-- Flight phase: wait until weapon is close to target before attacking
 	if attacker.currentTarget and not attacker._arrived then
 		local dir = attacker._deployDir or ((ws.x < attacker.currentTarget.x) and -1 or 1)
 		local destX = attacker.currentTarget.x + dir * swing.offsetX
@@ -185,7 +191,6 @@ function AttackSystem.update(dt, allObjects)
 	attacker.cooldownTimer = cooldown
 	attacker.damageTimer = swing.duration / speedScale
 
-	-- Swing toward target: opposite of deploy direction
 	local dir = -attacker._deployDir
 	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.OutSine
 	local easeFunc = swingCurve(rawEase)
