@@ -64,6 +64,22 @@ function Commands.complete(text)
 	local cmd, rest = text:match("^(%S*)%s*(.*)$")
 	local trailingSpace = text:match("^.*%s$") ~= nil
 	local list = {}
+	-- `bind` takes a command + key, so after the first space we may need to
+	-- complete the inner command's sub-commands (e.g. `bind lvl p` → weapon
+	-- names) rather than bind's own sub-commands.
+	if cmd == "bind" and rest ~= "" then
+		local innerCmd, innerRest = rest:match("^(%S+)%s*(.*)$")
+		local innerTrailingSpace = rest:match("^.*%s$") ~= nil
+		if (innerTrailingSpace or innerRest ~= "") and subcommands[innerCmd] then
+			local innerRestLower = innerRest:lower()
+			for _, sub in ipairs(subcommands[innerCmd]) do
+				if sub:lower():sub(1, #innerRest) == innerRestLower then
+					list[#list + 1] = sub
+				end
+			end
+			return cmd .. " " .. innerCmd .. " ", list
+		end
+	end
 	if trailingSpace or rest ~= "" then
 		-- Completing a sub-command of `cmd`. Match case-insensitively so e.g.
 		-- "medi" completes to "MediumCrystal"; the returned candidate keeps its

@@ -802,6 +802,17 @@ function love.keypressed(key, _, _)
 	if bound then
 		local message, success, hold = Commands.execute(bound, commandsCtx())
 		Debug.setChatOutput(message, success, hold)
+		local output = Debug.chatOutput()
+		local function logChat(detail)
+			Log.write("Chat", "%s — %s", bound, detail)
+		end
+		if output:find("\n") then
+			for line in output:gmatch("[^\n]+") do
+				logChat(line)
+			end
+		else
+			logChat(output)
+		end
 		return
 	end
 

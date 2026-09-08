@@ -726,11 +726,7 @@ function Debug.drawChat(scale)
 	local s = Debug.settings("hud")
 	local cs = Debug.settings("hud.chat")
 	local hudOn = Debug.enabled("hud")
-	if not hudOn then
-		return
-	end
-
-	local inputActive = Debug.enabled("hud.chat")
+	local inputActive = hudOn and Debug.enabled("hud.chat")
 	local hasOutput = #chatOutputLines > 0
 	if not inputActive and not hasOutput then
 		return
