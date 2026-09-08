@@ -1,8 +1,8 @@
 return {
-	["card.extraction"] = "Извлечение",
+	["card.extraction"] = "Добыча",
 	["card.sharpness"] = "Острота",
 	["card.handy"] = "Удобство",
-	["modifier.buffDamage"] = "Повышение урона\n{old} -> {new}",
-	["modifier.buffAttackSpeed"] = "Увеличение скорости атаки\n{old} -> {new}",
-	["modifier.buffCrystalsFromRocks"] = "Больше кристаллов с камней\n{old} -> {new}",
+	["modifier.buffDamage"] = "Урон\n#gray{old}#darkGray->#green{new}",
+	["modifier.buffAttackSpeed"] = "Скорость атаки\n#gray{old}#darkGray->#green{new}",
+	["modifier.buffCrystalsFromRocks"] = "#greenБольше #rдропа с камней\n#gray{old}#darkGray->#green{new}",
 }

@@ -405,8 +405,8 @@ function Label:buildCanvas(cx, cy, fw, fh)
 
 	local baseX = anchorX + ox
 	local textW = SpriteFont.measureText(ref, self:stripColorTags(self.text), self._charSpacing)
-	local renderedW = textW * self.scale
-	self._textW = renderedW
+	local inkW = (textW - self._charSpacing) * self.scale
+	self._textW = inkW
 
 	if self.maxHeight then
 		local maxH = self.maxHeight / self.scale
@@ -467,7 +467,7 @@ function Label:buildCanvas(cx, cy, fw, fh)
 		love.graphics.setScissor()
 	else
 		local drawX = baseX
-		local clip = self.maxWidth and renderedW > self.maxWidth
+		local clip = self.maxWidth and inkW > self.maxWidth
 		if clip then
 			-- Clip window is centred on the label's natural centre (anchorX),
 			-- so a scrolling label lines up with a non-scrolling one. Glyphs
@@ -475,7 +475,7 @@ function Label:buildCanvas(cx, cy, fw, fh)
 			-- shift the text (not the window) to sweep it through. A small
 			-- overshoot (scrollEdgePad) lets glyph ink reach the window edge
 			-- instead of leaving the frame's transparent padding as a gap.
-			local range = renderedW - self.maxWidth
+			local range = inkW - self.maxWidth
 			local pad = self.scrollEdgePad
 			local f = range > 0 and (self:scrollOffset(range) / range) or 0
 			local scrollShift = (range * 0.5 - pad) - f * (range - 2 * pad)
