@@ -36,12 +36,4 @@ local Rarity = {
 	},
 }
 
-function Rarity.rarityNameForLevel(level)
-	if level >= 4 then return "legendary"
-	elseif level >= 3 then return "rare"
-	elseif level >= 2 then return "uncommon"
-	else return "common"
-	end
-end
-
 return Rarity

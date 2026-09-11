@@ -1,6 +1,18 @@
 local Palette = {}
 Palette.__index = Palette
 
+local function rarityNameForLevel(level)
+	if level >= 4 then
+		return "legendary"
+	elseif level >= 3 then
+		return "rare"
+	elseif level >= 2 then
+		return "uncommon"
+	else
+		return "common"
+	end
+end
+
 local CONFIGS = {
 	tier = {
 		dataModule = require("Source.Helpers.Systems.Tiers"),
@@ -78,7 +90,7 @@ function Palette:_resolve()
 	if self.scheme == "tier" then
 		self.value = cfg.dataModule.tierNameForLevel(self.level)
 	elseif self.scheme == "rarity" then
-		self.value = cfg.dataModule.rarityNameForLevel(self.level)
+		self.value = rarityNameForLevel(self.level)
 	end
 end
 
