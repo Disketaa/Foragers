@@ -18,8 +18,9 @@ Canvas.__index = Canvas
 ---@param width number Base canvas width
 ---@param height number Base canvas height
 ---@param mode string "inner" to keep fixed resolution and center with borders, "outer" to fill window
+---@param maxShake number|nil Maximum shake offset in screen pixels (default 0). Extra padding is added so the canvas still covers the window when shifted by shake.
 ---@return Canvas
-function Canvas.new(width, height, mode)
+function Canvas.new(width, height, mode, maxShake)
 	local self = setmetatable({}, Canvas)
 	self.baseWidth = width
 	self.baseHeight = height
@@ -33,6 +34,7 @@ function Canvas.new(width, height, mode)
 	if self.mode ~= "inner" and self.mode ~= "outer" then
 		error("Canvas: unknown mode '" .. tostring(self.mode) .. "'")
 	end
+	self.maxShake = maxShake or 0
 	self:_recreateCanvas()
 	return self
 end
@@ -50,6 +52,9 @@ end
 ---@param windowHeight number
 function Canvas:resize(windowWidth, windowHeight)
 	self.scale = math.max(1, math.floor(math.min(windowWidth / self.baseWidth, windowHeight / self.baseHeight)))
+	-- Pad by scale pixels for the blit origin offset, plus maxShake screen-px so the
+	-- canvas still covers the window when viewX/viewY shift it by the maximum shake.
+	local pad = self.scale + math.ceil(self.maxShake)
 
 	if self.mode == "inner" then
 		self.offsetX = math.floor((windowWidth - self.baseWidth * self.scale) / 2)
@@ -60,8 +65,8 @@ function Canvas:resize(windowWidth, windowHeight)
 			self:_recreateCanvas()
 		end
 	else
-		local newWidth = math.ceil(windowWidth / self.scale) + 2 * self.scale
-		local newHeight = math.ceil(windowHeight / self.scale) + 2 * self.scale
+		local newWidth = math.ceil((windowWidth + 2 * pad) / self.scale)
+		local newHeight = math.ceil((windowHeight + 2 * pad) / self.scale)
 		if self.width ~= newWidth or self.height ~= newHeight then
 			self.width = newWidth
 			self.height = newHeight
@@ -83,7 +88,7 @@ end
 --- pivot point — magnifies the rendered picture without changing what was drawn.
 ---@param pivotX number|nil Screen-space X to zoom about (default: window center)
 ---@param pivotY number|nil Screen-space Y to zoom about (default: window center)
---- Canvas is padded by scale pixels on each side to prevent sub-pixel edge gaps with nearest filtering.
+--- Canvas is padded by scale+maxShake pixels on each side to prevent sub-pixel edge gaps with nearest filtering.
 function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShader, zoom, pivotX, pivotY)
 	-- Floor view offset for pixel-perfect canvas rendering (prevents sub-pixel seams)
 	viewX = math.floor(viewX or 0)
@@ -111,8 +116,9 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShade
 	end
 	love.graphics.setCanvas()
 
-	local finalX = self.offsetX + viewX + subX * self.scale - self.scale
-	local finalY = self.offsetY + viewY + subY * self.scale - self.scale
+	local pad = self.scale + math.ceil(self.maxShake)
+	local finalX = self.offsetX + viewX + subX * self.scale - pad
+	local finalY = self.offsetY + viewY + subY * self.scale - pad
 
 	love.graphics.push()
 	if zoom ~= 1 then

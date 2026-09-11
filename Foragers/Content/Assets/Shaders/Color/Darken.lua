@@ -1,7 +1,6 @@
-return {
+	return {
 	name = "Darken",
 	order = 30,
-	postprocess = true,
 	type = "color",
 	module = true,
 	uniforms = { u_darken = 0 },

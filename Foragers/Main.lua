@@ -66,8 +66,8 @@ local collisionScan = {}
 local function isNonSolidCollision(c)
 	return c.mode ~= "solid"
 end
-local canvas = Canvas.new(320, 180, "outer")
-local bgCanvas = Canvas.new(320, 180, "outer")
+local canvas = Canvas.new(320, 180, "outer", 2)
+local bgCanvas = Canvas.new(320, 180, "outer", 2)
 local cursorSprite = nil
 GameState.cameraX = 0
 GameState.cameraY = 0
@@ -637,6 +637,15 @@ function love.draw()
 	if ShaderLoader.postProcessEnabled and (GameState.darkenUniform > 0 or DayCycle.time < 8 or DayCycle.time > 16.5) then
 		Emissive.drawToScreen(visible, canvas, GameState.camPixelX, GameState.camPixelY,
 			GameState.camSubX, GameState.camSubY, GameState.shakeOffsetX, GameState.shakeOffsetY, zoom, zpx, zpy)
+	end
+
+	-- Darken is a screen-space guarantee (fade-to-black), not a scene recolor.
+	-- Draw it as a fixed rect after both canvas blits so shake can't shift its
+	-- coverage and create an undarken gap at the window edges.
+	if GameState.darkenUniform > 0 then
+		love.graphics.setColor(0, 0, 0, GameState.darkenUniform)
+		love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+		love.graphics.setColor(1, 1, 1, 1)
 	end
 
 	-- Boundary overlay: each sprite's pivot-aware frame box — solid fill under
