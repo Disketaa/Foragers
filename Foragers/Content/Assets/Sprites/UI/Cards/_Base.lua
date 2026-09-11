@@ -106,7 +106,7 @@ return {
 			scale = 1,
 			offsetX = 0,
 			offsetY = -16,
-			parallax = -0.5,
+			parallax = 0.2,
 			layer = "below",
 		},
 
@@ -135,8 +135,8 @@ return {
 			id = "icon",
 			offsetX = 0,
 			offsetY = -13,
-			bob = 0.5,
-			parallax = -1,
+			bob = 0.1,
+			parallax = -0.33,
 			shader = "Palette",
 		},
 
@@ -145,15 +145,15 @@ return {
 			id = "overlay",
 			offsetX = 0,
 			offsetY = -17,
-			bob = 0.5,
-			parallax = -1,
+			bob = 0.1,
+			parallax = -0.33,
 		},
 
 		{
 			component = "text",
 			id = "title",
 			offsetX = 0,
-			offsetY = -40,
+			offsetY = -39,
 			dropshadowColor = { 0, 0, 0, 0.33 },
 			maxWidth = 48,
 			horizontalAlign = "center",
@@ -188,7 +188,7 @@ return {
 			id = "skew",
 			shaders = {
 				"Brightness",
-				{ Skew = { u_amount = 0.1 } },
+				{ Skew = { u_amount = 0.05 } },
 				{ Rimlight = { u_coneWidth = 1, u_inner = 0.4, u_outer = 1, u_threshold = 0.25, u_rimStrength = 0 } },
 				"Burn",
 			},
