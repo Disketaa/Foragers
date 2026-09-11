@@ -4,5 +4,5 @@ return {
 	["card.handy"] = "Handy",
 	["modifier.buffDamage"] = "Damage\n#gray{old}#darkGray->#green{new}",
 	["modifier.buffAttackSpeed"] = "Attack Speed\n#gray{old}#darkGray->#green{new}",
-	["modifier.buffCrystalsFromRocks"] = "#greenBonus #rDrops From Rocks\n#gray{old}#darkGray->#green{new}",
+	["modifier.buffCrystalsFromRocks"] = "#greenHigher #rDrops From Rocks\n#gray{old}#darkGray->#green{new}",
 }
