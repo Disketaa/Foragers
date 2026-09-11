@@ -1,6 +1,6 @@
 return {
 	extends = "Content.Assets.Sprites.UI.Cards.Groups.Pickaxe._Pickaxe",
-	modifier = { stat = "rockCrystalBonus", amount = 1 },
+	modifier = { stat = "rockCrystalBonus", baseAmount = 1 },
 	rarity = "common",
 	components = {
 		{

@@ -5,8 +5,9 @@ local Cursor = require("Source.Sprite.Components.Cursor")
 local Events = require("Source.Helpers.Core.Events")
 local GameState = require("Source.Helpers.Systems.GameState")
 local I18n = require("Source.Helpers.Core.I18n")
-	local PostProcess = require("Source.Helpers.Graphics.PostProcess")
+local PostProcess = require("Source.Helpers.Graphics.PostProcess")
 local GridNav = require("Source.Helpers.UI.GridNav")
+local Rarities = require("Source.Helpers.Systems.Rarities")
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
 local TextParser = require("Source.Helpers.Core.TextParser")
 local Zoom = require("Source.Helpers.Graphics.Zoom")
@@ -18,6 +19,7 @@ local CardSelect = {}
 
 local REST_GAP = -4
 local ZOOM_ADD = 0.15
+local MAX_VISIBLE_CARDS = 3
 
 local _cards = {}
 local _hiding = false
@@ -46,16 +48,80 @@ local function finalOffset(i, n, cardW)
 	return slot * (cardW + REST_GAP)
 end
 
+local function pickWeightedCards(cards, max)
+	if #cards <= max then
+		return cards
+	end
+	local pool = {}
+	for _, entry in ipairs(cards) do
+		local rarity = entry.sprite.data and entry.sprite.data.rarity or "common"
+		table.insert(pool, { entry = entry, weight = Rarities.weight(rarity) })
+	end
+
+	local picked = {}
+	for _ = 1, max do
+		if #pool == 0 then
+			break
+		end
+
+		local totalWeight = 0
+		for _, item in ipairs(pool) do
+			totalWeight = totalWeight + item.weight
+		end
+
+		if totalWeight <= 0 then
+			local idx = love.math.random(1, #pool)
+			table.insert(picked, pool[idx].entry)
+			table.remove(pool, idx)
+		else
+			local roll = love.math.random(1, totalWeight)
+			local cumulative = 0
+			for j, item in ipairs(pool) do
+				cumulative = cumulative + item.weight
+				if roll <= cumulative then
+					table.insert(picked, item.entry)
+					table.remove(pool, j)
+					break
+				end
+			end
+		end
+	end
+	return picked
+end
+
+local function applyRarity(entry, rarity)
+	entry.sprite.data.rarity = rarity
+	-- Re-bake image canvases that use rarity palette so they pick up the new
+	-- parent.data.rarity on next draw.
+	for _, comp in ipairs(entry.sprite.components) do
+		if comp.type == "image" and comp.palette and comp.palette.scheme == "rarity" then
+			comp._canvas = nil
+		end
+	end
+	local pal = entry.sprite:findComponent("palette")
+	if pal and pal.scheme == "rarity" then
+		pal:setRarity(rarity)
+	end
+end
+
 --- Callers must gate state themselves (start() does); this only lays out + shows.
 function CardSelect.enter(uiSprites)
 	_cards = {}
 	_hiding = false
 	_chosen = nil
 	_uiSprites = uiSprites
+	local available = {}
 	for _, entry in ipairs(uiSprites) do
 		if entry.sprite.object == "card" and cardAvailable(entry.sprite) then
-			table.insert(_cards, entry)
+			table.insert(available, entry)
 		end
+	end
+
+	local picked = pickWeightedCards(available, MAX_VISIBLE_CARDS)
+	for _, entry in ipairs(picked) do
+		local rarity = Rarities.pick()
+		applyRarity(entry, rarity)
+		table.insert(_cards, entry)
 	end
 
 	local n = #_cards
@@ -91,23 +157,26 @@ function CardSelect.enter(uiSprites)
 			if emblem then
 				emblem:setFrame(tier)
 			end
-			if lvl then
-				lvl:setColor({ Tiers.tierColor(level) })
-			end
+		if lvl then
+			lvl:setColor({ Tiers.tierColor(level) })
+		end
 		local cardTier = s:findComponent("tier")
 		if cardTier and grp == "pickaxe" then
 			cardTier:setLevel(level)
 		end
-		local mod = s.data and s.data.modifier
-		if mod and type(mod) == "table" and mod.stat then
-			local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
-			local desc = s:findComponent("text", function(c) return c.id == "description" end)
-			if stats and desc and desc._rawText and desc._rawText.key then
-				local old, new = stats:previewStat(mod)
-				local raw = I18n.withDelta(desc._rawText.key, old, new, desc._rawText.params)
-				desc._rawText = raw
-				desc:setText(TextParser.resolve(raw))
-			end
+	end
+	local mod = s.data and s.data.modifier
+	if mod and type(mod) == "table" and mod.stat then
+		local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
+		local desc = s:findComponent("text", function(c) return c.id == "description" end)
+		if stats and desc and desc._rawText and desc._rawText.key then
+			local rarity = s.data and s.data.rarity or "common"
+			local scale = Rarities.scale(rarity)
+			local amount = (mod.baseAmount or 0) * scale
+			local old, new = stats:previewStat({ stat = mod.stat, amount = amount })
+			local raw = I18n.withDelta(desc._rawText.key, old, new, desc._rawText.params)
+			desc._rawText = raw
+			desc:setText(TextParser.resolve(raw))
 		end
 	end
 		local cardW = s.frameWidth or 64
@@ -325,11 +394,14 @@ function CardSelect.applyModifier(sprite)
 		mod(stats)
 		return
 	end
+	local rarity = sprite.data and sprite.data.rarity or "common"
+	local scale = Rarities.scale(rarity)
+	local amount = (mod.baseAmount or 0) * scale
 	local cur = stats[mod.stat]
 	if type(cur) == "table" then
-		cur.base = (cur.base or 0) + (mod.amount or 0)
+		cur.base = (cur.base or 0) + amount
 	else
-		stats[mod.stat] = (stats[mod.stat] or 0) + (mod.amount or 0)
+		stats[mod.stat] = (stats[mod.stat] or 0) + amount
 	end
 end
 

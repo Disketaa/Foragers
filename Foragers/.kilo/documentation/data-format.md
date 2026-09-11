@@ -102,6 +102,7 @@ Card sprite data files (`Content/Assets/Sprites/UI/Cards/...`) support these add
 | `maxLevel` | number | nil | Maximum level this card can be picked. When set, `CardSelect` filters out cards whose group has already reached this count. |
 | `group` | string | nil | Card group name (e.g. `"pickaxe"`). Used to track per-group pick counts in `GameState.cardGroupCounts`; cards in the same group share a counter. |
 | `modifier` | function / table | nil | Effect applied when the card is chosen. A function receives `(stats)` and mutates it directly. A table `{ stat = "damage", amount = 2 }` adds `amount` to `stats[stat]` (handles both flat and `{base,gain}` stats). |
+| `rarity` | string | `"common"` | Base rarity used for palette coloring and card selection weighting. When `CardSelect` shows a card, it may assign a new rarity via `Rarities.pick()` and update the card's palette to match. Must match a key in `Content/Data/Rarities.lua`. |
 
 ## Complete example
 
