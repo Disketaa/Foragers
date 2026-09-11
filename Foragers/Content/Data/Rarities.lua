@@ -1,6 +1,6 @@
 return {
-	common = { weight = 1 },
-	uncommon = { weight = 1 },
-	rare = { weight = 1 },
-	legendary = { weight = 1 },
+	common = { weight = 1500 },
+	uncommon = { weight = 200 },
+	rare = { weight = 60 },
+	legendary = { weight = 15 },
 }
