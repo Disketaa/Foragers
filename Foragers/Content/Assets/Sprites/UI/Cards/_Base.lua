@@ -12,6 +12,7 @@ return {
 
 		{
 			component = "tween",
+			persist = { y = true },
 			tags = {
 				show = {
 					{ target = "y", from = 0, to = 2, duration = "1..2", curve = "InOutCubic", loop = true, pingPong = true },
@@ -22,7 +23,7 @@ return {
 				},
 
 				hide = {
-					{ target = "y", from = 0, to = "10..30", duration = 1, curve = "InOutCubic" },
+					{ target = "y", from = 0, to = "10..20", duration = 1, curve = "InOutCubic" },
 					{ target = "burn", from = 0, to = 1, duration = 1, curve = "InOutCubic" },
 					{ target = "brightness", from = 0.5, to = 0, duration = 1, curve = "InOutCubic" },
 				},

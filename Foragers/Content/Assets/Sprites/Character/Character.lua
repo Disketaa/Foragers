@@ -22,8 +22,8 @@ return {
 
 		{
 			component = "player_stats",
-			movementSpeed = { base = 50, gain = 1 },
-			swimmingSpeed = { base = 30, gain = 0.5 },
+			movementSpeed = { base = 50, gain = 0.5 },
+			swimmingSpeed = { base = 30, gain = 0.25 },
 			level = 1,
 			maxLevel = 99,
 			experience = 0,
