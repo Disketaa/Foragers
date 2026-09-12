@@ -77,6 +77,7 @@ return {
 
 		{
 			component = "tween",
+			persist = { tintMix = true },
 			tags = {
 				flip = {
 					{ target = "scaleX", from = 0.75, to = 1, duration = 0.3, curve = "OutBack" },
