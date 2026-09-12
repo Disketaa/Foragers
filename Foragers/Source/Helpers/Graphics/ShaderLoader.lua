@@ -16,7 +16,8 @@ local screenScale = 1
 function ShaderLoader.loadAll(basePath)
 	ShaderLoader.shaders = {}
 	ShaderLoader.modules = {}
-	local postprocess = {}
+	local preProcess = {}
+	local postProcess = {}
 	Path.scanDirectory(basePath, function(fullPath)
 		local luaPath = Path.lua(fullPath)
 		-- Drop any cached module so edits to shader data files are picked up on
@@ -26,10 +27,11 @@ function ShaderLoader.loadAll(basePath)
 		local success, data = pcall(require, luaPath)
 		if success and type(data) == "table" and data.name then
 			if data.module then
-				-- building block, not a standalone shader
 				ShaderLoader.modules[data.name] = data
 				if data.postprocess then
-					table.insert(postprocess, { name = data.name, order = data.order or 0 })
+					local phase = data.phase or "post"
+					local target = phase == "pre" and preProcess or postProcess
+					table.insert(target, { name = data.name, order = data.order or 0, phase = phase })
 				end
 			elseif data.code then
 				local ok, shader = pcall(love.graphics.newShader, data.code)
@@ -52,27 +54,33 @@ function ShaderLoader.loadAll(basePath)
 			end
 		end
 	end)
-	-- Stack every module flagged `postprocess` into ONE screen pass. Explicit
-	-- `order` (tie-broken by name) keeps effect order controllable and stable.
-	table.sort(postprocess, function(a, b)
-		if a.order == b.order then
-			return a.name < b.name
+	-- Stack every module flagged `postprocess` into phase-separated screen passes.
+	-- `phase = "pre"` runs before emissive (e.g. DayNightGrade); `phase = "post"`
+	-- runs after emissive (e.g. Saturation, CircleMask). Explicit `order`
+	-- (tie-broken by name) keeps effect order controllable and stable.
+	local function compilePhase(list, name, priority)
+		table.sort(list, function(a, b)
+			if a.order == b.order then
+				return a.name < b.name
+			end
+			return a.order < b.order
+		end)
+		local names = {}
+		for _, p in ipairs(list) do
+			table.insert(names, p.name)
 		end
-		return a.order < b.order
-	end)
-	local names = {}
-	for _, p in ipairs(postprocess) do
-		table.insert(names, p.name)
-	end
-	if #names > 0 then
-		local entry = ShaderLoader._compileProgram(names, {
-			name = "ScreenPost",
-			priority = "postprocess",
-		})
-		if entry then
-			table.insert(ShaderLoader.shaders, entry)
+		if #names > 0 then
+			local entry = ShaderLoader._compileProgram(names, {
+				name = name,
+				priority = priority,
+			})
+			if entry then
+				table.insert(ShaderLoader.shaders, entry)
+			end
 		end
 	end
+	compilePhase(preProcess, "ScreenPostPre", "postprocess_pre")
+	compilePhase(postProcess, "ScreenPostPost", "postprocess_post")
 end
 
 function ShaderLoader.compose(names)
@@ -205,15 +213,43 @@ function ShaderLoader.update(dt)
 end
 
 --- The screen post-process program. loadAll composes every module flagged
---- `postprocess` into exactly one entry with this priority, so the first
---- match IS the program — callers rely on the single-slot invariant. Returns nil
---- while disabled so callers can't accidentally keep applying it (e.g. on death).
+--- `postprocess` into phase-separated entries. Returns the post-emissive pass
+--- (Saturation, CircleMask, etc.) while disabled so callers can't accidentally
+--- keep applying it (e.g. on death).
 function ShaderLoader.getPostProcess()
 	if not ShaderLoader.postProcessEnabled then
 		return nil
 	end
 	for _, s in ipairs(ShaderLoader.shaders or {}) do
-		if s.priority == "postprocess" then
+		if s.priority == "postprocess_post" then
+			return s.shader
+		end
+	end
+	return nil
+end
+
+--- Pre-emissive post-process pass (DayNightGrade). Applied to the world canvas
+--- before emissive sprites are composited.
+function ShaderLoader.getPrePostProcess()
+	if not ShaderLoader.postProcessEnabled then
+		return nil
+	end
+	for _, s in ipairs(ShaderLoader.shaders or {}) do
+		if s.priority == "postprocess_pre" then
+			return s.shader
+		end
+	end
+	return nil
+end
+
+--- Post-emissive post-process pass (Saturation, CircleMask, etc.). Applied to
+--- the combined world + emissive result.
+function ShaderLoader.getPostPostProcess()
+	if not ShaderLoader.postProcessEnabled then
+		return nil
+	end
+	for _, s in ipairs(ShaderLoader.shaders or {}) do
+		if s.priority == "postprocess_post" then
 			return s.shader
 		end
 	end

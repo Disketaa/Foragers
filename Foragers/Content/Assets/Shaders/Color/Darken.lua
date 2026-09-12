@@ -1,4 +1,4 @@
-	return {
+return {
 	name = "Darken",
 	order = 30,
 	type = "color",

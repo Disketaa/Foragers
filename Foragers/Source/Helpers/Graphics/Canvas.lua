@@ -6,9 +6,10 @@
 ---@field scale number
 ---@field offsetX number
 ---@field offsetY number
+---@field maxShake number
 ---@field canvas love.Canvas
 ---@field mode string
----@field new fun(width: number, height: number, mode?: string): Canvas
+---@field new fun(width: number, height: number, mode?: string, maxShake?: number): Canvas
 ---@field newCanvas fun(w: number, h: number): love.Canvas
 ---@field createCanvasManager fun(): fun(w: number, h: number): love.Canvas
 ---@field drawTo fun(canvas: love.Canvas, drawFunc: function, clearColor?: table, afterRestore?: function)

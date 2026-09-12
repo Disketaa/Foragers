@@ -1,5 +1,6 @@
 return {
 	name = "DayNightGrade",
+	phase = "pre",
 	order = 25,
 	postprocess = true,
 	type = "color",

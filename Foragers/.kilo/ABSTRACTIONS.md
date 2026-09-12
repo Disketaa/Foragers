@@ -53,23 +53,7 @@ relevant section before touching that subsystem.
 - **Compile errors are swallowed by `pcall` in `compose`.** If a composed shader
   shows no effect, the cause is almost always a GLSL compile failure returning
   nil. Temporarily print the `pcall` error (or write the generated source) to see it.
-- **Screen post-process = auto-composed modules, not a program data file.** Any
-  module with `postprocess = true` is collected by `ShaderLoader.loadAll` and
-  composed into one `"ScreenPost"` program (`priority = "postprocess"`) returned
-  by `getPostProcess()` — applied to BOTH canvas blits (`Canvas:draw`'s
-  `screenShader` param), so screen-space math must hold for both. Ordering is
-  explicit: sort by `order` (number, default 0), tie-broken by name — Saturation
-  is 10, CircleMask 20 so the mask blackens the final picture. To add a screen
-  effect: flag a module `postprocess = true`, add an `order`, done — the
-  `modules = {...}` program-file path was removed, this is the only way. A
-  postprocess-flagged module can still be composed onto sprites like any module.
-  `getPostProcess()` relies on the single-slot invariant: exactly one postprocess
-  program exists, so first-match is the program. Master switch:
-  `ShaderLoader.setPostProcessEnabled(false)` makes `getPostProcess()` return nil,
-  so callers pass it unconditionally and the whole screen (both canvas blits) drops
-  post-process. **The death screen does NOT use this switch anymore** — the mask
-  stays ON so the CircleMask holds the satiety-0 radius over the frozen world.
-  Never add `isDead and nil or getPostProcess()` at the call site.
+- **Screen post-process = phase-separated auto-composed modules, not a program data file.** Any module with `postprocess = true` is collected by `ShaderLoader.loadAll` and composed into phase-separated programs: `phase = "pre"` → `"ScreenPostPre"` (`priority = "postprocess_pre"`) returned by `getPrePostProcess()`; `phase = "post"` → `"ScreenPostPost"` (`priority = "postprocess_post"`) returned by `getPostPostProcess()`. The pre-pass runs before emissive compositing (e.g. DayNightGrade on the world canvas); the post-pass runs after (e.g. Saturation, CircleMask on the combined world+emissive result). Ordering within each phase is explicit: sort by `order` (number, default 0), tie-broken by name. To add a screen effect: flag a module `postprocess = true`, set `phase` (`"pre"` or `"post"`), add an `order`, done — the `modules = {...}` program-file path was removed, this is the only way. A postprocess-flagged module can still be composed onto sprites like any module. Master switch: `ShaderLoader.setPostProcessEnabled(false)` makes both `getPrePostProcess()` and `getPostPostProcess()` return nil. **The death screen does NOT use this switch anymore** — the mask stays ON so the CircleMask holds the satiety-0 radius over the frozen world. Never add `isDead and nil or getPostProcess()` at the call site.
 - **Post-process mask dither must sample in canvas pixels, not window pixels.**
   The blit upscales the canvas (nearest) and may output-zoom about a pivot; the
   shader receives `screen_coords` in window px. Effects convert back via

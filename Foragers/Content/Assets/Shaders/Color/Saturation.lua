@@ -1,5 +1,6 @@
 return {
 	name = "Saturation",
+	phase = "post",
 	order = 10,
 	postprocess = true,
 	type = "color",

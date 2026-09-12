@@ -68,6 +68,7 @@ local function isNonSolidCollision(c)
 end
 local canvas = Canvas.new(320, 180, "outer", 2)
 local bgCanvas = Canvas.new(320, 180, "outer", 2)
+local combinedCanvas = Canvas.new(320, 180, "outer", 2)
 local cursorSprite = nil
 GameState.cameraX = 0
 GameState.cameraY = 0
@@ -556,7 +557,6 @@ function love.draw()
 	local isDead = GameState.state == "gameover"
 
 	-- CircleMask maps window px back to canvas px; needs the blit transform
-	-- (scale x zoom about the pivot), which changes every frame.
 	local bx, by = Camera.canvasBlitOrigin(canvas)
 	ShaderLoader.setScreenTransform(canvas.scale * zoom, zpx + (bx - zpx) * zoom, zpy + (by - zpy) * zoom, canvas.width, canvas.height)
 
@@ -564,8 +564,7 @@ function love.draw()
 	-- previous frame (setColor persists). Reset to neutral before the canvases.
 	love.graphics.setColor(1, 1, 1, 1)
 
-	-- Background canvas: same movement as world (sticky to camera, no parallax)
-	-- Shader compensates for missing translate via camera_x/y uniform
+	-- Background canvas: Shader compensates for missing translate via camera_x/y uniform
 	bgCanvas:draw(
 		function()
 			ShaderLoader.drawBackground(bgCanvas.width, bgCanvas.height)
@@ -575,7 +574,7 @@ function love.draw()
 		GameState.shakeOffsetY,
 		GameState.camSubX,
 		GameState.camSubY,
-		ShaderLoader.getPostProcess(),
+		ShaderLoader.getPrePostProcess(),
 		zoom,
 		zpx,
 		zpy
@@ -584,7 +583,7 @@ function love.draw()
 	-- Main world canvas. The frozen world keeps drawing through the whole death
 	-- sequence — while dying the player's collapse is visible, and at gameover
 	-- the closing CircleMask blackens it. No separate black-cleared death layer.
-	canvas:draw(function()
+	Canvas.drawTo(canvas.canvas, function()
 		love.graphics.push()
 		love.graphics.translate(GameState.camPixelX, GameState.camPixelY)
 
@@ -620,7 +619,9 @@ function love.draw()
 		end
 
 		for _, sprite in ipairs(sorted) do
-			sprite:draw()
+			if not sprite._hasEmissive then
+				sprite:draw()
+			end
 		end
 
 		ParticleEmitter.drawBursts()
@@ -629,15 +630,42 @@ function love.draw()
 		TextEmitter.drawAll()
 
 		love.graphics.pop() -- world layer end
-	end, nil, GameState.shakeOffsetX, GameState.shakeOffsetY, GameState.camSubX, GameState.camSubY,
-	ShaderLoader.getPostProcess(), zoom, zpx, zpy)
+	end)
 
-	-- Draw only when grade chain differs from identity: postProcess active AND
-	-- (darken active OR outside neutral day range 8-16.5).
-	if ShaderLoader.postProcessEnabled and (GameState.darkenUniform > 0 or DayCycle.time < 8 or DayCycle.time > 16.5) then
+	Canvas.drawTo(combinedCanvas.canvas, function()
+		local preShader = ShaderLoader.getPrePostProcess()
+		if preShader then
+			love.graphics.setShader(preShader)
+		end
+		love.graphics.draw(canvas.canvas, 0, 0)
+		if preShader then
+			love.graphics.setShader()
+		end
+
 		Emissive.drawToScreen(visible, canvas, GameState.camPixelX, GameState.camPixelY,
-			GameState.camSubX, GameState.camSubY, GameState.shakeOffsetX, GameState.shakeOffsetY, zoom, zpx, zpy)
+			GameState.camSubX, GameState.camSubY, GameState.shakeOffsetX, GameState.shakeOffsetY,
+			zoom, zpx, zpy, combinedCanvas.canvas)
+	end)
+
+	local pad = canvas.scale + math.ceil(canvas.maxShake)
+	local finalX = canvas.offsetX + math.floor(GameState.shakeOffsetX or 0) + GameState.camSubX * canvas.scale - pad
+	local finalY = canvas.offsetY + math.floor(GameState.shakeOffsetY or 0) + GameState.camSubY * canvas.scale - pad
+
+	love.graphics.push()
+	if zoom ~= 1 then
+		love.graphics.translate(zpx, zpy)
+		love.graphics.scale(zoom, zoom)
+		love.graphics.translate(-zpx, -zpy)
 	end
+	local postShader = ShaderLoader.getPostPostProcess()
+	if postShader then
+		love.graphics.setShader(postShader)
+	end
+	love.graphics.draw(combinedCanvas.canvas, finalX, finalY, 0, canvas.scale, canvas.scale)
+	if postShader then
+		love.graphics.setShader()
+	end
+	love.graphics.pop()
 
 	-- Darken is a screen-space guarantee (fade-to-black), not a scene recolor.
 	-- Draw it as a fixed rect after both canvas blits so shake can't shift its

@@ -1,5 +1,6 @@
 return {
 	name = "CircleMask",
+	phase = "post",
 	order = 20,
 	postprocess = true,
 	type = "color",

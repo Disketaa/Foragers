@@ -13,6 +13,10 @@ function Emissive.new()
 	}, Emissive)
 end
 
+function Emissive:attach()
+	self.parent._hasEmissive = true
+end
+
 --- Draw emissive sprites at native 1x onto offscreen canvas, then blit canvas
 --- to screen at integer scale s. Two-stage split avoids compounded fractional
 --- scale (s * tweenScale) that breaks nearest-neighbor on direct-to-screen draw.
@@ -28,7 +32,8 @@ end
 ---@param zoom number
 ---@param zpx number Zoom pivot X
 ---@param zpy number Zoom pivot Y
-function Emissive.drawToScreen(entries, canvas, camPixelX, camPixelY, camSubX, camSubY, shakeX, shakeY, zoom, zpx, zpy)
+---@param targetCanvas love.Canvas|nil Optional target canvas; if nil, draws to screen
+function Emissive.drawToScreen(entries, canvas, camPixelX, camPixelY, camSubX, camSubY, shakeX, shakeY, zoom, zpx, zpy, targetCanvas)
 	emCanvas = ensureCanvas(canvas.width, canvas.height)
 
 	Canvas.drawTo(emCanvas, function()
@@ -88,22 +93,20 @@ function Emissive.drawToScreen(entries, canvas, camPixelX, camPixelY, camSubX, c
 		love.graphics.pop()
 	end, { 0, 0, 0, 0 })
 
-	-- Same transform chain as Canvas:draw uses for the world canvas blit.
-	local s = canvas.scale
-	local finalX = canvas.offsetX + math.floor(shakeX or 0) + camSubX * s - s
-	local finalY = canvas.offsetY + math.floor(shakeY or 0) + camSubY * s - s
-
 	love.graphics.push()
-	if zoom ~= 1 then
-		love.graphics.translate(zpx, zpy)
-		love.graphics.scale(zoom, zoom)
-		love.graphics.translate(-zpx, -zpy)
+	if targetCanvas then
+		love.graphics.draw(emCanvas, 0, 0)
+	else
+		if zoom ~= 1 then
+			love.graphics.translate(zpx, zpy)
+			love.graphics.scale(zoom, zoom)
+			love.graphics.translate(-zpx, -zpy)
+		end
+		local s = canvas.scale
+		local finalX = canvas.offsetX + math.floor(shakeX or 0) + camSubX * s - s
+		local finalY = canvas.offsetY + math.floor(shakeY or 0) + camSubY * s - s
+		love.graphics.draw(emCanvas, finalX, finalY, 0, s, s)
 	end
-	love.graphics.setBlendMode("alpha")
-	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.draw(emCanvas, finalX, finalY, 0, s, s)
-	love.graphics.setBlendMode("alpha")
-	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.pop()
 end
 
