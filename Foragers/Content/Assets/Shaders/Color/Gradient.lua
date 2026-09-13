@@ -9,6 +9,7 @@ return {
 		u_canvasSize = { 0, 0 },
 		u_rangeMin = 0,
 		u_rangeMax = 1,
+		u_bias = 0,
 	},
 	code = [[
 vec4 Gradient_color(vec4 color, vec2 screen_coords) {
@@ -24,6 +25,7 @@ vec4 Gradient_color(vec4 color, vec2 screen_coords) {
 	float hi = max(u_rangeMin, u_rangeMax);
 	float t = (hi > lo) ? (raw - lo) / (hi - lo) : raw;
 	t = clamp(t, 0.0, 1.0);
+	t = clamp(t + u_bias, 0.0, 1.0);
 
 	vec3 g = mix(u_colorA, u_colorB, t);
 	return vec4(g, color.a);

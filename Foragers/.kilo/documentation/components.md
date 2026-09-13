@@ -46,6 +46,30 @@ onto the component and sent to the shader at attach. If `u_seed` is not set, the
 Shader component derives it from the sprite position so multiple props of the same
 type sway out of phase.
 
+## Gradient shader
+
+`Content/Assets/Shaders/Color/Gradient.lua` — color-chain module that blends
+`u_colorA` → `u_colorB` along a directional axis. Used by `text` labels via the
+compact override form:
+
+```lua
+shader = { { Gradient = { u_colorA = {1,1,1}, u_colorB = {0.4,0.34,0.33}, u_angle = 90, u_bias = -0.4 } } }
+```
+
+| Uniform | Type | Default | Meaning |
+|---|---|---|---|
+| `u_colorA` | `{r,g,b}` | `{1,1,1}` | Start color |
+| `u_colorB` | `{r,g,b}` | `{1,1,1}` | End color |
+| `u_angle` | number | `0` | Gradient direction in degrees (0 = right, 90 = down) |
+| `u_rangeMin` | number | `0` | Auto-computed from text bbox by `Label.buildCanvas()` — do not set in data |
+| `u_rangeMax` | number | `1` | Auto-computed from text bbox by `Label.buildCanvas()` — do not set in data |
+| `u_bias` | number | `0` | Shift applied to mix factor after clamp. Negative → colorA dominant, positive → colorB dominant |
+| `u_canvasSize` | `{w,h}` | `{0,0}` | Canvas size; sent automatically by `Label` before each text draw |
+
+`u_rangeMin`/`u_rangeMax` are overwritten every bake by `Label` (projected from
+the text bounding box along `u_angle`). Use `u_bias` to control dominance
+instead — it survives bake cycles because `Label` never touches it.
+
 ## Gameplay
 
 | Component | Purpose | Config | Subscribes | Emits |
@@ -76,7 +100,7 @@ it is a one-shot, played only by its event (e.g. `death`, `hunger`) or a single
 | **text_emitter** | Floating text on events (e.g. damage numbers). Registered in `ComponentRegistry` but driven by global `TextEmitter.updateAll(dt)` / `TextEmitter.drawAll()` from `main.lua` — NOT via the per-sprite component loop (its `update`/`draw` are no-ops). | `font`, `text`, `event`, `color`, `moveX`, `moveY`, `gravity`, `duration`, `offsetX`, `offsetY`, `destroy`, `destroyCurve` | PROP_HIT (5) | — |
 | **counter** | Maps a value from a source component (e.g. `player_stats`) to a spritesheet frame. Event-driven — subscribes to `VALUE_CHANGED` on the source sprite via `setPlayerSprite()`. `update()` drives smooth tween animation. Optional `label` overlays text (level). Emits `COUNTER_TICK` on parent sprite on every value change and `COUNTER_WRAP` when the source level changes (bar wraps around). | `mode` (`"fraction"`/`"progress"`), `field`, `maxField`, `sourceType`, `frames`, `smoothness`, `curve`, `label` | VALUE_CHANGED (5) on source sprite | COUNTER_TICK, COUNTER_WRAP |
 | **ui** | Data-only screen-positioning. No `update`/`draw` — positioned by Main using `UI.calculate()`. Any sprite in `Content/Assets/Sprites/UI/` with this component is drawn after the world canvas `pop()`. | `horizontal` (`"left"`/`"center"`/`"right"`), `vertical` (`"top"`/`"center"`/`"bottom"`), `offsetX`, `offsetY` | — | — |
-| **text** | Static text label rendered with an external sprite-font atlas (not the parent's own spritesheet). Baked into a card-sized canvas and drawn through the parent's skew shader, so it warps with the EXACT same perspective as the card. Offsets are in canvas pixels from the sprite CENTRE. Supports scrolling when `maxWidth` is set. | `text`, `font`, `color`, `charSpacing`, `offsetX`, `offsetY`, `horizontalAlign`, `verticalAlign`, `scale`, `skewWithParent`, `dropshadowColor`, `tierColors`, `maxWidth`, `scrollSpeed`, `scrollPause`, `scrollEdgePad` | — | — |
+| **text** | Static text label rendered with an external sprite-font atlas (not the parent's own spritesheet). Baked into a card-sized canvas and drawn through the parent's skew shader, so it warps with the EXACT same perspective as the card. Offsets are in canvas pixels from the sprite CENTRE. Supports scrolling when `maxWidth` is set. | `text`, `font`, `color`, `charSpacing`, `offsetX`, `offsetY`, `horizontalAlign`, `verticalAlign`, `scale`, `skewWithParent`, `dropshadowColor`, `tierColors`, `maxWidth`, `scrollSpeed`, `scrollPause`, `scrollEdgePad`, `shader` (string or compact table `{ Gradient = { u_* = ... } }`) | — | — |
 | **image** | Image (optionally animated) drawn on top of the host sprite at a centre-relative offset. Baked into a card-sized canvas and drawn through the parent's skew shader, so it warps with the EXACT same perspective as the card. Supports parallax, bob, and an optional per-image shader. When `palette` is set, loads that palette directly instead of using parent shaderData — allows different images on the same sprite to use different palettes (e.g. card frame uses rarity, icon uses tier). | `image`, `offsetX`, `offsetY`, `scale`, `skewWithParent`, `drawBehind`, `parallax`, `parallaxSmoothing`, `bob`, `shader`, `palette` (`{scheme: "tier"|"rarity", value?: string}`) | — | — |
 | **cursor** | Screen-fixed cursor with switchable kinds (`arrow`/`hand`). Maps `love.mouse.getPosition()` into canvas space (via a live `canvas` ref wired by `main.lua`) and writes `parent.x/y` each frame; auto-hides after `hideDelay` s of no movement, reappears (fast fade-in) on move. `Cursor.active` is the live instance (assigned by `main.lua`); `defaultType` is restored each frame unless a `hover` component raises `_hoverClaimed`, in which case `Cursor:setType(kind)` keeps the hovered kind. Requires a `tween` component with `show`/`hide` tags (alpha). Updated manually from `main.lua`'s draw guard with wall-clock `dt` (not the world sprite loop) to keep it out of `love.update`'s upvalue budget. `canvas`/`Cursor.active` are set externally by `main.lua`, not from data. | `type` (`"arrow"` default base kind), `hideDelay` (5.5), `moveThreshold` (1.5) | — | — (drives the `tween` component via `triggerTag`, not events) |
 | **hover** | Per-frame cursor-kind swap on pointer-over. Hit-tests the mouse (mapped into canvas space) against the parent's pivot-aware frame bounds; on hit calls `Cursor.active:setType(type)` and raises `cursor._hoverClaimed` so `Cursor` keeps that kind for the frame instead of reverting to `defaultType`. Depends on `Cursor.active` being set by `main.lua` (silent no-op otherwise). No events. | `type` (cursor kind applied while hovered, `"hand"` default) | — | — |

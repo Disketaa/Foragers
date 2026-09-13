@@ -159,7 +159,7 @@ return {
 			maxWidth = 48,
 			horizontalAlign = "center",
 			verticalAlign = "center",
-			shader = { { Gradient = { u_colorA = { 0, 1, 1 }, u_colorB = { 0, 0, 0 }, u_angle = 90 } } },
+			shader = { { Gradient = { u_colorA = { 1, 1, 1 }, u_colorB = { 0.4, 0.34, 0.33 }, u_angle = 90, u_bias = -0.4 } } },
 		},
 
 		{
