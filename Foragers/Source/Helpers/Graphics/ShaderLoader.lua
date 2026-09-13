@@ -83,18 +83,43 @@ function ShaderLoader.loadAll(basePath)
 	compilePhase(postProcess, "ScreenPostPost", "postprocess_post")
 end
 
-function ShaderLoader.compose(names)
+function ShaderLoader.compose(specs)
+	-- specs: array of strings or tables.
+	--   string        -> shader name
+	--   {name="X"}    -> named shader
+	--   {X={u_*=...}} -> compact form: shader name + uniform overrides
+	local names = {}
+	local overrides = {}
+	for _, s in ipairs(specs) do
+		if type(s) == "string" then
+			table.insert(names, s)
+		elseif s.name then
+			table.insert(names, s.name)
+			for k, v in pairs(s) do
+				if k ~= "name" then
+					overrides[k] = v
+				end
+			end
+		else
+			local name, params = next(s)
+			table.insert(names, name)
+			for k, v in pairs(params or {}) do
+				overrides[k] = v
+			end
+		end
+	end
+
 	local key = "prog_" .. table.concat(names, "_")
 	for _, s in ipairs(ShaderLoader.shaders) do
 		if s.name == key then
-			return s
+			return s, overrides
 		end
 	end
 
 	local ok, entry = pcall(function() return ShaderLoader._compileProgram(names, {}) end)
 	if ok and entry then
 		table.insert(ShaderLoader.shaders, entry)
-		return entry
+		return entry, overrides
 	end
 	if not ok then
 		Log.error("ShaderLoader", "compose(%s) FAILED: %s", table.concat(names, ","), tostring(entry))

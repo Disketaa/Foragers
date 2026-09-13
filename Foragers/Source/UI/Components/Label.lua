@@ -3,6 +3,7 @@ local SpriteFont = require("Source.Sprite.Components.SpriteFont")
 local Pivot = require("Source.Helpers.Core.Pivot")
 local TextParser = require("Source.Helpers.Core.TextParser")
 local I18n = require("Source.Helpers.Core.I18n")
+local Math = require("Source.Helpers.Core.Math")
 
 -- Weak-KEYED so GC'd labels don't accumulate.
 local instances = setmetatable({}, { __mode = "k" })
@@ -44,6 +45,7 @@ end
 ---@field scale number
 ---@field skewWithParent boolean
 ---@field dropshadowColor table|nil @ dropshadow renders only when this is set
+---@field shader string|table|nil @ shader name or list of names to apply when baking text to canvas; compact form `{ Gradient = { u_* = ... } }` supported for per-component uniform overrides
 ---@field tierColors table|nil @ per-tier level text colors, indexed by emblem tier (1..5); consumed by CardSelect
 ---@field maxWidth number|nil @ nil disables clip/scroll
 ---@field maxHeight number|nil @ nil disables height clip; enables word-wrap when set
@@ -53,13 +55,17 @@ end
 ---@field _scrollT number @ accumulated scroll time
 ---@field _textW number|nil @ cached rendered width for overflow check
 ---@field _textH number|nil @ cached rendered height for multiline check
+---@field _shader love.Shader|nil @ composed shader applied during canvas bake
+---@field _angle number|nil @ gradient angle from shader overrides (radians)
+---@field _gradColorA table|nil @ gradient color A from shader overrides
+---@field _gradColorB table|nil @ gradient color B from shader overrides
 local Label = {}
 Label.__index = Label
 
 Label.SCROLL_SPEED = 50
 Label.SCROLL_PAUSE = 1
 
----@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadowColor}
+---@param data table {text, font, color, charSpacing, offsetX, offsetY, horizontalAlign, verticalAlign, scale, dropshadowColor, shader}
 ---@return Label
 function Label.new(data)
 	local self = setmetatable({
@@ -84,6 +90,11 @@ function Label.new(data)
 		scrollPause = data.scrollPause or Label.SCROLL_PAUSE,
 		scrollEdgePad = data.scrollEdgePad or 1,
 		charSpacing = data.charSpacing,
+		shader = data.shader,
+		_shader = nil,
+		_angle = nil,
+		_gradColorA = nil,
+		_gradColorB = nil,
 		_scrollT = 0,
 		_textW = nil,
 		_textH = nil,
@@ -353,6 +364,26 @@ function Label:attach()
 	self._frameH = ss.frameHeight
 	self._pivotX = ss.pivotX or "center"
 	self._pivotY = ss.pivotY or "center"
+	if self.shader then
+		local ShaderLoader = require("Source.Helpers.Graphics.ShaderLoader")
+		local specs = type(self.shader) == "string" and { self.shader } or self.shader
+		local loaded, overrides = ShaderLoader.compose(specs)
+		if loaded then
+			self._shader = loaded.shader
+		self._angle = overrides and overrides.u_angle
+		self._angleRad = math.rad(self._angle or 0)
+		self._gradColorA = overrides and overrides.u_colorA
+			self._gradColorB = overrides and overrides.u_colorB
+			for u, v in pairs(loaded.uniforms or {}) do
+				self._shader:send(u, v)
+			end
+			for k, v in pairs(overrides or {}) do
+				if self._shader:hasUniform(k) then
+					self._shader:send(k, v)
+				end
+			end
+		end
+	end
 end
 
 ---@param text string
@@ -371,7 +402,6 @@ function Label:setColor(color)
 	self._canvas = nil
 end
 
----@param cx number card centre x (screen)
 ---@param cy number card centre y (screen)
 ---@param fw number card frame width
 ---@param fh number card frame height
@@ -408,6 +438,24 @@ function Label:buildCanvas(cx, cy, fw, fh)
 	local inkW = (textW - self._charSpacing) * self.scale
 	self._textW = inkW
 
+	local function drawShaded(text, x, y, opts)
+		if self._shader then
+			love.graphics.setShader(self._shader)
+			if self._shader:hasUniform("u_canvasSize") then
+				self._shader:send("u_canvasSize", { fw, fh })
+			end
+			if self._shader:hasUniform("u_colorA") then
+				self._shader:send("u_colorA", self._gradColorA or { 1, 1, 1 })
+				self._shader:send("u_colorB", self._gradColorB or { 1, 1, 1 })
+				self._shader:send("u_angle", self._angle or 0)
+			end
+		end
+		SpriteFont.drawText(ref, text, x, y, opts)
+		if self._shader then
+			love.graphics.setShader()
+		end
+	end
+
 	if self.maxHeight then
 		local maxH = self.maxHeight / self.scale
 		local lines, totalH = self:wrapText(self.text, self.maxWidth, ref, self._charSpacing)
@@ -429,7 +477,22 @@ function Label:buildCanvas(cx, cy, fw, fh)
 		end
 
 		local drawY = anchorY
+		local textH = totalH * self.scale
 		local persistentColor = self.color
+		local maxLineW = 0
+		for _, line in ipairs(lines) do
+			local lw = SpriteFont.measureText(ref, self:stripColorTags(line.text), self._charSpacing) * self.scale
+			if lw > maxLineW then maxLineW = lw end
+		end
+		local canvasAnchorX = anchorX - (cx - fw * 0.5)
+		local canvasAnchorY = anchorY - (cy - fh * 0.5)
+		if self._shader then
+			local lo, hi = Math.projectBBoxRange(canvasAnchorX, canvasAnchorY, maxLineW, textH, self._angleRad, fw, fh)
+			if self._shader:hasUniform("u_rangeMin") then
+				self._shader:send("u_rangeMin", lo)
+				self._shader:send("u_rangeMax", hi)
+			end
+		end
 		for i, line in ipairs(lines) do
 			if visibleLines > 0 and i > visibleLines then
 				break
@@ -445,21 +508,21 @@ function Label:buildCanvas(cx, cy, fw, fh)
 			local segX = baseX - totalW * 0.5 - (self._charSpacing * self.scale) * 0.5
 			for _, seg in ipairs(coloredSegments) do
 				local color = seg.color or self.color
-				if self.dropshadowColor then
-					SpriteFont.drawText(ref, seg.text, segX + 1, drawY + 1, {
-						color = self.dropshadowColor,
-						horizontalAlign = "left",
-						verticalAlign = "center",
-						scale = self.scale,
-					})
-				end
-				SpriteFont.drawText(ref, seg.text, segX, drawY, {
-					color = color,
+			if self.dropshadowColor then
+				SpriteFont.drawText(ref, seg.text, segX + 1, drawY + 1, {
+					color = self.dropshadowColor,
 					horizontalAlign = "left",
 					verticalAlign = "center",
 					scale = self.scale,
 				})
-				segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
+			end
+			drawShaded(seg.text, segX, drawY, {
+				color = color,
+				horizontalAlign = "left",
+				verticalAlign = "center",
+				scale = self.scale,
+			})
+			segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
 			end
 			drawY = drawY + lineH
 		end
@@ -487,29 +550,39 @@ function Label:buildCanvas(cx, cy, fw, fh)
 		end
 
 		local coloredSegments, _ = self:parseColors(self.text, self.color)
+		local textH = ref.frameH * self.scale
 		local totalW = 0
 		for _, seg in ipairs(coloredSegments) do
 			totalW = totalW + SpriteFont.measureText(ref, seg.text, self._charSpacing)
 		end
 		totalW = totalW * self.scale
 		local segX = drawX - totalW * 0.5 - (self._charSpacing * self.scale) * 0.5
+		local canvasAnchorX = anchorX - (cx - fw * 0.5)
+		local canvasAnchorY = anchorY - (cy - fh * 0.5)
+		if self._shader then
+			local lo, hi = Math.projectBBoxRange(canvasAnchorX, canvasAnchorY, totalW, textH, self._angleRad, fw, fh)
+			if self._shader:hasUniform("u_rangeMin") then
+				self._shader:send("u_rangeMin", lo)
+				self._shader:send("u_rangeMax", hi)
+			end
+		end
 		for _, seg in ipairs(coloredSegments) do
 			local color = seg.color or self.color
-			if self.dropshadowColor then
-				SpriteFont.drawText(ref, seg.text, segX + 1, anchorY + 1, {
-					color = self.dropshadowColor,
-					horizontalAlign = "left",
-					verticalAlign = self.verticalAlign,
-					scale = self.scale,
-				})
-			end
-			SpriteFont.drawText(ref, seg.text, segX, anchorY, {
-				color = color,
+		if self.dropshadowColor then
+			SpriteFont.drawText(ref, seg.text, segX + 1, anchorY + 1, {
+				color = self.dropshadowColor,
 				horizontalAlign = "left",
 				verticalAlign = self.verticalAlign,
 				scale = self.scale,
 			})
-			segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
+		end
+		drawShaded(seg.text, segX, anchorY, {
+			color = color,
+			horizontalAlign = "left",
+			verticalAlign = self.verticalAlign,
+			scale = self.scale,
+		})
+		segX = segX + SpriteFont.measureText(ref, seg.text, self._charSpacing) * self.scale
 		end
 
 		if clip then

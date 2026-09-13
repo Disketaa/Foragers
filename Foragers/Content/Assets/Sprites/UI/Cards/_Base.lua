@@ -155,10 +155,11 @@ return {
 			id = "title",
 			offsetX = 0,
 			offsetY = -39,
-			dropshadowColor = { 0, 0, 0, 0.33 },
+			dropshadowColor = { 0, 0, 0, 0.2 },
 			maxWidth = 48,
 			horizontalAlign = "center",
 			verticalAlign = "center",
+			shader = { { Gradient = { u_colorA = { 0, 1, 1 }, u_colorB = { 0, 0, 0 }, u_angle = 90 } } },
 		},
 
 		{
