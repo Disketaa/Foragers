@@ -41,8 +41,9 @@ return {
 
 				unselect = {
 					{ target = "y", from = 0, to = 2, duration = "1..2", curve = "InOutCubic", loop = true, pingPong = true },
-					{ target = "scaleX", from = 1.25, to = 1, duration = 0.1, curve = "OutBack" },
-					{ target = "scaleY", from = 1.25, to = 1, duration = 0.2, curve = "OutBack" },
+					{ target = "scaleX", from = 1.25, to = 1, duration = 0.4, curve = "OutBack" },
+					{ target = "scaleY", from = 1.25, to = 1, duration = 0.3, curve = "OutBack" },
+					{ target = "angle", from = "-5|5", to = 0, duration = 0.5, curve = "OutBack" },
 					{ target = "rimStrength", set = 0 },
 					{ target = "brightness", from = 0.5, to = 0.25, duration = 0.3, curve = "OutBack" },
 				},
