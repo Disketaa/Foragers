@@ -4,7 +4,7 @@ return {
 	frameHeight = 8,
 	pivotX = 3,
 	pivotY = 3,
-	layer = 0,
+	layer = 4,
 	components = {
 		{
 			component = "spritesheet",

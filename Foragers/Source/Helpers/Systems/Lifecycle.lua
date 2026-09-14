@@ -48,11 +48,11 @@ local function cancelLoadingHold()
 	end
 end
 
---- Hold-to-restart is normal-play only (death auto-restarts), and works from any
---- bound input. Ignored while a restart is already winding down (restartTimer > 0)
+--- Hold-to-restart works during normal play and card selection,
+--- from any bound input. Ignored while a restart is already winding down (restartTimer > 0)
 --- so a re-press can't jump the scale-out tween.
 function Lifecycle.handleRestartPress()
-	if GameState.state ~= "game" or GameState.restartTimer > 0 then
+	if (GameState.state ~= "game" and GameState.state ~= "cardselect") or GameState.restartTimer > 0 then
 		return
 	end
 	startLoadingHold()
