@@ -128,13 +128,13 @@ end
 ---@param text string
 ---@param x number
 ---@param y number
----@param opts table|nil {color=rgba, alpha, scale, horizontalAlign, verticalAlign}
+---@param opts table|nil {color=rgba, alpha, scale, horizontalAlign, verticalAlign, charSpacing?}
 function SpriteFont.drawText(ref, text, x, y, opts)
 	opts = opts or {}
 	local image = ref.image
 	local frameW = ref.frameW
 	local frameH = ref.frameH
-	local charSpacing = ref.charSpacing or 0
+	local charSpacing = opts.charSpacing ~= nil and opts.charSpacing or (ref.charSpacing or 0)
 	local ox = Pivot.px(ref.pivotX, frameW, "center")
 	local oy = Pivot.px(ref.pivotY, frameH, "center")
 	local scale = opts.scale or 1

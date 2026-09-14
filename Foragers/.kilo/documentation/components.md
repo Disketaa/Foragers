@@ -121,6 +121,7 @@ it is a one-shot, played only by its event (e.g. `death`, `hunger`) or a single
 | `offsetY` | number/range/choice | `-8` | Spawn Y offset from parent pivot; re-rolled per emit |
 | `destroy` | `"fade"`/`"scale"`/`"instant"` | `"fade"` | Animated property: `fade`→alpha 1→0, `scale`→scale 1→0, `instant`→stays 1 |
 | `destroyCurve` | string | `"Linear"` | Easing name from `Tween.Easing` shaping the destroy animation |
+| `charSpacing` | number | font default | Extra pixels between glyphs; overrides the font data default |
 
 Spawn base = `parent.x + offsetX, parent.y + offsetY` (parent pivot point). Text is drawn with the **font's** pivot as the glyph origin (Tinylorder uses `pivotX=0, pivotY=0`, so text is top-left anchored at the base). Random fields (`moveX/moveY/gravity/duration/offsetX/offsetY`) are resolved via `ValueParser.call(self, "field")` **inside the event handler**, not in `new`, so each emit re-rolls choice/range strings. `drawAll` saves/restores the active shader so text is never tinted by a sprite shader.
 

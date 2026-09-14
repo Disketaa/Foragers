@@ -66,12 +66,13 @@ end
 ---@field offsetY number
 ---@field destroy string
 ---@field destroyCurve string
+---@field charSpacing number|nil
 ---@field type string
 ---@field parent Sprite
 local TextEmitter = {}
 TextEmitter.__index = TextEmitter
 
----@param data table Component config: font, text, event, color, motion (moveX/moveY/gravity/duration/offsetX/offsetY), destruction (destroy/destroyCurve).
+---@param data table Component config: font, text, event, color, motion (moveX/moveY/gravity/duration/offsetX/offsetY), destruction (destroy/destroyCurve), charSpacing.
 --- Motion fields may be range ("-6..-8") or choice ("-10|10") strings. ValueParser.table resolves them and stores
 --- originals in t.__raw so ValueParser.call re-rolls per emit; without it the raw strings leak into arithmetic in the handler.
 ---@return TextEmitter
@@ -95,6 +96,8 @@ function TextEmitter.new(data)
 		-- destruction: "fade" (alpha 1->0) | "scale" (scale 1->0) | "instant"
 		destroy = data.destroy or "fade",
 		destroyCurve = data.destroyCurve or "Linear",
+
+		charSpacing = data.charSpacing,
 
 		type = "text_emitter",
 	}
@@ -146,6 +149,7 @@ function TextEmitter:attach()
 			destroyCurve = self.destroyCurve,
 			color = self.color,
 			fontRef = ref,
+			charSpacing = self.charSpacing,
 		}
 		table.insert(activeTexts, num)
 	end, 5)
@@ -203,6 +207,7 @@ function TextEmitter.drawAll()
 				color = t.color,
 				alpha = alpha,
 				scale = t.scale,
+				charSpacing = t.charSpacing,
 			})
 		end
 	end
