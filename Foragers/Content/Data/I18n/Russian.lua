@@ -1,8 +1,8 @@
 return {
-	["card.contraction"] = "Сокращение",
-	["card.extension"] = "Продление",
-	["card.extraction"] = "Добыча",
-	["card.handy"] = "Удобство",
+	["card.closeness"] = "Близость",
+	["card.fortune"] = "Добыча",
+	["card.farness"] = "Дальность",
+	["card.haste"] = "Спешка",
 	["card.sharpness"] = "Острота",
 	["modifier.buffAttackRange"] = "Радиус атаки\n#gray{old}#darkGray->#green{new}",
 	["modifier.buffAttackSpeed"] = "Скорость атаки\n#gray{old}#darkGray->#green{new}",

@@ -1,24 +1,24 @@
 return {
 	extends = "Content.Assets.Sprites.UI.Cards.Groups.Pickaxe._Pickaxe",
-	modifier = { stat = "attackRange", baseAmount = 1 },
+	modifier = { stat = "attackSpeed", baseAmount = 1 },
 	rarity = "common",
 	components = {
 		{
 			component = "image",
 			id = "overlay",
-			image = "Content/Assets/Sprites/UI/Cards/Graphics/Icons/Enlarge",
+			image = "Content/Assets/Sprites/UI/Cards/Graphics/Icons/Strip",
 		},
 
 		{
 			component = "text",
 			id = "title",
-			text = { key = "card.extension" },
+			text = { key = "card.haste" },
 		},
 
 		{
 			component = "text",
 			id = "description",
-			text = { key = "modifier.buffAttackRange" },
+			text = { key = "modifier.buffAttackSpeed" },
 		},
 	},
 }

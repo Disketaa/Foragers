@@ -12,7 +12,7 @@ return {
 		{
 			component = "text",
 			id = "title",
-			text = { key = "card.contraction" },
+			text = { key = "card.closeness" },
 		},
 
 		{

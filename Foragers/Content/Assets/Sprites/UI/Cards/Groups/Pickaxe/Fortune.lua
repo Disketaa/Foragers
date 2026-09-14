@@ -18,7 +18,7 @@ return {
 		{
 			component = "text",
 			id = "title",
-			text = { key = "card.extraction" },
+			text = { key = "card.fortune" },
 		},
 
 		{
