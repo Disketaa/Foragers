@@ -5,6 +5,33 @@ local TextParser = require("Source.Helpers.Core.TextParser")
 local I18n = require("Source.Helpers.Core.I18n")
 local Math = require("Source.Helpers.Core.Math")
 
+local PALETTE_MODULES = {
+	rarity = require("Content.Assets.Palettes.Rarity"),
+	tier = require("Content.Assets.Palettes.Tier"),
+	text = require("Content.Assets.Palettes.Text"),
+}
+
+local function resolvePaletteRef(value, parent)
+	if not (value and type(value) == "table" and value.palette) then
+		return value
+	end
+	local scheme = value.palette
+	local index = value.index or 1
+	local pal = PALETTE_MODULES[scheme]
+	if not pal then
+		return value
+	end
+	local valueName = "common"
+	if parent and parent.data then
+		valueName = parent.data[scheme] or valueName
+	end
+	local def = pal[valueName]
+	if def and def.colors and def.colors[index] then
+		return def.colors[index]
+	end
+	return { 1, 1, 1 }
+end
+
 -- Weak-KEYED so GC'd labels don't accumulate.
 local instances = setmetatable({}, { __mode = "k" })
 local _listenerReady = false
@@ -379,7 +406,7 @@ function Label:attach()
 			end
 			for k, v in pairs(overrides or {}) do
 				if self._shader:hasUniform(k) then
-					self._shader:send(k, v)
+					self._shader:send(k, resolvePaletteRef(v, self.parent))
 				end
 			end
 		end
@@ -445,8 +472,8 @@ function Label:buildCanvas(cx, cy, fw, fh)
 				self._shader:send("u_canvasSize", { fw, fh })
 			end
 			if self._shader:hasUniform("u_colorA") then
-				self._shader:send("u_colorA", self._gradColorA or { 1, 1, 1 })
-				self._shader:send("u_colorB", self._gradColorB or { 1, 1, 1 })
+				self._shader:send("u_colorA", resolvePaletteRef(self._gradColorA or { 1, 1, 1 }, self.parent))
+				self._shader:send("u_colorB", resolvePaletteRef(self._gradColorB or { 1, 1, 1 }, self.parent))
 				self._shader:send("u_angle", self._angle or 0)
 			end
 		end
