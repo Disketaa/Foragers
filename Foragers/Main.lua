@@ -341,11 +341,15 @@ function initGame()
 	end
 
 	-- All sprites in Content/Assets/Sprites/UI/ with a "ui" component → screen-fixed layer.
+	-- Cards are loaded on demand by CardSelect, not pre-instantiated here.
 	local uiEntries = SpriteLoader.loadAll("Content/Assets/Sprites/UI") or {}
 	for _, entry in ipairs(uiEntries) do
-		local uiComp = entry.instance:findComponent("ui")
-		if uiComp then
-			table.insert(uiSprites, { sprite = entry.instance, ui = uiComp })
+		-- Skip card definitions: CardSelect instantiates only the picked ones.
+		if not entry.path:match("/Cards/") then
+			local uiComp = entry.instance:findComponent("ui")
+			if uiComp then
+				table.insert(uiSprites, { sprite = entry.instance, ui = uiComp })
+			end
 		end
 	end
 	for _, ui in ipairs(uiSprites) do

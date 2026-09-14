@@ -24,6 +24,8 @@ return {
 
 				hide = {
 					{ target = "y", from = 0, to = "10..20", duration = 1, curve = "InOutCubic" },
+					{ target = "scaleX", from = 1, to = 0, duration = 1, curve = "InCubic" },
+					{ target = "scaleY", from = 1, to = 0, duration = 1, curve = "InCubic" },
 					{ target = "angle", from = 0, to = "-45|45", duration = 1.5, curve = "InCubic" },
 					{ target = "burn", from = 0, to = 1, duration = 1, curve = "InOutCubic" },
 					{ target = "brightness", from = 0.5, to = 0, duration = 1, curve = "InOutCubic" },

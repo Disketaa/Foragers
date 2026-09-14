@@ -1,4 +1,6 @@
 return {
+	["card.extension"] = "Продление",
+	["card.contraction"] = "Сокращение",
 	["card.extraction"] = "Добыча",
 	["card.sharpness"] = "Острота",
 	["card.handy"] = "Удобство",

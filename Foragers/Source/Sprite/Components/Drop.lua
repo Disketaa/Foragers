@@ -58,7 +58,12 @@ function Drop:attach()
 				local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
 				if stats then
 					for _, statName in ipairs(dropDef.bonusStats) do
-						count = count + (stats:resolveStat(stats[statName]) or 0)
+						local bonus = stats:resolveStat(stats[statName]) or 0
+						if statName == "rockCrystalBonus" then
+							count = count + bonus + math.floor(bonus / 4)
+						else
+							count = count + bonus
+						end
 					end
 				end
 			end

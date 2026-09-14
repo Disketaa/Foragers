@@ -220,6 +220,12 @@ relevant section before touching that subsystem.
   only because: no runtime mod content, nothing mutates an Image/Quad/Source
   (play `clone()`s the base), frame changes index the shared quad array (never
   `quad:setViewport`). Runtime mods/hot-reload would need an invalidation path.
+- **`SpriteLoader` also caches PNG loads by path.** `loadImageCached(path)` stores
+  `love.graphics.newImage` results in a module-level `_imageCache`. Without this,
+  on-demand card spawning re-decodes the same spritesheet PNG from disk and
+  re-uploads to GPU every pick — a one-frame stall that shows up as an FPS spike.
+  The cache is never invalidated; safe for the same reasons as the SpriteSheet
+  cache (no runtime mods, no image mutation).
 - **Streaming world spawn.** `WorldBuilder.build` returns cheap plans
   (`terrainPlan`/`propPlan`, RNG only) and `Main.love.update` drains them within a
   wall-clock budget, nearest-player-first. `PropSpawner.update` must be gated
@@ -427,3 +433,5 @@ entire data tree. These fields are safe to randomize:
 - **`GameState.pendingLevelUps` queues level-ups across card picks.** `PlayerStats` increments it on `LEVEL_UP`; `CardSelect.applyModifier()` decrements it when a card is chosen. Main re-shows cards while `> 0`, so gaining 2+ levels at once shows the picker repeatedly.
 - **`GameState.showingCards` prevents re-entry.** `CardSelect.start()` gates on `not showingCards`; the flag is cleared only after the hide tweens finish in `CardSelect.update()`, not on pick. This keeps the chosen card's burn animation playing while the world runs underneath.
 - **`GameState.cardGroupCounts` tracks per-group picks.** Each card's `group` field increments its count on pick; `cardAvailable()` checks `count < maxLevel` so fully-maxed groups stop appearing.
+- **Cards spawn on-demand, not pre-loaded.** `CardSelect.enter()` calls `SpriteLoader.loadDefs()` once (cached in `_cardDefs`), filters by `cardAvailable()`, picks `MAX_VISIBLE_CARDS` via weighted reservoir sampling, then instantiates only those 3 cards. This avoids loading all possible card spritesheets at boot and keeps VRAM bounded when the card set grows large. `freshData()` deep-copies the picked def's data (including the `components` array) before instantiation so `require()`-cached module tables are never mutated across rounds.
+- **Card hide uses scale-to-zero, not alpha.** Component draws ignore alpha, so the `hide` tween tag animates `scaleX`/`scaleY` from 1 to 0. `exit()` also force-sets `scaleX = 0`/`scaleY = 0` on each card before removing them from `_uiSprites`.

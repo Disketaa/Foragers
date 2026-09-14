@@ -6,8 +6,16 @@ local ValueParser = require("Source.Helpers.Core.ValueParser")
 
 local SpriteLoader = {}
 
---- Turn a data table into a live Sprite. Handles field copy, component creation,
---- and PNG loading. Used by loadAll(), WorldBuilder.instantiateProp() and Drop.
+local _imageCache = {}
+
+local function loadImageCached(path)
+	if not _imageCache[path] then
+		local ok, image = pcall(function() return love.graphics.newImage(path) end)
+		_imageCache[path] = ok and image or false
+	end
+	return _imageCache[path] or nil
+end
+
 ---@param data table
 ---@param x number
 ---@param y number
@@ -54,8 +62,8 @@ function SpriteLoader.instantiate(data, x, y, pngPath)
 	if pngPath then
 		local pngInfo = love.filesystem.getInfo(pngPath)
 		if pngInfo then
-			local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
-			if ok then
+			local image = loadImageCached(pngPath)
+			if image then
 				sprite.image = image
 				if not next(data.components or {}) then
 					sprite.type = "StaticSprite"
@@ -101,6 +109,27 @@ function SpriteLoader.loadAll(assetsPath, spawnCallback)
 	end)
 
 	return objects
+end
+
+--- Scan a directory for sprite data definitions without instantiating them.
+--- Returns a list of { path = fullPath, data = table } suitable for eligibility
+--- checks (group, maxLevel, rarity) without paying the instantiate cost.
+---@param assetsPath string
+---@return table[]
+function SpriteLoader.loadDefs(assetsPath)
+	local defs = {}
+	Path.scanDirectory(assetsPath, function(fullPath, item)
+		if not item:match("^_") then
+			local ok, data = pcall(require, Path.lua(fullPath))
+			if ok and type(data) == "table" then
+				if data.extends then
+					data = Merge.resolveExtends(data)
+				end
+				table.insert(defs, { path = fullPath, data = data })
+			end
+		end
+	end)
+	return defs
 end
 
 return SpriteLoader
