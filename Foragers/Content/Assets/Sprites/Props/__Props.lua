@@ -14,6 +14,7 @@ return {
 
 		{
 			component = "tween",
+			persist = { tintMix = true },
 			tags = {
 				prop_spawned = {
 					{ target = "scaleX", from = 2, to = 1, duration = 0.25, curve = "OutBack" },

@@ -380,7 +380,7 @@ local function applyTweens(self, tweenSet, restart)
 					wait = tweenData.wait,
 				}
 				local isOverride = not isNew and not sameConfig(tween._src, src)
-				if isNew or isOverride or (restart and tween:isFinished()) then
+				if isNew or isOverride or restart then
 					tween.from = from
 					tween.to = to
 					tween.duration = dur
@@ -419,7 +419,7 @@ function TweenComponent.new(data)
 end
 
 function TweenComponent:attach()
-	applyTweens(self, self.tweens)
+	applyTweens(self, self.tweens, false)
 
 	self.parent:on(Events.FLIPPED, function()
 		if self.tags.flip then
