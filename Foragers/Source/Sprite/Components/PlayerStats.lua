@@ -16,7 +16,7 @@ local GameState = require("Source.Helpers.Systems.GameState")
 ---@field lowSatietyWarnings number Warning thresholds before death
 ---@field dead boolean Whether the player has died (satiety 0); blocks further consumption/restoration
 ---@field damage number|{base:number, gain:number} Base attack damage
----@field attackRange number|{base:number, gain:number} Attack range
+---@field attackRange number|{base:number, gain:number, min?:number} Attack range
 ---@field attackSpeed number|{base:number, gain:number} Attacks per second
 ---@field crystalDropBonus number|{base:number, gain:number} Bonus crystals from all sources
 ---@field rockCrystalBonus number|{base:number, gain:number} Bonus crystals specifically from rocks
@@ -171,16 +171,27 @@ function PlayerStats:resolveCurve(curve, level)
 end
 
 --- Resolve a stat defined as a flat number or an additive `{base, gain}`
---- curve: `base + gain * (level-1)`.
----@param stat number|{base:number, gain:number}
+--- curve: `base + gain * (level-1)`. If `min` is set, the result is clamped
+--- to it so bounded stats like `attackRange` never go below floor.
+---@param stat number|{base:number, gain:number, min?:number}|nil
 ---@param level number|nil resolve at a specific level (defaults to current)
 ---@return number
 function PlayerStats:resolveStat(stat, level)
 	level = level or self.level
 	if type(stat) == "table" then
-		return math.floor(stat.base + (stat.gain or 0) * (level - 1))
+		local base = stat.base or 0
+		local gain = stat.gain or 0
+		local val = math.floor(base + gain * (level - 1))
+		local min = stat.min
+		if min ~= nil and val < min then
+			val = min
+		end
+		return val
 	end
-	return stat or 0
+	if stat == nil then
+		return 0
+	end
+	return stat
 end
 
 ---@return number XP required for the current level
@@ -224,16 +235,16 @@ function PlayerStats:getRockCrystalBonus()
 end
 
 --- Preview old/new resolved value for a stat if `amount` were applied.
---- Does not mutate. Handles both flat number and {base,gain} stat shapes.
+--- Does not mutate. Handles both flat number and {base,gain,min} stat shapes.
 ---@param mod {stat:string, amount:number}
 ---@return number old current resolved value
----@return number new resolved value after adding amount
+---@return number new resolved value after adding amount, clamped to min
 function PlayerStats:previewStat(mod)
 	local cur = self[mod.stat]
 	local old = self:resolveStat(cur)
 	local newVal
 	if type(cur) == "table" then
-		newVal = self:resolveStat({ base = (cur.base or 0) + (mod.amount or 0), gain = cur.gain })
+		newVal = self:resolveStat({ base = (cur.base or 0) + (mod.amount or 0), gain = cur.gain, min = cur.min })
 	else
 		newVal = old + (mod.amount or 0)
 	end
