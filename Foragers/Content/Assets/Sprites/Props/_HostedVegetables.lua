@@ -15,11 +15,6 @@ return {
 		},
 
 		{
-			component = "destructible",
-			hp = 15,
-		},
-
-		{
 			component = "silhouette",
 			mode = "silhouette",
 		},

@@ -26,7 +26,7 @@ return {
 
 		{
 			component = "destructible",
-			hp = 20,
+			hp = 120,
 		},
 
 		{

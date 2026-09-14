@@ -35,11 +35,11 @@ return {
 			lowSatietyWarnings = 4,
 			lowSatietyZoom = 2,
 			lowSatietyMaskRadius = 24,
-			damage = { base = 5, gain = 0.5 },
-			range = { base = 20, gain = 0.25 },
+			damage = { base = 30, gain = 1 },
+			range = { base = 20, gain = 0.1 },
 			critChance = 0,
 			critMult = 1.5,
-			attackSpeed = { base = 20, gain = 1 },
+			attackSpeed = { base = 40, gain = 0.5 },
 		},
 
 		{
