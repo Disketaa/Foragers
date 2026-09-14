@@ -111,16 +111,20 @@ local function formatParam(v)
 	return tostring(v)
 end
 
---- Replace {name} placeholders (e.g. "{n}") using the params table.
+--- Replace {name} or {name%} placeholders (e.g. "{n}", "{old%}").
+--- A trailing "%" multiplies the value by 100 and appends a percent sign.
 ---@param str string
 ---@param params table|nil
 ---@return string
 local function interpolate(str, params)
 	if not params then return str end
-	return (str:gsub("%{([%w_]+)%}", function(name)
+	return (str:gsub("%{([%w_]+)(%%?)%}", function(name, pct)
 		local v = params[name]
 		if v == nil then return "" end
-		return formatParam(v)
+		if pct == "%" then
+			v = v * 100
+		end
+		return formatParam(v) .. pct
 	end))
 end
 

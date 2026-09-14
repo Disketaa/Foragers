@@ -36,7 +36,7 @@ return {
 			lowSatietyZoom = 2,
 			lowSatietyMaskRadius = 24,
 			damage = { base = 30, gain = 1 },
-			range = { base = 20, gain = 0.1 },
+			attackRange = 20,
 			critChance = 0,
 			critMult = 1.5,
 			attackSpeed = { base = 40, gain = 0.5 },

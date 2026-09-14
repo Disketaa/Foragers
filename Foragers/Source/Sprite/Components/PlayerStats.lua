@@ -16,7 +16,7 @@ local GameState = require("Source.Helpers.Systems.GameState")
 ---@field lowSatietyWarnings number Warning thresholds before death
 ---@field dead boolean Whether the player has died (satiety 0); blocks further consumption/restoration
 ---@field damage number|{base:number, gain:number} Base attack damage
----@field range number|{base:number, gain:number} Attack range
+---@field attackRange number|{base:number, gain:number} Attack range
 ---@field attackSpeed number|{base:number, gain:number} Attacks per second
 ---@field crystalDropBonus number|{base:number, gain:number} Bonus crystals from all sources
 ---@field rockCrystalBonus number|{base:number, gain:number} Bonus crystals specifically from rocks
@@ -68,7 +68,7 @@ function PlayerStats.new(data)
 		critChance = data.critChance or 0,
 		critMult = data.critMult or 1.5,
 		damage = data.damage or 1,
-		range = data.range or 20,
+		attackRange = data.attackRange or 20,
 		attackSpeed = data.attackSpeed or 20,
 		crystalDropBonus = data.crystalDropBonus or 0,
 		rockCrystalBonus = data.rockCrystalBonus or 0,
@@ -204,8 +204,8 @@ function PlayerStats:getDamage()
 end
 
 ---@return number attack range for the current level
-function PlayerStats:getRange()
-	return self:resolveStat(self.range)
+function PlayerStats:getAttackRange()
+	return self:resolveStat(self.attackRange)
 end
 
 ---@return number attack speed (attacks/sec) for the current level

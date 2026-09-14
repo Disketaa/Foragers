@@ -1,6 +1,6 @@
 return {
 	extends = "Content.Assets.Sprites.UI.Cards.Groups.Pickaxe._Pickaxe",
-	modifier = { stat = "attackSpeed", baseAmount = 1 },
+	modifier = { stat = "attackRange", baseAmount = -1 },
 	rarity = "common",
 	components = {
 		{
@@ -18,7 +18,7 @@ return {
 		{
 			component = "text",
 			id = "description",
-			text = { key = "modifier.buffAttackSpeed" },
+			text = { key = "modifier.debuffAttackRange" },
 		},
 	},
 }

@@ -18,7 +18,7 @@ local function getWeaponData(weaponSprite, playerSprite)
 	local ps = playerSprite and playerSprite:findComponent("player_stats")
 	local range, cooldown, damage, attackSpeed
 	if ps then
-		range = ps:getRange()
+		range = ps:getAttackRange()
 		cooldown = ps:getCooldown()
 		damage = ps:getDamage()
 		attackSpeed = ps:getAttackSpeed()
