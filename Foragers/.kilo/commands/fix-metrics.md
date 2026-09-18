@@ -32,11 +32,10 @@ file:line:col - rule_name: SKIP — reason
 
 Reason must be concrete, not advisory. Reject: "seems fine". Require: "14-state FSM dispatch, branches structurally distinct, not sloppy".
 
-If the skip should persist across future scans (not just this pass), also add a baseline entry:
-```
-Tools/LuaMetrics/baseline.json
-```
-keyed by structural fingerprint, not file:line — see `Tools/LuaMetrics/README.md` for fingerprint generation. Do not add a line-number-keyed entry; it invalidates on refactor.
+If the skip should persist across future scans (not just this pass), add the function name to `targets.exclude_functions` in `Tools/LuaMetrics/Settings.toml`. The tool writes accepted skips to `Tools/LuaMetrics/Baseline.json` automatically; that file should contain only excluded/accepted functions, not every function in the project. On subsequent runs:
+- fingerprint matches → silently skipped
+- fingerprint mismatches → reported as `[BASELINE CHANGED]` so you know the code drifted
+Do not edit `Baseline.json` manually; edit `Settings.toml` and let the tool regenerate the baseline.
 
 If the skip is architectural (Section I conflict), use `REVIEW REQUIRED` instead of `SKIP`:
 ```
@@ -77,6 +76,25 @@ file:line:col - rule_name: REVIEW REQUIRED — architectural change needed
 
 ## After fixing
 Tell the user what to check in-game to verify the fix didn't break anything.
+
+## Known issues
+### LuaMetrics depth-tracking false positives
+`Tools/LuaMetrics/LuaMetrics.py` historically missed `local function` boundaries, inflating CC for any function containing nested named locals. Reported CC=26/58 for `drawProfiler`/`Debug.draw` were unreliable; true CC unknown until tool is fixed. Patch: recognize `^(local\s+)?function\b` and `^(do|if|while|for|repeat)\b` as depth openers.
+
+### LuaMetrics end-counting overcount
+`extract_functions` used `clean.count("end")`, which matches the substring anywhere. Fix: `re.findall(r"\bend\b", s)` so only the keyword counts.
+
+### LuaLS parameter drift after extraction
+When extracting helpers from a large draw/update function, LuaLS will flag:
+- unused params in the new helper
+- undefined globals where the helper reads a parent local that wasn't passed through
+- arity mismatches at call sites
+- stale `---@param` LuaDoc on the extracted function
+
+Fix pattern: after each extraction, run LuaLS, then audit the helper signature against its body and every call site. Remove unused params, add missing ones, update LuaDoc. Do not leave placeholder params "for symmetry" — they trigger unused-argument warnings.
+
+### Parameter propagation rule
+A helper extracted from a parent function can only use what is explicitly passed. If the helper references a local defined in the parent (color, font, offset, gap, etc.), that local must become a parameter. Do not rely on closure over parent locals — LuaLS treats them as undefined globals inside the helper.
 
 ## Reference
 - `.kilo/AGENTS.md` — full architecture, component rules, event system, error handling

@@ -579,10 +579,68 @@ local function renderText(text, x, y, color, f)
 	love.graphics.print(text, x, y)
 end
 
+local function fmtMs(ms, digits, timeChars)
+	local fmt = "%." .. digits .. "f"
+	local val, unit
+	if ms < 1 then
+		val, unit = ms * 1000, "µs"
+	else
+		val, unit = ms, "ms"
+	end
+	local num = string.format("%" .. (timeChars - 2) .. "s", string.format(fmt, val))
+	return num, unit
+end
+
+local function fmtPct(ms, total)
+	return string.format("%.1f", (ms / total) * 100)
+end
+
+local function drawRow(segs, bg, offset, y, rowW, fontHeight, x1, x2, x3, pctCol, rowGap)
+	if bg then
+		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
+		love.graphics.rectangle("fill", offset, y, rowW, fontHeight)
+	end
+	local xs = { x1, x2, x3 }
+	for i = 1, 3 do
+		local segs3 = segs[i]
+		local w = 0
+		for _, seg in ipairs(segs3) do
+			w = w + seg[3]:getWidth(seg[1])
+		end
+		local x = xs[i]
+		if i == 3 then
+			x = x3 + pctCol - w
+		end
+		for _, seg in ipairs(segs3) do
+			renderText(seg[1], x, y, seg[2], seg[3])
+			x = x + seg[3]:getWidth(seg[1])
+		end
+	end
+	return y + fontHeight + rowGap
+end
+
 --- Bottom-left table of per-scope frame cost (name, ms, % of measured total).
 --- Reuses the `hud` styling (size, fonts, colors, padding) and the same row-box
 --- rendering as the top-left HUD. `profiler` group adds only `enabled`/`limit`.
----@param scale number
+--- Truncate entry names to `nameMax` chars and split into module/method.
+local function _truncateNames(entries, nameMax)
+	for i = 1, #entries do
+		local e = entries[i]
+		local disp = e.name
+		if #disp > nameMax then
+			disp = string.sub(disp, 1, nameMax - 1) .. "..."
+		end
+		local dot = disp:find("%.")
+		if dot then
+			e.module = string.sub(disp, 1, dot - 1)
+			e.method = string.sub(disp, dot)
+		else
+			e.module = disp
+			e.method = nil
+		end
+	end
+end
+
 local function drawProfiler(scale)
 	if not Profiler.enabled() or not Debug.enabled("hud") then
 		return
@@ -608,47 +666,19 @@ local function drawProfiler(scale)
 	local count = math.min(limit, #entries)
 
 	local nameMax = math.max(3, math.floor(p.nameMaxChars or 18))
-	local digits = math.max(0, math.floor(p.digits or 4))
-	for i = 1, count do
-		local e = entries[i]
-		-- Truncate into a local display name; never mutate the shared entry
-		-- name so the snapshot trace reads the full scope names.
-		local disp = e.name
-		if #disp > nameMax then
-			disp = string.sub(disp, 1, nameMax - 1) .. "..."
-		end
-		local dot = disp:find("%.")
-		if dot then
-			e.module = string.sub(disp, 1, dot - 1)
-			e.method = string.sub(disp, dot)
-		else
-			e.module = disp
-			e.method = nil
-		end
-	end
+	_truncateNames(entries, nameMax)
 
 	-- Time column keeps a fixed char width so a value crossing a digit boundary
 	-- (9→10µs) never resizes it and shifts the `%` column. `%` is the last column
 	-- so it can size to its content without causing any shift.
-	local valueMaxChars = p.valueMaxChars and math.max(4, math.floor(p.valueMaxChars)) or 0
+	local digits = math.max(0, math.floor(p.digits or 4))
+	local valueMaxChars = p.valueMaxChars
+	if valueMaxChars then
+		valueMaxChars = math.max(4, math.floor(valueMaxChars))
+	end
 	local timeChars = math.max(4, digits + 6)
 	if valueMaxChars > 0 then
 		timeChars = math.min(timeChars, valueMaxChars)
-	end
-
-	local function fmtMs(ms)
-		local fmt = "%." .. digits .. "f"
-		local val, unit
-		if ms < 1 then
-			val, unit = ms * 1000, "µs"
-		else
-			val, unit = ms, "ms"
-		end
-		local num = string.format("%" .. (timeChars - 2) .. "s", string.format(fmt, val))
-		return num, unit
-	end
-	local function fmtPct(ms)
-		return string.format("%.1f", (ms / total) * 100)
 	end
 
 	local nameCol = 0
@@ -656,7 +686,7 @@ local function drawProfiler(scale)
 	for i = 1, count do
 		local e = entries[i]
 		nameCol = math.max(nameCol, labelFont:getWidth(e.module .. (e.method or "")))
-		pctCol = math.max(pctCol, valueFont:getWidth(fmtPct(e.ms) .. "%"))
+		pctCol = math.max(pctCol, valueFont:getWidth(fmtPct(e.ms, total) .. "%"))
 	end
 	nameCol = math.max(nameCol, labelFont:getWidth("Scope"))
 	pctCol = math.max(pctCol, valueFont:getWidth("%"))
@@ -673,40 +703,16 @@ local function drawProfiler(scale)
 	local y = topY
 	-- Each column is a list of { text, color, font } segments so a cell can be
 	-- split (e.g. number in valueColor, unit in labelColor).
-	local function drawRow(segs)
-		if bg then
-			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
-			love.graphics.rectangle("fill", offset, y, rowW, fontHeight)
-		end
-		local xs = { x1, x2, x3 }
-		for i = 1, 3 do
-			local segs3 = segs[i]
-			local w = 0
-			for _, seg in ipairs(segs3) do
-				w = w + seg[3]:getWidth(seg[1])
-			end
-			local x = xs[i]
-			if i == 3 then
-				x = x3 + pctCol - w
-			end
-			for _, seg in ipairs(segs3) do
-				renderText(seg[1], x, y, seg[2], seg[3])
-				x = x + seg[3]:getWidth(seg[1])
-			end
-		end
-		y = y + fontHeight + rowGap
-	end
-
 	local labelSeg = { "Scope", labelColor, labelFont }
 	local header = {
 		{ labelSeg },
 		{ { string.format("%" .. timeChars .. "s", "Time"), labelColor, valueFont } },
 		{ { "%", labelColor, valueFont } },
 	}
-	drawRow(header)
+	y = drawRow(header, bg, offset, y, rowW, fontHeight, x1, x2, x3, pctCol, rowGap)
 	for i = 1, count do
 		local e = entries[i]
-		local num, unit = fmtMs(e.ms)
+		local num, unit = fmtMs(e.ms, digits, timeChars)
 		local nameSegs = { { e.module, valueColor, labelFont } }
 		if e.method then
 			table.insert(nameSegs, { e.method, labelColor, labelFont })
@@ -714,9 +720,71 @@ local function drawProfiler(scale)
 		local cells = {
 			nameSegs,
 			{ { num, valueColor, valueFont }, { unit, labelColor, valueFont } },
-			{ { fmtPct(e.ms), valueColor, valueFont }, { "%", labelColor, valueFont } },
+			{ { fmtPct(e.ms, total), valueColor, valueFont }, { "%", labelColor, valueFont } },
 		}
-		drawRow(cells)
+		y = drawRow(cells, bg, offset, y, rowW, fontHeight, x1, x2, x3, pctCol, rowGap)
+	end
+end
+
+--- Render chat output (read-only command results). Gated by `hasOutput and not inputActive`.
+local function _drawChatOutput(labelFont, offset, gap, rowH, valueColor, goodColor, badColor, bg, labelColor)
+	local outColor = chatOutputSuccess and goodColor or badColor
+	local maxLines = 10
+	local lines = chatOutputLines
+	if #lines > maxLines then
+		local trimmed = {}
+		for i = #lines - maxLines + 1, #lines do
+			trimmed[#trimmed + 1] = lines[i]
+		end
+		lines = trimmed
+	end
+	local outW = 0
+	for _, line in ipairs(lines) do
+		local w = gap * 2
+		for _, seg in ipairs(line) do
+			w = w + labelFont:getWidth(seg[1])
+		end
+		if w > outW then
+			outW = w
+		end
+	end
+	local baseY = love.graphics.getHeight() - offset - rowH * #lines
+	if bg then
+		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
+		love.graphics.rectangle("fill", offset, baseY, outW, rowH * #lines)
+	end
+	love.graphics.setFont(labelFont)
+	for i, line in ipairs(lines) do
+		local ly = love.graphics.getHeight() - offset - rowH * (#lines - i + 1)
+		local x = offset + gap
+		for _, seg in ipairs(line) do
+			local c = seg[2] == "name" and valueColor or (seg[2] == "label" and labelColor or outColor)
+			love.graphics.setColor(c[1], c[2], c[3], c[4])
+			love.graphics.print(seg[1], x, ly + gap / 2)
+			x = x + labelFont:getWidth(seg[1])
+		end
+	end
+end
+
+--- Render chat input field. Gated by `inputActive`.
+local function _drawChatInput(labelFont, offset, gap, textW, rowH, rowW, prompt, valueColor, labelColor, bg)
+	local y = love.graphics.getHeight() - offset - rowH
+
+	if bg then
+		love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
+		love.graphics.rectangle("fill", offset, y, rowW, rowH)
+	end
+
+	love.graphics.setColor(valueColor[1], valueColor[2], valueColor[3], valueColor[4])
+	love.graphics.setFont(labelFont)
+	pcall(love.graphics.print, prompt .. chatText, offset + gap, y + gap / 2)
+
+	-- I-beam blinks at ~2Hz when the field is focused.
+	chatBlink = (chatBlink + 1) % 60
+	if chatBlink < 30 then
+		love.graphics.setColor(labelColor[1], labelColor[2], labelColor[3], labelColor[4])
+		local cursorX = offset + gap + textW
+		love.graphics.line(cursorX, y + gap / 2, cursorX, y + rowH - gap / 2)
 	end
 end
 
@@ -754,129 +822,141 @@ function Debug.drawChat(scale)
 	local rowH = fontHeight + gap
 	local rowW = gap + textW + cursorW + gap
 
-	-- Output renders as stacked rows growing upward from the input position,
-	-- capped so a long help listing never fills the screen. Line 1 is the
-	-- bottom row; each subsequent line sits one row above. Each line is a list
-	-- of styled segments: "value" uses the success/error color, "label" the dim
-	-- label color (e.g. a help command name vs its description).
 	if hasOutput and not inputActive then
-		local outColor = chatOutputSuccess and goodColor or badColor
-		local maxLines = 10
-		local lines = chatOutputLines
-		if #lines > maxLines then
-			local trimmed = {}
-			for i = #lines - maxLines + 1, #lines do
-				trimmed[#trimmed + 1] = lines[i]
-			end
-			lines = trimmed
-		end
-		local outW = 0
-		for _, line in ipairs(lines) do
-			local w = gap * 2
-			for _, seg in ipairs(line) do
-				w = w + labelFont:getWidth(seg[1])
-			end
-			if w > outW then
-				outW = w
-			end
-		end
-		local baseY = love.graphics.getHeight() - offset - rowH * #lines
-		if bg then
-			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
-			love.graphics.rectangle("fill", offset, baseY, outW, rowH * #lines)
-		end
-		love.graphics.setFont(labelFont)
-		for i, line in ipairs(lines) do
-			local ly = love.graphics.getHeight() - offset - rowH * (#lines - i + 1)
-			local x = offset + gap
-			for _, seg in ipairs(line) do
-				local c = seg[2] == "name" and valueColor or (seg[2] == "label" and labelColor or outColor)
-				love.graphics.setColor(c[1], c[2], c[3], c[4])
-				love.graphics.print(seg[1], x, ly + gap / 2)
-				x = x + labelFont:getWidth(seg[1])
-			end
-		end
+		_drawChatOutput(labelFont, offset, gap, rowH, valueColor, goodColor, badColor, bg, labelColor)
 	end
-
 	if inputActive then
-		local y = love.graphics.getHeight() - offset - rowH
-
-		if bg then
-			love.graphics.setColor(bg[1], bg[2], bg[3], bg[4])
-			love.graphics.rectangle("fill", offset, y, rowW, rowH)
-		end
-
-		love.graphics.setColor(valueColor[1], valueColor[2], valueColor[3], valueColor[4])
-		love.graphics.setFont(labelFont)
-		pcall(love.graphics.print, prompt .. chatText, offset + gap, y + gap / 2)
-
-		-- I-beam blinks at ~2Hz when the field is focused.
-		chatBlink = (chatBlink + 1) % 60
-		if chatBlink < 30 then
-			love.graphics.setColor(labelColor[1], labelColor[2], labelColor[3], labelColor[4])
-			local cursorX = offset + gap + textW
-			love.graphics.line(cursorX, y + gap / 2, cursorX, y + rowH - gap / 2)
-		end
+		_drawChatInput(labelFont, offset, gap, textW, rowH, rowW, prompt, valueColor, labelColor, bg)
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)
 end
 
---- Draw the top-left HUD readout (FPS, FPS graph, object count) at native
---- resolution. Gated by the `hud` group. `scale` is the window upscale factor
---- (canvas.scale) so the text and graph stay proportional on any window size.
----@param objectCount number
----@param scale number
-function Debug.draw(objectCount, scale)
-	scale = scale or 1
-	-- Sample render stats here so the snapshot reports draw calls from the
-	-- real draw pass (getStats resets each frame, so update() sees zeros).
-	Snapshot.captureDraw()
-	Snapshot.setDrawEnd()
-	-- Auto-profiler draws its own table first, independent of the HUD.
-	drawProfiler(scale)
-	Debug.drawChat(scale)
-
-	local s = Debug.settings("hud")
-	local gs = Debug.settings("hud.fpsGraph")
+--- Resolve shared HUD draw state (fonts, colors, graph settings). Returns all
+--- locals needed by the layout/render pass so Debug.draw itself stays thin.
+local function _hudDrawState(s, gs, scale)
 	local hasFps = s.fps
 	local hasGraph = Debug.enabled("hud.fpsGraph")
 	local hasCount = s.objectCount
 	local toggles = type(s.toggles) == "table" and s.toggles or {}
 	local hasToggles = #toggles > 0
-	if not Debug.enabled("hud") or not (hasFps or hasGraph or hasCount or hasToggles) then
-		return
-	end
-
+	local wantHud = Debug.enabled("hud") and (hasFps or hasGraph or hasCount or hasToggles)
 	local size = math.max(4, math.floor((s.size or 8) * scale))
 	local labelFont, valueFont, fontHeight = hudFonts(s, scale)
-
-	-- `padding` is a single group offset: the whole readout shifts right/down
-	-- by it. `gap` alone spaces the rows inside the block.
 	local offset, gap = spacing(s, s, scale)
 	local labelColor = s.labelColor or { 0.6, 0.6, 0.6, 1 }
 	local valueColor = s.color or { 1, 1, 1, 1 }
 	local goodColor = s.goodColor or { 0, 1, 0, 1 }
 	local badColor = s.badColor or { 1, 0, 0, 1 }
-	-- Graph height clamped to the row so a tall graph never overflows its box.
 	local gh = math.min((gs.height or (size * 2)) * scale, fontHeight)
 	local graphShown = hasGraph and historyCount > 1
+	return wantHud, hasFps, hasGraph, hasCount, toggles, hasToggles, labelFont, valueFont, fontHeight, offset, gap, labelColor, valueColor, goodColor, badColor, gh, graphShown
+end
 
-	-- Layout every row (FPS, object count, separator, toggles) up front so the
-	-- background boxes and text share one pass. Each row hugs its own content.
+--- Draw the FPS graph row. Called only when `graphShown` is true.
+local function _drawFpsGraph(r, labelColor, goodColor, badColor, offset, graphX, gh, fontHeight, scale, gs)
+	local target = Options.maxFps or 60
+	-- Color against the real ceiling: user maxFps capped at what the display
+	-- can actually sustain, so a 144hz panel at ~144 isn't painted red against
+	-- an unreachable 180 target. Options.maxFps stays the static user setting
+	-- (bar scale + label); only the threshold/cap-marker use the ceiling.
+	-- getDisplayRefreshRate is absent on some LÖVE builds, so fall back to the
+	-- highest measured FPS (the display cap appears as the peak sample when
+	-- maxFps is above it).
+	local refresh = 0
+	local getRate = love.window["getDisplayRefreshRate"]
+	if getRate then
+		refresh = getRate() or 0
+	end
+	if refresh <= 0 then
+		local peak = 0
+		for i = 1, historyCount do
+			local idx = (historyIndex - historyCount + i - 1) % HISTORY_MAX + 1
+			if (history[idx] or 0) > peak then peak = history[idx] end
+		end
+		refresh = peak
+	end
+	local effectiveMax = (refresh > 0 and math.min(target, refresh) or target)
+	-- `tolerance` is a fraction of the ceiling (0.5 = 50%): at 60fps a
+	-- segment stays green down to 30fps before it goes red.
+	local tolerance = gs.tolerance or 0
+	local threshold = effectiveMax * (1 - tolerance)
+	local gy = r.y + (fontHeight - gh) / 2
+	local step = (gs.width or 60) * scale / (historyCount - 1)
+	local gx = offset + graphX
+	-- Walk the ring oldest→newest (history[historyIndex] is the newest).
+	local first = (historyIndex - historyCount) % HISTORY_MAX + 1
+	local function sampleAt(k)
+		local idx = first + k
+		if idx > HISTORY_MAX then
+			idx = idx - HISTORY_MAX
+		end
+		return history[idx]
+	end
+	-- Per-segment color: green while stable, red at the samples that dropped.
+	love.graphics.setLineWidth(math.max(1, (gs.thickness or 1) * scale))
+	-- Dim marker at the display refresh cap when it's below the user's
+	-- maxFps target, so the graph shows both the configured line and the
+	-- real ceiling it can't exceed.
+	if effectiveMax < target then
+		local capY = gy + gh - (effectiveMax / target) * gh
+		love.graphics.setColor(labelColor[1], labelColor[2], labelColor[3], 0.5)
+		love.graphics.line(gx, capY, gx + (gs.width or 60) * scale, capY)
+	end
+	for k = 1, historyCount - 1 do
+		local v1, v2 = sampleAt(k - 1), sampleAt(k)
+		local c = (v2 or 0) >= threshold and goodColor or badColor
+		love.graphics.setColor(c[1], c[2], c[3], c[4])
+		local h1 = math.min(gh, (v1 / target) * gh)
+		local h2 = math.min(gh, (v2 / target) * gh)
+		love.graphics.line(gx + (k - 1) * step, gy + gh - h1, gx + k * step, gy + gh - h2)
+	end
+end
+
+--- Draw one FPS row (label + value + optional graph).
+local function _drawFpsRow(r, labelFont, valueFont, labelColor, valueColor, goodColor, badColor, offset, graphX, gh, fontHeight, scale, gs, graphShown)
+	local label = "FPS "
+	local val = tostring(math.floor(history[historyIndex] or 0))
+	renderText(label, offset, r.y, labelColor, labelFont)
+	renderText(val, offset + r.labelW + (r.fixedValW - valueFont:getWidth(val)), r.y, valueColor, valueFont)
+
+	if graphShown then
+		_drawFpsGraph(r, labelColor, goodColor, badColor, offset, graphX, gh, fontHeight, scale, gs)
+	end
+end
+
+--- Draw one object-count row.
+local function _drawCountRow(r, labelFont, valueFont, labelColor, valueColor, offset, objectCount)
+	local label = "Objects "
+	renderText(label, offset, r.y, labelColor, labelFont)
+	renderText(tostring(objectCount), offset + labelFont:getWidth(label), r.y, valueColor, valueFont)
+end
+
+--- Draw one toggle-status row.
+local function _drawToggleRow(r, labelFont, valueColor, valueFont, labelColor, offset)
+	local x = offset
+	if r.keyText ~= "" then
+		renderText(r.keyText, x, r.y, valueColor, labelFont)
+		x = x + labelFont:getWidth(r.keyText)
+	end
+	renderText(r.dimText, x, r.y, labelColor, labelFont)
+	x = x + labelFont:getWidth(r.dimText)
+	renderText(r.status, x, r.y, r.statusColor, valueFont)
+end
+
+--- Layout HUD rows (FPS, count, toggles) and return the row list plus graphX offset.
+local function _layoutRows(gs, hasFps, hasGraph, hasCount, toggles, hasToggles, labelFont, valueFont, fontHeight, offset, gap, scale, objectCount, goodColor, badColor)
 	local rows = {}
 	local graphX = 0
 	local y = offset
 	if hasFps then
 		local gapi = (gs.gap or 6) * scale
-		-- Reserve a fixed value width (maxFps digits) so the graph doesn't shift
-		-- when the live reading goes 2→3 digits. Value text right-aligns into it.
 		local digits = #tostring(math.floor(Options.maxFps or 999))
 		local labelW = labelFont:getWidth("FPS ")
 		local fixedValW = valueFont:getWidth(string.rep("9", digits))
 		local textW = labelW + fixedValW
 		local w = textW + gapi
-		if graphShown then
+		if hasGraph and historyCount > 1 then
 			graphX = textW + gapi
 			w = w + (gs.width or 60) * scale
 		end
@@ -889,12 +969,9 @@ function Debug.draw(objectCount, scale)
 		y = y + fontHeight + gap
 	end
 	if hasToggles then
-		-- One empty separator row between the readout and the toggle statuses.
 		y = y + fontHeight + gap
 		for _, t in ipairs(toggles) do
 			local on = Debug.enabled(t.path)
-			-- Key prefix read from Options.lua keybinds so the readout mirrors
-			-- the bindings without duplicating the mapping.
 			local keyText = ""
 			if t.key then
 				local kb = Options.keybinds[t.key]
@@ -920,6 +997,32 @@ function Debug.draw(objectCount, scale)
 			y = y + fontHeight + gap
 		end
 	end
+	return rows, graphX
+end
+
+--- Draw the top-left HUD readout (FPS, FPS graph, object count) at native
+--- resolution. Gated by the `hud` group. `scale` is the window upscale factor
+--- (canvas.scale) so the text and graph stay proportional on any window size.
+---@param objectCount number
+---@param scale number
+function Debug.draw(objectCount, scale)
+	scale = scale or 1
+	-- Sample render stats here so the snapshot reports draw calls from the
+	-- real draw pass (getStats resets each frame, so update() sees zeros).
+	Snapshot.captureDraw()
+	Snapshot.setDrawEnd()
+	-- Auto-profiler draws its own table first, independent of the HUD.
+	drawProfiler(scale)
+	Debug.drawChat(scale)
+
+	local s = Debug.settings("hud")
+	local gs = Debug.settings("hud.fpsGraph")
+	local wantHud, hasFps, hasGraph, hasCount, toggles, hasToggles, labelFont, valueFont, fontHeight, offset, gap, labelColor, valueColor, goodColor, badColor, gh, graphShown = _hudDrawState(s, gs, scale)
+	if not wantHud then
+		return
+	end
+
+	local rows, graphX = _layoutRows(gs, hasFps, hasGraph, hasCount, toggles, hasToggles, labelFont, valueFont, fontHeight, offset, gap, scale, objectCount, goodColor, badColor)
 
 	if s.backgroundColor then
 		local bg = s.backgroundColor
@@ -931,82 +1034,11 @@ function Debug.draw(objectCount, scale)
 
 	for _, r in ipairs(rows) do
 		if r.kind == "fps" then
-			local label = "FPS "
-			local val = tostring(math.floor(history[historyIndex] or 0))
-			renderText(label, offset, r.y, labelColor, labelFont)
-			renderText(val, offset + r.labelW + (r.fixedValW - valueFont:getWidth(val)), r.y, valueColor, valueFont)
-
-			if graphShown then
-			local target = Options.maxFps or 60
-			-- Color against the real ceiling: user maxFps capped at what the display
-			-- can actually sustain, so a 144hz panel at ~144 isn't painted red against
-			-- an unreachable 180 target. Options.maxFps stays the static user setting
-			-- (bar scale + label); only the threshold/cap-marker use the ceiling.
-			-- getDisplayRefreshRate is absent on some LÖVE builds, so fall back to the
-			-- highest measured FPS (the display cap appears as the peak sample when
-			-- maxFps is above it).
-			local refresh = 0
-			local getRate = love.window["getDisplayRefreshRate"]
-			if getRate then
-				refresh = getRate() or 0
-			end
-			if refresh <= 0 then
-				local peak = 0
-				for i = 1, historyCount do
-					local idx = (historyIndex - historyCount + i - 1) % HISTORY_MAX + 1
-					if (history[idx] or 0) > peak then peak = history[idx] end
-				end
-				refresh = peak
-			end
-			local effectiveMax = (refresh > 0 and math.min(target, refresh) or target)
-			-- `tolerance` is a fraction of the ceiling (0.5 = 50%): at 60fps a
-			-- segment stays green down to 30fps before it goes red.
-			local tolerance = gs.tolerance or 0
-			local threshold = effectiveMax * (1 - tolerance)
-				local gy = r.y + (fontHeight - gh) / 2
-				local step = (gs.width or 60) * scale / (historyCount - 1)
-				local gx = offset + graphX
-				-- Walk the ring oldest→newest (history[historyIndex] is the newest).
-				local first = (historyIndex - historyCount) % HISTORY_MAX + 1
-				local function sampleAt(k)
-					local idx = first + k
-					if idx > HISTORY_MAX then
-						idx = idx - HISTORY_MAX
-					end
-					return history[idx]
-				end
-				-- Per-segment color: green while stable, red at the samples that dropped.
-			love.graphics.setLineWidth(math.max(1, (gs.thickness or 1) * scale))
-			-- Dim marker at the display refresh cap when it's below the user's
-			-- maxFps target, so the graph shows both the configured line and the
-			-- real ceiling it can't exceed.
-			if effectiveMax < target then
-				local capY = gy + gh - (effectiveMax / target) * gh
-				love.graphics.setColor(labelColor[1], labelColor[2], labelColor[3], 0.5)
-				love.graphics.line(gx, capY, gx + (gs.width or 60) * scale, capY)
-			end
-			for k = 1, historyCount - 1 do
-					local v1, v2 = sampleAt(k - 1), sampleAt(k)
-					local c = (v2 or 0) >= threshold and goodColor or badColor
-					love.graphics.setColor(c[1], c[2], c[3], c[4])
-					local h1 = math.min(gh, (v1 / target) * gh)
-					local h2 = math.min(gh, (v2 / target) * gh)
-					love.graphics.line(gx + (k - 1) * step, gy + gh - h1, gx + k * step, gy + gh - h2)
-				end
-			end
+			_drawFpsRow(r, labelFont, valueFont, labelColor, valueColor, goodColor, badColor, offset, graphX, gh, fontHeight, scale, gs, graphShown)
 		elseif r.kind == "count" then
-			local label = "Objects "
-			renderText(label, offset, r.y, labelColor, labelFont)
-			renderText(tostring(objectCount), offset + labelFont:getWidth(label), r.y, valueColor, valueFont)
+			_drawCountRow(r, labelFont, valueFont, labelColor, valueColor, offset, objectCount)
 		elseif r.kind == "toggle" then
-			local x = offset
-			if r.keyText ~= "" then
-				renderText(r.keyText, x, r.y, valueColor, labelFont)
-				x = x + labelFont:getWidth(r.keyText)
-			end
-			renderText(r.dimText, x, r.y, labelColor, labelFont)
-			x = x + labelFont:getWidth(r.dimText)
-			renderText(r.status, x, r.y, r.statusColor, valueFont)
+			_drawToggleRow(r, labelFont, valueColor, valueFont, labelColor, offset)
 		end
 	end
 

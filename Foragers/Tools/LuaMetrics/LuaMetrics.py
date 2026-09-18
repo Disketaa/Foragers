@@ -4,6 +4,9 @@ LuaMetrics - Code sloppiness metrics for Lua projects.
 Reports cyclomatic complexity spikes and code clones.
 """
 
+import datetime
+import hashlib
+import json
 import os
 import re
 import sys
@@ -22,6 +25,7 @@ def find_lua_files(root, settings):
     root = os.path.abspath(root)
     exclude_files = set(settings.get("targets", {}).get("exclude_files", []))
     exclude_folders = set(settings.get("targets", {}).get("exclude_folders", []))
+    exclude_functions = set(settings.get("targets", {}).get("exclude_functions", []))
 
     files = []
     for dirpath, dirnames, filenames in os.walk(root):
@@ -34,26 +38,16 @@ def find_lua_files(root, settings):
         for f in filenames:
             if f.endswith(".lua") and f not in exclude_files:
                 files.append(os.path.join(dirpath, f))
-    return sorted(files)
+    return sorted(files), exclude_functions
 
 
 def strip_strings_and_comments(line):
     result = []
     in_string = False
-    escape = False
     string_char = None
     i = 0
     while i < len(line):
         c = line[i]
-        if escape:
-            result.append(c)
-            escape = False
-            i += 1
-            continue
-        if c == "\\" and in_string:
-            result.append(c)
-            i += 1
-            continue
         if not in_string and c in ('"', "'"):
             in_string = True
             string_char = c
@@ -63,6 +57,10 @@ def strip_strings_and_comments(line):
             string_char = None
             result.append(" ")
         elif in_string:
+            if c == "\\" and i + 1 < len(line):
+                result.append(" ")
+                i += 2
+                continue
             result.append(" ")
         elif not in_string and c == "-" and i + 1 < len(line) and line[i + 1] == "-":
             break
@@ -88,15 +86,17 @@ def extract_functions(content, filepath):
     anon_start = re.compile(r"function\s*\(")
 
     i = 0
+    depth = 0
     while i < len(lines):
         clean = strip_strings_and_comments(lines[i]).strip()
+
         m = func_start.match(clean)
         is_anon = bool(anon_start.search(clean))
-        if m or is_anon:
+        if (m or is_anon) and depth == 0:
             name = m.group(2) if m else "anonymous"
             start_line = i + 1
 
-            depth = 0
+            body_depth = 0
             j = i
             while j < len(lines):
                 s = strip_strings_and_comments(lines[j]).strip()
@@ -107,9 +107,9 @@ def extract_functions(content, filepath):
                 opens += len(re.findall(r"\b(for|while)\b", s))
                 if not re.search(r"\b(for|while)\b.*\bdo\b", s):
                     opens += len(re.findall(r"\bdo\b", s))
-                closes = s.count("end")
-                depth += opens - closes
-                if depth == 0 and j > i:
+                closes = len(re.findall(r"\bend\b", s))
+                body_depth += opens - closes
+                if body_depth == 0 and j > i:
                     break
                 j += 1
 
@@ -128,7 +128,15 @@ def extract_functions(content, filepath):
                 }
             )
             i = j + 1
+            depth = 0
         else:
+            if clean:
+                opens = len(re.findall(r"\b(function|if|repeat)\b", clean))
+                opens += len(re.findall(r"\b(for|while)\b", clean))
+                if not re.search(r"\b(for|while)\b.*\bdo\b", clean):
+                    opens += len(re.findall(r"\bdo\b", clean))
+                closes = clean.count("end")
+                depth += opens - closes
             i += 1
 
     return functions
@@ -219,6 +227,26 @@ def detect_clones(functions, min_lines=6):
     return list(unique.values())
 
 
+def compute_fingerprint(body_lines):
+    norm = normalize(body_lines)
+    body = "\n".join(norm)
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+def load_baseline(root):
+    path = os.path.join(root, "Tools", "LuaMetrics", "Baseline.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_baseline(root, baseline):
+    path = os.path.join(root, "Tools", "LuaMetrics", "Baseline.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(baseline, f, indent=2)
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: LuaMetrics.py <project_root>", file=sys.stderr)
@@ -226,7 +254,7 @@ def main():
 
     root = sys.argv[1]
     settings = load_settings(root)
-    files = find_lua_files(root, settings)
+    files, exclude_functions = find_lua_files(root, settings)
 
     all_functions = []
     for f in files:
@@ -247,9 +275,34 @@ def main():
     cc_error = settings.get("metrics", {}).get("cc_error", 20)
     clone_min = settings.get("metrics", {}).get("clone_min_lines", 6)
 
+    baseline = load_baseline(root)
+    updated_baseline = {}
+    now = datetime.datetime.now().isoformat()
+
     # Erosion: CC > cc_error error, CC > cc_warn warning
     for f in all_functions:
         rel = os.path.relpath(f["file"], root)
+        key = f"{rel}:{f['line']}:{f['name']}"
+        fp = compute_fingerprint(f["body"])
+
+        if f["name"] in exclude_functions:
+            updated_baseline[key] = {"fingerprint": fp, "updated": now}
+            continue
+
+        entry = baseline.get(key)
+        if entry and entry.get("fingerprint") == fp:
+            updated_baseline[key] = entry
+            continue
+
+        if entry and entry.get("fingerprint") != fp:
+            output_lines.append(
+                f"{rel}:{f['line']}:1 - CC={f['cc']} exceeds warn threshold ({cc_warn}): {f['name']} [BASELINE CHANGED]"
+            )
+            warnings += 1
+            files_with_issues.add(f["file"])
+            updated_baseline[key] = {"fingerprint": fp, "updated": now}
+            continue
+
         if f["cc"] > cc_error:
             errors += 1
             files_with_issues.add(f["file"])
@@ -284,7 +337,8 @@ def main():
         print(f"{errors} errors / {warnings} warnings in {len(files_with_issues)} files")
     elif warnings:
         print(f"{warnings} warnings in {len(files_with_issues)} files")
-    print("Hint: raise thresholds in Settings.toml (cc_warn=10, cc_error=20), extract clones into shared helpers, or add false positives to targets.exclude_files.")
+    print("Hint: raise thresholds in Settings.toml (cc_warn=10, cc_error=20), extract clones into shared helpers, or add accepted warnings to targets.exclude_functions in Settings.toml.")
+    save_baseline(root, updated_baseline)
     sys.exit(errors)
 
 
