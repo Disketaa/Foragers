@@ -5,6 +5,14 @@ description: Guide for fixing a single metrics violation in Foragers
 ## Before you start
 2. Read the flagged file and the exact function/region mentioned in the violation
 3. Check `.kilo/documentation/` for LÖVE2D API docs if the fix touches engine calls
+4. Comments only if:
+- explain "why", not "what" (code already says what)
+- describe non-obvious contract between functions/modules
+- LuaDoc type annotations
+
+Do NOT write a comment if removing it leaves the code
+self-explanatory. When unsure — don't write.
+
 
 ## Not every violation gets fixed
 Before fixing, decide: **fix** or **skip**.
