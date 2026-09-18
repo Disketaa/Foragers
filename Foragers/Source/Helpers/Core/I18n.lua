@@ -19,24 +19,20 @@ function I18n.onLanguageChange(cb)
 end
 
 --- Safe to call once at boot; subsequent calls refresh the language tables.
-function I18n.load()
-	I18n._langs = {}
-	Path.scanDirectory("Content/Data/I18n", function(fullPath)
-		local code = fullPath:match("([^/\\]+)%.lua$")
-		if not code then return end
-		local ok, data = pcall(require, Path.lua(fullPath))
-		if ok and type(data) == "table" then
-			I18n._langs[code] = data
-		elseif not ok then
-			-- Syntax/require error in a language file: surface it, don't silently
-			-- drop the table (a broken English.lua would degrade every key to raw).
-			Log.error("I18n", "failed to load language '" .. code .. "': " .. tostring(data))
-		end
-	end)
-	if not I18n._langs[I18n.DEFAULT_LANG] then
-		-- Without the canonical table every lookup degrades to the raw key.
-		I18n._langs[I18n.DEFAULT_LANG] = {}
+local function _loadLangFile(fullPath)
+	local code = fullPath:match("([^/\\]+)%.lua$")
+	if not code then return end
+	local ok, data = pcall(require, Path.lua(fullPath))
+	if ok and type(data) == "table" then
+		I18n._langs[code] = data
+	elseif not ok then
+		-- Syntax/require error in a language file: surface it, don't silently
+		-- drop the table (a broken English.lua would degrade every key to raw).
+		Log.error("I18n", "failed to load language '" .. code .. "': " .. tostring(data))
 	end
+end
+
+local function _applyOptionsLanguage()
 	-- Decoupled via pcall so I18n never forces an Options load order or import
 	-- cycle. A genuine failure is logged once so a broken Options import isn't
 	-- masked as "defaults to en".
@@ -46,6 +42,18 @@ function I18n.load()
 	elseif not ok then
 		Log.error("I18n", "Options load failed (language defaulted to '" .. I18n._current .. "'): " .. tostring(Options))
 	end
+end
+
+function I18n.load()
+	I18n._langs = {}
+	Path.scanDirectory("Content/Data/I18n", function(fullPath)
+		_loadLangFile(fullPath)
+	end)
+	if not I18n._langs[I18n.DEFAULT_LANG] then
+		-- Without the canonical table every lookup degrades to the raw key.
+		I18n._langs[I18n.DEFAULT_LANG] = {}
+	end
+	_applyOptionsLanguage()
 	-- An explicit setLanguage() issued before langs were ready takes precedence
 	-- over the Options default (explicit runtime override wins).
 	if I18n._pending then
