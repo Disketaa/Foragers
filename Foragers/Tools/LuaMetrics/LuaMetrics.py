@@ -101,7 +101,10 @@ def extract_functions(content, filepath):
                 if not s:
                     j += 1
                     continue
-                opens = len(re.findall(r"\b(function|do|if|while|for|repeat)\b", s))
+                opens = len(re.findall(r"\b(function|if|repeat)\b", s))
+                opens += len(re.findall(r"\b(for|while)\b", s))
+                if not re.search(r"\b(for|while)\b.*\bdo\b", s):
+                    opens += len(re.findall(r"\bdo\b", s))
                 closes = s.count("end")
                 depth += opens - closes
                 if depth == 0 and j > i:
