@@ -3,7 +3,6 @@ description: Guide for fixing a single metrics violation in Foragers
 ---
 
 ## Before you start
-1. Read `.kilo/AGENTS.md` — architecture rules, component system, event system, error handling
 2. Read the flagged file and the exact function/region mentioned in the violation
 3. Check `.kilo/documentation/` for LÖVE2D API docs if the fix touches engine calls
 
