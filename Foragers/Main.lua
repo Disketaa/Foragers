@@ -776,59 +776,82 @@ end
 
 --- Match a binding against an input of the given type (keyboard/mouse/gamepad
 --- buttons). Restart accepts all three; the other keybinds are keyboard-only.
+local function executeAndLog(cmdText, label)
+	local message, success, hold = Commands.execute(cmdText, commandsCtx())
+	Debug.setChatOutput(message, success, hold)
+	local output = Debug.chatOutput()
+	local function logChat(detail)
+		Log.write("Chat", "%s — %s", label, detail)
+	end
+	if output:find("\n") then
+		for line in output:gmatch("[^\n]+") do
+			logChat(line)
+		end
+	else
+		logChat(output)
+	end
+end
+
+local function handleChatEscape()
+	Chat.resetChatCompletion()
+	Debug.setChatActive(false)
+end
+
+local function handleChatSubmit()
+	local text = Debug.chatText()
+	if text ~= "" then
+		executeAndLog(text, text)
+		Debug.pushChatHistory(text)
+		Debug.setChatText("")
+		Sound.play(Debug.chatEnterSound())
+	end
+	Debug.setChatActive(false)
+	Chat.resetChatCompletion()
+end
+
+local function handleChatBackspace()
+	Chat.resetChatCompletion()
+	Chat.startChatRepeat("backspace", function()
+		Debug.setChatText(Input.removeLast(Debug.chatText()))
+	end)
+end
+
+local function handleChatHistoryUp()
+	Chat.resetChatCompletion()
+	Chat.startChatRepeat("up", function()
+		Debug.chatHistoryUp()
+	end)
+end
+
+local function handleChatHistoryDown()
+	Chat.resetChatCompletion()
+	Chat.startChatRepeat("down", function()
+		Debug.chatHistoryDown()
+	end)
+end
+
+local function handleChatTab()
+	Chat.startChatRepeat("tab", function()
+		local backwards = love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
+		Chat.handleChatTab(backwards)
+	end)
+end
+
+local chatKeyHandlers = {
+	escape = handleChatEscape,
+	["return"] = handleChatSubmit,
+	kpenter = handleChatSubmit,
+	backspace = handleChatBackspace,
+	up = handleChatHistoryUp,
+	down = handleChatHistoryDown,
+	tab = handleChatTab,
+}
+
 function love.keypressed(key, _, _)
 	if Debug.chatActive() then
-		if key == "escape" then
-			Chat.resetChatCompletion()
-			Debug.setChatActive(false)
-			return
-		elseif key == "return" or key == "kpenter" then
-			local text = Debug.chatText()
-			if text ~= "" then
-			local message, success, hold = Commands.execute(text, commandsCtx())
-			Debug.setChatOutput(message, success, hold)
-		local output = Debug.chatOutput()
-		local function logChat(detail)
-			Log.write("Chat", "%s — %s", text, detail)
-		end
-			if output:find("\n") then
-				-- Multi-line output: one marker per rendered line, like the screen.
-				for line in output:gmatch("[^\n]+") do
-					logChat(line)
-				end
-			else
-				logChat(output)
-			end
-			Debug.pushChatHistory(text)
-			Debug.setChatText("")
-			Sound.play(Debug.chatEnterSound())
-			end
-		Debug.setChatActive(false)
-		Chat.resetChatCompletion()
-		return
-	elseif key == "backspace" then
-			Chat.resetChatCompletion()
-			Chat.startChatRepeat("backspace", function()
-				Debug.setChatText(Input.removeLast(Debug.chatText()))
-			end)
-			return
-		elseif key == "up" then
-			Chat.resetChatCompletion()
-			Chat.startChatRepeat("up", function()
-				Debug.chatHistoryUp()
-			end)
-			return
-		elseif key == "down" then
-			Chat.resetChatCompletion()
-			Chat.startChatRepeat("down", function()
-				Debug.chatHistoryDown()
-			end)
-			return
-		elseif key == "tab" then
-			Chat.startChatRepeat("tab", function()
-				local backwards = love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
-				Chat.handleChatTab(backwards)
-			end)
+		local handler = chatKeyHandlers[key]
+		if handler then
+			handler()
 			return
 		end
 		-- Chat consumes every key while open; never fall through to gameplay
@@ -841,46 +864,41 @@ function love.keypressed(key, _, _)
 	-- bind time, so any key reaching this point is safe to override.
 	local bound = Binds.get(key)
 	if bound then
-		local message, success, hold = Commands.execute(bound, commandsCtx())
-		Debug.setChatOutput(message, success, hold)
-		local output = Debug.chatOutput()
-		local function logChat(detail)
-			Log.write("Chat", "%s — %s", bound, detail)
-		end
-		if output:find("\n") then
-			for line in output:gmatch("[^\n]+") do
-				logChat(line)
-			end
-		else
-			logChat(output)
-		end
+		executeAndLog(bound, bound)
 		return
 	end
 
-	if Bindings.matches(Options.keybinds.restart, "keyboard", key) then
-		Lifecycle.handleRestartPress()
-	elseif Bindings.matches(Options.keybinds.toggleFullscreen, "keyboard", key) then
-		local fullscreen, fstype = love.window.getFullscreen()
-		Options.fullscreen = not fullscreen
-		love.window.setFullscreen(Options.fullscreen, fstype)
-		Options.save()
-	elseif Bindings.matches(Options.keybinds.toggleDebug, "keyboard", key) then
-		Debug.toggle("hud")
-		if not Debug.enabled("hud") then
-			Debug.setChatActive(false)
-		end
-	elseif Bindings.matches(Options.keybinds.toggleGizmo, "keyboard", key) then
-		Debug.toggle("gizmo")
-	elseif Bindings.matches(Options.keybinds.toggleProfiler, "keyboard", key) then
-		Debug.toggle("hud.profiler")
-	elseif Bindings.matches(Options.keybinds.toggleChat, "keyboard", key) then
-		if Debug.enabled("hud") then
-			local wasActive = Debug.chatActive()
-			Debug.toggle("hud.chat")
-			-- Reset only on open: close already resets via escape / send handlers.
-			if not wasActive and Debug.chatActive() then
-				Chat.resetChatCompletion()
+	local gameplayBindings = {
+		{bind = Options.keybinds.restart, action = function() Lifecycle.handleRestartPress() end},
+		{bind = Options.keybinds.toggleFullscreen, action = function()
+			local fullscreen, fstype = love.window.getFullscreen()
+			Options.fullscreen = not fullscreen
+			love.window.setFullscreen(Options.fullscreen, fstype)
+			Options.save()
+		end},
+		{bind = Options.keybinds.toggleDebug, action = function()
+			Debug.toggle("hud")
+			if not Debug.enabled("hud") then
+				Debug.setChatActive(false)
 			end
+		end},
+		{bind = Options.keybinds.toggleGizmo, action = function() Debug.toggle("gizmo") end},
+		{bind = Options.keybinds.toggleProfiler, action = function() Debug.toggle("hud.profiler") end},
+		{bind = Options.keybinds.toggleChat, action = function()
+			if Debug.enabled("hud") then
+				local wasActive = Debug.chatActive()
+				Debug.toggle("hud.chat")
+				-- Reset only on open: close already resets via escape / send handlers.
+				if not wasActive and Debug.chatActive() then
+					Chat.resetChatCompletion()
+				end
+			end
+		end},
+	}
+	for _, entry in ipairs(gameplayBindings) do
+		if Bindings.matches(entry.bind, "keyboard", key) then
+			entry.action()
+			break
 		end
 	end
 end
