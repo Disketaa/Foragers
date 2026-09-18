@@ -62,6 +62,8 @@ def strip_strings_and_comments(line):
             in_string = False
             string_char = None
             result.append(" ")
+        elif in_string:
+            result.append(" ")
         elif not in_string and c == "-" and i + 1 < len(line) and line[i + 1] == "-":
             break
         else:
