@@ -77,4 +77,3 @@ Tell the user what to check in-game to verify the fix didn't break anything.
 - `.kilo/documentation/events.md` — all events, emitters, listener priorities
 - `.kilo/documentation/data-format.md` — sprite data file format
 - `Tools/LuaMetrics/Settings.toml` — CC thresholds, clone min lines, exclusions
-- `Tools/LuaMetrics/baseline.json` — fingerprint-keyed accepted exceptions
