@@ -197,6 +197,10 @@ local function drawComponents(sprite, predicate)
 	end
 end
 
+function Sprite:drawComponents(predicate)
+	drawComponents(self, predicate)
+end
+
 function Sprite:draw()
 	if self.type == "StaticSprite" and self.image then
 		local hadShader = self:applyShader()

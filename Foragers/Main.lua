@@ -8,6 +8,7 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
 end
 
 local SpriteLoader = require("Source.Sprite.SpriteLoader")
+local Sprite = require("Source.Sprite.Sprite")
 local Merge = require("Source.Helpers.Core.Merge")
 local Path = require("Source.Helpers.Core.Path")
 local WorldGen = require("Source.World.WorldGen")
@@ -625,6 +626,39 @@ function love.draw()
 		for _, sprite in ipairs(sorted) do
 			if not sprite._hasEmissive then
 				sprite:draw()
+			else
+				-- Emissive sprites skip the image here (drawn in Emissive pass),
+				-- but their non-particle components still need to render inside
+				-- the sprite-local transform. Particle emitters draw in world
+				-- space, so they are rendered outside the transform block.
+				local sx, sy, rot = 1, 1, 0
+				if sprite.tweens then
+					if sprite.tweens.scaleX then sx = sprite.tweens.scaleX:getValue() end
+					if sprite.tweens.scaleY then sy = sprite.tweens.scaleY:getValue() end
+					if sprite.tweens.angle then rot = math.rad(sprite.tweens.angle:getValue()) end
+				end
+				local applyXform = (sx ~= 1 or sy ~= 1 or rot ~= 0)
+				if applyXform then
+					love.graphics.push()
+					love.graphics.translate(sprite.x, sprite.y)
+					love.graphics.rotate(rot)
+					love.graphics.scale(sx, sy)
+					love.graphics.translate(-sprite.x, -sprite.y)
+				end
+
+				Sprite.drawComponents(sprite, function(c) return c.drawBehind end)
+				Sprite.drawComponents(sprite, function(c) return not c.drawBehind and not c.drawOnTop end)
+				Sprite.drawComponents(sprite, function(c) return c.drawOnTop end)
+
+				if applyXform then
+					love.graphics.pop()
+				end
+
+				-- Particle emitters: world-space coords, drawn outside sprite transform.
+				local emitters = sprite:getComponents("particle_emitter", function(c) return not c._broken end)
+				for _, emitter in ipairs(emitters) do
+					emitter:draw()
+				end
 			end
 		end
 

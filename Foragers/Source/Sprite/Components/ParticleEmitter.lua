@@ -333,45 +333,45 @@ function ParticleEmitter:attach()
 	end, 13)
 end
 
-function ParticleEmitter:_spawn()
-	if not self.parent then
-		return
-	end
-	local p = self:_createParticle(self.parent.x + self.offsetX, self.parent.y + self.offsetY)
-	if p then
-		table.insert(self._particles, p)
-	end
-end
-
-function ParticleEmitter:update(dt)
-	-- Age existing particles (always runs, even when detached)
-	for i = #self._particles, 1, -1 do
-		local p = self._particles[i]
-		if p.anim then
-			p.anim:update(dt)
+	function ParticleEmitter:_spawn()
+		if not self.parent then
+			return
 		end
-		p._age = p._age + dt
-		if p._age >= p._duration then
-			table.remove(self._particles, i)
+		local p = self:_createParticle(self.parent.x + self.offsetX, self.parent.y + self.offsetY)
+		if p then
+			table.insert(self._particles, p)
 		end
 	end
 
-	-- Detached: no spawning, only let existing particles finish
-	if self._detached then
-		return
-	end
-
-	if self.interval and self.interval > 0 and self._particleData then
-		local shouldAccumulate = true
-		if self.moving then
-			if not self.parent then
-				shouldAccumulate = false
-			else
-				shouldAccumulate = not not (self.parent.x ~= self._lastParentX or self.parent.y ~= self._lastParentY)
-				self._lastParentX = self.parent.x
-				self._lastParentY = self.parent.y
+	function ParticleEmitter:update(dt)
+		-- Age existing particles (always runs, even when detached)
+		for i = #self._particles, 1, -1 do
+			local p = self._particles[i]
+			if p.anim then
+				p.anim:update(dt)
+			end
+			p._age = p._age + dt
+			if p._age >= p._duration then
+				table.remove(self._particles, i)
 			end
 		end
+
+		-- Detached: no spawning, only let existing particles finish
+		if self._detached then
+			return
+		end
+
+		if self.interval and self.interval > 0 and self._particleData then
+			local shouldAccumulate = true
+			if self.moving then
+				if not self.parent then
+					shouldAccumulate = false
+				else
+					shouldAccumulate = not not (self.parent.x ~= self._lastParentX or self.parent.y ~= self._lastParentY)
+					self._lastParentX = self.parent.x
+					self._lastParentY = self.parent.y
+				end
+			end
 		if shouldAccumulate then
 			self._intervalTimer = self._intervalTimer + dt
 			while self._intervalTimer >= self.interval do
@@ -382,7 +382,7 @@ function ParticleEmitter:update(dt)
 			end
 		end
 	end
-end
+	end
 
 function ParticleEmitter:draw()
 	local prevShader = love.graphics.getShader()
