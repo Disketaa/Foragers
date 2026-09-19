@@ -1,5 +1,47 @@
 local ShaderLoader = require("Source.Helpers.Graphics.ShaderLoader")
 
+---@param s string|table
+---@return table|nil spec
+local function parseShaderSpec(s)
+	local spec
+	if type(s) == "string" then
+		spec = { name = s }
+	elseif s.name ~= nil then
+		spec = s
+	else
+		-- compact form: { ShaderName = { u_* = ... } }
+		local name, params = next(s)
+		if not name then
+			return nil
+		end
+		spec = { name = name }
+		if type(params) == "table" then
+			for k, v in pairs(params) do
+				spec[k] = v
+			end
+		end
+	end
+	return spec
+end
+
+local function initUniforms(self, loaded)
+	for name, default in pairs(loaded.uniforms or {}) do
+		if self.parent.shader:hasUniform(name) then
+			self._uniformWhitelist[name] = true
+			local v = self[name] ~= nil and self[name] or default
+			self._uniformValues[name] = v
+			self.parent.shaderData[name] = v
+		end
+	end
+	-- u_seed: per-instance variation. If not explicitly set, derive from position
+	-- so multiple props of the same type sway out of phase.
+	if self._uniformWhitelist.u_seed and self.u_seed == nil then
+		local seed = (self.parent.x or 0) * 0.13 + (self.parent.y or 0) * 0.27
+		self._uniformValues.u_seed = seed
+		self.parent.shaderData.u_seed = seed
+	end
+end
+
 local ShaderComponent = {}
 ShaderComponent.__index = ShaderComponent
 
@@ -8,23 +50,11 @@ function ShaderComponent.new(data)
 	local names = {}
 	if data.shaders then
 		for _, s in ipairs(data.shaders) do
-			local spec
-			if type(s) == "string" then
-				spec = { name = s }
-			elseif s.name then
-				spec = s
-			else
-				-- compact form: { ShaderName = { u_* = ... } }
-				local name, params = next(s)
-				spec = { name = name }
-				if type(params) == "table" then
-					for k, v in pairs(params) do
-						spec[k] = v
-					end
-				end
+			local spec = parseShaderSpec(s)
+			if spec then
+				table.insert(specs, spec)
+				table.insert(names, spec.name)
 			end
-			table.insert(specs, spec)
-			table.insert(names, spec.name)
 		end
 	else
 		table.insert(specs, { name = data.shaderName or "Brightness" })
@@ -62,21 +92,7 @@ function ShaderComponent:attach()
 		self.parent.shaderData = {}
 	end
 
-		for name, default in pairs(loaded.uniforms or {}) do
-			if self.parent.shader:hasUniform(name) then
-				self._uniformWhitelist[name] = true
-				local v = self[name] ~= nil and self[name] or default
-				self._uniformValues[name] = v
-				self.parent.shaderData[name] = v
-			end
-		end
-	-- u_seed: per-instance variation. If not explicitly set, derive from position
-	-- so multiple props of the same type sway out of phase.
-	if self._uniformWhitelist.u_seed and self.u_seed == nil then
-		local seed = (self.parent.x or 0) * 0.13 + (self.parent.y or 0) * 0.27
-		self._uniformValues.u_seed = seed
-		self.parent.shaderData.u_seed = seed
-	end
+	initUniforms(self, loaded)
 	self.parent._shaderDirty = true
 end
 
@@ -105,15 +121,13 @@ function ShaderComponent:update()
 		self:_setUniform("u_time", ShaderLoader.time)
 	end
 
-	if self._uniformWhitelist then
-		for uniformName in pairs(self._uniformWhitelist) do
-			if uniformName ~= "u_time" then
-				local target = uniformName:match("^u_(.+)$")
-				if target then
-					local tween = self.parent.tweens and self.parent.tweens[target]
-					local value = tween and tween:getValue() or self._uniformValues[uniformName]
-					self:_setUniform(uniformName, value)
-				end
+	for uniformName in pairs(self._uniformWhitelist) do
+		if uniformName ~= "u_time" then
+			local target = uniformName:match("^u_(.+)$")
+			if target then
+				local tween = self.parent.tweens and self.parent.tweens[target]
+				local value = tween and tween:getValue() or self._uniformValues[uniformName]
+				self:_setUniform(uniformName, value)
 			end
 		end
 	end
