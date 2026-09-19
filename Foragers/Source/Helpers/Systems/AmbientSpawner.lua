@@ -58,25 +58,31 @@ function AmbientSpawner.init(ambientConfig, worldData, worldConfig)
 	local density = ambientConfig.density or 0.02
 	local totalCap = math.max(1, math.floor(#AmbientSpawner._activeTiles * density))
 
-	local groupNames = {}
-	for name, cfg in pairs(ambientConfig) do
-		if type(cfg) == "table" and cfg.types then
-			groupNames[#groupNames + 1] = name
-		end
-	end
-	local perGroup = math.max(1, math.floor(totalCap / math.max(1, #groupNames)))
+	local groupEntries = AmbientSpawner._getGroupEntries(ambientConfig)
+	local perGroup = math.max(1, math.floor(totalCap / math.max(1, #groupEntries)))
 
+	for _, entry in ipairs(groupEntries) do
+		AmbientSpawner.groups[entry.name] = {
+			config = entry.cfg,
+			name = entry.name,
+			maxCount = perGroup,
+			sprites = {},
+			cooldown = 0,
+		}
+	end
+end
+
+--- Return `{name, cfg}` pairs for every ambient group that has `types`.
+---@param ambientConfig table
+---@return table[]
+function AmbientSpawner._getGroupEntries(ambientConfig)
+	local entries = {}
 	for name, cfg in pairs(ambientConfig) do
 		if type(cfg) == "table" and cfg.types then
-			AmbientSpawner.groups[name] = {
-				config = cfg,
-				name = name,
-				maxCount = perGroup,
-				sprites = {},
-				cooldown = 0,
-			}
+			entries[#entries + 1] = { name = name, cfg = cfg }
 		end
 	end
+	return entries
 end
 
 ---@param dt number
@@ -101,6 +107,39 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 	local cfg = group.config
 	local list = group.sprites
 
+	AmbientSpawner._cleanupList(list, objects, dynamicObjects, camPixelX, camPixelY, canvasWidth, canvasHeight, cfg)
+
+	if GameState.state ~= "game" then
+		return
+	end
+
+	if not isInsideWindow(cfg, sunData) then
+		return
+	end
+
+	group.cooldown = group.cooldown - dt
+	if group.cooldown > 0 then
+		return
+	end
+	group.cooldown = cfg.spawnInterval or 2
+
+	if #list >= group.maxCount then
+		return
+	end
+
+	AmbientSpawner._spawnAmbient(group, objects, dynamicObjects, camPixelX, camPixelY, canvasWidth, canvasHeight)
+end
+
+--- Remove despawned and off-screen ambients from the group's sprite list.
+---@param list table
+---@param objects table
+---@param dynamicObjects table
+---@param camPixelX number
+---@param camPixelY number
+---@param canvasWidth number
+---@param canvasHeight number
+---@param cfg table
+function AmbientSpawner._cleanupList(list, objects, dynamicObjects, camPixelX, camPixelY, canvasWidth, canvasHeight, cfg)
 	for i = #list, 1, -1 do
 		local entry = list[i]
 		local ambient = entry.instance:findComponent("ambient")
@@ -123,38 +162,20 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 			end
 		end
 	end
+end
 
-	if GameState.state ~= "game" then
-		return
-	end
+--- Try to spawn one ambient sprite for the group if under cap and inside time window.
+---@param group table
+---@param objects table
+---@param dynamicObjects table
+---@param camPixelX number
+---@param camPixelY number
+---@param canvasWidth number
+---@param canvasHeight number
+function AmbientSpawner._spawnAmbient(group, objects, dynamicObjects, camPixelX, camPixelY, canvasWidth, canvasHeight)
+	local cfg = group.config
 
-	if not isInsideWindow(cfg, sunData) then
-		return
-	end
-
-	group.cooldown = group.cooldown - dt
-	if group.cooldown > 0 then
-		return
-	end
-	group.cooldown = cfg.spawnInterval or 2
-
-	if #list >= group.maxCount then
-		return
-	end
-
-	local typePath = cfg.types[love.math.random(1, #cfg.types)]
-
-	local margin = AmbientSpawner._SPAWN_MARGIN
-	local vx = -camPixelX - margin
-	local vy = -camPixelY - margin
-	local vw = canvasWidth + margin * 2
-	local vh = canvasHeight + margin * 2
-	local nearTiles = {}
-	for _, tile in ipairs(AmbientSpawner._activeTiles) do
-		if tile.x >= vx and tile.x <= vx + vw and tile.y >= vy and tile.y <= vy + vh then
-			nearTiles[#nearTiles + 1] = tile
-		end
-	end
+	local nearTiles = AmbientSpawner._findNearTiles(camPixelX, camPixelY, canvasWidth, canvasHeight)
 	if #nearTiles == 0 then
 		return
 	end
@@ -162,14 +183,12 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 	local wx = chosen.x + love.math.random() * AmbientSpawner._tileSize
 	local wy = chosen.y + love.math.random() * AmbientSpawner._tileSize
 
-	local luaPath = Path.lua(typePath)
-	local ok, data = pcall(require, luaPath)
-	if not ok or not data then
+	local typePath = cfg.types[love.math.random(1, #cfg.types)]
+	local data = AmbientSpawner._loadSpriteData(typePath)
+	if not data then
 		return
 	end
-	if data.extends then
-		data = Merge.resolveExtends(data)
-	end
+
 	local pngPath = Path.png(typePath)
 	local sprite = SpriteLoader.instantiate(data, wx, wy, pngPath)
 	if not sprite then
@@ -184,9 +203,45 @@ function AmbientSpawner._updateGroup(group, dt, objects, dynamicObjects, camPixe
 	end
 
 	local entry = { instance = sprite, data = data }
-	table.insert(list, entry)
+	table.insert(group.sprites, entry)
 	table.insert(objects, entry)
 	table.insert(dynamicObjects, entry)
+end
+
+--- Return active tiles within the camera view plus spawn margin.
+---@param camPixelX number
+---@param camPixelY number
+---@param canvasWidth number
+---@param canvasHeight number
+---@return table[]
+function AmbientSpawner._findNearTiles(camPixelX, camPixelY, canvasWidth, canvasHeight)
+	local margin = AmbientSpawner._SPAWN_MARGIN
+	local vx = -camPixelX - margin
+	local vy = -camPixelY - margin
+	local vw = canvasWidth + margin * 2
+	local vh = canvasHeight + margin * 2
+	local nearTiles = {}
+	for _, tile in ipairs(AmbientSpawner._activeTiles) do
+		if tile.x >= vx and tile.x <= vx + vw and tile.y >= vy and tile.y <= vy + vh then
+			nearTiles[#nearTiles + 1] = tile
+		end
+	end
+	return nearTiles
+end
+
+--- Load and resolve a sprite data file by its content path.
+---@param typePath string Content path (e.g. "Props/Tree")
+---@return table|nil
+function AmbientSpawner._loadSpriteData(typePath)
+	local luaPath = Path.lua(typePath)
+	local ok, data = pcall(require, luaPath)
+	if not ok or not data then
+		return nil
+	end
+	if data.extends then
+		data = Merge.resolveExtends(data)
+	end
+	return data
 end
 
 return AmbientSpawner
