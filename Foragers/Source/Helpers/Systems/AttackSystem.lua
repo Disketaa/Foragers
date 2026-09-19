@@ -44,6 +44,138 @@ local AttackSystem = {}
 -- the baseline: speedScale = current APS / 2.
 local REFERENCE_ATTACK_SPEED = 2
 
+local function computeScales(attackSpeed)
+	local speedScale = 1
+	if attackSpeed and attackSpeed > 0 then
+		speedScale = attackSpeed / REFERENCE_ATTACK_SPEED
+	end
+	local travelScale = speedScale > 1 and speedScale * speedScale or 1
+	return speedScale, travelScale
+end
+
+local function tickCooldown(atk, dt)
+	if atk.cooldownTimer > 0 then
+		atk.cooldownTimer = atk.cooldownTimer - dt
+	end
+end
+
+local function revalidateTarget(atk, ws, ax, ay, rangeSq, weaponFollow, travelScale)
+	if not atk.currentTarget then
+		return false
+	end
+	local dc = atk.currentTarget:findComponent("destructible", function(c) return c.hp > 0 and not c.guarded end)
+	if dc then
+		local dx = atk.currentTarget.x - ax
+		local dy = atk.currentTarget.y - ay
+		if dx * dx + dy * dy <= rangeSq then
+			return true
+		end
+	end
+	if weaponFollow then
+		local committed = atk._arrived and atk.cooldownTimer > 0
+		if not committed and not (ws and ws.tweens and ws.tweens.swingAngle) then
+			weaponFollow:recall(weaponFollow.smoothnessX / travelScale)
+			atk.currentTarget = nil
+			atk.damageTimer = nil
+		end
+	end
+	return false
+end
+
+local function acquireTarget(atk, ws, allObjects, ax, ay, rangeSq, weaponFollow, swing, travelScale)
+	local candidates = {}
+	for _, entry in ipairs(allObjects) do
+		local sprite = entry.instance
+		if sprite and sprite:findComponent("destructible", function(c) return c.hp > 0 and not c.guarded end) then
+			local dx = sprite.x - ax
+			local dy = sprite.y - ay
+			if dx * dx + dy * dy <= rangeSq then
+				table.insert(candidates, sprite)
+			end
+		end
+	end
+	if #candidates == 0 then
+		return
+	end
+	local chosen = candidates[love.math.random(1, #candidates)]
+	local deployDir = (atk.sprite.x < chosen.x) and 1 or -1
+	if weaponFollow then
+		weaponFollow:deployTo(chosen, swing.offsetX, swing.offsetY, swing.smoothness / travelScale, deployDir)
+	end
+	atk.currentTarget = chosen
+	atk._deployDir = deployDir
+	atk._arrived = false
+	if ws then
+		local hx, hy = chosen.hostParent and chosen.hostParent.x or chosen.x, chosen.hostParent and chosen.hostParent.y or chosen.y
+		ws._lastHitX = hx
+		ws._lastHitY = hy
+		chosen._lastHitX = hx
+		chosen._lastHitY = hy
+		chosen:emit(Events.TARGET_SELECTED)
+	end
+end
+
+local function checkArrival(atk, ws, swing)
+	local dir = atk._deployDir or ((ws.x < atk.currentTarget.x) and -1 or 1)
+	local destX = atk.currentTarget.x + dir * swing.offsetX
+	local destY = atk.currentTarget.y + swing.offsetY
+	if math.abs(ws.x - destX) <= 2 and math.abs(ws.y - destY) <= 2 then
+		atk._arrived = true
+		return true
+	end
+	return false
+end
+
+local function resolveDamage(atk, ws, damage, dt)
+	if not atk.damageTimer then
+		return
+	end
+	atk.damageTimer = atk.damageTimer - dt
+	if atk.damageTimer > 0 then
+		return
+	end
+	atk.damageTimer = nil
+	if not atk.currentTarget then
+		return
+	end
+	local dc = atk.currentTarget:findComponent("destructible", function(c) return c.hp > 0 and c.takeDamage and not c.guarded end)
+	if dc then
+		dc:takeDamage(damage)
+		if dc.hp <= 0 and ws then
+			ws:emit(Events.PROP_BROKEN)
+		end
+		atk.currentTarget:emit(Events.PROP_HIT, damage)
+		if ws then
+			local hx, hy =
+				atk.currentTarget.hostParent and atk.currentTarget.hostParent.x or atk.currentTarget.x,
+				atk.currentTarget.hostParent and atk.currentTarget.hostParent.y or atk.currentTarget.y
+			ws._lastHitX = hx
+			ws._lastHitY = hy
+			ws:emit(Events.PROP_HIT)
+		end
+		if atk.sprite then
+			atk.sprite:emit(Events.PROP_HIT, damage)
+		end
+	end
+end
+
+local function startSwing(atk, ws, swing, cooldown, speedScale)
+	atk.cooldownTimer = cooldown
+	atk.damageTimer = swing.duration / speedScale
+
+	local dir = -atk._deployDir
+	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.OutSine
+	local easeFunc = swingCurve(rawEase)
+	local angleTween = TweenModule.Tween.new("swingAngle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration / speedScale, easeFunc)
+	angleTween._smoothness = swing.smoothness
+	ws.tweens.swingAngle = angleTween
+	angleTween:start()
+	ws:emit(Events.FLIPPED, atk._deployDir == -1)
+	ws._lastHitX = nil
+	ws._lastHitY = nil
+	ws:emit(Events.SWING)
+end
+
 function AttackSystem.registerAttacker(sprite, weaponSprite)
 	attacker = {
 		sprite = sprite,
@@ -67,141 +199,34 @@ function AttackSystem.update(dt, allObjects)
 
 	local ws = attacker.weaponSprite
 	local range, cooldown, damage, swing, attackSpeed = getWeaponData(ws, attacker.sprite)
-	-- Higher attack speed => faster tool travel + swing, so the cooldown actually
-	-- pays off instead of being eaten by fixed follow/swing timing. Reference is
-	-- the default 2 APS the smoothness values were tuned against.
-	local speedScale = 1
-	if attackSpeed and attackSpeed > 0 then
-		speedScale = attackSpeed / REFERENCE_ATTACK_SPEED
-	end
-	-- Swing stays linear so the animation doesn't vanish, but travel scales
-	-- more aggressively so high attack speed doesn't bottleneck on weapon transit.
-	local travelScale = speedScale > 1 and speedScale * speedScale or 1
+	local speedScale, travelScale = computeScales(attackSpeed)
 	local rangeSq = range * range
 	local weaponFollow = getWeaponFollow(ws)
 	local ax, ay = attacker.sprite.x, attacker.sprite.y
 
-	if attacker.cooldownTimer > 0 then
-		attacker.cooldownTimer = attacker.cooldownTimer - dt
-	end
+	tickCooldown(attacker, dt)
 
 	cleanupTween(ws, "swingAngle")
 
-	local targetValid = false
-	if attacker.currentTarget then
-		local dc = attacker.currentTarget:findComponent("destructible", function(c) return c.hp > 0 and not c.guarded end)
-		if dc then
-			local dx = attacker.currentTarget.x - ax
-			local dy = attacker.currentTarget.y - ay
-			if dx * dx + dy * dy <= rangeSq then
-				targetValid = true
-			end
-		end
-		if not targetValid and weaponFollow then
-			local committed = attacker._arrived and attacker.cooldownTimer > 0
-			if not committed and not (ws and ws.tweens and ws.tweens.swingAngle) then
-				weaponFollow:recall(weaponFollow.smoothnessX / travelScale)
-				attacker.currentTarget = nil
-				attacker.damageTimer = nil
-			end
-		end
+	if attacker.currentTarget and not revalidateTarget(attacker, ws, ax, ay, rangeSq, weaponFollow, travelScale) then
+		attacker.currentTarget = nil
 	end
-
 	if not attacker.currentTarget then
-		local candidates = {}
-		for _, entry in ipairs(allObjects) do
-			local sprite = entry.instance
-			if sprite and sprite:findComponent("destructible", function(c) return c.hp > 0 and not c.guarded end) then
-				local dx = sprite.x - ax
-				local dy = sprite.y - ay
-				if dx * dx + dy * dy <= rangeSq then
-					table.insert(candidates, sprite)
-				end
-			end
-		end
-		if #candidates > 0 then
-			local chosen = candidates[love.math.random(1, #candidates)]
-			-- Deploy to far side of target: away from character, not from weapon
-			local deployDir = (attacker.sprite.x < chosen.x) and 1 or -1
-			if weaponFollow then
-				weaponFollow:deployTo(chosen, swing.offsetX, swing.offsetY, swing.smoothness / travelScale, deployDir)
-			end
-			attacker.currentTarget = chosen
-			attacker._deployDir = deployDir
-			attacker._arrived = false
-			if ws then
-				-- Crosshair targets the host (stone) position, not the overlay
-				-- child's offset position (snail sits offsetY above the stone).
-				local hx, hy = chosen.hostParent and chosen.hostParent.x or chosen.x, chosen.hostParent and chosen.hostParent.y or chosen.y
-				ws._lastHitX = hx
-				ws._lastHitY = hy
-				-- Redirect the targeted object's own crosshair to the host position
-				-- so overlay children (berries, snail) show it on the parent, not
-				-- their offset. Supports future multi-prop / splash targeting.
-				chosen._lastHitX = hx
-				chosen._lastHitY = hy
-				chosen:emit(Events.TARGET_SELECTED)
-			end
-		end
+		acquireTarget(attacker, ws, allObjects, ax, ay, rangeSq, weaponFollow, swing, travelScale)
 	end
 
 	if attacker.currentTarget and not attacker._arrived then
-		local dir = attacker._deployDir or ((ws.x < attacker.currentTarget.x) and -1 or 1)
-		local destX = attacker.currentTarget.x + dir * swing.offsetX
-		local destY = attacker.currentTarget.y + swing.offsetY
-		if math.abs(ws.x - destX) <= 2 and math.abs(ws.y - destY) <= 2 then
-			attacker._arrived = true
-		else
+		if not checkArrival(attacker, ws, swing) then
 			return
 		end
 	end
 
-	if attacker.damageTimer then
-		attacker.damageTimer = attacker.damageTimer - dt
-		if attacker.damageTimer <= 0 then
-			attacker.damageTimer = nil
-			if attacker.currentTarget then
-				local dc = attacker.currentTarget:findComponent("destructible", function(c) return c.hp > 0 and c.takeDamage and not c.guarded end)
-				if dc then
-					dc:takeDamage(damage)
-					if dc.hp <= 0 and ws then
-						ws:emit(Events.PROP_BROKEN)
-					end
-					attacker.currentTarget:emit(Events.PROP_HIT, damage)
-					if ws then
-						local hx, hy =
-							attacker.currentTarget.hostParent and attacker.currentTarget.hostParent.x or attacker.currentTarget.x,
-							attacker.currentTarget.hostParent and attacker.currentTarget.hostParent.y or attacker.currentTarget.y
-						ws._lastHitX = hx
-						ws._lastHitY = hy
-						ws:emit(Events.PROP_HIT)
-					end
-					if attacker.sprite then
-						attacker.sprite:emit(Events.PROP_HIT, damage)
-					end
-				end
-			end
-		end
-	end
+	resolveDamage(attacker, ws, damage, dt)
 
 	if not attacker.currentTarget or attacker.cooldownTimer > 0 or attacker.damageTimer then
 		return
 	end
-
-	attacker.cooldownTimer = cooldown
-	attacker.damageTimer = swing.duration / speedScale
-
-	local dir = -attacker._deployDir
-	local rawEase = TweenModule.Easing[swing.curve] or TweenModule.Easing.OutSine
-	local easeFunc = swingCurve(rawEase)
-	local angleTween = TweenModule.Tween.new("swingAngle", swing.angleFrom * dir, swing.angleTo * dir, swing.duration / speedScale, easeFunc)
-	angleTween._smoothness = swing.smoothness
-	ws.tweens.swingAngle = angleTween
-	angleTween:start()
-	ws:emit(Events.FLIPPED, attacker._deployDir == -1)
-	ws._lastHitX = nil
-	ws._lastHitY = nil
-	ws:emit(Events.SWING)
+	startSwing(attacker, ws, swing, cooldown, speedScale)
 end
 
 return AttackSystem
