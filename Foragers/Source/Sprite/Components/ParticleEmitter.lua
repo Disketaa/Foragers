@@ -71,78 +71,99 @@ function ParticleEmitter:_createParticle(px, py, angle)
 		particle.angle = ValueParser.value(dataAngleRaw)
 	end
 
+	local ok
 	if data.components and #data.components > 0 then
-		local compData
-		for _, comp in ipairs(data.components) do
-			if comp.component == "spritesheet" then
-				compData = {}
-				for k, v in pairs(comp) do
-					compData[k] = v
-				end
-				break
-			end
-		end
-		if not compData then
-			return
-		end
-		compData.frameWidth = data.frameWidth
-		compData.frameHeight = data.frameHeight
-		compData.pivotX = data.pivotX
-		compData.pivotY = data.pivotY
-		if not compData.spriteSheet then
-			compData.spriteSheet = Path.png(self.particle)
-		end
-
-		local ok, sp = pcall(function() return require("Source.Helpers.Core.ComponentRegistry").create("spritesheet", compData) end)
-		if not ok or not sp then
-			return
-		end
-
-		sp.currentAnim = next(sp.animations)
-		if not sp.currentAnim then
-			return
-		end
-
-		sp.parent = {
-			flipX = self._cachedFlipX,
-			angle = particle.angle,
-			emit = function(event, ...)
-				if self.parent then
-					self.parent:emit(event, ...)
-				end
-			end,
-		}
-
-		local config = sp.animations[sp.currentAnim]
-		if not config then
-			return
-		end
-
-		particle.anim = sp
-		particle._duration = config.frames / config.speed
+		ok = self:_createSpritesheetParticle(data, particle)
 	else
-		local pngPath = Path.png(self.particle)
-		local pngInfo = love.filesystem.getInfo(pngPath)
-		if not pngInfo then
-			return
-		end
+		ok = self:_createImageParticle(data, particle)
+	end
 
-		local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
-		if not ok then
-			return
-		end
-
-		particle.image = image
-		particle.frameWidth = data.frameWidth or 16
-		particle.frameHeight = data.frameHeight or 16
-		particle.pivotX = data.pivotX or "center"
-		particle.pivotY = data.pivotY or "center"
-		particle.flipX = self._cachedFlipX
-		particle._duration = data.lifetime or 0.5
+	if not ok then
+		return
 	end
 
 	-- A shake component on the particle data shakes the particle in place
 	-- (e.g. the death burst), driven off the trigger, no event wiring.
+	self:_applyShakeComponent(data, particle)
+
+	return particle
+end
+
+function ParticleEmitter:_createSpritesheetParticle(data, particle)
+	local compData
+	for _, comp in ipairs(data.components) do
+		if comp.component == "spritesheet" then
+			compData = {}
+			for k, v in pairs(comp) do
+				compData[k] = v
+			end
+			break
+		end
+	end
+	if not compData then
+		return
+	end
+	compData.frameWidth = data.frameWidth
+	compData.frameHeight = data.frameHeight
+	compData.pivotX = data.pivotX
+	compData.pivotY = data.pivotY
+	if not compData.spriteSheet then
+		compData.spriteSheet = Path.png(self.particle)
+	end
+
+	local ok, sp = pcall(function() return require("Source.Helpers.Core.ComponentRegistry").create("spritesheet", compData) end)
+	if not ok or not sp then
+		return
+	end
+
+	sp.currentAnim = next(sp.animations)
+	if not sp.currentAnim then
+		return
+	end
+
+	sp.parent = {
+		flipX = self._cachedFlipX,
+		angle = particle.angle,
+		emit = function(event, ...)
+			if self.parent then
+				self.parent:emit(event, ...)
+			end
+		end,
+	}
+
+	local config = sp.animations[sp.currentAnim]
+	if not config then
+		return
+	end
+
+	particle.anim = sp
+	particle._duration = config.frames / config.speed
+	return particle
+end
+
+function ParticleEmitter:_createImageParticle(data, particle)
+	local pngPath = Path.png(self.particle)
+	local pngInfo = love.filesystem.getInfo(pngPath)
+	if not pngInfo then
+		return
+	end
+
+	local ok, image = pcall(function() return love.graphics.newImage(pngPath) end)
+	if not ok then
+		return
+	end
+
+	particle.image = image
+	particle.frameWidth = data.frameWidth or 16
+	particle.frameHeight = data.frameHeight or 16
+	particle.pivotX = data.pivotX or "center"
+	particle.pivotY = data.pivotY or "center"
+	particle.flipX = self._cachedFlipX
+	particle._duration = data.lifetime or 0.5
+	return particle
+end
+
+function ParticleEmitter:_applyShakeComponent(data, particle)
 	for _, comp in ipairs(data.components or {}) do
 		if comp.component == "shake" then
 			local shake = require("Source.Helpers.Core.ComponentRegistry").create("shake", comp)
@@ -153,8 +174,6 @@ function ParticleEmitter:_createParticle(px, py, angle)
 			break
 		end
 	end
-
-	return particle
 end
 
 function ParticleEmitter:_burst()

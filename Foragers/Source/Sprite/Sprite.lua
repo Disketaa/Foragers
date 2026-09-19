@@ -243,14 +243,21 @@ function Sprite:draw()
 		love.graphics.translate(-self.x, -self.y)
 	end
 
-	drawComponents(self, function(c) return c.drawBehind end)
+	drawComponents(self, function(c) return c.drawBehind and c.type ~= "particle_emitter" end)
 
-	drawComponents(self, function(c) return not c.drawBehind and not c.drawOnTop end)
+	drawComponents(self, function(c) return not c.drawBehind and not c.drawOnTop and c.type ~= "particle_emitter" end)
 
-	drawComponents(self, function(c) return c.drawOnTop end)
+	drawComponents(self, function(c) return c.drawOnTop and c.type ~= "particle_emitter" end)
 
 	if applyXform then
 		love.graphics.pop()
+	end
+
+	-- Particle emitters use world-space coordinates; draw them outside the
+	-- sprite-local transform so they do not follow parent movement/rotation.
+	local emitters = self:getComponents("particle_emitter", function(c) return not c._broken end)
+	for _, emitter in ipairs(emitters) do
+		emitter:draw()
 	end
 end
 

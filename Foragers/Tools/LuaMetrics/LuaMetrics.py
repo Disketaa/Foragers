@@ -104,10 +104,10 @@ def extract_functions(content, filepath):
                 if not s:
                     j += 1
                     continue
-                opens = len(re.findall(r"\b(function|if|repeat)\b", s))
-                opens += len(re.findall(r"\b(for|while)\b", s))
-                if not re.search(r"\b(for|while)\b.*\bdo\b", s):
-                    opens += len(re.findall(r"\bdo\b", s))
+                opens = 1 if re.search(r"^(local\s+)?function\b", s) else 0
+                opens += len(re.findall(r"^(if|repeat)\b", s))
+                opens += len(re.findall(r"^(for|while)\b", s))
+                opens += len(re.findall(r"^do\b", s))
                 closes = len(re.findall(r"\bend\b", s))
                 body_depth += opens - closes
                 if body_depth == 0 and j > i:
@@ -132,11 +132,11 @@ def extract_functions(content, filepath):
             depth = 0
         else:
             if clean:
-                opens = len(re.findall(r"\b(function|if|repeat)\b", clean))
-                opens += len(re.findall(r"\b(for|while)\b", clean))
-                if not re.search(r"\b(for|while)\b.*\bdo\b", clean):
-                    opens += len(re.findall(r"\bdo\b", clean))
-                closes = clean.count("end")
+                opens = 1 if re.search(r"^(local\s+)?function\b", clean) else 0
+                opens += len(re.findall(r"^(if|repeat)\b", clean))
+                opens += len(re.findall(r"^(for|while)\b", clean))
+                opens += len(re.findall(r"^do\b", clean))
+                closes = len(re.findall(r"\bend\b", clean))
                 depth += opens - closes
             i += 1
 
