@@ -90,22 +90,23 @@ function ShaderLoader.compose(specs)
 	--   {X={u_*=...}} -> compact form: shader name + uniform overrides
 	local names = {}
 	local overrides = {}
+	local function mergeOverrides(dst, src, excludeKey)
+		for k, v in pairs(src or {}) do
+			if k ~= excludeKey then
+				dst[k] = v
+			end
+		end
+	end
 	for _, s in ipairs(specs) do
 		if type(s) == "string" then
 			table.insert(names, s)
 		elseif s.name then
 			table.insert(names, s.name)
-			for k, v in pairs(s) do
-				if k ~= "name" then
-					overrides[k] = v
-				end
-			end
+			mergeOverrides(overrides, s, "name")
 		else
 			local name, params = next(s)
 			table.insert(names, name)
-			for k, v in pairs(params or {}) do
-				overrides[k] = v
-			end
+			mergeOverrides(overrides, params, nil)
 		end
 	end
 
@@ -162,14 +163,15 @@ function ShaderLoader._compileProgram(names, meta)
 	end
 
 	-- Pipeline: uv modifiers -> single Texel -> color modifiers
-	local uvCalls = {}
-	for _, name in ipairs(uvChain) do
-		table.insert(uvCalls, string.format("	uv = %s_uv(uv, screen_coords);", name))
+	local function buildCalls(chainNames, tmpl)
+		local out = {}
+		for _, n in ipairs(chainNames) do
+			table.insert(out, string.format(tmpl, n))
+		end
+		return out
 	end
-	local colorCalls = {}
-	for _, name in ipairs(colorChain) do
-		table.insert(colorCalls, string.format("	color = %s_color(color, screen_coords);", name))
-	end
+	local uvCalls = buildCalls(uvChain, "	uv = %s_uv(uv, screen_coords);")
+	local colorCalls = buildCalls(colorChain, "	color = %s_color(color, screen_coords);")
 
 	local effectHeader = "\nvec4 effect(vec4 color, Image texture, vec2 tex_coords, vec2 screen_coords) {\n"
 	local code = table.concat(decls, "\n")
