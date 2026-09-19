@@ -129,6 +129,95 @@ local function applyRarity(entry, rarity)
 	end
 end
 
+local function tweensRunning(sprite)
+	for _, tween in pairs(sprite.tweens) do
+		if not tween.loop and not tween:isFinished() then
+			return true
+		end
+	end
+	return false
+end
+
+local function updateSpotlight()
+	if not _spotlight or not GridNav.active then
+		return
+	end
+	local cur = GridNav.active:current()
+	if cur then
+		_spotlight.ui.offsetX = cur.ui.offsetX
+		_spotlight.ui.offsetY = cur.ui.offsetY
+	end
+end
+
+local function setupCardGroup(s)
+    local grp = s.data and s.data.group
+    if not grp then
+        return
+    end
+    local level = (GameState.cardGroupCounts[grp] or 0) + 1
+    local lvl = s:findComponent("text", function(c) return c.id == "level" end)
+    if lvl then
+        lvl:setText(tostring(level))
+    end
+    local emblem = s:findComponent("image", function(c) return c.id == "emblem" end)
+    local tier = Tiers.tierForLevel(level)
+    if emblem then
+        emblem:setFrame(tier)
+    end
+    if lvl then
+        lvl:setColor({ Tiers.tierColor(level) })
+    end
+    local cardTier = s:findComponent("tier")
+    if cardTier and grp == "pickaxe" then
+        cardTier:setLevel(level)
+    end
+end
+
+local function setupCardModifier(s)
+    local mod = s.data and s.data.modifier
+    if not (mod and type(mod) == "table" and mod.stat) then
+        return
+    end
+    local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
+    local desc = s:findComponent("text", function(c) return c.id == "description" end)
+    if not (stats and desc and desc._rawText and desc._rawText.key) then
+        return
+    end
+    local rarity = s.data and s.data.rarity or "common"
+    local scale = Rarities.scale(rarity)
+    local amount = (mod.baseAmount or 0) * scale
+    local old, new = stats:previewStat({ stat = mod.stat, amount = amount })
+    local raw = I18n.withDelta(desc._rawText.key, old, new, desc._rawText.params)
+    desc._rawText = raw
+    desc:setText(TextParser.resolve(raw))
+end
+
+local function setupCard(entry, i, n)
+    entry.ui.horizontalAlign = "center"
+    entry.ui.verticalAlign = "center"
+    entry.sprite.alpha = 1
+    entry.sprite.scaleX = 1
+    entry.sprite.scaleY = 1
+    local s = entry.sprite
+    s.angle = 0
+    if s.shader then
+        s.shader:send("u_burn", 0)
+    end
+    local shader = s:findComponent("shader")
+    if shader then
+        shader._uniformValues.u_burn = 0
+        s.shaderData.u_burn = 0
+    end
+    local tw = s:findComponent("tween")
+    if tw then
+        tw:triggerTag("show")
+    end
+    setupCardGroup(s)
+    setupCardModifier(s)
+    local cardW = s.frameWidth or 64
+    entry.ui.offsetX = finalOffset(i, n, cardW)
+end
+
 --- Callers must gate state themselves (start() does); this only lays out + shows.
 function CardSelect.enter(uiSprites)
 	_cards = {}
@@ -168,61 +257,7 @@ function CardSelect.enter(uiSprites)
 
 	local n = #_cards
 	for i, entry in ipairs(_cards) do
-	    entry.ui.horizontalAlign = "center"
-	    entry.ui.verticalAlign = "center"
-	    entry.sprite.alpha = 1
-	    entry.sprite.scaleX = 1
-	    entry.sprite.scaleY = 1
-	    local s = entry.sprite
-	    s.angle = 0
-	    if s.shader then
-	        s.shader:send("u_burn", 0)
-	    end
-	    local shader = s:findComponent("shader")
-	    if shader then
-	        shader._uniformValues.u_burn = 0
-	        s.shaderData.u_burn = 0
-	    end
-	    local tw = s:findComponent("tween")
-	    if tw then
-	        tw:triggerTag("show")
-	    end
-	    local grp = s.data and s.data.group
-	    if grp then
-	        local level = (GameState.cardGroupCounts[grp] or 0) + 1
-	        local lvl = s:findComponent("text", function(c) return c.id == "level" end)
-	        if lvl then
-	            lvl:setText(tostring(level))
-	        end
-	        local emblem = s:findComponent("image", function(c) return c.id == "emblem" end)
-	        local tier = Tiers.tierForLevel(level)
-	        if emblem then
-	            emblem:setFrame(tier)
-	        end
-	        if lvl then
-	            lvl:setColor({ Tiers.tierColor(level) })
-	        end
-	        local cardTier = s:findComponent("tier")
-	        if cardTier and grp == "pickaxe" then
-	            cardTier:setLevel(level)
-	        end
-	    end
-	    local mod = s.data and s.data.modifier
-	    if mod and type(mod) == "table" and mod.stat then
-	        local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
-	        local desc = s:findComponent("text", function(c) return c.id == "description" end)
-	        if stats and desc and desc._rawText and desc._rawText.key then
-	            local rarity = s.data and s.data.rarity or "common"
-	            local scale = Rarities.scale(rarity)
-	            local amount = (mod.baseAmount or 0) * scale
-	            local old, new = stats:previewStat({ stat = mod.stat, amount = amount })
-	            local raw = I18n.withDelta(desc._rawText.key, old, new, desc._rawText.params)
-	            desc._rawText = raw
-	            desc:setText(TextParser.resolve(raw))
-	        end
-	    end
-	    local cardW = s.frameWidth or 64
-	    entry.ui.offsetX = finalOffset(i, n, cardW)
+	    setupCard(entry, i, n)
 	end
 end
 
@@ -335,13 +370,7 @@ function CardSelect.isHiding()
 end
 
 function CardSelect.update(dt)
-	if _spotlight and GridNav.active then
-	    local cur = GridNav.active:current()
-	    if cur then
-	        _spotlight.ui.offsetX = cur.ui.offsetX
-	        _spotlight.ui.offsetY = cur.ui.offsetY
-	    end
-	end
+	updateSpotlight()
 	if GridNav.active and not _hiding then
 	    GridNav.active:update(dt)
 	end
@@ -350,21 +379,13 @@ function CardSelect.update(dt)
 	end
 
 	for _, entry in ipairs(_cards) do
-	    if entry.sprite ~= _chosen then
-	        for _, tween in pairs(entry.sprite.tweens) do
-	            if not tween.loop and not tween:isFinished() then
-	                return
-	            end
-	        end
+	    if entry.sprite ~= _chosen and tweensRunning(entry.sprite) then
+	        return
 	    end
 	end
 	-- Also wait for chosen card's tweens (burn takes 2s, longer than hide).
-	if _chosen then
-	    for _, tween in pairs(_chosen.tweens) do
-	        if not tween.loop and not tween:isFinished() then
-	            return
-	        end
-	    end
+	if _chosen and tweensRunning(_chosen) then
+	    return
 	end
 	CardSelect.exit()
 	GameState.showingCards = false
@@ -403,6 +424,39 @@ function CardSelect.exit()
 	_G._cardSelectHiding = false
 end
 
+local function refreshWeaponUI(grp)
+    local wt = GameState.weaponLevelText
+    local we = GameState.weaponEmblem
+    local wtw = GameState.weaponTween
+    local wpalette = GameState.weaponTier
+    if not (wt or we or wtw or wpalette) then
+        return
+    end
+    local wgrp = "pickaxe"
+    local wlvl = (GameState.cardGroupCounts[wgrp] or 0)
+    if wt then
+        wt:setText(tostring(wlvl))
+        wt:setColor({ Tiers.tierColor(wlvl) })
+    end
+    if we then
+        local emblemTier = Tiers.tierForLevel(wlvl)
+        we:setFrame(emblemTier)
+    end
+    if wtw and grp == wgrp then
+        wtw:triggerTag("chosen")
+    end
+    if wpalette and grp == wgrp then
+        wpalette:setLevel(wlvl)
+    end
+    local heldWeapon = GameState.weaponSprite
+    if heldWeapon and grp == wgrp then
+        local heldTier = heldWeapon:findComponent("tier")
+        if heldTier then
+            heldTier:setLevel(wlvl)
+        end
+    end
+end
+
 function CardSelect.applyModifier(sprite)
 	local mod = sprite.data and sprite.data.modifier
 	if not mod then
@@ -412,37 +466,7 @@ function CardSelect.applyModifier(sprite)
 	if grp then
 	    GameState.cardGroupCounts[grp] = (GameState.cardGroupCounts[grp] or 0) + 1
 	end
-	-- Refresh weapon UI level text + emblem + palette component if this pickaxe group changed.
-	-- Main.lua stores the refs on GameState so CardSelect can update them here.
-	local wt = GameState.weaponLevelText
-	local we = GameState.weaponEmblem
-	local wtw = GameState.weaponTween
-	local wpalette = GameState.weaponTier
-	if wt or we or wtw or wpalette then
-	    local wgrp = "pickaxe"
-	    local wlvl = (GameState.cardGroupCounts[wgrp] or 0)
-	    if wt then
-	        wt:setText(tostring(wlvl))
-	        wt:setColor({ Tiers.tierColor(wlvl) })
-	    end
-	    if we then
-	        local emblemTier = Tiers.tierForLevel(wlvl)
-	        we:setFrame(emblemTier)
-	    end
-	    if wtw and grp == wgrp then
-	        wtw:triggerTag("chosen")
-	    end
-	    if wpalette and grp == wgrp then
-	        wpalette:setLevel(wlvl)
-	    end
-	    local heldWeapon = GameState.weaponSprite
-	    if heldWeapon and grp == wgrp then
-	        local heldTier = heldWeapon:findComponent("tier")
-	        if heldTier then
-	            heldTier:setLevel(wlvl)
-	        end
-	    end
-	end
+	refreshWeaponUI(grp)
 	local stats = GameState.playerSprite and GameState.playerSprite:findComponent("player_stats")
 	if not stats then
 	    return
