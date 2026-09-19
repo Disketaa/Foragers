@@ -163,7 +163,7 @@ function Image:_applyPalette(shader)
 	local value = self.palette.value
 	if not value then
 		if self.parent.data then
-			value = self.parent.data[self.palette.scheme] -- e.g. data.rarity or data.tier
+			value = self.parent.data[self.palette.scheme]
 		end
 	end
 	value = value or cfg.default
