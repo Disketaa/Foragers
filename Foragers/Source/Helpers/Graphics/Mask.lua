@@ -26,47 +26,7 @@ function Mask.renderSilhouette(entries, viewW, viewH, camX, camY)
 				if silComp then
 					local color = silComp.color or { 0, 0, 0, 0.75 }
 					love.graphics.setColor(color[1], color[2], color[3], color[4] or 0.75)
-					local rot = 0
-					local t = sprite.tweens
-					if t then
-						local angleTween = t.swingAngle or t.angle
-						if angleTween then
-							rot = math.rad(angleTween:getValue())
-						end
-					end
-					if rot == 0 and sprite.angle then
-						rot = math.rad(sprite.angle)
-					end
-
-					local scaleX, scaleY = 1, 1
-					if t then
-						if t.scaleX then
-							scaleX = t.scaleX:getValue()
-						end
-						if t.scaleY then
-							scaleY = t.scaleY:getValue()
-						end
-					end
-
-					local spritesheet = sprite:findComponent("spritesheet", function(c) return not c._broken end)
-					if spritesheet then
-						love.graphics.push()
-						love.graphics.translate(sprite.x, sprite.y)
-						-- drawCurrentFrame handles flipX+sx/sy internally
-						love.graphics.scale(scaleX, scaleY)
-						love.graphics.rotate(rot)
-						spritesheet:drawCurrentFrame(0, 0, 0)
-						love.graphics.pop()
-					elseif sprite.image then
-						if sprite.flipX then
-							scaleX = -scaleX
-						end
-						local w = sprite.frameWidth or sprite.image:getWidth()
-						local h = sprite.frameHeight or sprite.image:getHeight()
-						local ox = Pivot.px(sprite.pivotX, w, 0)
-						local oy = Pivot.px(sprite.pivotY, h, 0)
-						love.graphics.draw(sprite.image, sprite.x, sprite.y, rot, scaleX, scaleY, ox, oy)
-					end
+					Mask.drawSprite(sprite)
 				end
 			end
 		end
@@ -77,6 +37,52 @@ end
 ---@return love.Canvas|nil
 function Mask.getCanvas()
 	return silCanvas
+end
+
+--- Draws a sprite using its current tween-based transform.
+---@param sprite table Sprite instance
+function Mask.drawSprite(sprite)
+	local rot = 0
+	local t = sprite.tweens
+	if t then
+		local angleTween = t.swingAngle or t.angle
+		if angleTween then
+			rot = math.rad(angleTween:getValue())
+		end
+	end
+	if rot == 0 and sprite.angle then
+		rot = math.rad(sprite.angle)
+	end
+
+	local scaleX, scaleY = 1, 1
+	if t then
+		if t.scaleX then
+			scaleX = t.scaleX:getValue()
+		end
+		if t.scaleY then
+			scaleY = t.scaleY:getValue()
+		end
+	end
+
+	local spritesheet = sprite:findComponent("spritesheet", function(c) return not c._broken end)
+	if spritesheet then
+		love.graphics.push()
+		love.graphics.translate(sprite.x, sprite.y)
+		-- drawCurrentFrame handles flipX+sx/sy internally
+		love.graphics.scale(scaleX, scaleY)
+		love.graphics.rotate(rot)
+		spritesheet:drawCurrentFrame(0, 0, 0)
+		love.graphics.pop()
+	elseif sprite.image then
+		if sprite.flipX then
+			scaleX = -scaleX
+		end
+		local w = sprite.frameWidth or sprite.image:getWidth()
+		local h = sprite.frameHeight or sprite.image:getHeight()
+		local ox = Pivot.px(sprite.pivotX, w, 0)
+		local oy = Pivot.px(sprite.pivotY, h, 0)
+		love.graphics.draw(sprite.image, sprite.x, sprite.y, rot, scaleX, scaleY, ox, oy)
+	end
 end
 
 return Mask

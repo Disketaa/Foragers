@@ -1,5 +1,5 @@
 local Canvas = require("Source.Helpers.Graphics.Canvas")
-local Pivot = require("Source.Helpers.Core.Pivot")
+local Mask = require("Source.Helpers.Graphics.Mask")
 
 local Emissive = {}
 Emissive.__index = Emissive
@@ -47,46 +47,7 @@ function Emissive.drawToScreen(entries, canvas, camPixelX, camPixelY, camSubX, c
 					local alpha = sprite.alpha or 1
 					love.graphics.setColor(1, 1, 1, alpha)
 
-					local rot = 0
-					local t = sprite.tweens
-					if t then
-						local angleTween = t.swingAngle or t.angle
-						if angleTween then
-							rot = math.rad(angleTween:getValue())
-						end
-					end
-					if rot == 0 and sprite.angle then
-						rot = math.rad(sprite.angle)
-					end
-
-					local scaleX, scaleY = 1, 1
-					if t then
-						if t.scaleX then
-							scaleX = t.scaleX:getValue()
-						end
-						if t.scaleY then
-							scaleY = t.scaleY:getValue()
-						end
-					end
-
-					local spritesheet = sprite:findComponent("spritesheet", function(c) return not c._broken end)
-					if spritesheet then
-						love.graphics.push()
-						love.graphics.translate(sprite.x, sprite.y)
-						love.graphics.scale(scaleX, scaleY)
-						love.graphics.rotate(rot)
-						spritesheet:drawCurrentFrame(0, 0, 0)
-						love.graphics.pop()
-					elseif sprite.image then
-						if sprite.flipX then
-							scaleX = -scaleX
-						end
-						local w = sprite.frameWidth or sprite.image:getWidth()
-						local h = sprite.frameHeight or sprite.image:getHeight()
-						local ox = Pivot.px(sprite.pivotX, w, 0)
-						local oy = Pivot.px(sprite.pivotY, h, 0)
-						love.graphics.draw(sprite.image, sprite.x, sprite.y, rot, scaleX, scaleY, ox, oy)
-					end
+					Mask.drawSprite(sprite)
 				end
 			end
 		end
