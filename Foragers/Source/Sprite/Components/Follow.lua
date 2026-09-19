@@ -75,6 +75,25 @@ function Follow:recall(smoothness)
 	self._recallSmoothness = smoothness
 end
 
+function Follow:_initScatterBase()
+	if not self._scatterBaseX or not self._scatterBaseY then
+		local tx = self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
+		local ty = self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+		self._scatterBaseX = self.parent.x - tx
+		self._scatterBaseY = self.parent.y - ty
+	end
+end
+
+function Follow:_applyScatter()
+	if not self._scatterBaseX or not self._scatterBaseY then
+		self:_initScatterBase()
+	end
+	local tx = self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
+	local ty = self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+	self.parent.x = self._scatterBaseX + tx
+	self.parent.y = self._scatterBaseY + ty
+end
+
 ---@param dt number
 function Follow:update(dt)
 	if not self.parent then
@@ -105,19 +124,8 @@ function Follow:update(dt)
 	if outsideRadius then
 		self._arrivedEmitted = false
 		self._elapsedFollowTime = nil
-		if not self._scatterBaseX then
-			local tx, ty = 0, 0
-			if self.parent.tweens then
-				tx = self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
-				ty = self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
-			end
-			self._scatterBaseX = self.parent.x - tx
-			self._scatterBaseY = self.parent.y - ty
-		end
-		local tx = self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
-		local ty = self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
-		self.parent.x = self._scatterBaseX + tx
-		self.parent.y = self._scatterBaseY + ty
+		self:_initScatterBase()
+		self:_applyScatter()
 		return
 	end
 
@@ -127,19 +135,8 @@ function Follow:update(dt)
 	if self.followDelay and self._delayElapsed then
 		self._delayElapsed = self._delayElapsed + dt
 		if self._delayElapsed < self.followDelay then
-			if not self._scatterBaseX then
-				local tx, ty = 0, 0
-				if self.parent.tweens then
-					tx = self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
-					ty = self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
-				end
-				self._scatterBaseX = self.parent.x - tx
-				self._scatterBaseY = self.parent.y - ty
-			end
-			local tx = self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
-			local ty = self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
-			self.parent.x = self._scatterBaseX + tx
-			self.parent.y = self._scatterBaseY + ty
+			self:_initScatterBase()
+			self:_applyScatter()
 			return
 		end
 		self._scatterBaseX = nil
