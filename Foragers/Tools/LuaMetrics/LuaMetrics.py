@@ -331,6 +331,7 @@ def main():
             updated_baseline[bkey] = entry
             continue
 
+        updated_baseline[bkey] = {"fingerprint": fp, "updated": now}
         warnings += 1
         files_with_issues.add(c["file1"])
         files_with_issues.add(c["file2"])

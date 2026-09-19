@@ -136,6 +136,63 @@ function Image:attach()
 	end
 end
 
+--- Send palette color uniforms to the image shader.
+---@param shader love.Shader
+---@param colors table
+---@param prefix string
+function Image:_sendPaletteColors(shader, colors, prefix)
+	for i = 1, #colors do
+		local color = colors[i] or colors[1]
+		local key = prefix .. i
+		if shader:hasUniform(key) then
+			shader:send(key, color)
+		end
+	end
+end
+
+--- Apply per-image palette uniforms to the image shader.
+---@param shader love.Shader
+function Image:_applyPalette(shader)
+	if not self.palette then
+		return
+	end
+	local cfg = PALETTE_CONFIGS[self.palette.scheme]
+	if not cfg then
+		return
+	end
+	local value = self.palette.value
+	if not value then
+		if self.parent.data then
+			value = self.parent.data[self.palette.scheme] -- e.g. data.rarity or data.tier
+		end
+	end
+	value = value or cfg.default
+	local def = cfg.dataModule[value]
+	if not def then
+		return
+	end
+	if not def.colors then
+		return
+	end
+	self:_sendPaletteColors(shader, def.colors, cfg.prefix)
+	if self.palette.scheme == "rarity" then
+		if shader:hasUniform("u_tier_5") then
+			local lastColor = def.colors[4] or def.colors[1]
+			shader:send("u_tier_5", lastColor)
+		end
+	end
+end
+
+--- Forward parent shaderData uniforms to the image shader.
+---@param shader love.Shader
+function Image:_forwardParentUniforms(shader)
+	for u, v in pairs(self.parent.shaderData) do
+		if u:match("^u_") and shader:hasUniform(u) then
+			shader:send(u, v)
+		end
+	end
+end
+
 ---@param cx number card centre x (screen)
 ---@param cy number card centre y (screen)
 ---@param fw number card frame width
@@ -165,39 +222,10 @@ function Image:buildCanvas(cx, cy, fw, fh)
 	if self._shader and self.parent and self.parent.shaderData then
 		hadImageShader = true
 		love.graphics.setShader(self._shader)
-		-- Per-image palette: load palette directly instead of reading from parent.shaderData
 		if self.palette then
-			local cfg = PALETTE_CONFIGS[self.palette.scheme]
-			if cfg then
-				-- Resolve value: use explicit value or fall back to parent.data
-				local value = self.palette.value
-				if not value and self.parent.data then
-					value = self.parent.data[self.palette.scheme] -- e.g. data.rarity or data.tier
-				end
-				value = value or cfg.default
-				local def = cfg.dataModule[value]
-				if def and def.colors then
-					for i = 1, #def.colors do
-						local color = def.colors[i] or def.colors[1]
-						local key = cfg.prefix .. i
-						if self._shader:hasUniform(key) then
-							self._shader:send(key, color)
-						end
-					end
-					-- Also set u_tier_5 for lum < 0.65 fallback
-					if self.palette.scheme == "rarity" and self._shader:hasUniform("u_tier_5") then
-						local lastColor = def.colors[4] or def.colors[1]
-						self._shader:send("u_tier_5", lastColor)
-					end
-				end
-			end
+			self:_applyPalette(self._shader)
 		else
-			-- Default: forward uniforms from parent shaderData (tier palette from sprite-level component)
-			for u, v in pairs(self.parent.shaderData) do
-				if u:match("^u_") and self._shader:hasUniform(u) then
-					self._shader:send(u, v)
-				end
-			end
+			self:_forwardParentUniforms(self._shader)
 		end
 	end
 	if quad then
@@ -219,24 +247,52 @@ function Image:setFrame(index)
 	if not self._ss then
 		return
 	end
-	self._ss._currentIndex = index
+	self._ss:setFrame(index)
 	self._canvas = nil
+end
+
+--- Get a tween value from the parent sprite, or 0 if unavailable.
+---@param name string tween field name
+---@return number
+function Image:_getParentTweenValue(name)
+	local tweens = self.parent and self.parent.tweens
+	local tween = tweens and tweens[name]
+	return tween and tween:getValue() or 0
+end
+
+--- Get the parent sprite's frame dimensions, falling back to defaults.
+---@return number, number
+function Image:_getParentFrameSize()
+	return self.parent and self.parent.frameWidth or 64, self.parent and self.parent.frameHeight or 104
+end
+
+--- Compute the additive bob offset for this frame.
+---@return number
+function Image:_computeBob()
+	if not self.bob then
+		return 0
+	end
+	return -math.cos(self._bobT * (math.pi * 0.5)) * self.bob
+end
+
+--- Apply the parent's draw shader if available, returning whether it was set.
+---@return boolean
+function Image:_applyDrawShader()
+	if self.parent and self.parent.applyShader then
+		return self.parent:applyShader()
+	end
+	return false
 end
 
 function Image:draw(x, y)
 	if not self._image or not self._ss then
 		return
 	end
-	-- Base anchor stays pixel-perfect (card is pixel-art); only the parallax,
-	-- bob, and tween offsets are sub-pixel so motion is smooth and independent
-	-- of the pixel grid.
-	local tx = self.parent and self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
-	local ty = self.parent and self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
+	local tx = self:_getParentTweenValue("x")
+	local ty = self:_getParentTweenValue("y")
 	local bx = math.floor(x - tx + 0.5)
 	local by = math.floor(y - ty + 0.5)
-	local fw = self.parent and self.parent.frameWidth or 64
-	local fh = self.parent and self.parent.frameHeight or 104
-	-- Re-bake only when the source frame changes (animated images) or first draw.
+	local fw, fh = self:_getParentFrameSize()
 	local frame = self._animated and (self._ss:getAnimFrameIndex() or 1) or 1
 	if not self._canvas or self._bakedFrame ~= frame then
 		self._canvas = self:buildCanvas(bx, by, fw, fh)
@@ -245,14 +301,10 @@ function Image:draw(x, y)
 	if not self._canvas then
 		return
 	end
-	-- Bob and parallax are additive draw offsets, so they never fight or cancel.
-	local bobY = 0
-	if self.bob then
-		bobY = -math.cos(self._bobT * (math.pi * 0.5)) * self.bob
-	end
+	local bobY = self:_computeBob()
 	local dx = bx + (self._parX or 0) + tx
 	local dy = by + (self._parY or 0) + bobY + ty
-	local hadShader = self.parent and self.parent.applyShader and self.parent:applyShader() or false
+	local hadShader = self:_applyDrawShader()
 	local r, g, b, a = love.graphics.getColor()
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.draw(self._canvas, dx, dy, 0, 1, 1, fw * 0.5, fh * 0.5)
