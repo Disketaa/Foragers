@@ -1,7 +1,7 @@
 targets.folders = ["*"]
 targets.exclude_folders = ["Tools"]
 targets.exclude_files = ["lldebugger.lua"]
-targets.exclude_functions = ["drawProfiler", "_drawChatOutput", "Debug.drawChat", "_hudDrawState", "_drawFpsGraph", "_layoutRows"]
+targets.exclude_functions = ["drawProfiler", "_drawChatOutput", "Debug.drawChat", "_hudDrawState", "_drawFpsGraph", "_layoutRows", "parseColors", "stripColorTags", "buildCanvas"]
 
 [metrics]
 cc_warn = 10

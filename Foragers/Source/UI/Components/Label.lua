@@ -328,36 +328,35 @@ function Label:wrapText(text, maxWidth, ref, charSpacing)
 		else
 			local currentLine = ""
 			local currentWidth = 0
-		for i, word in ipairs(words) do
-			local trailingSpace = i < #words and " " or ""
-			local wordWithSpace = word .. trailingSpace
-			local strippedWord = self:stripColorTags(wordWithSpace)
-			local wordWidth = SpriteFont.measureText(ref, strippedWord, charSpacing)
-			if currentWidth + wordWidth <= maxWidth then
-				currentLine = currentLine .. wordWithSpace
-				currentWidth = currentWidth + wordWidth
-			else
-				if currentLine ~= "" then
-					-- Strip trailing space from the completed line; it was only
-					-- needed as word-separation padding, not as part of the line.
-					if currentLine:sub(-1) == " " then
-						currentLine = currentLine:sub(1, -2)
-						currentWidth = currentWidth - charSpacing
-					end
-					table.insert(lines, { text = currentLine, width = currentWidth })
-				end
-				currentLine = word .. " "
-				currentWidth = SpriteFont.measureText(ref, self:stripColorTags(word .. " "), charSpacing)
-			end
+	local function finalizeLine(out, line, width, spacing)
+		-- Trailing space is word-separation padding, not part of the line.
+		if line:sub(-1) == " " then
+			line = line:sub(1, -2)
+			width = width - spacing
 		end
+		table.insert(out, { text = line, width = width })
+		return line, width
+	end
+
+	for i, word in ipairs(words) do
+		local trailingSpace = i < #words and " " or ""
+		local wordWithSpace = word .. trailingSpace
+		local strippedWord = self:stripColorTags(wordWithSpace)
+		local wordWidth = SpriteFont.measureText(ref, strippedWord, charSpacing)
+		if currentWidth + wordWidth <= maxWidth then
+			currentLine = currentLine .. wordWithSpace
+			currentWidth = currentWidth + wordWidth
+		else
 			if currentLine ~= "" then
-				-- Strip trailing space from the final line of the paragraph.
-				if currentLine:sub(-1) == " " then
-					currentLine = currentLine:sub(1, -2)
-					currentWidth = currentWidth - charSpacing
-				end
-				table.insert(lines, { text = currentLine, width = currentWidth })
+				finalizeLine(lines, currentLine, currentWidth, charSpacing)
 			end
+			currentLine = word .. " "
+			currentWidth = SpriteFont.measureText(ref, self:stripColorTags(word .. " "), charSpacing)
+		end
+	end
+	if currentLine ~= "" then
+		finalizeLine(lines, currentLine, currentWidth, charSpacing)
+	end
 		end
 	end
 

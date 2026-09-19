@@ -19,9 +19,10 @@ Before fixing, decide: **fix** or **skip**.
 
 **Skip if any apply:**
 - CC exceeds threshold but branches are structurally distinct (state machine, parser dispatch, event router) — not repeated/near-identical logic
-- Clone pair is a required boilerplate idiom (event `attach()` subscription, component factory pattern) — not copy-pasted business logic
+- Clone pair is required boilerplate idiom (event `attach()` subscription, component factory pattern) — not copy-pasted business logic
 - Fix requires touching Section I constraints (event system, single-writer rule, component boundaries)
 - File matches `Settings.toml` `exclude_files`
+
 **Do not silently drop a skip.** Every skip must be recorded.
 
 ## Skip format (strict)
@@ -32,10 +33,32 @@ file:line:col - rule_name: SKIP — reason
 
 Reason must be concrete, not advisory. Reject: "seems fine". Require: "14-state FSM dispatch, branches structurally distinct, not sloppy".
 
-If the skip should persist across future scans (not just this pass), add the function name to `targets.exclude_functions` in `Tools/LuaMetrics/Settings.toml`. The tool writes accepted skips to `Tools/LuaMetrics/Baseline.json` automatically; that file should contain only excluded/accepted functions, not every function in the project. On subsequent runs:
-- fingerprint matches → silently skipped
-- fingerprint mismatches → reported as `[BASELINE CHANGED]` so you know the code drifted
-Do not edit `Baseline.json` manually; edit `Settings.toml` and let the tool regenerate the baseline.
+If the skip should persist across future scans (not just this pass):
+- **CC skip**: add the function name to `targets.exclude_functions` in `Tools/LuaMetrics/Settings.toml`. The tool writes accepted skips to `Tools/LuaMetrics/Baseline.json` automatically; that file should contain only excluded/accepted functions, not every function in the project. On subsequent runs:
+  - fingerprint matches → silently skipped
+  - fingerprint mismatches → reported as `[BASELINE CHANGED]` so you know the code drifted
+- **Clone skip**: add the clone fingerprint to `Tools/LuaMetrics/Baseline.json` under key `clone:rel1:line1:rel2:line2`. Fingerprint = sha256 of the normalized 6-line clone window (strings/comments stripped, empty lines removed). On subsequent runs:
+  - fingerprint matches → silently skipped
+  - code drifts → fingerprint changes → clone is reported again
+
+Do not edit `Baseline.json` manually for CC skips; edit `Settings.toml` and let the tool regenerate the baseline. For clone skips, add entries directly to `Baseline.json` using the format above.
+
+### Generating clone fingerprints
+
+To add a clone skip to `Baseline.json`:
+1. Identify the clone pair: `file1:line1` and `file2:line2`
+2. Extract the normalized 6-line window from each location (strings/comments stripped, empty lines removed)
+3. Compute sha256 of the joined normalized lines
+4. Add entry to `Baseline.json`:
+   ```json
+   "clone:Source\\Path\\File1.lua:LINE1:Source\\Path\\File2.lua:LINE2": {
+     "fingerprint": "sha256hex",
+     "updated": "ISO_TIMESTAMP"
+   }
+   ```
+5. Re-run LuaMetrics — the clone should be silently skipped
+
+If the code at either location changes, the fingerprint will mismatch and the clone will be reported again.
 
 If the skip is architectural (Section I conflict), use `REVIEW REQUIRED` instead of `SKIP`:
 ```
@@ -53,7 +76,7 @@ file:line:col - rule_name: REVIEW REQUIRED — architectural change needed
 |---|---|
 | CC>20 | Extract logic into a helper function; reduce branches |
 | CC>10 | Simplify conditionals, extract helper |
-| Clone | Extract shared code into a helper; call from both sites |
+| Clone | Extract shared code into a helper; call from both sites. If extraction is not viable (boilerplate, distinct contexts), record skip in `Baseline.json` with clone fingerprint |
 
 ### 3. Apply the fix
 - One file, one region, one violation at a time

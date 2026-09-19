@@ -26,6 +26,7 @@ def find_lua_files(root, settings):
     exclude_files = set(settings.get("targets", {}).get("exclude_files", []))
     exclude_folders = set(settings.get("targets", {}).get("exclude_folders", []))
     exclude_functions = set(settings.get("targets", {}).get("exclude_functions", []))
+    exclude_clones = set(settings.get("targets", {}).get("exclude_clones", []))
 
     files = []
     for dirpath, dirnames, filenames in os.walk(root):
@@ -213,6 +214,7 @@ def detect_clones(functions, min_lines=6):
                     "file2": chunk["file"],
                     "line2": chunk["line"],
                     "size": chunk["size"],
+                    "key": chunk["key"],
                 }
             )
         else:
@@ -319,11 +321,19 @@ def main():
     # Verbosity: clones
     clones = detect_clones(all_functions, min_lines=clone_min)
     for c in clones:
+        rel1 = os.path.relpath(c["file1"], root)
+        rel2 = os.path.relpath(c["file2"], root)
+        bkey = f"clone:{rel1}:{c['line1']}:{rel2}:{c['line2']}"
+        fp = hashlib.sha256(c["key"].encode("utf-8")).hexdigest()
+
+        entry = baseline.get(bkey)
+        if entry and entry.get("fingerprint") == fp:
+            updated_baseline[bkey] = entry
+            continue
+
         warnings += 1
         files_with_issues.add(c["file1"])
         files_with_issues.add(c["file2"])
-        rel1 = os.path.relpath(c["file1"], root)
-        rel2 = os.path.relpath(c["file2"], root)
         output_lines.append(
             f"{rel1}:{c['line1']}:1 - {c['size']}-line clone, also at {rel2}:{c['line2']}"
         )
