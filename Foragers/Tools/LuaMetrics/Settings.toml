@@ -1,7 +1,7 @@
 targets.folders = ["*"]
 targets.exclude_folders = ["Tools"]
 targets.exclude_files = ["lldebugger.lua"]
-targets.exclude_functions = ["drawProfiler", "_drawChatOutput", "Debug.drawChat", "_hudDrawState", "_drawFpsGraph", "_layoutRows", "resolvePaletteRef", "Label.new", "Label:parseColors", "Label:stripColorTags", "Label:wrapText", "Label:attach", "Label:buildCanvas", "Label:draw", "Image:update", "Image:attach", "Image:_applyPalette", "Image:_sendPaletteColors", "Image:_forwardParentUniforms", "Image:_getParentTweenValue", "Image:_getParentFrameSize", "Image:_computeBob", "Image:_applyDrawShader", "Image:draw", "Commands.complete", "Gizmo.draw", "Snapshot.update", "setupCardModifier", "refreshWeaponUI", "CardSelect.applyModifier", "_setupAnimations", "ShaderLoader.loadAll", "ShaderLoader.compose", "ShaderLoader._compileProgram"]
+targets.exclude_functions = ["drawProfiler", "_drawChatOutput", "Debug.drawChat", "_hudDrawState", "_drawFpsGraph", "_layoutRows", "resolvePaletteRef", "Label.new", "Label:parseColors", "Label:stripColorTags", "Label:wrapText", "Label:attach", "Label:buildCanvas", "Label:draw", "Image:update", "Image:attach", "Image:_applyPalette", "Image:_sendPaletteColors", "Image:_forwardParentUniforms", "Image:_getParentTweenValue", "Image:_getParentFrameSize", "Image:_computeBob", "Image:_applyDrawShader", "Image:draw", "Commands.complete", "Gizmo.draw", "Snapshot.update", "setupCardModifier", "refreshWeaponUI", "CardSelect.applyModifier", "_setupAnimations", "ShaderLoader.loadAll", "ShaderLoader.compose", "ShaderLoader._compileProgram", "Follow.new"]
 
 [metrics]
 cc_warn = 10

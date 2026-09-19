@@ -94,6 +94,93 @@ function Follow:_applyScatter()
 	self.parent.y = self._scatterBaseY + ty
 end
 
+function Follow:_isOutsideRadius(liveX, liveY)
+	return not self._tempTarget
+		and self.followRadius
+		and (self.parent.x - liveX) ^ 2 + (self.parent.y - liveY) ^ 2 > self.followRadius ^ 2
+end
+
+function Follow:_tickDelay(dt)
+	if not self.followDelay then
+		return false
+	end
+	self._delayElapsed = (self._delayElapsed or 0) + dt
+	if self._delayElapsed < self.followDelay then
+		self:_initScatterBase()
+		self:_applyScatter()
+		return true
+	end
+	self._scatterBaseX = nil
+	self._scatterBaseY = nil
+	return false
+end
+
+function Follow:_updateLean(dt, dir, sx)
+	local leanEase = Math.expSmooth(dt, self.leanSmoothness or sx)
+	local dx = self.parent.x - (self._prevParentX or self.parent.x)
+	self._prevParentX = self.parent.x
+	local moving = math.abs(dx) > self.leanThreshold
+	local targetAngle = moving and (self.leanAngle * dir) or 0
+	self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * leanEase
+end
+
+function Follow:_computeLiveTarget(dir)
+	if self._tempTarget then
+		return self._tempTarget.x + dir * self._tempOffsetX, self._tempTarget.y + self._tempOffsetY
+	end
+	return self.followTarget.x + dir * self.offsetX, self.followTarget.y + self.offsetY
+end
+
+function Follow:_initFollowEntry(liveX, liveY)
+	if self.followRadius then
+		-- Radius mode: start from current position for smooth entry
+		self._followX = self.parent.x
+		self._followY = self.parent.y
+	else
+		-- Standard mode (tools): snap to target position
+		self._followX = liveX
+		self._followY = liveY
+	end
+	self._prevParentX = self.parent.x
+	self._currentAngle = 0
+	self._elapsedFollowTime = 0
+	self.parent.angle = 0
+	-- Clear scatter base so tweens don't teleport on re-entry
+	self._scatterBaseX = nil
+	self._scatterBaseY = nil
+end
+
+function Follow:_tryEmitArrived(liveX, liveY)
+	if self._tempTarget or self._arrivedEmitted then
+		return
+	end
+	local dist = math.abs(self.parent.x - liveX) + math.abs(self.parent.y - liveY)
+	if dist < (self.arrivedThreshold or 3) then
+		self._arrivedEmitted = true
+		self.parent:emit(Events.FOLLOW_ARRIVED)
+	end
+end
+
+function Follow:_resolveDir(useTarget)
+	if self._tempTarget then
+		return self._deployDir
+	end
+	return (self.parent.x < useTarget.x) and -1 or 1
+end
+
+function Follow:_baseSmoothnessFor(field)
+	if self._tempTarget then
+		return self._deploySmoothness or 0.02
+	end
+	return self._recallSmoothness or self[field]
+end
+
+function Follow:_applyRotation(dt, accelFactor)
+	if self.rotate and not self._arrivedEmitted and accelFactor > 1 then
+		self.parent.angle = (self.parent.angle or 0) + (accelFactor - 1) * dt * 180
+	end
+end
+
 ---@param dt number
 function Follow:update(dt)
 	if not self.parent then
@@ -105,23 +192,11 @@ function Follow:update(dt)
 		return
 	end
 
-	local dir = self._tempTarget and self._deployDir or ((self.parent.x < useTarget.x) and -1 or 1)
-	local liveX, liveY
-	if self._tempTarget then
-		liveX = self._tempTarget.x + dir * self._tempOffsetX
-		liveY = self._tempTarget.y + self._tempOffsetY
-	else
-		liveX = self.followTarget.x + dir * self.offsetX
-		liveY = self.followTarget.y + self.offsetY
-	end
+	local dir = self:_resolveDir(useTarget)
+	local liveX, liveY = self:_computeLiveTarget(dir)
 
 	-- Check if outside activation radius (deploy always overrides)
-	local outsideRadius = not self._tempTarget
-		and self.followRadius
-		and (self.parent.x - liveX) ^ 2 + (self.parent.y - liveY) ^ 2 > self.followRadius ^ 2
-
-	-- Apply tweens outside radius from fixed base (scatter visible, not cumulative)
-	if outsideRadius then
+	if self:_isOutsideRadius(liveX, liveY) then
 		self._arrivedEmitted = false
 		self._elapsedFollowTime = nil
 		self:_initScatterBase()
@@ -129,60 +204,29 @@ function Follow:update(dt)
 		return
 	end
 
-	if self.followDelay and not self._delayElapsed then
-		self._delayElapsed = 0
-	end
-	if self.followDelay and self._delayElapsed then
-		self._delayElapsed = self._delayElapsed + dt
-		if self._delayElapsed < self.followDelay then
-			self:_initScatterBase()
-			self:_applyScatter()
-			return
-		end
-		self._scatterBaseX = nil
-		self._scatterBaseY = nil
+	-- Delay before starting follow (scatter first)
+	if self:_tickDelay(dt) then
+		return
 	end
 
 	-- Inside radius: initialize follow from current position (tween offset already baked in)
 	if self._followX == nil then
-		if self.followRadius then
-			-- Radius mode: start from current position for smooth entry
-			self._followX = self.parent.x
-			self._followY = self.parent.y
-		else
-			-- Standard mode (tools): snap to target position
-			self._followX = liveX
-			self._followY = liveY
-		end
-		self._prevParentX = self.parent.x
-		self._currentAngle = 0
-		self._elapsedFollowTime = 0
-		self.parent.angle = 0
-		-- Clear scatter base so tweens don't teleport on re-entry
-		self._scatterBaseX = nil
-		self._scatterBaseY = nil
+		self:_initFollowEntry(liveX, liveY)
 	end
 
 	self._elapsedFollowTime = (self._elapsedFollowTime or 0) + dt
 	local accelFactor = 1 + self.accelerate * self._elapsedFollowTime
 
 	-- Spin faster as acceleration builds, stops when outside radius (early return above)
-	if self.rotate and not self._arrivedEmitted and accelFactor > 1 then
-		self.parent.angle = (self.parent.angle or 0) + (accelFactor - 1) * dt * 180
-	end
+	self:_applyRotation(dt, accelFactor)
 
-	local sx = (self._tempTarget and (self._deploySmoothness or 0.02) or (self._recallSmoothness or self.smoothnessX)) / accelFactor
-	local sy = (self._tempTarget and (self._deploySmoothness or 0.02) or (self._recallSmoothness or self.smoothnessY)) / accelFactor
+	local sx = self:_baseSmoothnessFor("smoothnessX") / accelFactor
+	local sy = self:_baseSmoothnessFor("smoothnessY") / accelFactor
 	local easeX = Math.expSmooth(dt, sx)
 	local easeY = Math.expSmooth(dt, sy)
-	local leanEase = Math.expSmooth(dt, self.leanSmoothness or sx)
 
 	-- Lean toward travel direction; deploy flight moves too, so keep lean live there.
-	local dx = self.parent.x - (self._prevParentX or self.parent.x)
-	self._prevParentX = self.parent.x
-	local moving = math.abs(dx) > self.leanThreshold
-	local targetAngle = moving and (self.leanAngle * dir) or 0
-	self._currentAngle = self._currentAngle + (targetAngle - self._currentAngle) * leanEase
+	self:_updateLean(dt, dir, sx)
 
 	self._followX = self._followX + (liveX - self._followX) * easeX
 	self._followY = self._followY + (liveY - self._followY) * easeY
@@ -190,12 +234,24 @@ function Follow:update(dt)
 	self.parent.x = self._followX
 	self.parent.y = self._followY
 
-	if not self._tempTarget and not self._arrivedEmitted then
-		local dist = math.abs(self.parent.x - liveX) + math.abs(self.parent.y - liveY)
-		if dist < (self.arrivedThreshold or 3) then
-			self._arrivedEmitted = true
-			self.parent:emit(Events.FOLLOW_ARRIVED)
-		end
+	self:_tryEmitArrived(liveX, liveY)
+end
+
+function Follow:_computeDrawRotation()
+	local rot = math.rad(self._currentAngle or 0)
+	if self.parent.tweens and self.parent.tweens.swingAngle then
+		rot = rot + math.rad(self.parent.tweens.swingAngle:getValue())
+	end
+	return rot
+end
+
+function Follow:_beginShader()
+	return self.parent.applyShader and self.parent:applyShader() or false
+end
+
+function Follow:_endShader(hadShader)
+	if hadShader then
+		love.graphics.setShader()
 	end
 end
 
@@ -212,11 +268,8 @@ function Follow:draw(x, y)
 	if not parent or not parent.image then
 		return
 	end
-	local hadShader = parent.applyShader and parent:applyShader() or false
-	local rot = math.rad(self._currentAngle or 0)
-	if parent.tweens and parent.tweens.swingAngle then
-		rot = rot + math.rad(parent.tweens.swingAngle:getValue())
-	end
+	local hadShader = self:_beginShader()
+	local rot = self:_computeDrawRotation()
 	love.graphics.draw(
 		parent.image,
 		math.floor(x + 0.5),
@@ -227,9 +280,7 @@ function Follow:draw(x, y)
 		Pivot.px(parent.pivotX, parent.frameWidth or parent.image:getWidth(), "center"),
 		Pivot.px(parent.pivotY, parent.frameHeight or parent.image:getHeight(), "bottom")
 	)
-	if hadShader then
-		love.graphics.setShader()
-	end
+	self:_endShader(hadShader)
 end
 
 return Follow
