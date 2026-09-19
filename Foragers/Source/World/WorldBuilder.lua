@@ -27,12 +27,19 @@ local tilePngPath = Path.moduleToPath("Content.Assets.Sprites.Tiles.GrassTiles")
 -- Single owner per world build; reassigned only across a full rebuild.
 local terrainBatch = nil
 
+local function _tileActive(world, x, y)
+	return world[y] and world[y][x] and world[y][x].active
+end
+
+local function _hasGetRect(comp)
+	return comp.getRect ~= nil
+end
+
 local function computeMask(world, x, y)
-	local top = world[y - 1] and world[y - 1][x] and world[y - 1][x].active
-	local right = world[y][x + 1] and world[y][x + 1].active
-	local bottom = world[y + 1] and world[y + 1][x] and world[y + 1][x].active
-	local left = world[y][x - 1] and world[y][x - 1].active
-	return (top and 1 or 0) + (right and 2 or 0) + (bottom and 4 or 0) + (left and 8 or 0)
+	return (_tileActive(world, x, y - 1) and 1 or 0) +
+	       (_tileActive(world, x + 1, y) and 2 or 0) +
+	       (_tileActive(world, x, y + 1) and 4 or 0) +
+	       (_tileActive(world, x - 1, y) and 8 or 0)
 end
 
 --- Collapse each row's contiguous active tiles into one wide AABB. The union of
@@ -130,6 +137,78 @@ local function instantiateTerrainTile(spec)
 	return sprite
 end
 
+--- Collect active tiles excluding player collision rects.
+local function _tileOverlapsPlayer(tile, playerSprite, tileSize)
+	if not playerSprite then
+		return false
+	end
+	local tileRect = { x = tile.x, y = tile.y, w = tileSize, h = tileSize }
+	for _, comp in ipairs(playerSprite:getComponents("collision", _hasGetRect)) do
+		if rectsOverlap(tileRect, comp:getRect()) then
+			return true
+		end
+	end
+	return false
+end
+
+local function _collectActiveTiles(worldData, playerSprite, tileSize)
+	local activeTiles = {}
+	for y = 0, private.height - 1 do
+		for x = 0, private.width - 1 do
+			local tile = worldData[y][x]
+			if tile.active and not _tileOverlapsPlayer(tile, playerSprite, tileSize) then
+				table.insert(activeTiles, tile)
+			end
+		end
+	end
+	return activeTiles
+end
+
+--- Fisher-Yates shuffle into a new local array.
+local function _shuffleTiles(tiles, numProps)
+	local shuffled = {}
+	for i = 1, #tiles do
+		shuffled[i] = tiles[i]
+	end
+	for i = 1, math.min(numProps, #shuffled) do
+		local j = love.math.random(i, #shuffled)
+		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+	end
+	return shuffled
+end
+
+--- Partition plan into hosts then rest, sort each by distance to player.
+local function _partitionAndSortPlan(plan, playerSprite)
+	local hosts, rest = {}, {}
+	for _, entry in ipairs(plan) do
+		if entry.data.host then
+			table.insert(hosts, entry)
+		else
+			table.insert(rest, entry)
+		end
+	end
+
+	if playerSprite then
+		local px, py = playerSprite.x, playerSprite.y
+		local function byDistance(a, b)
+			local dax, day = a.x - px, a.y - py
+			local dbx, dby = b.x - px, b.y - py
+			return dax * dax + day * day < dbx * dbx + dby * dby
+		end
+		table.sort(hosts, byDistance)
+		table.sort(rest, byDistance)
+	end
+
+	plan = {}
+	for _, e in ipairs(hosts) do
+		table.insert(plan, e)
+	end
+	for _, e in ipairs(rest) do
+		table.insert(plan, e)
+	end
+	return plan
+end
+
 --- Build the initial prop plan: which tiles get which prop type, computed once
 --- (RNG + shuffle only, no sprite/audio/image work). Actual instantiation is
 --- streamed over frames by the caller so large worlds don't block load.
@@ -141,29 +220,7 @@ local function buildPropPlan(worldData, playerSprite)
 	local coverage = props.coverage or 0.3
 	local tileSize = private.tileSize or 8
 
-	local activeTiles = {}
-	for y = 0, private.height - 1 do
-		for x = 0, private.width - 1 do
-			local tile = worldData[y][x]
-			if tile.active then
-				local skip = false
-				if playerSprite then
-					local tileRect = { x = tile.x, y = tile.y, w = tileSize, h = tileSize }
-					for _, comp in
-						ipairs(playerSprite:getComponents("collision", function(c) return c.getRect end))
-					do
-						if rectsOverlap(tileRect, comp:getRect()) then
-							skip = true
-							break
-						end
-					end
-				end
-				if not skip then
-					table.insert(activeTiles, tile)
-				end
-			end
-		end
-	end
+	local activeTiles = _collectActiveTiles(worldData, playerSprite, tileSize)
 
 	-- Recompute the cap now that the real active-tile count is known.
 	PropPicker.init(private, #activeTiles)
@@ -179,15 +236,7 @@ local function buildPropPlan(worldData, playerSprite)
 	local savedState = love.math.getRandomState()
 	love.math.setRandomSeed(numProps > 0 and activeTiles[1].seed or 0)
 
-	-- Shuffle once into a local array so the single pick pass uses a fixed order.
-	local shuffledTiles = {}
-	for i = 1, #activeTiles do
-		shuffledTiles[i] = activeTiles[i]
-	end
-	for i = 1, math.min(numProps, #shuffledTiles) do
-		local j = love.math.random(i, #shuffledTiles)
-		shuffledTiles[i], shuffledTiles[j] = shuffledTiles[j], shuffledTiles[i]
-	end
+	local shuffledTiles = _shuffleTiles(activeTiles, numProps)
 
 	-- plannedHosts: every host prop (bush/tree/rock/stump) the single pick pass
 	-- decided will be placed. claimedHosts: each host claimed once so two berries
@@ -267,38 +316,7 @@ local function buildPropPlan(worldData, playerSprite)
 
 	love.math.setRandomState(savedState)
 
-	-- Partition so host props (bushes) instantiate before the overlay foods that
-	-- attach to them, then sort each group nearest the player first so the
-	-- visible area fills immediately while off-screen props stream in later.
-	local hosts, rest = {}, {}
-	for _, entry in ipairs(plan) do
-		if entry.data.host then
-			table.insert(hosts, entry)
-		else
-			table.insert(rest, entry)
-		end
-	end
-
-	if playerSprite then
-		local px, py = playerSprite.x, playerSprite.y
-		local function byDistance(a, b)
-			local dax, day = a.x - px, a.y - py
-			local dbx, dby = b.x - px, b.y - py
-			return dax * dax + day * day < dbx * dbx + dby * dby
-		end
-		table.sort(hosts, byDistance)
-		table.sort(rest, byDistance)
-	end
-
-	plan = {}
-	for _, e in ipairs(hosts) do
-		table.insert(plan, e)
-	end
-	for _, e in ipairs(rest) do
-		table.insert(plan, e)
-	end
-
-	return plan
+	return _partitionAndSortPlan(plan, playerSprite)
 end
 
 --- Instantiate + wire one prop from a plan entry. Host providers register in
