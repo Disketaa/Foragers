@@ -27,6 +27,34 @@ local function frameIndexAt(anim, currentTime)
 	return i
 end
 
+local function _setupAnimations(self, data, columns)
+	self.animations = {}
+	for name, animDef in pairs(data.animations) do
+		local numFrames = math.min(animDef.frames or columns, columns)
+		-- Per-frame hold weights (`duration`, default all 1s). cum[i] is the
+		-- weight-sum boundary before frame i, so frame i spans [cum[i], cum[i+1])
+		-- in frame units; maxTime = total / speed keeps currentTime in seconds.
+		local dur = animDef.duration or {}
+		local cum = { 0 }
+		for i = 1, numFrames do
+			cum[i + 1] = cum[i] + (tonumber(dur[i]) or 1)
+		end
+		local speed = ValueParser.call(animDef, "speed") or 1
+		self.animations[name] = {
+			startIdx = (animDef.row - 1) * columns + 1,
+			frames = numFrames,
+			speed = speed,
+			cum = cum,
+			maxTime = cum[numFrames + 1] / speed,
+			loop = animDef.loop ~= false,
+		}
+	end
+	self.tags = data.tags
+	self.currentAnim = (self.tags and self.tags.idle) or (self.animations.idle and "idle") or next(self.animations)
+	self.currentTime = 0
+	self._lastFrame = nil
+end
+
 function SpriteSheet.new(data)
 	if not data or not data.spriteSheet then
 		return setmetatable({}, SpriteSheet)
@@ -107,31 +135,7 @@ function SpriteSheet.new(data)
 	end
 
 	if data.animations then
-		self.animations = {}
-		for name, animDef in pairs(data.animations) do
-			local numFrames = math.min(animDef.frames or columns, columns)
-			-- Per-frame hold weights (`duration`, default all 1s). cum[i] is the
-			-- weight-sum boundary before frame i, so frame i spans [cum[i], cum[i+1])
-			-- in frame units; maxTime = total / speed keeps currentTime in seconds.
-			local dur = animDef.duration or {}
-			local cum = { 0 }
-			for i = 1, numFrames do
-				cum[i + 1] = cum[i] + (tonumber(dur[i]) or 1)
-			end
-			local speed = ValueParser.call(animDef, "speed") or 1
-			self.animations[name] = {
-				startIdx = (animDef.row - 1) * columns + 1,
-				frames = numFrames,
-				speed = speed,
-				cum = cum,
-				maxTime = cum[numFrames + 1] / speed,
-				loop = animDef.loop ~= false,
-			}
-		end
-		self.tags = data.tags
-		self.currentAnim = (self.tags and self.tags.idle) or (self.animations.idle and "idle") or next(self.animations)
-		self.currentTime = 0
-		self._lastFrame = nil
+		_setupAnimations(self, data, columns)
 	else
 		self._currentIndex = nil
 	end
@@ -139,8 +143,7 @@ function SpriteSheet.new(data)
 	return self
 end
 
-function SpriteSheet:attach()
-	-- Cache by path so sprites sharing an atlas (e.g. font chars) share one CPU-side pixel buffer.
+local function _cacheImageData(self)
 	if self._path and not imageDataCache[self._path] then
 		local ok, imgData = pcall(love.image.newImageData, self._path)
 		if ok then
@@ -148,18 +151,23 @@ function SpriteSheet:attach()
 		end
 	end
 	self._imageData = self._path and imageDataCache[self._path] or nil
+end
+
+local function _reflectFrameSize(self)
+	if self.frameWidth then
+		self.parent.frameWidth = self.frameWidth
+		self.parent.frameHeight = self.frameHeight
+		self.parent.pivotX = self.pivotX
+		self.parent.pivotY = self.pivotY
+	end
+end
+
+function SpriteSheet:attach()
+	-- Cache by path so sprites sharing an atlas (e.g. font chars) share one CPU-side pixel buffer.
+	_cacheImageData(self)
 
 	if self.parent then
-		-- Reflect the true per-frame size and pivot onto the sprite; data may omit
-		-- them (props derive size from imageW / columns and default pivot to 0.5),
-		-- leaving sprite.frameWidth/pivotX nil and misaligning draw vs boundaries.
-		-- Guard: bare spritesheet (no PNG) has nil frameWidth — don't overwrite.
-		if self.frameWidth then
-			self.parent.frameWidth = self.frameWidth
-			self.parent.frameHeight = self.frameHeight
-			self.parent.pivotX = self.pivotX
-			self.parent.pivotY = self.pivotY
-		end
+		_reflectFrameSize(self)
 	end
 	self.parent:on(Events.STATE_CHANGED, function(newState)
 		local animName = self.tags and self.tags[newState] or newState
@@ -256,6 +264,16 @@ function SpriteSheet:_getQuad()
 	return quad
 end
 
+local function _getDrawContext(parent)
+	local sx, sy, rot, alpha = 1, 1, 0, 1
+	if parent and parent.getDrawContext then
+		sx, sy, rot, alpha = parent:getDrawContext()
+	elseif parent and parent.flipX then
+		sx = -sx
+	end
+	return sx, sy, rot, alpha
+end
+
 function SpriteSheet:draw(x, y)
 	if not self.quads then
 		return
@@ -269,12 +287,7 @@ function SpriteSheet:draw(x, y)
 
 	local parent = self.parent
 	local hadShader = parent and parent.applyShader and parent:applyShader() or false
-	local sx, sy, rot, alpha = 1, 1, 0, 1
-	if parent and parent.getDrawContext then
-		sx, sy, rot, alpha = parent:getDrawContext()
-	elseif parent and parent.flipX then
-		sx = -sx
-	end
+	local sx, sy, rot, alpha = _getDrawContext(parent)
 	local ox = Pivot.px(self.pivotX, self.frameWidth, 0)
 	local oy = Pivot.px(self.pivotY, self.frameHeight, 0)
 	if alpha < 1 then
