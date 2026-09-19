@@ -57,6 +57,39 @@ local function measureGlyphWidth(imageData, quad, frameW, frameH)
 	return maxX + 1, minX, maxX
 end
 
+--- Builds the visual-char → cell-index map for a charset string.
+---@param chars string
+---@return table
+local function buildCharIndex(chars)
+	local index = {}
+	local vi = 0
+	local i = 1
+	while i <= #chars do
+		local nextI, c = utf8Next(chars, i)
+		index[c] = vi + 1
+		vi = vi + 1
+		i = nextI
+	end
+	return index
+end
+
+--- Applies hand-tuned per-char spacing widths, taking precedence over
+--- autoTrim measurements.
+---@param self table
+---@param spacing table
+local function applySpacing(self, spacing)
+	for _, entry in ipairs(spacing) do
+		local w = entry[1]
+		local chars = entry[2]
+		local ci = 1
+		while ci <= #chars do
+			local nextCi, c = utf8Next(chars, ci)
+			self._charWidth[c] = w
+			ci = nextCi
+		end
+	end
+end
+
 function SpriteFont.new(data)
 	if not data or not data.chars then
 		return setmetatable({ type = "spritefont", text = "" }, SpriteFont)
@@ -70,30 +103,12 @@ function SpriteFont.new(data)
 		charSpacing = data.charSpacing or 0,
 		autoTrim = data.autoTrim or false,
 		color = data.color and { unpack(data.color) } or { 0, 0, 0, 1 },
-		_charIndex = {},
+		_charIndex = buildCharIndex(data.chars),
 		_charWidth = {},
 		_charInkLeft = {},
 	}, SpriteFont)
 
-	local vi = 0
-	local i = 1
-	while i <= #self.chars do
-		local nextI, c = utf8Next(self.chars, i)
-		self._charIndex[c] = vi + 1
-		vi = vi + 1
-		i = nextI
-	end
-
-	for _, entry in ipairs(self.spacing) do
-		local w = entry[1]
-		local chars = entry[2]
-		local ci = 1
-		while ci <= #chars do
-			local nextCi, c = utf8Next(chars, ci)
-			self._charWidth[c] = w
-			ci = nextCi
-		end
-	end
+	applySpacing(self, self.spacing)
 
 	return self
 end
@@ -129,15 +144,12 @@ end
 ---@param x number
 ---@param y number
 ---@param opts table|nil {color=rgba, alpha, scale, horizontalAlign, verticalAlign, charSpacing?}
-function SpriteFont.drawText(ref, text, x, y, opts)
+local function computeAlignment(ref, text, x, y, charSpacing, opts)
 	opts = opts or {}
-	local image = ref.image
 	local frameW = ref.frameW
 	local frameH = ref.frameH
-	local charSpacing = opts.charSpacing ~= nil and opts.charSpacing or (ref.charSpacing or 0)
 	local ox = Pivot.px(ref.pivotX, frameW, "center")
 	local oy = Pivot.px(ref.pivotY, frameH, "center")
-	local scale = opts.scale or 1
 
 	local totalW
 	if opts.horizontalAlign then
@@ -161,20 +173,20 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 		cy = cy - (frameH - oy)
 	end
 
-	local pr, pg, pb, pa
-	if opts.color or opts.alpha then
-		pr, pg, pb, pa = love.graphics.getColor()
-		local r, g, b, a = pr, pg, pb, pa
-		if opts.color then
-			r, g, b = opts.color[1] or r, opts.color[2] or g, opts.color[3] or b
-			a = opts.color[4] or a
-		end
-		if opts.alpha then
-			a = opts.alpha
-		end
-		love.graphics.setColor(r, g, b, a)
-	end
+	return cx, cy, ox, oy
+end
 
+---@param ref table {image, quads, charIndex, charWidth, frameW}
+---@param text string
+---@param cx number
+---@param cy number
+---@param ox number
+---@param oy number
+---@param scale number
+---@param charSpacing number
+local function drawGlyphs(ref, text, cx, cy, ox, oy, scale, charSpacing)
+	local image = ref.image
+	local frameW = ref.frameW
 	local i = 1
 	local n = #text
 	while i <= n do
@@ -191,6 +203,39 @@ function SpriteFont.drawText(ref, text, x, y, opts)
 		cx = cx + (ref.charWidth[c] or frameW) + charSpacing
 		i = nextI
 	end
+end
+
+--- Applies optional color/alpha overrides and returns the previous color.
+---@param opts table|nil {color=rgba, alpha}
+---@return number, number, number, number previous r,g,b,a
+local function applyColor(opts)
+	opts = opts or {}
+	local pr, pg, pb, pa
+	if opts.color or opts.alpha then
+		pr, pg, pb, pa = love.graphics.getColor()
+		local r, g, b, a = pr, pg, pb, pa
+		if opts.color then
+			r, g, b = opts.color[1] or r, opts.color[2] or g, opts.color[3] or b
+			a = opts.color[4] or a
+		end
+		if opts.alpha then
+			a = opts.alpha
+		end
+		love.graphics.setColor(r, g, b, a)
+	end
+	return pr, pg, pb, pa
+end
+
+function SpriteFont.drawText(ref, text, x, y, opts)
+	opts = opts or {}
+	local charSpacing = opts.charSpacing ~= nil and opts.charSpacing or (ref.charSpacing or 0)
+	local scale = opts.scale or 1
+
+	local cx, cy, ox, oy = computeAlignment(ref, text, x, y, charSpacing, opts)
+
+	local pr, pg, pb, pa = applyColor(opts)
+
+	drawGlyphs(ref, text, cx, cy, ox, oy, scale, charSpacing)
 
 	if opts.color or opts.alpha then
 		love.graphics.setColor(pr, pg, pb, pa)
@@ -201,6 +246,25 @@ end
 --- "spritesheet" component to already be attached to self.parent (it reads
 --- ss.image / ss.quads). Runs only when data.autoTrim is true; hand-tuned
 --- data.spacing entries take precedence (see the loop below).
+--- Measures a single glyph's ink width and assigns it to the char tables.
+---@param self table
+---@param ss table spritesheet component
+---@param c string glyph character
+---@param idx integer quad index
+---@param offset number advance offset (typically -1)
+---@param imageData love.ImageData
+local function measureChar(self, ss, c, idx, offset, imageData)
+	local quad = ss.quads[idx]
+	if not quad then return end
+	local gw, inkLeft = measureGlyphWidth(imageData, quad, ss.frameWidth, ss.frameHeight)
+	if gw > 0 then
+		self._charWidth[c] = gw + offset
+		self._charInkLeft[c] = inkLeft
+	else
+		Log.write("SpriteFont", "autoTrim: char '%s' measured 0 width; falling back to frameWidth", c)
+	end
+end
+
 function SpriteFont:attach()
 	if not self.autoTrim then return end
 	local ss = self.parent and self.parent:findComponent("spritesheet")
@@ -214,16 +278,7 @@ function SpriteFont:attach()
 	local offset = -1
 	for c, idx in pairs(self._charIndex) do
 		if not self._charWidth[c] then -- data.spacing overrides win
-			local quad = ss.quads[idx]
-			if quad then
-				local gw, inkLeft = measureGlyphWidth(imageData, quad, ss.frameWidth, ss.frameHeight)
-				if gw > 0 then
-					self._charWidth[c] = gw + offset
-					self._charInkLeft[c] = inkLeft
-				else
-					Log.write("SpriteFont", "autoTrim: char '%s' measured 0 width; falling back to frameWidth", c)
-				end
-			end
+			measureChar(self, ss, c, idx, offset, imageData)
 		end
 	end
 end
