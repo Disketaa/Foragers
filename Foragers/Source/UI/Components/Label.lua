@@ -615,43 +615,62 @@ function Label:buildCanvas(cx, cy, fw, fh)
 			love.graphics.setScissor()
 		end
 	end
-	love.graphics.pop()
-	love.graphics.setCanvas(prev)
-	return canvas
+    love.graphics.pop()
+    love.graphics.setCanvas(prev)
+    return canvas
+end
+
+function Label:parentFrameSize()
+    if self.parent then
+        return self.parent.frameWidth or self._frameW or 64, self.parent.frameHeight or self._frameH or 104
+    end
+    return self._frameW or 64, self._frameH or 104
+end
+
+function Label:parentTweenOffset()
+    local tx, ty = 0, 0
+    if self.parent and self.parent.tweens then
+        local tweenX = self.parent.tweens.x
+        local tweenY = self.parent.tweens.y
+        if tweenX then tx = tweenX:getValue() end
+        if tweenY then ty = tweenY:getValue() end
+    end
+    return tx, ty
+end
+
+function Label:applyParentShader()
+    return self.parent and self.parent.applyShader and self.parent:applyShader() or false
 end
 
 function Label:draw(x, y)
-	if not self._image or not self._quads or not self._charIndex then
-		return
-	end
-	if #self.text == 0 then
-		return
-	end
+    if not self._image or not self._quads or not self._charIndex then
+        return
+    end
+    if #self.text == 0 then
+        return
+    end
 
-	local fw = self.parent and self.parent.frameWidth or self._frameW or 64
-	local fh = self.parent and self.parent.frameHeight or self._frameH or 104
+    local fw, fh = self:parentFrameSize()
+    local tx, ty = self:parentTweenOffset()
+    local bx = math.floor(x - tx + 0.5)
+    local by = math.floor(y - ty + 0.5)
 
-	local tx = self.parent and self.parent.tweens and self.parent.tweens.x and self.parent.tweens.x:getValue() or 0
-	local ty = self.parent and self.parent.tweens and self.parent.tweens.y and self.parent.tweens.y:getValue() or 0
-	local bx = math.floor(x - tx + 0.5)
-	local by = math.floor(y - ty + 0.5)
+    local scrolling = self.maxWidth and not self.maxHeight and self._textW and self._textW > self.maxWidth
+    if not self._canvas or scrolling then
+        self._canvas = self:buildCanvas(bx, by, fw, fh)
+    end
+    if not self._canvas then
+        return
+    end
 
-	local scrolling = self.maxWidth and not self.maxHeight and self._textW and self._textW > self.maxWidth
-	if not self._canvas or scrolling then
-		self._canvas = self:buildCanvas(bx, by, fw, fh)
-	end
-	if not self._canvas then
-		return
-	end
-
-	local hadShader = self.parent and self.parent.applyShader and self.parent:applyShader() or false
-	local r, g, b, a = love.graphics.getColor()
-	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.draw(self._canvas, bx + tx, by + ty, 0, 1, 1, fw * 0.5, fh * 0.5)
-	if hadShader then
-		love.graphics.setShader()
-	end
-	love.graphics.setColor(r, g, b, a)
+    local hadShader = self:applyParentShader()
+    local r, g, b, a = love.graphics.getColor()
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(self._canvas, bx + tx, by + ty, 0, 1, 1, fw * 0.5, fh * 0.5)
+    if hadShader then
+        love.graphics.setShader()
+    end
+    love.graphics.setColor(r, g, b, a)
 end
 
 return Label
