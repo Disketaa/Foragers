@@ -210,6 +210,8 @@ function AttackSystem.update(dt, allObjects)
 
 	if attacker.currentTarget and not revalidateTarget(attacker, ws, ax, ay, rangeSq, weaponFollow, travelScale) then
 		attacker.currentTarget = nil
+		attacker.damageTimer = nil
+		attacker._arrived = false
 	end
 	if not attacker.currentTarget then
 		acquireTarget(attacker, ws, allObjects, ax, ay, rangeSq, weaponFollow, swing, travelScale)
