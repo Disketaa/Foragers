@@ -273,42 +273,37 @@ for name in pairs(getWeaponNames()) do
 	Commands.addSubcommand("lvl", name)
 end
 
-Commands.register("lvl", function(args, ctx)
-	-- Handle weapon level: lvl <weapon> N
-	local firstArg = args:match("^(%S+)")
-	local weaponGroups = getWeaponNames()
-	if firstArg and weaponGroups[firstArg] then
-		local weaponName = firstArg
-		local rest = args:match("^%S+%s+(.*)$") or ""
-		if rest == "" then
-			local currentLevel = GameState.cardGroupCounts[weaponName] or 0
-			return weaponName .. " level: " .. currentLevel, true
-		end
-		local amount, op = Commands.parseAmount(rest)
-		if not amount then
-			return 'Usage: lvl pickaxe | lvl pickaxe +N | lvl pickaxe N', false
-		end
+local function handleWeaponLevel(args, weaponName)
+	local rest = args:match("^%S+%s+(.*)$") or ""
+	if rest == "" then
 		local currentLevel = GameState.cardGroupCounts[weaponName] or 0
-		local newLevel
-		if op == "add" then
-			newLevel = currentLevel + amount
-		elseif op == "sub" then
-			newLevel = math.max(0, currentLevel - amount)
-		else
-			newLevel = amount
-		end
-		GameState.cardGroupCounts[weaponName] = newLevel
-		refreshWeaponUI(newLevel)
-		local delta = newLevel - currentLevel
-		if delta > 0 then
-			return weaponName .. " level: " .. currentLevel .. " → " .. newLevel, true
-		elseif delta < 0 then
-			return weaponName .. " level: " .. currentLevel .. " → " .. newLevel, true
-		end
-		return weaponName .. " level unchanged: " .. newLevel, true
+		return weaponName .. " level: " .. currentLevel, true
 	end
+	local amount, op = Commands.parseAmount(rest)
+	if not amount then
+		return 'Usage: lvl pickaxe | lvl pickaxe +N | lvl pickaxe N', false
+	end
+	local currentLevel = GameState.cardGroupCounts[weaponName] or 0
+	local newLevel
+	if op == "add" then
+		newLevel = currentLevel + amount
+	elseif op == "sub" then
+		newLevel = math.max(0, currentLevel - amount)
+	else
+		newLevel = amount
+	end
+	GameState.cardGroupCounts[weaponName] = newLevel
+	refreshWeaponUI(newLevel)
+	local delta = newLevel - currentLevel
+	if delta > 0 then
+		return weaponName .. " level: " .. currentLevel .. " → " .. newLevel, true
+	elseif delta < 0 then
+		return weaponName .. " level: " .. currentLevel .. " → " .. newLevel, true
+	end
+	return weaponName .. " level unchanged: " .. newLevel, true
+end
 
-	-- Player level (original behavior)
+local function handlePlayerLevel(args, ctx)
 	local s, err = needStats(ctx)
 	if not s then
 		return err, false
@@ -330,6 +325,16 @@ Commands.register("lvl", function(args, ctx)
 	end
 	s:setLevel(amount)
 	return "Level set to " .. amount, true
+end
+
+Commands.register("lvl", function(args, ctx)
+	-- Handle weapon level: lvl <weapon> N
+	local firstArg = args:match("^(%S+)")
+	local weaponGroups = getWeaponNames()
+	if firstArg and weaponGroups[firstArg] then
+		return handleWeaponLevel(args, firstArg)
+	end
+	return handlePlayerLevel(args, ctx)
 end, "player lvl or lvl <weapon> N.")
 
 Commands.register("satiety", function(args, ctx)
