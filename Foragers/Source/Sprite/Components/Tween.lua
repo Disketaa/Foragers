@@ -296,6 +296,18 @@ local function createTween(target, from, to, duration, curve, loop, pingPong, de
 	return Tween.new(target, from, to, duration, curve or Easing.OutBack, loop, pingPong, destroyOnComplete, wait)
 end
 
+local function makeSrc(tweenData)
+	return {
+		from = tweenData.from,
+		to = tweenData.to,
+		duration = tweenData.duration,
+		curve = tweenData.curve,
+		loop = tweenData.loop,
+		pingPong = tweenData.pingPong,
+		wait = tweenData.wait,
+	}
+end
+
 local function applyTweens(self, tweenSet, restart)
 	if restart == nil then restart = true end
 	local active = {}
@@ -352,15 +364,7 @@ local function applyTweens(self, tweenSet, restart)
 						destroyOnComplete,
 						wait
 					)
-					self.parent.tweens[tweenData.target]._src = {
-						from = tweenData.from,
-						to = tweenData.to,
-						duration = tweenData.duration,
-						curve = tweenData.curve,
-						loop = tweenData.loop,
-						pingPong = tweenData.pingPong,
-						wait = tweenData.wait,
-					}
+				self.parent.tweens[tweenData.target]._src = makeSrc(tweenData)
 					local shaderComp = self.parent:findComponent("shader")
 				if shaderComp then
 					local uniformName = "u_" .. tweenData.target
@@ -370,15 +374,7 @@ local function applyTweens(self, tweenSet, restart)
 				end
 			end
 			local tween = self.parent.tweens[tweenData.target]
-				local src = {
-					from = tweenData.from,
-					to = tweenData.to,
-					duration = tweenData.duration,
-					curve = tweenData.curve,
-					loop = tweenData.loop,
-					pingPong = tweenData.pingPong,
-					wait = tweenData.wait,
-				}
+			local src = makeSrc(tweenData)
 				local isOverride = not isNew and not sameConfig(tween._src, src)
 				if isNew or isOverride or restart then
 					tween.from = from
