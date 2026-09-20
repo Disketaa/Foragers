@@ -121,6 +121,17 @@ function Canvas:draw(drawFunc, clearColor, viewX, viewY, subX, subY, screenShade
 	local finalX = self.offsetX + viewX + subX * self.scale - pad
 	local finalY = self.offsetY + viewY + subY * self.scale - pad
 
+	self:_blitToScreen(screenShader, zoom, pivotX, pivotY, finalX, finalY)
+end
+
+--- Blit the canvas to screen with optional zoom pivot and post-process shader.
+---@param screenShader love.Shader|nil
+---@param zoom number
+---@param pivotX number
+---@param pivotY number
+---@param finalX number
+---@param finalY number
+function Canvas:_blitToScreen(screenShader, zoom, pivotX, pivotY, finalX, finalY)
 	love.graphics.push()
 	if zoom ~= 1 then
 		love.graphics.translate(pivotX, pivotY)
