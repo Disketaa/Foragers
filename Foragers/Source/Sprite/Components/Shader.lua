@@ -1,27 +1,10 @@
 local ShaderLoader = require("Source.Helpers.Graphics.ShaderLoader")
+local ShaderSpec = require("Source.Helpers.Core.ShaderSpec")
 
 ---@param s string|table
 ---@return table|nil spec
 local function parseShaderSpec(s)
-	local spec
-	if type(s) == "string" then
-		spec = { name = s }
-	elseif s.name ~= nil then
-		spec = s
-	else
-		-- compact form: { ShaderName = { u_* = ... } }
-		local name, params = next(s)
-		if not name then
-			return nil
-		end
-		spec = { name = name }
-		if type(params) == "table" then
-			for k, v in pairs(params) do
-				spec[k] = v
-			end
-		end
-	end
-	return spec
+	return ShaderSpec.parse(s)
 end
 
 local function initUniforms(self, loaded)

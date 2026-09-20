@@ -1,4 +1,5 @@
 local Log = require("Source.Helpers.Core.Log")
+local ShaderSpec = require("Source.Helpers.Core.ShaderSpec")
 
 local Merge = {}
 
@@ -51,19 +52,9 @@ local function _mergeShaderShaders(base, override)
 	local seen = {}
 	local result = {}
 	local function add(entry)
-		local spec
-		if type(entry) == "string" then
-			spec = { name = entry }
-		elseif entry.name then
-			spec = entry
-		else
-			local name, params = next(entry)
-			spec = { name = name }
-			if type(params) == "table" then
-				for k, v in pairs(params) do
-					spec[k] = v
-				end
-			end
+		local spec = ShaderSpec.parse(entry)
+		if not spec then
+			return
 		end
 		if not seen[spec.name] then
 			seen[spec.name] = true
