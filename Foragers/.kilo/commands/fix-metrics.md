@@ -98,6 +98,7 @@ file:line:col - rule_name: REVIEW REQUIRED — architectural change needed
 ## After fixing
 Tell the user what to check in-game to verify the fix didn't break anything.
 Ask webai, using --claude --new to approve your solution. Attach relevant files with @
+If webai telling you send more info, use --same tag!
 
 ## Known issues
 ### LuaMetrics depth-tracking false positives
