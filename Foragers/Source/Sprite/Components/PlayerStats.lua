@@ -58,45 +58,52 @@ local RUNTIME_KEYS = {
 	_currentState = true,
 }
 
+local STAT_DEFAULTS = {
+	critChance = 0,
+	critMult = 1.5,
+	damage = 1,
+	attackRange = 20,
+	attackSpeed = 20,
+	crystalDropBonus = 0,
+	rockCrystalBonus = 0,
+	level = 1,
+	maxLevel = 99,
+	experience = 0,
+	satiety = 100,
+	maxSatiety = 100,
+	lowSatietyPercent = 33,
+	lowSatietyZoom = 2,
+	lowSatietyWarnings = 3,
+	lowSatietyMaskRadius = 24,
+	movementSpeed = 50,
+	swimmingSpeed = 30,
+}
+
+local function withDefaults(input, defaults)
+	local t = {}
+	for k, v in pairs(defaults) do
+		t[k] = input[k] ~= nil and input[k] or v
+	end
+	return t
+end
+
+local function buildPlayerStatsTable(data)
+	local xpCurve = data.xpCurve or {}
+	local satietyDrain = data.satietyDrain or {}
+	local t = withDefaults(data, STAT_DEFAULTS)
+	t.xpCurve = withDefaults(xpCurve, { base = 10, growth = 1.35 })
+	t.satietyDrain = withDefaults(satietyDrain, { run = 0.5, swim = 0.75, idle = 0.1, float = 0.1 })
+	t.dead = false
+	t._warned = 0
+	t.type = "player_stats"
+	return t
+end
+
 ---@param data table
 ---@return PlayerStats
 function PlayerStats.new(data)
 	data = deepcopy(data)
-	local xpCurve = data.xpCurve or {}
-	local satietyDrain = data.satietyDrain or {}
-	local self = setmetatable({
-		critChance = data.critChance or 0,
-		critMult = data.critMult or 1.5,
-		damage = data.damage or 1,
-		attackRange = data.attackRange or 20,
-		attackSpeed = data.attackSpeed or 20,
-		crystalDropBonus = data.crystalDropBonus or 0,
-		rockCrystalBonus = data.rockCrystalBonus or 0,
-		level = data.level or 1,
-		maxLevel = data.maxLevel or 99,
-		experience = data.experience or 0,
-		xpCurve = {
-			base = xpCurve.base or 10,
-			growth = xpCurve.growth or 1.35,
-		},
-		satiety = data.satiety or 100,
-		maxSatiety = data.maxSatiety or 100,
-		lowSatietyPercent = data.lowSatietyPercent or 33,
-		lowSatietyZoom = data.lowSatietyZoom or 2,
-		lowSatietyWarnings = data.lowSatietyWarnings or 3,
-		lowSatietyMaskRadius = data.lowSatietyMaskRadius or 24,
-		dead = false,
-		_warned = 0,
-		satietyDrain = {
-			run = satietyDrain.run or 0.5,
-			swim = satietyDrain.swim or 0.75,
-			idle = satietyDrain.idle or 0.1,
-			float = satietyDrain.float or 0.1,
-		},
-		movementSpeed = data.movementSpeed or 50,
-		swimmingSpeed = data.swimmingSpeed or 30,
-		type = "player_stats",
-	}, PlayerStats)
+	local self = setmetatable(buildPlayerStatsTable(data), PlayerStats)
 	self._defaults = {}
 	for k, v in pairs(self) do
 		if not RUNTIME_KEYS[k] then
