@@ -988,16 +988,6 @@ function love.gamepadreleased(_, button)
 	end
 end
 
-function love.wheelmoved(_, dy)
-	if Debug.chatActive() then
-		return
-	end
-	-- TEMP debug: wheel scrubs the day/night clock. Float step per notch for
-	-- smooth fine control (whole-hour jumps were too coarse). Remove with the
-	-- Day&Night debug controls.
-	DayCycle.setTime(DayCycle.time + dy * 0.25)
-end
-
 function love.quit()
 	DiscordRPC.shutdown()
 end

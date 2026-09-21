@@ -28,6 +28,58 @@ local function approach(current, target, dt, tau)
 	return current + (target - current) * (1 - math.exp(-dt / tau))
 end
 
+--- Calculate shadow stretch and direction for a given time.
+---@param time number
+---@param sr number Sunrise hour
+---@param ss number Sunset hour
+---@param winH number Half-width of the stretch window
+---@param power number Stretch power exponent
+---@return number stretch
+---@return number dir
+local function getStretch(time, sr, ss, winH, power)
+	local stretch, dir = 0, 0
+	local dSr = time - sr
+	if dSr > -winH and dSr < winH then
+		-- Sunrise: hold MAX stretch across the horizon half (where opacity fades in)
+		-- so the shadow appears already lengthened, then ramp to default on the day
+		-- half as the sun rises. Prevents the shadow growing during fade-in.
+		dir = 1
+		stretch = dSr < 0 and 1 or (1 - dSr / winH) ^ power
+	else
+		local dSs = time - ss
+		if dSs > -winH and dSs < winH then
+			-- Sunset: ramp up on the day half (shadow lengthens as the sun lowers),
+			-- hold MAX across the horizon half (where opacity fades out) so it
+			-- dissolves at full length instead of easing back to default.
+			dir = -1
+			stretch = dSs > 0 and 1 or (1 + dSs / winH) ^ power
+		end
+	end
+	return stretch, dir
+end
+
+--- Calculate shadow opacity for a given time.
+---@param time number
+---@param sr number Sunrise hour
+---@param ss number Sunset hour
+---@param winH number Half-width of the fade window
+---@return number alpha
+local function getAlpha(time, sr, ss, winH)
+	local alpha = 0
+	if time >= sr and time <= ss then
+		alpha = 1
+	else
+		local dSrFade = time - sr
+		local dSs = time - ss
+		if dSrFade >= -winH and dSrFade < 0 then
+			alpha = 1 - math.abs(dSrFade) / winH -- 0 at sr-winH -> 1 at sr
+		elseif dSs > 0 and dSs <= winH then
+			alpha = 1 - math.abs(dSs) / winH -- 1 at ss -> 0 at ss+winH
+		end
+	end
+	return alpha
+end
+
 --- Derive sun state for a given hour (0-24). Simplified shadow model: the
 --- stretch/offset is concentrated at the horizon (sunrise/sunset) and collapses
 --- to 0 across the rest of the day and all night, so midday and night shadows are
@@ -52,52 +104,14 @@ function DayCycle.getSunData(time)
 		local dayProgress = (time - sr) / dayLen -- 0 at sunrise, 1 at sunset
 		elevation = math.sin(dayProgress * math.pi) -- 0 at horizon, 1 at noon
 	end
-	-- Stretch window centered on each horizon, easing to 0 on both sides. Peak is
-	-- exactly at the horizon; this avoids the old sunset snap where the ramp hit
-	-- max at the boundary then cut to 0 (night). Sunrise leans RIGHT (dir=1),
-	-- sunset leans LEFT (dir=-1); Shadow applies it as a pivot-based stretch.
 	local winH = (Data.shadow.stretchWindow or 0.15) * dayLen
-	-- >1 concentrates the stretch at the horizon (peak-short): tails flatten, change
-	-- is steepest right at sunrise/sunset instead of spreading linearly across the
-	-- whole golden hour. (Smoothstep/InOut would do the opposite — flat at the peak.)
 	local power = Data.shadow.stretchPower or 2
-	local stretch, dir = 0, 0
-	local dSr = time - sr
-	if dSr > -winH and dSr < winH then
-		-- Sunrise: hold MAX stretch across the horizon half (where opacity fades in)
-		-- so the shadow appears already lengthened, then ramp to default on the day
-		-- half as the sun rises. Prevents the shadow growing during fade-in.
-		dir = 1
-		stretch = dSr < 0 and 1 or (1 - dSr / winH) ^ power
-	else
-		local dSs = time - ss
-		if dSs > -winH and dSs < winH then
-			-- Sunset: ramp up on the day half (shadow lengthens as the sun lowers),
-			-- hold MAX across the horizon half (where opacity fades out) so it
-			-- dissolves at full length instead of easing back to default.
-			dir = -1
-			stretch = dSs > 0 and 1 or (1 + dSs / winH) ^ power
-		end
-	end
+	local stretch, dir = getStretch(time, sr, ss, winH, power)
 	if stretch > 0 then
 		sunLength = Data.shadow.maxLen * stretch
 		offsetX = dir * sunLength
 	end
-	-- Shadow opacity: full across the day, fades out across the golden hour after
-	-- sunset and back in before sunrise, so the post-sunset stretch ease-back is
-	-- hidden (no visible snap) and night carries no shadow. Reuses winH for fade width.
-	local alpha = 0
-	if time >= sr and time <= ss then
-		alpha = 1
-	else
-		local dSrFade = time - sr
-		local dSs = time - ss
-		if dSrFade >= -winH and dSrFade < 0 then
-			alpha = 1 - math.abs(dSrFade) / winH -- 0 at sr-winH -> 1 at sr
-		elseif dSs > 0 and dSs <= winH then
-			alpha = 1 - math.abs(dSs) / winH -- 1 at ss -> 0 at ss+winH
-		end
-	end
+	local alpha = getAlpha(time, sr, ss, winH)
 	return {
 		time = time,
 		elevation = elevation,
@@ -156,7 +170,7 @@ function DayCycle.update(dt)
 	DayCycle._approachDisplay(dt)
 end
 
---- Set the clock directly (used by the `time` debug command / wheel scrub).
+--- Set the clock directly (used by the `time` debug command).
 --- Snaps the raw clock + force-emits TIME_CHANGED for future listeners (sky/
 --- lighting); the shadow no longer reads raw time, so it eases in over
 --- smoothness instead of teleporting.
