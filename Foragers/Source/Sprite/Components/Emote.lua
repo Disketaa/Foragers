@@ -32,6 +32,81 @@ local TweenModule = require("Source.Sprite.Components.Tween")
 local Emote = {}
 Emote.__index = Emote
 
+---@param emoteData table
+---@return table[], table[]
+local function parseTweenComponent(emoteData)
+	local tweens, tags = {}, {}
+	for _, comp in ipairs(emoteData.components or {}) do
+		if comp.component == "tween" then
+			tweens = comp.tweens or {}
+			tags = comp.tags or {}
+			break
+		end
+	end
+	return tweens, tags
+end
+
+---@param comp table
+---@param emoteData table
+---@param objectPath string
+---@return table
+local function copySpritesheetFields(comp, emoteData, objectPath)
+	local compData = {}
+	for k, v in pairs(comp) do
+		compData[k] = v
+	end
+	compData.frameWidth = emoteData.frameWidth
+	compData.frameHeight = emoteData.frameHeight
+	compData.pivotX = emoteData.pivotX
+	compData.pivotY = emoteData.pivotY
+	if not compData.spriteSheet then
+		compData.spriteSheet = Path.png(objectPath)
+	end
+	return compData
+end
+
+---@param self Emote
+---@param sp table|nil
+local function wireSpriteSheet(self, sp)
+	if not (sp and sp.quads) then
+		return
+	end
+	sp.parent = self
+	self._sheet = sp
+	local anim = sp.animations and sp.animations[sp.currentAnim]
+	if anim then
+		self._duration = anim.frames / anim.speed
+	end
+end
+
+local function parseSpritesheetComponent(self, emoteData)
+	for _, comp in ipairs(emoteData.components or {}) do
+		if comp.component == "spritesheet" then
+			local compData = copySpritesheetFields(comp, emoteData, self.object)
+			local ok2, sp = pcall(SpriteSheet.new, compData)
+			if ok2 then
+				wireSpriteSheet(self, sp)
+			end
+			break
+		end
+	end
+end
+
+local function loadPlainImage(self, emoteData)
+	local pngInfo = love.filesystem.getInfo(Path.png(self.object))
+	if pngInfo then
+		local ok2, image = pcall(love.graphics.newImage, Path.png(self.object))
+		if ok2 and image then
+			self._image = image
+			self.frameWidth = emoteData.frameWidth
+			self.frameHeight = emoteData.frameHeight
+			self.pivotX = emoteData.pivotX or "center"
+			self.pivotY = emoteData.pivotY or "center"
+			self._duration = emoteData.lifetime or 1
+		end
+	end
+end
+
 ---@param data table
 ---@return Emote
 function Emote.new(data)
@@ -59,59 +134,10 @@ function Emote.new(data)
 	if ok and emoteData then
 		ValueParser.table(emoteData)
 
-		-- Emote data is self-contained: its `tween` component carries the spawn
-		-- pop-in (`tweens`, runs on trigger like drops on spawn) and the exit
-		-- animation (`tags.hide`). Read both from it.
-		for _, comp in ipairs(emoteData.components or {}) do
-			if comp.component == "tween" then
-				self.tweens = comp.tweens or {}
-				self.tags = comp.tags or {}
-				break
-			end
-		end
-
-		-- Spritesheet path (single-frame or animated): embed the sheet and wire it
-		-- to this component as its parent so draw() applies our scale/flip.
-		for _, comp in ipairs(emoteData.components or {}) do
-			if comp.component == "spritesheet" then
-				local compData = {}
-				for k, v in pairs(comp) do
-					compData[k] = v
-				end
-				compData.frameWidth = emoteData.frameWidth
-				compData.frameHeight = emoteData.frameHeight
-				compData.pivotX = emoteData.pivotX
-				compData.pivotY = emoteData.pivotY
-				if not compData.spriteSheet then
-					compData.spriteSheet = Path.png(self.object)
-				end
-				local ok2, sp = pcall(SpriteSheet.new, compData)
-				if ok2 and sp and sp.quads then
-					sp.parent = self
-					self._sheet = sp
-					local anim = sp.animations and sp.animations[sp.currentAnim]
-					if anim then
-						self._duration = anim.frames / anim.speed
-					end
-				end
-				break
-			end
-		end
-
-		-- No spritesheet in data: plain-image emotes (e.g. Cursor) draw the raw PNG.
+		self.tweens, self.tags = parseTweenComponent(emoteData)
+		parseSpritesheetComponent(self, emoteData)
 		if not self._sheet then
-			local pngInfo = love.filesystem.getInfo(Path.png(self.object))
-			if pngInfo then
-				local ok2, image = pcall(love.graphics.newImage, Path.png(self.object))
-				if ok2 and image then
-					self._image = image
-					self.frameWidth = emoteData.frameWidth
-					self.frameHeight = emoteData.frameHeight
-					self.pivotX = emoteData.pivotX or "center"
-					self.pivotY = emoteData.pivotY or "center"
-					self._duration = emoteData.lifetime or 1
-				end
-			end
+			loadPlainImage(self, emoteData)
 		end
 	end
 
