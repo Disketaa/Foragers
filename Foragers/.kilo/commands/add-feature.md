@@ -3,7 +3,6 @@ description: Guide for adding a new feature to Foragers
 ---
 
 ## Before you start
-
 1. Read `.kilo/AGENTS.md` — architecture rules, component system, event system, error handling
 2. Study the nearest existing implementation of a similar feature
 3. Check `.kilo/documentation/` for LÖVE2D API docs
@@ -11,18 +10,15 @@ description: Guide for adding a new feature to Foragers
 ## Adding a new feature
 
 ### 1. Data first
-
 New game content (items, entities, world config, sprites, animations) goes in `Content/Data/` or `Content/Assets/Sprites/` as Lua data tables. No hardcoded values in logic code.
 
 ### 2. Choose the right module
-
 - **New sprite type** — add data file in `Content/Assets/Sprites/<Category>/<Name>.lua`; `SpriteLoader.loadAll()` picks it up automatically
 - **New component** — register via `ComponentRegistry.register("name", factoryFn)` in the data file or from a mod's `Mod.lua`; place the module in `Source/Sprite/Components/`
 - **New world generation logic** — pure data goes in `Source/World/WorldGen.lua`, sprite construction in `Source/World/WorldBuilder.lua`
 - **New helper/system** — place in `Source/Helpers/`; one module = one responsibility
 
 ### 3. Component communication
-
 Components communicate via events, not field reads. If a new component needs data from another:
 - Subscribe to an existing event from `Events.lua`
 - If no existing event fits the signal, add it to `Events.lua` and add its row to `events.md` with documented emitters and priorities
@@ -30,14 +26,12 @@ Components communicate via events, not field reads. If a new component needs dat
 - Use priority gaps of 5 when subscribing (AGENTS.md §X)
 
 ### 4. Error handling
-
 - Component `update()` and `draw()` are already wrapped in `xpcall` by `Sprite.lua`
 - On error: `Log.error()` prints the stack trace, `component._broken = true` disables the component
 - If your code runs outside `update()`/`draw()` (e.g. `attach()`), wrap in your own `xpcall` or `pcall`
 - Log errors through `Log.error()` — swap implementation in `Log.lua` when file logging is needed
 
 ### 5. Data files for sprites
-
 PNG image path is **auto-derived** from the `.lua` file path (same name, `.png` extension) — do NOT specify it in the data file. The `spriteSheet` field is injected internally by `SpriteLoader.instantiate()`.
 
 ```lua
@@ -67,16 +61,13 @@ return {
 Reference existing files: `Content/Assets/Sprites/Character/Character.lua`, `Content/Assets/Sprites/Props/Rocks.lua`.
 
 ### 6. Mod support
-
 If the feature should be overridable by mods:
 - Keep data in Lua tables, register components via `ComponentRegistry`
 - Mods load their `Mod.lua` which can call `ComponentRegistry.register()` to add or override
 - All mod operations are wrapped in `pcall` — a broken mod must never crash the base game
 
 ## Debugging
-
 ### If the feature doesn't work
-
 1. **Enable console** — temporarily set `t.console = true` in `conf.lua` (revert before commit; VS Code debugger requires `false`)
 2. **Check for `[ERROR]` messages** — component errors are logged via `Log.error` with component type and traceback
 3. **Check `_broken` flag** — if a component crashed once, it's silently skipped on all subsequent frames
@@ -86,7 +77,6 @@ If the feature should be overridable by mods:
 7. **Console-only logging** — add temporary `print()` calls if `Log.error` doesn't provide enough context (wrap in `if t.console then ... end` to avoid debugger conflict)
 
 ### Common issues
-
 | Symptom | Likely cause |
 |---|---|
 | Sprite not visible | Image missing at computed path (PNG must match `.lua` filename in same directory) |
@@ -96,9 +86,7 @@ If the feature should be overridable by mods:
 | Tween not animating | Tween subscribes to `state_changed` and `flipped` — trigger one of these, or check the tween data syntax |
 
 ## Pre-flight to-do check
-
 Before finishing, verify each:
-
 - [ ] All gameplay values in `Content/Data/` or `Content/Assets/Sprites/`, not hardcoded (AGENTS.md §I)
 - [ ] Components communicate via events only — no field reads across components in `update()` (§I, §X)
 - [ ] `parent._state` never written outside Control — emit `state_changed` instead (§I)
@@ -111,7 +99,6 @@ Before finishing, verify each:
 - [ ] Stale section references in docs updated to match current AGENTS.md chapter numbers (§II)
 
 ## Reference
-
 - `.kilo/AGENTS.md` — full architecture, component rules, event system, error handling
 - `.kilo/documentation/components.md` — component config fields, subscribed/emitted events
 - `.kilo/documentation/events.md` — all events, emitters, listener priorities

@@ -3,14 +3,11 @@ description: Prepare a commit with staged changes (no push)
 ---
 
 ## Before commit
-
 - Check `.kilo/CHANGELOG.md` and AGENTS.md §XII (Rejected Questions) — if the commit proposes something already rejected or deferred, call it out instead of committing
 - Run `git status` and `git diff` to see what changed and why
 
 ## Commit
-
 Stage and commit from Disketaa.
-
 If any changed file is gitignored (check `git check-ignore -v <file>`), skip it — do NOT un-ignore or force-add it.
 
 Format:

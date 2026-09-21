@@ -26,7 +26,6 @@ Before fixing, decide: **fix** or **skip**.
 **Do not silently drop a skip.** Every skip must be recorded.
 
 ## Skip format (strict)
-
 ```
 file:line:col - rule_name: SKIP — reason
 ```
@@ -44,7 +43,6 @@ If the skip should persist across future scans (not just this pass):
 Do not edit `Baseline.json` manually for CC skips; edit `Settings.toml` and let the tool regenerate the baseline. For clone skips, add entries directly to `Baseline.json` using the format above.
 
 ### Generating clone fingerprints
-
 To add a clone skip to `Baseline.json`:
 1. Identify the clone pair: `file1:line1` and `file2:line2`
 2. Extract the normalized 6-line window from each location (strings/comments stripped, empty lines removed)
